@@ -33,6 +33,7 @@ The first implementation is the Tillitis Key 1:
 * [Firmware](hw/application_fpga/fw/mta1_mkdf/README.md)
 * [Toolchain setup](doc/toolchain_setup.md)
 * [Quickstart](doc/quickstart.md) to program the Tillitis Key1
+* [Release Notes](doc/release_notes.md)
 
 ## About this repository
 
