@@ -53,6 +53,9 @@ between the host and the device.
 
 ## Firmware
 
+The device has 128 kB RAM. The current firmware loads the app at the
+upper 64 kB. The lower 64 kB is currently set up as stack for the app.
+
 The firmware is part of FPGA bitstream (ROM), and is loaded at
 `0x0000_0000`.
 
