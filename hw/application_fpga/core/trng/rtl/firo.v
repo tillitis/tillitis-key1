@@ -32,6 +32,7 @@ module firo(
   //---------------------------------------------------------------
   // Combinational loop inverters.
   //---------------------------------------------------------------
+  /* verilator lint_off PINMISSING */
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv1  (.I0(f[0]), .O(f[1]));
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv2  (.I0(f[1]), .O(f[2]));
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv3  (.I0(f[2]), .O(f[3]));
@@ -42,6 +43,7 @@ module firo(
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv8  (.I0(f[7]), .O(f[8]));
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv9  (.I0(f[8]), .O(f[9]));
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv10 (.I0(f[9]), .O(f[10]));
+  /* verilator lint_on PINMISSING */
 
 
   //---------------------------------------------------------------

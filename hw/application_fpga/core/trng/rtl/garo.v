@@ -33,6 +33,7 @@ module garo(
   //---------------------------------------------------------------
   // Combinational loop inverters.
   //---------------------------------------------------------------
+  /* verilator lint_off PINMISSING */
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv1  (.I0(g[0]),  .O(gp[0]));
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv2  (.I0(g[1]),  .O(gp[1]));
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv3  (.I0(g[2]),  .O(gp[2]));
@@ -45,6 +46,7 @@ module garo(
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv10 (.I0(g[9]),  .O(gp[9]));
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv11 (.I0(g[10]), .O(gp[10]));
   (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv12 (.I0(g[11]), .O(gp[11]));
+  /* verilator lint_on PINMISSING */
 
 
   //---------------------------------------------------------------

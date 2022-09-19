@@ -149,8 +149,10 @@ module application_fpga(
   //----------------------------------------------------------------
   // Use the FPGA internal High Frequency OSCillator as clock source.
   // 00: 48MHz, 01: 24MHz, 10: 12MHz, 11: 6MHz
+  /* verilator lint_off PINMISSING */
   SB_HFOSC #(.CLKHF_DIV("0b10")
 	     ) u_hfosc (.CLKHFPU(1'b1),.CLKHFEN(1'b1),.CLKHF(clk));
+  /* verilator lint_on PINMISSING */
 
 
   reset_gen #(.RESET_CYCLES(200))
