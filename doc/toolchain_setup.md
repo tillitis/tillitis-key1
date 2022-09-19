@@ -15,7 +15,7 @@ These steps are used to build and install the
                          python3-dev libboost-dev libeigen3-dev \
                          libboost-dev libboost-filesystem-dev \
                          libboost-thread-dev libboost-program-options-dev \
-                         libboost-iostreams-dev cmake
+                         libboost-iostreams-dev cmake libhidapi-dev
 
     git clone https://github.com/YosysHQ/icestorm
     cd icestorm
