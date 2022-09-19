@@ -111,8 +111,6 @@ def main():
     parser.add_argument("--serial", help="Serial number (0 - (2**31 - 1))", type=int)
     args = parser.parse_args()
 
-    print(args)
-
     if args.verbose:
         print("TillitisKey Provisining Tool (TPT)")
 
