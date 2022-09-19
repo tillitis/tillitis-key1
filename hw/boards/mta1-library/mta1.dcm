@@ -1,0 +1,15 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ICE40UP5K-SG48ITR
+D iCE40 UltraPlus FPGA, 5280 LUTs, 1.2V, 48-pin QFN
+K FPGA programmable logic
+F http://www.latticesemi.com/Products/FPGAandCPLD/iCE40Ultra
+$ENDCMP
+#
+$CMP W25Q80DVSNIG
+D 32Mb Serial Flash Memory, Standard/Dual/Quad SPI, SOIC-8
+K flash memory SPI
+F https://www.winbond.com/resource-files/w25q80dv_revg_07212015.pdf
+$ENDCMP
+#
+#End Doc Library

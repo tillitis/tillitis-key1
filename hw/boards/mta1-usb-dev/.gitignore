@@ -1,0 +1,15 @@
+# Ignore list for KiCAD Projects
+*.000
+*.bak
+*.bck
+*.kicad_pcb-bak
+*.sch-bak
+*~_autosave-*
+*.tmp
+*-save.pro
+*-save.kicad_pcb
+fp-info-cache
+*.net
+*.dsn
+*.ses
+*.swp

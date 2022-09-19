@@ -1,0 +1,15 @@
+BasedOnStyle: LLVM
+UseTab: Always
+IndentWidth: 8
+TabWidth: 8
+
+IncludeBlocks: Preserve
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortEnumsOnASingleLine: false
+

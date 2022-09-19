@@ -1,0 +1,53 @@
+### Module positions - created on Wed Aug 31 17:19:18 2022 ###
+### Printed by Pcbnew version (6.0.4)
+## Unit = mm, Angle = deg.
+## Side : top
+# Ref     Val                Package                                   PosX       PosY       Rot  Side
+C1        10uF               CAPC1608X09L                            4.8438    11.8500  -90.0000  top
+C2        10uF               CAPC1608X09L                            4.4500     1.9500  -90.0000  top
+C3        10uF               CAPC1608X09L                           10.2438     8.5500  -90.0000  top
+C4        10uF               CAPC1608X09L                           10.0000     1.9500  -90.0000  top
+C5        10uF               CAPC1608X09L                           10.4500    11.8500  -90.0000  top
+C6        10uF               CAPC1608X09L                            4.9437     8.5500  -90.0000  top
+C7        0.10uF             CAPC1005X06L                           11.4500     8.1000   90.0000  top
+C8        10uF_16V           C_1206_3216Metric                      26.2000     6.7500   90.0000  top
+C13       0.10uF             CAPC1005X06L                           12.3500     8.1000   90.0000  top
+C16       0.10uF             CAPC1005X06L                           23.5000     8.4500   45.0000  top
+C17       0.10uF             CAPC1005X06L                           14.8000     2.5500  -135.0000  top
+C18       0.10uF             CAPC1005X06L                           13.8000     8.0000  135.0000  top
+C19       0.10uF             CAPC1005X06L                           24.2000     7.7500   45.0000  top
+C20       0.10uF             CAPC1005X06L                           15.5000     1.8500  -135.0000  top
+C21       0.10uF             CAPC1005X06L                           16.2000     1.1500  -135.0000  top
+C22       0.10uF             CAPC1005X06L                           14.5000     8.7000  135.0000  top
+C23       0.10uF             CAPC1005X06L                           12.5000    10.9000  180.0000  top
+C25       10uF               CAPC1608X09L                           13.0500     1.9500  -90.0000  top
+C26       0.10uF             CAPC1005X06L                           20.0500    11.9000   90.0000  top
+C27       3pF                CAPC1005X06L                           25.7500    12.0500    0.0000  top
+D1        Power_LED          LED_0402_1005Metric                    12.5000     9.9000  180.0000  top
+D3        LED_ARGB           0402rgb-1010                           26.0000     1.8000   90.0000  top
+FB3       BLM18KG300TN1D     Ferritbead_0603_1608Metric             11.5000     1.9500  -90.0000  top
+P1        USB_C_Plug         U261-241N-4BS60                         1.0500     6.7500    0.0000  top
+R1        10k                ERJ2G(0402)_L                           3.5500    12.0500  -90.0000  top
+R2        10k                ERJ2G(0402)_L                           3.5500     8.1000  -90.0000  top
+R3        1k                 ERJ2G(0402)_L                          15.1500     9.4000  -45.0000  top
+R16       1K                 ERJ2G(0402)_L                          21.6000     1.1500  -45.0000  top
+R17       1K                 ERJ2G(0402)_L                          22.3000     1.8500  -45.0000  top
+R18       1K                 ERJ2G(0402)_L                          23.0000     2.5500  -45.0000  top
+R19       10k                ERJ2G(0402)_L                          22.7000     9.1000  -135.0000  top
+R20       10k                ERJ2G(0402)_L                          15.9000    10.1000  -45.0000  top
+R22       10k                ERJ2G(0402)_L                           3.0000     1.7500  -90.0000  top
+R23       10k                ERJ2G(0402)_L                          18.2000    11.7000  180.0000  top
+R24       10k                ERJ2G(0402)_L                          12.5000    12.8000    0.0000  top
+R25       10k                ERJ2G(0402)_L                          18.2000    12.8000  180.0000  top
+R26       10k                ERJ2G(0402)_L                          12.5000    11.8500    0.0000  top
+R29       5.1K               ERJ2G(0402)_L                           3.5500    10.1000   90.0000  top
+R30       2K                 ERJ2G(0402)_L                          25.7500    11.0500    0.0000  top
+U1        MCP1824T-2502EOT   SOT-23-5                                7.2500     1.8000    0.0000  top
+U2        MIC5258-1.2YM5     SOT-23-5                                7.6437    11.7500    0.0000  top
+U3        CH552E             MSOP-10_3x3mm_P0.5mm                   10.2000     5.2500  180.0000  top
+U5        USBLC6-2SC6        SOT-23-6                                5.0000     5.1500  180.0000  top
+U6        ICE40UP5K-SG48ITR  QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm    18.9000     5.6500  -135.0000  top
+U8        W25Q80DVUXIE       W25Q80DVUXIE                           15.4000    12.1500  180.0000  top
+U9        NCP752BSN33T1G     NCP752BSN33T1G                          7.5938     8.5500    0.0000  top
+U10       PT2043AT6          SOT-23-6                               22.7000    11.7500  180.0000  top
+## End

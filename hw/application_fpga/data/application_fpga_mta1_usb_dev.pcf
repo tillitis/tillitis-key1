@@ -1,0 +1,39 @@
+#=======================================================================
+#
+# application_fpga_mta1_usb_dev.pcf
+# ---------------------------------
+# Pin constraints file for the Application FPGA design used on the
+# Mullvad MTA1_USB_DEV board.
+#
+#
+# Copyright (C) 2022 - Tillitis AB
+# SPDX-License-Identifier: GPL-2.0-only
+#
+#=======================================================================
+
+# UART.
+set_io interface_rx 15
+set_io interface_tx 16
+#set_io interface_cts 27
+#set_io interface_rts 28
+
+
+# Touch sense, mapped to a switch.
+set_io touch_event 23
+
+
+# GPIOs.
+set_io app_gpio1 26
+set_io app_gpio2 27
+set_io app_gpio3 31
+set_io app_gpio4 32
+
+
+# LEDs
+set_io led_r 41
+set_io led_g 40
+set_io led_b 39
+
+#=======================================================================
+# EOF application_fpga_usb_dev.pcf
+#=======================================================================
