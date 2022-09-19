@@ -40,5 +40,25 @@ $ cd tillitis-key1/hw/application_fpga
 $ make prog_flash
 ```
 
-Your Key1 device should eventually be running the firmware with the LED
-flashing white, indicating that it is ready to receive an app.
+After programming, when your Key1 device is connected to the host, it would boot the firmware.
+When boot has completed, the device will start flashing the LED white. This indicates that the device
+is ready to receive and measure an app.
+
+To personalize the device, you need to modify the hex file that contain the Unique Device Secret (UDS).
+You should also update the Unique Device Identity (UDI). These hex files are located in hw/application_fpga/data.
+To make this easier there is a tool, tpt that can generate these files. The tool can be found in hw/application_fpga/tools/tpt.
+The tool allow you to supply a secret used as part of the UDS generation. The tool can be run interactively, or by suppling
+inputs on the command line:
+
+```
+usage: tpt.py [-h] [-v] [--uss USS] [--vid VID] [--pid PID] [--rev REV] [--serial SERIAL]
+
+options:
+  -h, --help       show this help message and exit
+  -v, --verbose    Verbose operation
+  --uss USS        User supplied secret
+  --vid VID        Vendor id (0 - 65535)
+  --pid PID        Product id (0 - 2555
+  --rev REV        Revision number (0 - 15)
+  --serial SERIAL  Serial number (0 - (2**31 - 1))
+```
