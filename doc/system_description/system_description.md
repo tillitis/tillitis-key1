@@ -2,8 +2,8 @@
 
 ## Purpose and Revision
 The purpose of this document is to provide a description of the
-mta1_mkdf. What it is, what is supposed to be used for, by whom, where
-and possible use cases. The document also provides a functional level
+Tillitis Key 1 (TK1). What it is, what is supposed to be used for, by whom,
+where and possible use cases. The document also provides a functional level
 description of features and components of the mta1_mkdf.
 
 Finally, the document acts as a requirement description. For the
@@ -12,18 +12,18 @@ requirements, the document follows
 requirement levels.
 
 The described functionality and requirements applies
-to version one (v1) of the mta1_mkdf.
+to version one (v1) of the TK1.
 
 The intended users of this document are:
-- Implementors of the mta1_mkdf hardware, firmware and SDKs
-- Developers of secure applications for the mta1_mkdf
+- Implementors of the TK1 hardware, firmware and SDKs
+- Developers of secure applications for the TK1
 - Technically skilled third parties that wants to understand the
-  mta1_mkdf
+  TK1
 
 
 ## Introduction
-The mta1_mkdf is USB-connected, RISC-V based application platform. The
-purpose of the mta1_mkdf is to provide a secure application environment
+The TK1 is a USB-connected, RISC-V based application platform. The
+purpose of the TK1 is to provide a secure application environment
 for applications that provides some security functionality needed by the
 user. Some examples of such security functionality are:
 
@@ -33,7 +33,7 @@ user. Some examples of such security functionality are:
 
 
 ### Measured Based Security
-The key, unique feature of the mta1_mkdf is that it measures the secure
+The key, unique feature of the TK1 is that it measures the secure
 application when the application is being loaded onto the device. The
 measurement, combined with a Unique Device Secret (UDS) is used to
 derive secrets for the application.
@@ -44,7 +44,7 @@ last time the application was loaded onto the same device, the
 application can be trusted not to have been altered.
 
 Note that since the UDS is per-device unique, the same application
-loaded onto another mta1_mkdf device will cause a different set of keys
+loaded onto another TK1 device will cause a different set of keys
 to be derived. This ties keys to a specific device.
 
 The derivation can also be combined with a User Supplied Secret
@@ -55,7 +55,7 @@ being used in the derivation.
 
 
 ### Assets
-The mta1_mkdf store and use the following assets internally:
+The TK1 store and use the following assets internally:
 
 - UDS - Unique Device Secret. Provisioned and stored during
   device manufacturing. Never to be replaced during the life time of
@@ -80,13 +80,13 @@ Additionally the following asset could be provided from the host:
 
 
 ### Subsystems and Components
-The mta1_mkdf as a project, system and secure application platform
+The TK1 as a project, system and secure application platform
 consists of a number of subsystems and components, modules, support
 libraries etc. Roughly these can be divided into:
 
-- mta1_mkdf boards. PCB designs for development and general usage
+- TK1 boards. PCB designs for development and general usage
 
-- interface_fpga. FPGA design with cores
+- USB to UART controller
 
 - application_fpga. FPGA design with cores including CPU and memory
 
@@ -122,12 +122,12 @@ libraries etc. Roughly these can be divided into:
 The Application FPGA hardware should provide the following:
 
 1. Fixed information
-	- Unique Device ID (UID)
+   - Unique Device ID (UID)
       - 64 bits
       - Readable via API before application start
       - Generated and stored by Mullvad
 
-	- Unique Device Authentication key (UDA)
+   - Unique Device Authentication key (UDA)
       - At least 128 bits number
       - Readable by FW before application start
       - Generated and stored by Mullvad
@@ -153,14 +153,14 @@ The Application FPGA hardware should provide the following:
       - Byte received status bit in RX_FIFO_AVAILABLE address
       - Readable by FW and application
 
-	- Tx-FIFO with capacity (fifo_ready)
+    - Tx-FIFO with capacity (fifo_ready)
       - 8 bit data in TX_FIFO_DATA address
       - Ready to store byte status bit in TX_FIFO_READY address
       - Status readable by FW and application
       - Data writable by FW and application
 
 3. I/O
-	- LED (RGB)
+   - LED (RGB)
       - Status and control in LED address
       - Readable and writable by FW and application
 
