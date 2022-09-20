@@ -22,6 +22,7 @@ RUN apt-get -qq update -y \
                libeigen3-dev \
                libffi-dev \
                libftdi-dev \
+               libhidapi-dev \
                libreadline-dev \
                lld \
                llvm \
@@ -44,7 +45,8 @@ RUN git show -s >/repo-commit-icestorm
 WORKDIR /
 RUN rm -rf /src
 
-RUN git clone --depth=1 https://github.com/tillitis/icestorm /src
+# Custom iceprog for the RPi 2040-based programmer (will be upstreamed).
+RUN git clone -b interfaces --depth=1 https://github.com/tillitis/icestorm /src
 WORKDIR /src/iceprog
 RUN make -j$(nproc --ignore=2) \
     && make PROGRAM_PREFIX=tillitis- install
@@ -54,6 +56,8 @@ RUN rm -rf /src
 
 RUN git clone https://github.com/YosysHQ/yosys /src
 WORKDIR /src
+# Avoiding current issue with yosys & icebram, filed in:
+# https://github.com/YosysHQ/yosys/issues/3478
 RUN git checkout 06ef3f264afaa3eaeab45cc0404d8006c15f02b1 \
     && make -j$(nproc --ignore=2) \
     && make install
