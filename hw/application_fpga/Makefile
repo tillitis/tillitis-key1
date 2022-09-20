@@ -168,7 +168,7 @@ verilator: $(VERILATOR_TOP_SRC) $(VERILOG_SRCS) firmware.hex $(ICE40_SIM_CELLS) 
 # Main FPGA build flow.
 # Synthesis. Place & Route. Bitstream generation.
 #-------------------------------------------------------------------
-synth.json: $(TOP_SRC) $(VERILOG_SRCS) bram_fw.hex
+synth.json: $(TOP_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/udi.hex
 	$(YOSYS_PATH)yosys -v3 -l synth.log -DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 		-DFIRMWARE_HEX=\"$(P)/bram_fw.hex\" \
 		-DUDS_HEX=\"$(P)/data/uds.hex\" \

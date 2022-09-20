@@ -1,17 +1,19 @@
 
 This document describes how to build the FPGA bitstream, including the
-firmware, and get this programmed onto the flash of the Tillitis Key1
+firmware, and get this programmed onto the flash of the Tillitis Key 1
 USB device.
 
-The Tillitis Key1 kit includes:
+The Tillitis Key 1 kit includes:
 
-- Tillitis Key1 USB device, marked MTA1-USB V1
+- Tillitis Key 1 USB device, marked MTA1-USB V1
 - Programmer board based on Raspberry Pi Pico, with a white device
   holder/jig
 - USB-cable with micro-B plug, for connecting the programmer to
   computer
 - USB-C cable
 - USB-C to USB-A adapter
+
+# Programming FPGA bitstream and firmware onto Tillitis Key 1
 
 Connect the programmer to the computer using the mentioned cable. It
 is convenient to connect the USB device to the USB-C cable, and then
@@ -40,15 +42,22 @@ $ cd tillitis-key1/hw/application_fpga
 $ make prog_flash
 ```
 
-After programming, when your Key1 device is connected to the host, it would boot the firmware.
-When boot has completed, the device will start flashing the LED white. This indicates that the device
-is ready to receive and measure an app.
+After programming, when your device is connected to the host, it would boot the
+firmware. When boot has completed, the device will start flashing the LED
+white. This indicates that the device is ready to receive and measure an app.
 
-To personalize the device, you need to modify the hex file that contain the Unique Device Secret (UDS).
-You should also update the Unique Device Identity (UDI). These hex files are located in hw/application_fpga/data.
-To make this easier there is a tool, tpt that can generate these files. The tool can be found in hw/application_fpga/tools/tpt.
-The tool allow you to supply a secret used as part of the UDS generation. The tool can be run interactively, or by suppling
-inputs on the command line:
+# Device personalization
+
+To personalize the device, you need to modify the hex file that contains the
+Unique Device Secret (UDS). You should also update the Unique Device Identity
+(UDI). These hex files are located in `hw/application_fpga/data/`. Note that
+after modify the files in this directory, you need to rebuild and program the
+device again (as above).
+
+To make this easier there is a tool that can generate these files. The tool can
+be found in `hw/application_fpga/tools/tpt`. The tool allow you to supply a
+secret used as part of the UDS generation. The tool can be run interactively,
+or by suppling inputs on the command line:
 
 ```
 usage: tpt.py [-h] [-v] [--uss USS] [--vid VID] [--pid PID] [--rev REV] [--serial SERIAL]
