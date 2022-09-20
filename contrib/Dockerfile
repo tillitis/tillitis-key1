@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.04 as builder
 
 RUN apt-get -qq update -y \
     && DEBIAN_FRONTEND=noninteractive \
@@ -73,3 +73,41 @@ RUN cmake -DARCH=ice40 -DCMAKE_INSTALL_PREFIX=/usr/local . \
 RUN git show -s >/repo-commit-nextpnr
 WORKDIR /
 RUN rm -rf /src
+
+
+FROM ubuntu:22.04
+COPY --from=builder /usr/local/ /usr/local
+
+RUN apt-get -qq update -y \
+    && DEBIAN_FRONTEND=noninteractive \
+       apt-get install -y --no-install-recommends \
+               bison \
+               build-essential \
+               ca-certificates \
+               clang \
+               cmake \
+               flex \
+               gawk \
+               git \
+               golang \
+               graphviz \
+               less \
+               libboost-dev \
+               libboost-filesystem-dev \
+               libboost-iostreams-dev \
+               libboost-program-options-dev \
+               libboost-thread-dev \
+               libeigen3-dev \
+               libftdi1 \
+               libhidapi-libusb0 \
+               lld \
+               llvm \
+               mercurial \
+               nano \
+               pkg-config \
+               python3 \
+               python3-dev \
+               tcl-dev \
+               verilator \
+               vim \
+               xdot \
