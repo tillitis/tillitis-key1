@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as builder
+FROM ubuntu:22.04 as base
 
 RUN apt-get -qq update -y \
     && DEBIAN_FRONTEND=noninteractive \
@@ -36,6 +36,9 @@ RUN apt-get -qq update -y \
                vim \
                xdot \
     && rm -rf /var/lib/apt/lists/*
+
+
+FROM base as builder
 
 RUN git clone --depth=1 https://github.com/YosysHQ/icestorm /src
 WORKDIR /src
@@ -75,39 +78,5 @@ WORKDIR /
 RUN rm -rf /src
 
 
-FROM ubuntu:22.04
+FROM base
 COPY --from=builder /usr/local/ /usr/local
-
-RUN apt-get -qq update -y \
-    && DEBIAN_FRONTEND=noninteractive \
-       apt-get install -y --no-install-recommends \
-               bison \
-               build-essential \
-               ca-certificates \
-               clang \
-               cmake \
-               flex \
-               gawk \
-               git \
-               golang \
-               graphviz \
-               less \
-               libboost-dev \
-               libboost-filesystem-dev \
-               libboost-iostreams-dev \
-               libboost-program-options-dev \
-               libboost-thread-dev \
-               libeigen3-dev \
-               libftdi1 \
-               libhidapi-libusb0 \
-               lld \
-               llvm \
-               mercurial \
-               nano \
-               pkg-config \
-               python3 \
-               python3-dev \
-               tcl-dev \
-               verilator \
-               vim \
-               xdot \
