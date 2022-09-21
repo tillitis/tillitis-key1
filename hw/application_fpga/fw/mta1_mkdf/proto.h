@@ -35,7 +35,10 @@ enum fwcmd {
 	FW_CMD_RUN_APP		= 0x07,
 	FW_RSP_RUN_APP		= 0x08,
 	FW_CMD_GET_APP_DIGEST	= 0x09,
-	FW_RSP_GET_APP_DIGEST	= 0x10
+	FW_CMD_LOAD_USS		= 0x0a,
+	FW_RSP_LOAD_USS		= 0x0b,
+	/* ... */
+	FW_RSP_GET_APP_DIGEST	= 0x10, // encoded as 0x10 for backwards compatibility
 };
 // clang-format on
 
