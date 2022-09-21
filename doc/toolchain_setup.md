@@ -81,9 +81,24 @@ The circuit board designs were all created in [KiCad
 These tools are needed to build the programmer firmware for the
 mta1-usb-v1-programmer
 
-TODO
+#### FW update of the programmer
+The programmer runs a FW needed to program the devices, the source code
+is available on Githun:
 
-* source code: https://github.com/Blinkinlabs/ice40_flasher
+https://github.com/Blinkinlabs/ice40_flasher
+
+There is also a pre built FW binary for the programmer:
+https://github.com/Blinkinlabs/ice40_flasher/tree/main/bin
+
+Download the file programmer FW file "main.uf2" to your host computer.
+
+To program do the following.
+
+1. Press the "BOOTSEL" button on the RPi2040 board while connecting the board to the host
+2. Release the button after cvonnecting the board to the host. The board will now appear to the host as a USB connected storage device
+3. Open the storage device and drop the FW file ("main.uf2") into the storage device
+
+The programmer will update its FW with the file and restart itself.
 
 
 ### mta1-usb-v1: ch552 USB to Serial firmware
