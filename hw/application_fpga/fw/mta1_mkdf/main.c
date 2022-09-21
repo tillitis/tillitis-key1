@@ -205,44 +205,40 @@ int main()
 		case FW_CMD_RUN_APP:
 			puts("request: run-app\n");
 
-			if (hdr.len != 1) {
-				// Bad length
+			if (hdr.len != 1 || *app_size == 0 || *app_addr == 0) {
+				// Bad cmd length, or app_size and app_addr are
+				// not both set
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_RUN_APP, rsp);
 				break;
 			}
 
-			if (*app_size > 0 && *app_addr != 0) {
-				rsp[0] = STATUS_OK;
-				fwreply(hdr, FW_RSP_RUN_APP, rsp);
-
-				// Flip over to application mode
-				*switch_app = 1;
-
-				// Jump to app - doesn't return
-				// First clears memory of firmware remains
-				puts("Jumping to ");
-				putinthex(*app_addr);
-				lf();
-				// clang-format off
-				asm volatile(
-					"li a0, 0x40000000;" // MTA1_MKDF_RAM_BASE
-					"li a1, 0x40010000;"
-					"loop:;"
-					"sw zero, 0(a0);"
-					"addi a0, a0, 4;"
-					"blt a0, a1, loop;"
-					// Get value at MTA1_MKDF_MMIO_MTA1_APP_ADDR
-					"lui a0,0xff000;"
-					"lw a0,0x030(a0);"
-					"jalr x0,0(a0);"
-					::: "memory");
-				// clang-format on
-			}
-
-			rsp[0] = STATUS_BAD;
+			rsp[0] = STATUS_OK;
 			fwreply(hdr, FW_RSP_RUN_APP, rsp);
-			break;
+
+			// Flip over to application mode
+			*switch_app = 1;
+
+			// Jump to app - doesn't return
+			// First clears memory of firmware remains
+			puts("Jumping to ");
+			putinthex(*app_addr);
+			lf();
+			// clang-format off
+			asm volatile(
+				"li a0, 0x40000000;" // MTA1_MKDF_RAM_BASE
+				"li a1, 0x40010000;"
+				"loop:;"
+				"sw zero, 0(a0);"
+				"addi a0, a0, 4;"
+				"blt a0, a1, loop;"
+				// Get value at MTA1_MKDF_MMIO_MTA1_APP_ADDR
+				"lui a0,0xff000;"
+				"lw a0,0x030(a0);"
+				"jalr x0,0(a0);"
+				::: "memory");
+			// clang-format on
+			break; // This is never reached!
 
 		case FW_CMD_GET_APP_DIGEST:
 			puts("request: get-app-digest\n");
