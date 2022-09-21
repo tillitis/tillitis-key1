@@ -71,11 +71,15 @@ int main()
 	uint8_t *loadaddr = (uint8_t *)APP_RAM_ADDR;
 	int left = 0;	// Bytes left to read
 	int nbytes = 0; // Bytes to write to memory
+	uint8_t uss[32];
 	uint32_t local_app_size = 0;
 	uint8_t in;
 	uint8_t digest[32];
 
 	print_hw_version(local_name0, local_name1, local_ver);
+
+	// If host does not load USS, we use an all zero USS
+	memset(uss, 0, 32);
 
 	for (;;) {
 		// blocking; fw flashing white while waiting for cmd
@@ -115,6 +119,22 @@ int main()
 			memcpy(rsp + 8, (uint8_t *)&local_ver, 4);
 
 			fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
+			break;
+
+		case FW_CMD_LOAD_USS:
+			puts("request: load-uss\n");
+
+			if (hdr.len != 128 || *app_size != 0) {
+				// Bad cmd length, or app_size already set
+				rsp[0] = STATUS_BAD;
+				fwreply(hdr, FW_RSP_LOAD_USS, rsp);
+				break;
+			}
+
+			memcpy(uss, cmd + 1, 32);
+
+			rsp[0] = STATUS_OK;
+			fwreply(hdr, FW_RSP_LOAD_USS, rsp);
 			break;
 
 		case FW_CMD_LOAD_APP_SIZE:
@@ -173,7 +193,7 @@ int main()
 			left -= nbytes;
 
 			if (left == 0) {
-				uint8_t scratch[64];
+				uint8_t scratch[96];
 
 				puts("Fully loaded ");
 				putinthex(*app_size);
@@ -186,14 +206,15 @@ int main()
 					(const void *)*app_addr, *app_size);
 				print_digest(digest);
 
-				// CDI = hash(uds, hash(app))
+				// CDI = hash(uds, hash(app), uss)
 				uint32_t local_cdi[8];
 
 				// Only word aligned access to UDS
 				wordcpy(scratch, (void *)uds, 8);
 				memcpy(scratch + 32, digest, 32);
+				memcpy(scratch + 64, uss, 32);
 				blake2s((void *)local_cdi, 32, NULL, 0,
-					(const void *)scratch, 64);
+					(const void *)scratch, 96);
 				// Only word aligned access to CDI
 				wordcpy((void *)cdi, (void *)local_cdi, 8);
 			}
