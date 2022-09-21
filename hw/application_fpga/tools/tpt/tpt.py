@@ -22,17 +22,17 @@ from hkdf import Hkdf
 
 #-------------------------------------------------------------------
 #-------------------------------------------------------------------
-def gen_uds(verbose, arg_uss):
+def gen_uds(verbose, arg_ent):
     if verbose:
         print("\nGenerating UDS")
 
-    if arg_uss == None:
-        uss = str.encode(input("Enter user supplied secret: "))
+    if arg_ent == None:
+        ent = str.encode(input("Enter additional entropy: "))
     else:
-        uss = str.encode(arg_uss)
+        ent = str.encode(arg_ent)
 
     ikm = token_bytes(256)
-    my_hkdf = Hkdf(uss, ikm)
+    my_hkdf = Hkdf(ent, ikm)
     uds = my_hkdf.expand(b"TillitisKey UDS", 32)
     uds_hex = uds.hex()
 
@@ -104,7 +104,7 @@ def enc_str(b):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Verbose operation", action="store_true")
-    parser.add_argument("--uss", help="User supplied secret", type=str)
+    parser.add_argument("--ent", help="User supplied entropy", type=str)
     parser.add_argument("--vid", help="Vendor id (0 - 65535)",  type=int)
     parser.add_argument("--pid", help="Product id (0 - 2555", type=int)
     parser.add_argument("--rev", help="Revision number (0 - 15)", type=int)
@@ -114,7 +114,7 @@ def main():
     if args.verbose:
         print("TillitisKey Provisining Tool (TPT)")
 
-    uds = gen_uds(args.verbose, args.uss)
+    uds = gen_uds(args.verbose, args.ent)
     save_uds(args.verbose, uds)
 
     udi = gen_udi(args.verbose, args.pid, args.vid, args.rev, args.serial)
