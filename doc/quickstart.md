@@ -52,6 +52,13 @@ your computer (use the USB-C-to-A adapter if needed) and will boot the
 firmware. When boot has completed it will start flashing the LED
 white. This indicates that it is ready to receive and measure an app.
 
+To try out an app, continue to the README.md the apps repo:
+https://github.com/tillitis/tillitis-key1-apps#readme
+
+To learn more about the concepts and workings of the firmware, see:
+[system_description/system_description.md](system_description/system_description.md)
+and [system_description/software.md](system_description/software.md).
+
 # Device personalization
 
 To personalize Tillitis Key 1, you need to modify the hex file that

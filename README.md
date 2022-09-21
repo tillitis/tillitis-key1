@@ -9,8 +9,8 @@ different, as other security tokens utilize closed source hardware for
 its security-critical operations.
 
 What makes the Tillitis Key 1 security token unique is that it doesn’t
-verify applications, it measures them, before running them on its open
-hardware security processor.
+verify applications, it measures them (hashes a digest over the
+binary), before running them on its open hardware security processor.
 
 Each security token contains a Unique Device Secret (UDS),
 which together with an application measurement, and an optional

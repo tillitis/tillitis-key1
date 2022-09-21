@@ -5,7 +5,11 @@
   * Firmware -- software that is part of ROM, and is currently
     supplied via the FPGA bit stream.
   * Application -- software supplied by the host machine, which is
-    received, loaded, and measured by the firmware.
+    received, loaded, and measured by the firmware (by hashing a
+    digest over the binary).
+
+Learn more about the concepts in the
+[system_description.md](system_description.md).
 
 ## CPU
 

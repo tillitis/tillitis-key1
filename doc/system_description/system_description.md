@@ -35,8 +35,8 @@ user. Some examples of such security functionality are:
 ### Measured Based Security
 The key, unique feature of the TK1 is that it measures the secure
 application when the application is being loaded onto the device. The
-measurement, combined with a Unique Device Secret (UDS) is used to
-derive secrets for the application.
+measurement (a hash digest), combined with a Unique Device Secret
+(UDS) is used to derive secrets for the application.
 
 The consequence of this is that if the application is altered, the keys
 derived will also change. Conversely, if the keys derived are the same as
