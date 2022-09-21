@@ -271,6 +271,7 @@ volatile int touch_cyc = 0;
 
 void sighandler(int)
 {
+	printf("touched!\n");
 	touch_cyc = 1000;
 }
 
