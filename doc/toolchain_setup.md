@@ -41,6 +41,8 @@ These steps are used to build and install the
 
     git clone https://github.com/YosysHQ/nextpnr
     cd nextpnr
+    # Use nextpnr-0.4. Aa few commits later we got issues, like on f4e6bbd383f6c43.
+    git checkout nextpnr-0.4
     cmake -DARCH=ice40 -DCMAKE_INSTALL_PREFIX=/usr/local .
     make -j$(nproc)
     sudo make install

@@ -44,7 +44,7 @@ RUN git clone --depth=1 https://github.com/YosysHQ/icestorm /src
 WORKDIR /src
 RUN make -j$(nproc --ignore=2) \
     && make install
-RUN git show -s >/repo-commit-icestorm
+RUN git >/usr/local/repo-commit-icestorm describe --tags --always --dirty
 WORKDIR /
 RUN rm -rf /src
 
@@ -53,7 +53,7 @@ RUN git clone -b interfaces --depth=1 https://github.com/tillitis/icestorm /src
 WORKDIR /src/iceprog
 RUN make -j$(nproc --ignore=2) \
     && make PROGRAM_PREFIX=tillitis- install
-RUN git show -s >/repo-commit-tillitis--icestorm
+RUN git >/usr/local/repo-commit-tillitis--icestorm describe --tags --always --dirty
 WORKDIR /
 RUN rm -rf /src
 
@@ -64,16 +64,18 @@ WORKDIR /src
 RUN git checkout 06ef3f264afaa3eaeab45cc0404d8006c15f02b1 \
     && make -j$(nproc --ignore=2) \
     && make install
-RUN git show -s >/repo-commit-yosys
+RUN git >/usr/local/repo-commit-yosys describe --tags --always --dirty
 WORKDIR /
 RUN rm -rf /src
 
-RUN git clone --depth=1 https://github.com/YosysHQ/nextpnr /src
+RUN git clone https://github.com/YosysHQ/nextpnr /src
 WORKDIR /src
-RUN cmake -DARCH=ice40 -DCMAKE_INSTALL_PREFIX=/usr/local . \
+# Use nextpnr-0.4. Aa few commits later we got issues, like on f4e6bbd383f6c43.
+RUN git checkout nextpnr-0.4 \
+    && cmake -DARCH=ice40 -DCMAKE_INSTALL_PREFIX=/usr/local . \
     && make -j$(nproc --ignore=2) \
     && make install
-RUN git show -s >/repo-commit-nextpnr
+RUN git >/usr/local/repo-commit-nextpnr describe --tags --always --dirty
 WORKDIR /
 RUN rm -rf /src
 
