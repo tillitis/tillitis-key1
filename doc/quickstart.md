@@ -1,40 +1,45 @@
 
 This document describes how to build the FPGA bitstream, including the
-firmware, and get this programmed onto the flash of the Tillitis Key 1
-USB device.
+firmware, and get this programmed onto the flash memory of the
+Tillitis Key 1 USB device.
 
 The Tillitis Key 1 kit includes:
 
-- Tillitis Key 1 USB device, marked MTA1-USB V1
-- Programmer board based on Raspberry Pi Pico, with a white device
-  holder/jig
-- USB-cable with micro-B plug, for connecting the programmer to
+- Tillitis Key 1 USB stick with USB-C plug, marked MTA1-USB V1
+- Programmer board based on Raspberry Pi Pico, with a white holder/jig
+- USB cable with micro-B plug, for connecting the programmer to
   computer
-- USB-C cable
+- USB-C extension cable
 - USB-C to USB-A adapter
 
 # Programming FPGA bitstream and firmware onto Tillitis Key 1
 
-Connect the programmer to the computer using the mentioned cable. It
-is convenient to connect the USB device to the USB-C cable, and then
-connect the cable to the computer. The latter using the USB-C-to-A, if
-needed.
+Connect the programmer to the computer using the USB cable with
+micro-B plug.
 
-`lsusb` should list two new devies: `cafe:4004 Blinkinlabs ICE40 programmer`
-and `1207:8887 Tillitis MTA1-USB-V1`.
+Place the Tillitis Key 1 (the USB stick) correctly in the programming
+jig and close the hatch.
 
-The USB device is then placed correctly in the programming jig, and
-the hatch closed. The USB device can remain in the jig during repeated
-programming and testing cycles. The jig has a cutout to allow for
-touching next to the LED where the touch sensor is located.
+The USB stick can remain in the jig during repeated development,
+programming and testing cycles. The USB stick should then be connected
+to the computer using the provided USB-C cable (use the USB-C-to-A
+adapter if needed). Note that connecting the USB stick to the computer
+is not required for programming it. For this purpose, the jig also has
+a cutout to allow touching where the touch sensor is located, next to
+the LED.
+
+On Linux, `lsusb` should list the connected programmer as `cafe:4004
+Blinkinlabs ICE40 programmer`. If the USB stick is also connected it
+shows up as `1207:8887 Tillitis MTA1-USB-V1`.
 
 To install the software needed for building and programming, please
 refer to [toolchain_setup.md](toolchain_setup.md).
 
-You are now ready to generate the FPGA bitstream including the standard
-firmware, and program the flash on the connected USB device. This should be run
-as your regular non-root user, but the the programming is done (in the
-Makefile) with `sudo tillitis-iceprog` (so sudo is expected be set up).
+You are now ready to generate the FPGA bitstream (including building
+the standard firmware) and program it onto the flash memory of the USB
+stick. The following should be run as your regular non-root user, but
+the programming is currently done using `sudo` (so sudo is expected to
+be set up for your user; the Makefile runs `sudo tillitis-iceprog …`).
 
 ```
 $ git clone https://github.com/tillitis/tillitis-key1
@@ -42,22 +47,24 @@ $ cd tillitis-key1/hw/application_fpga
 $ make prog_flash
 ```
 
-After programming, when your device is connected to the host, it would boot the
-firmware. When boot has completed, the device will start flashing the LED
-white. This indicates that the device is ready to receive and measure an app.
+After programming, the Tillitis Key 1 USB stick can be connected to
+your computer (use the USB-C-to-A adapter if needed) and will boot the
+firmware. When boot has completed it will start flashing the LED
+white. This indicates that it is ready to receive and measure an app.
 
 # Device personalization
 
-To personalize the device, you need to modify the hex file that contains the
-Unique Device Secret (UDS). You should also update the Unique Device Identity
-(UDI). These hex files are located in `hw/application_fpga/data/`. Note that
-after modify the files in this directory, you need to rebuild and program the
-device again (as above).
+To personalize Tillitis Key 1, you need to modify the hex file that
+contains the Unique Device Secret (UDS). You should also update the
+Unique Device Identity (UDI). These hex files are located in
+`hw/application_fpga/data/`. Note that after modify the files in this
+directory, you need to rebuild and program the device again (as
+above).
 
-To make this easier there is a tool that can generate these files. The tool can
-be found in `hw/application_fpga/tools/tpt`. The tool allow you to supply a
-secret used as part of the UDS generation. The tool can be run interactively,
-or by suppling inputs on the command line:
+To make this easier there is a tool that can generate these files. The
+tool can be found in `hw/application_fpga/tools/tpt`. The tool allow
+you to supply a secret used as part of the UDS generation. The tool
+can be run interactively, or by suppling inputs on the command line:
 
 ```
 usage: tpt.py [-h] [-v] [--uss USS] [--vid VID] [--pid PID] [--rev REV] [--serial SERIAL]
