@@ -74,12 +74,12 @@ you to supply a secret used as part of the UDS generation. The tool
 can be run interactively, or by suppling inputs on the command line:
 
 ```
-usage: tpt.py [-h] [-v] [--uss USS] [--vid VID] [--pid PID] [--rev REV] [--serial SERIAL]
+usage: tpt.py [-h] [-v] [--ent ENT] [--vid VID] [--pid PID] [--rev REV] [--serial SERIAL]
 
 options:
   -h, --help       show this help message and exit
   -v, --verbose    Verbose operation
-  --uss USS        User supplied secret
+  --ent ENT        User supplied entropy
   --vid VID        Vendor id (0 - 65535)
   --pid PID        Product id (0 - 2555
   --rev REV        Revision number (0 - 15)
