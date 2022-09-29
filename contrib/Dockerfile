@@ -22,12 +22,15 @@ RUN apt-get -qq update -y \
                libeigen3-dev \
                libffi-dev \
                libftdi-dev \
+               libglib2.0-dev \
                libhidapi-dev \
+               libpixman-1-dev \
                libreadline-dev \
                lld \
                llvm \
                mercurial \
                nano \
+               ninja-build \
                pkg-config \
                python3 \
                python3-dev \
