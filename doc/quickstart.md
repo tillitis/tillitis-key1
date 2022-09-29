@@ -23,10 +23,12 @@ jig and close the hatch.
 The USB stick can remain in the jig during repeated development,
 programming and testing cycles. The USB stick should then be connected
 to the computer using the provided USB-C cable (use the USB-C-to-A
-adapter if needed). Note that connecting the USB stick to the computer
-is not required for programming it. For this purpose, the jig also has
-a cutout to allow touching where the touch sensor is located, next to
-the LED.
+adapter if needed). The jig also has a cutout to allow touching where
+the touch sensor is located (next to the LED). Note that connecting
+the USB stick to the computer is not required for programming it. Note
+also that with this setup, to reset the USB stick back to firmware
+mode after loading an app, you need to unplug both the USB cable to
+the stick and the one to the programmer.
 
 On Linux, `lsusb` should list the connected programmer as `cafe:4004
 Blinkinlabs ICE40 programmer`. If the USB stick is also connected it
