@@ -160,8 +160,6 @@ Available commands/reponses:
 #### `FW_{CMD,RSP}_RUN_APP`
 #### `FW_{CMD,RSP}_NAME_VERSION`
 #### `FW_{CMD,RSP}_UID`
-#### `FW_{CMD,RSP}_TRNG_DATA`
-#### `FW_{CMD,RSP}_TRNG_STATUS`
 
 #### `FW_{CMD,RSP}_VERIFY_DEVICE`
 
@@ -308,8 +306,8 @@ Assigned core prefixes:
 
 | *name*             | *fw* | *app       | *size* | *type*  | *content* | *description*                                                         |
 |--------------------|------|------------|--------|---------|-----------|-----------------------------------------------------------------------|
-| `TRNG_STATUS`      | r    | r          |        |         |           | Non-zero when an entropy word is available.                           |
-| `TRNG_ENTROPY`     | r    | r          | 4B     |         |           | Entropy word. Reading a word will clear status.                       |
+| `TRNG_STATUS`      | r    | r          |        |         |           | STATUS_READY_BIT is set when an entropy word is available.            |
+| `TRNG_ENTROPY`     | r    | r          | 4B     | u32     |           | Entropy word. Reading a word will clear status.                       |
 | `TIMER_CTRL`       | r/w  | r/w        |        |         |           | If bit 0 in TIMER_STATUS is set then writing here starts the timer.   |
 |                    |      |            |        |         |           | If bit 0 in TIMER_STATUS is unset then writing here stops the timer.  |
 | `TIMER_STATUS`     | r    | r          |        |         |           | If bit 0 is set, the timer is ready to start running.                 |
@@ -324,7 +322,7 @@ Assigned core prefixes:
 | `UART_RX_DATA`     | r    | r          | 1B     | u8      |           | Data to read. Only LSB contains data                                  |
 | `UART_TX_STATUS`   | r    | r          | 1B     | u8      |           | Non-zero when it's OK to write data                                   |
 | `UART_TX_DATA`     | w    | w          | 1B     | u8      |           | Data to send. Only LSB contains data                                  |
-| `TOUCH_STATUS`     | r/w  | r/w        |        |         |           | STATUS_EVENT_BIT set 1 when touched; write to it after                |
+| `TOUCH_STATUS`     | r/w  | r/w        |        |         |           | STATUS_EVENT_BIT is set when touched; write to it after               |
 | `UDA`              | r    |            | 16B    | u8[16]  |           | Unique Device Authentication key.                                     |
 | `UDI`              | r    |            | 8B     | u64     |           | Unique Device ID (UDI).                                               |
 | `QEMU_DEBUG`       | w    | w          |        | u8      |           | Debug console (only in QEMU)                                          |

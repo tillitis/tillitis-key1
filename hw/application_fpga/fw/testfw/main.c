@@ -21,6 +21,8 @@ volatile uint32_t *timer =           (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_T
 volatile uint32_t *timer_prescaler = (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_PRESCALER;
 volatile uint32_t *timer_status =    (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_STATUS;
 volatile uint32_t *timer_ctrl =      (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_CTRL;
+volatile uint32_t *trng_status =  (volatile uint32_t *)MTA1_MKDF_MMIO_TRNG_STATUS;
+volatile uint32_t *trng_entropy = (volatile uint32_t *)MTA1_MKDF_MMIO_TRNG_ENTROPY;
 // clang-format on
 
 // TODO Real UDA is 4 words (16 bytes)
@@ -231,6 +233,21 @@ int main()
 	} else {
 		test_puts("All tests passed.\r\n");
 	}
+
+	test_puts("\r\nHere are 256 bytes from the TRNG:\r\n");
+	for (int j = 0; j < 8; j++) {
+		for (int i = 0; i < 8; i++) {
+			while ((*trng_status &
+				(1 << MTA1_MKDF_MMIO_TRNG_STATUS_READY_BIT)) ==
+			       0) {
+			}
+			uint32_t rnd = *trng_entropy;
+			test_puthexn((uint8_t *)&rnd, 4);
+			test_puts(" ");
+		}
+		test_puts("\r\n");
+	}
+	test_puts("\r\n");
 
 	test_puts("Now echoing what you type...\r\n");
 	for (;;) {
