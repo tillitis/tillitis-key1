@@ -48,7 +48,7 @@ TOP_SRC = $(P)/rtl/application_fpga.v
 VERILATOR_TOP_SRC = $(P)/tb/application_fpga_vsim.v
 
 VERILOG_SRCS = \
-	$(P)/rtl/reset_gen.v \
+	$(P)/rtl/clk_reset_gen.v \
 	$(P)/rtl/ram.v \
 	$(P)/rtl/rom.v \
 	$(P)/core/picorv32/rtl/picorv32.v \

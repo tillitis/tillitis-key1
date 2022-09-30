@@ -90,9 +90,9 @@ module uart(
   // The default bit rate is based on target clock frequency
   // divided by the bit rate times in order to hit the
   // center of the bits. I.e.
-  // Clock: 12 MHz, 38400 bps
-  // Divisor = 12*10E6 / 38400 = 312
-  localparam DEFAULT_BIT_RATE  = 16'd312;
+  // Clock: 18 MHz, 38400 bps
+  // Divisor = 18*10E6 / 38400 = 468.75 ~ 469
+  localparam DEFAULT_BIT_RATE  = 16'd469;
   localparam DEFAULT_DATA_BITS = 4'h8;
   localparam DEFAULT_STOP_BITS = 2'h1;
 
