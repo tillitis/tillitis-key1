@@ -1,5 +1,16 @@
 # Release Notes
 
+## Untagged
+
+### User Supplied Secret - Breaking change!
+
+*Nota bene* From commit 99efb78ed8ba69799045cff6c42c4a71bffdb703 the
+computed CDI secret is also taking the User Supplied Secret into
+account *even if the USS is not supplied*! This means if you start
+using firmware from this commit and onwards your CDI and with it the
+private key of the signerapp will change even if you haven't changed
+the app in any way.
+
 ## engineering-release-1
 
 ### Hardware
