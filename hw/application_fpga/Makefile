@@ -42,13 +42,16 @@ ASFLAGS = -target riscv32-unknown-none-elf -march=rv32imc -mabi=ilp32 -mno-relax
 ICE40_SIM_CELLS = $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 
-# FPGA source files.
-TOP_SRC = $(P)/rtl/application_fpga.v
+# FPGA specific Verilog source files.
+FPGA_SRC = $(P)/rtl/application_fpga.v \
+	   $(P)/rtl/clk_reset_gen.v
 
-VERILATOR_TOP_SRC = $(P)/tb/application_fpga_vsim.v
+# Verilator simulation  specific Verilog source files.
+VERILATOR_FPGA_SRC = $(P)/tb/application_fpga_vsim.v \
+		     $(P)/tb/reset_gen_vsim.v
 
+# Common verilog source files.
 VERILOG_SRCS = \
-	$(P)/rtl/clk_reset_gen.v \
 	$(P)/rtl/ram.v \
 	$(P)/rtl/rom.v \
 	$(P)/core/picorv32/rtl/picorv32.v \
@@ -137,7 +140,7 @@ LINT=verilator
 LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME \
 	--timescale 1ns/1ns -DNO_ICE40_DEFAULT_ASSIGNMENTS
 
-lint: $(TOP_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
+lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
 	$(LINT) $(LINT_FLAGS) \
 	-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 	-DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
@@ -150,7 +153,7 @@ lint: $(TOP_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
 #-------------------------------------------------------------------
 # Build Verilator compiled simulation for the design.
 #-------------------------------------------------------------------
-verilator: $(VERILATOR_TOP_SRC) $(VERILOG_SRCS) firmware.hex $(ICE40_SIM_CELLS) \
+verilator: $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS) firmware.hex $(ICE40_SIM_CELLS) \
 		$(P)/tb/application_fpga_verilator.cc
 	verilator --timescale 1ns/1ns -DNO_ICE40_DEFAULT_ASSIGNMENTS \
                   -Wall -Wno-COMBDLY -Wno-lint \
@@ -168,7 +171,7 @@ verilator: $(VERILATOR_TOP_SRC) $(VERILOG_SRCS) firmware.hex $(ICE40_SIM_CELLS) 
 # Main FPGA build flow.
 # Synthesis. Place & Route. Bitstream generation.
 #-------------------------------------------------------------------
-synth.json: $(TOP_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/udi.hex
+synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/udi.hex
 	$(YOSYS_PATH)yosys -v3 -l synth.log -DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 		-DFIRMWARE_HEX=\"$(P)/bram_fw.hex\" \
 		-DUDS_HEX=\"$(P)/data/uds.hex\" \
