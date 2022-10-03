@@ -83,7 +83,7 @@ int main()
 
 	for (;;) {
 		// blocking; fw flashing white while waiting for cmd
-		in = readbyte_ledflash(LED_RED | LED_BLUE | LED_GREEN, 500000);
+		in = readbyte_ledflash(LED_RED | LED_BLUE | LED_GREEN, 800000);
 
 		if (parseframe(in, &hdr) == -1) {
 			puts("Couldn't parse header\n");
