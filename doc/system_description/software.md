@@ -83,28 +83,30 @@ The purpose of the firmware is to bootstrap an application. The host
 will send a raw binary targeted to be loaded at `0x4001_0000` in the
 device.
 
-  1. The host sends sets the size of the app by using the
+  1. The host sends the User Supplied Secret (USS) by using the
      `FW_CMD_LOAD_APP_SIZE` command.
-  2. The firmware executes `FW_CMD_LOAD_APP_SIZE` command, which
+  2. The host sends the size of the app by using the
+     `FW_CMD_LOAD_APP_SIZE` command.
+  3. The firmware executes `FW_CMD_LOAD_APP_SIZE` command, which
      stores the application size into `APP_SIZE`, and sets `APP_ADDR`
      to zero. A `FW_RSP_LOAD_APP_SIZE` reponse is sent back to the
      host, with the status of the action (ok/fail).
-  3. If the the host receive a sucessful command, it will send
+  4. If the the host receive a sucessful command, it will send
      multiple `FW_CMD_LOAD_APP_DATA` commands, containing the full
      application.
-  4. For each received `FW_CMD_LOAD_APP_DATA` command the firmware
+  5. For each received `FW_CMD_LOAD_APP_DATA` command the firmware
      places the data into `0x4001_0000` and upwards. The firmware
      response with `FW_RSP_LOAD_APP_DATA` response to the host for
      each received block.
-  5. When the final block of the application image is received, we
+  6. When the final block of the application image is received, we
      measure the application by computing a BLAKE2s digest over the
      entire application,
 
-     The Compound Device Identifier is computed by using the `UDS` and
-     the measurement of the application, and placed in the `CDI`
-     register. Then `0x4001_0000` is written to `APP_ADDR`. The final
-     `FW_RSP_LOAD_APP_DATA` response is sent to the host, completing
-     the loading.
+     The Compound Device Identifier is computed by using the `UDS`,
+     the measurement of the application, and the `USS`, and placed in
+     the `CDI` register. Then `0x4001_0000` is written to `APP_ADDR`.
+     The final `FW_RSP_LOAD_APP_DATA` response is sent to the host,
+     completing the loading.
 
 NOTE: The firmware uses SPRAM for data and stack. We need to make sure
 that the application image does not overwrite the firmware's running
@@ -113,6 +115,16 @@ stack/data at reset, as the firmware does. Further; the firmware need
 to check application image is sane. The shared firmware data area
 (e.g. `.data` and the stack must be cleared prior launching the
 application.
+
+### Loading the User Supplied Secret (USS)
+
+The host program may send `FW_CMD_LOAD_USS` and `FW_CMD_LOAD_APP_SIZE`
+in any order. But it *should* always send both `FW_CMD_LOAD_USS` and
+`FW_CMD_LOAD_APP_SIZE` before sending the multiple
+`FW_CMD_LOAD_APP_DATA`. If it does not, the USS will not be
+predictable because somebody could have send `FW_CMD_LOAD_USS` before,
+and the last `FW_CMD_LOAD_APP_DATA` (on whichever iteration) will
+cause the currently loaded USS to be used for calculating CDI.
 
 ### Starting an application
 
@@ -142,6 +154,7 @@ Procedure:
 
 Available commands/reponses:
 
+#### `FW_{CMD,RSP}_LOAD_USS`
 #### `FW_{CMD,RSP}_LOAD_APP_SIZE`
 #### `FW_{CMD,RSP}_LOAD_APP_DATA`
 #### `FW_{CMD,RSP}_RUN_APP`
@@ -155,7 +168,7 @@ Available commands/reponses:
 Verification that the device is an authentic Mullvad
 device. Implemented using challenge/response.
 
-#### `FW_{CMD,RSP}_GET_APPLICATION_DIGEST`
+#### `FW_{CMD,RSP}_GET_APP_DIGEST`
 
 This command returns the un-keyed hash digest for the application that
 was loaded. It allows the host to verify that the application was
@@ -174,7 +187,7 @@ host ->
 host <-
   u8 RSP[1 + 32]
 
-  RSP[0].len  = 33   // command frame format
+  RSP[0].len  = 32   // command frame format
   RSP[1]      = 0x02 // FW_RSP_NAME_VERSION
 
   RSP[2..6]   = NAME0
@@ -188,9 +201,29 @@ host <-
 
 ```
 host ->
+  u8 CMD[1 + 128];
+
+  CMD[0].len = 128  // command frame format
+  CMD[1]     = 0x0a // FW_CMD_LOAD_USS
+
+  CMD[2..6]  = User Supplied Secret
+
+  CMD[6..]   = 0
+
+host <-
+  u8 RSP[1 + 4];
+
+  RSP[0].len = 4    // command frame format
+  RSP[1]     = 0x0b // FW_RSP_LOAD_USS
+
+  RSP[2]     = STATUS
+
+  RSP[3..]   = 0
+
+host ->
   u8 CMD[1 + 32];
 
-  CMD[0].len = 4    // command frame format
+  CMD[0].len = 32   // command frame format
   CMD[1]     = 0x03 // FW_CMD_LOAD_APP_SIZE
 
   CMD[2..6]  = APP_SIZE
@@ -200,7 +233,7 @@ host ->
 host <-
   u8 RSP[1 + 4];
 
-  RSP[0].len = 5    // command frame format
+  RSP[0].len = 4    // command frame format
   RSP[1]     = 0x04 // FW_RSP_LOAD_APP_SIZE
 
   RSP[2]     = STATUS
