@@ -18,13 +18,16 @@ firmware and the loaded app. All types are little-endian.
 
 ## Constraints
 
-The application FPGA is a Lattice UP5K, with the following
+The application FPGA is a Lattice ICE40 UP5K, with the following
 specifications:
 
-  * 32KB x 4 SPRAM => 128KB for Application
-  * 4Kb x 30 EBR => 120Kb, PicoRV32 uses ~4 EBR internally => 13KB for
-    Firmware. We should probably aim for less; 8KB should be the
-    target.
+  * 30 EBR[^1] x 4 Kbit => 120 Kbit. PicoRV32 uses ~4 EBRs internally
+    => 13 KB for Firmware. We should probably aim for less; 8 KB
+    should be the target.
+  * 4 SPRAM x 32 KB => 128 KB RAM for application/software
+
+[^1]: Embedded Block RAM residing in the FPGA, can configured as RAM
+    or ROM.
 
 ## Introduction
 
@@ -41,8 +44,9 @@ which is outlined below. E.g. UDS isn't readable, and the `APP_{ADDR,
 SIZE}` are not writable for the application.
 
 The software on the Tillitis Key communicates to the host via the
-`{RX,TX}_FIFO` registers, using the framing protocol described in
-[Framing Protocol](../framing_protocol/framing_protocol.md).
+`UART_{RX,TX}_{STATUS,DATA}` registers, using the framing protocol
+described in [Framing
+Protocol](../framing_protocol/framing_protocol.md).
 
 The firmware defines a protocol (command/response interface) on top of
 the framing layer, which is used to bootstrap the application onto the
@@ -57,8 +61,8 @@ between the host and the device.
 
 ## Firmware
 
-The device has 128 kB RAM. The current firmware loads the app at the
-upper 64 kB. The lower 64 kB is currently set up as stack for the app.
+The device has 128 KB RAM. The current firmware loads the app at the
+upper 64 KB. The lower 64 KB is currently set up as stack for the app.
 
 The firmware is part of FPGA bitstream (ROM), and is loaded at
 `0x0000_0000`.
@@ -70,7 +74,7 @@ The PicoRV32 starts executing at `0x0000_0000`. Our firmware starts at
 `0x4000_0000` and upwards. A stack is also initialized, starting at
 0x4000_fff0 and downwards. When the initialization is finished, the
 firmware waits for incoming commands from the host, by busy-polling
-the `RX_FIFO_{AVAILABLE,DATA}`registers. When a complete command is
+the `UART_RX_{STATUS,DATA}` registers. When a complete command is
 read, the firmware executes the command.
 
 ### Loading an application
@@ -296,7 +300,7 @@ Examples:
 | `UDS_NAME0`        | r    | invisible  |        |         |           | ID of core                                             |
 | `UDS_NAME1`        | r    | invisible  |        |         |           | ID of core                                             |
 | `UDS_VERSION`      | r    | invisible  |        |         |           | Version of core                                        |
-| `UDS_START`        | r[^1]| invisible  | 4B     | u8[32]  |           | First word of Unique Device Secret key.                |
+| `UDS_START`        | r[^2]| invisible  | 4B     | u8[32]  |           | First word of Unique Device Secret key.                |
 | `UDS_LAST`         |      | invisible  |        |         |           | The last word of the UDS                               |
 | `UART_NAME0`       | r    | r          |        |         |           | ID of core                                             |
 | `UART_NAME1`       | r    | r          |        |         |           | ID of core                                             |
@@ -327,4 +331,4 @@ Examples:
 | `CDI_START`        | r/w  | r          | 32B    | u8[32]  |           | Compound Device Identifier (CDI). UDS+measurement...   |
 | `CDI_LAST`         |      | r          |        |         |           | Last word of CDI                                       |
 
-[^1]: The UDS can only be read *once* per power-cycle.
+[^2]: The UDS can only be read *once* per power-cycle.

@@ -149,13 +149,13 @@ The Application FPGA hardware should provide the following:
 
 2. Communication
     - Rx-FIFO with status (data_available)
-      - 8 bit data in RX_FIFO_DATA address
-      - Byte received status bit in RX_FIFO_AVAILABLE address
+      - 8 bit data in UART_RX_DATA address
+      - Byte received status bit in UART_RX_STATUS address
       - Readable by FW and application
 
     - Tx-FIFO with capacity (fifo_ready)
-      - 8 bit data in TX_FIFO_DATA address
-      - Ready to store byte status bit in TX_FIFO_READY address
+      - 8 bit data in UART_RX_DATA address
+      - Ready to store byte status bit in UART_TX_STATUS address
       - Status readable by FW and application
       - Data writable by FW and application
 
