@@ -23,9 +23,11 @@ static volatile uint32_t *cdi =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_
 static volatile uint32_t *app_addr =   (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_APP_ADDR;
 static volatile uint32_t *app_size =   (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_APP_SIZE;
 
-#define LED_RED (1 << MTA1_MKDF_MMIO_MTA1_LED_R_BIT)
+#define LED_RED   (1 << MTA1_MKDF_MMIO_MTA1_LED_R_BIT)
 #define LED_GREEN (1 << MTA1_MKDF_MMIO_MTA1_LED_G_BIT)
-#define LED_BLUE (1 << MTA1_MKDF_MMIO_MTA1_LED_B_BIT)
+#define LED_BLUE  (1 << MTA1_MKDF_MMIO_MTA1_LED_B_BIT)
+#define LED_WHITE (LED_RED | LED_GREEN | LED_BLUE)
+// clang-format on
 
 static void print_hw_version(uint32_t name0, uint32_t name1, uint32_t ver)
 {
@@ -46,7 +48,6 @@ static void print_hw_version(uint32_t name0, uint32_t name1, uint32_t ver)
 	putinthex(ver);
 	lf();
 }
-// clang-format on
 
 static void print_digest(uint8_t *md)
 {
@@ -69,21 +70,15 @@ int main()
 	uint8_t cmd[CMDLEN_MAXBYTES];
 	uint8_t rsp[CMDLEN_MAXBYTES];
 	uint8_t *loadaddr = (uint8_t *)APP_RAM_ADDR;
-	int left = 0;	// Bytes left to read
-	int nbytes = 0; // Bytes to write to memory
-	uint8_t uss[32];
-	uint32_t local_app_size = 0;
-	uint8_t in;
-	uint8_t digest[32];
+	int left = 0; // Bytes left to receive
+	uint8_t uss[32] = {0};
+	uint8_t digest[32] = {0};
 
 	print_hw_version(local_name0, local_name1, local_ver);
 
-	// If host does not load USS, we use an all zero USS
-	memset(uss, 0, 32);
-
 	for (;;) {
 		// blocking; fw flashing white while waiting for cmd
-		in = readbyte_ledflash(LED_RED | LED_BLUE | LED_GREEN, 800000);
+		uint8_t in = readbyte_ledflash(LED_WHITE, 800000);
 
 		if (parseframe(in, &hdr) == -1) {
 			puts("Couldn't parse header\n");
@@ -106,7 +101,7 @@ int main()
 		// Min length is 1 byte so this should always be here
 		switch (cmd[0]) {
 		case FW_CMD_NAME_VERSION:
-			puts("request: name-version\n");
+			puts("cmd: name-version\n");
 
 			if (hdr.len != 1) {
 				// Bad length - give them an empty response
@@ -122,10 +117,10 @@ int main()
 			break;
 
 		case FW_CMD_LOAD_USS:
-			puts("request: load-uss\n");
+			puts("cmd: load-uss\n");
 
-			if (hdr.len != 128 || *app_size != 0) {
-				// Bad cmd length, or app_size already set
+			if (hdr.len != 128) {
+				// Bad cmd length
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_LOAD_USS, rsp);
 				break;
@@ -138,7 +133,7 @@ int main()
 			break;
 
 		case FW_CMD_LOAD_APP_SIZE:
-			puts("request: load-app-size\n");
+			puts("cmd: load-app-size\n");
 
 			if (hdr.len != 32) {
 				// Bad length
@@ -148,8 +143,9 @@ int main()
 			}
 
 			// cmd[1..4] contains the size.
-			local_app_size = cmd[1] + (cmd[2] << 8) +
-					 (cmd[3] << 16) + (cmd[4] << 24);
+			uint32_t local_app_size = cmd[1] + (cmd[2] << 8) +
+						  (cmd[3] << 16) +
+						  (cmd[4] << 24);
 
 			puts("app size: ");
 			putinthex(local_app_size);
@@ -163,6 +159,9 @@ int main()
 
 			*app_size = local_app_size;
 			*app_addr = 0;
+			// Clear digest as GET_APP_DIGEST returns it even if it
+			// has not been calculated
+			memset(digest, 0, 32);
 
 			// Reset where to start loading the program
 			loadaddr = (uint8_t *)APP_RAM_ADDR;
@@ -173,16 +172,18 @@ int main()
 			break;
 
 		case FW_CMD_LOAD_APP_DATA:
-			puts("request: load-app-data\n");
+			puts("cmd: load-app-data\n");
 
-			if (hdr.len != 128 || *app_size == 0) {
-				// Bad length of this command or bad app size -
-				// they need to call FW_CMD_LOAD_APP_SIZE first
+			if (hdr.len != 128 || *app_size == 0 ||
+			    *app_addr != 0) {
+				// Bad length, or app_size not yet set, or
+				// app_addr already set (fully loaded!)
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
 				break;
 			}
 
+			int nbytes;
 			if (left > 127) {
 				nbytes = 127;
 			} else {
@@ -224,11 +225,11 @@ int main()
 			break;
 
 		case FW_CMD_RUN_APP:
-			puts("request: run-app\n");
+			puts("cmd: run-app\n");
 
 			if (hdr.len != 1 || *app_size == 0 || *app_addr == 0) {
-				// Bad cmd length, or app_size and app_addr are
-				// not both set
+				// Bad cmd length, or app_size or app_addr are
+				// not yet set
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_RUN_APP, rsp);
 				break;
@@ -262,14 +263,14 @@ int main()
 			break; // This is never reached!
 
 		case FW_CMD_GET_APP_DIGEST:
-			puts("request: get-app-digest\n");
+			puts("cmd: get-app-digest\n");
 
 			memcpy(rsp, &digest, 32);
 			fwreply(hdr, FW_RSP_GET_APP_DIGEST, rsp);
 			break;
 
 		default:
-			puts("Received unknown firmware command: 0x");
+			puts("Got unknown firmware cmd: 0x");
 			puthex(cmd[0]);
 			lf();
 		}
