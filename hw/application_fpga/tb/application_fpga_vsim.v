@@ -222,9 +222,6 @@ module application_fpga(
 
 
   rom rom_inst(
-               .clk(clk),
-               .reset_n(reset_n),
-
                .cs(rom_cs),
                .address(rom_address),
                .read_data(rom_read_data),
