@@ -72,7 +72,6 @@ module timer(
   reg           tmp_ready;
 
   wire          core_ready;
-  wire [31 : 0] core_curr_prescaler;
   wire [31 : 0] core_curr_timer;
 
 
@@ -93,7 +92,6 @@ module timer(
                   .timer_value(timer_reg),
                   .start(start_reg),
                   .stop(stop_reg),
-		  .curr_prescaler(core_curr_prescaler),
 		  .curr_timer(core_curr_timer),
                   .ready(core_ready)
                  );
@@ -178,7 +176,7 @@ module timer(
 	  end
 
 	  if (address == ADDR_PRESCALER) begin
-	    tmp_read_data = core_curr_prescaler;
+	    tmp_read_data = prescaler_reg;
 	  end
 
 	  if (address == ADDR_TIMER) begin

@@ -22,7 +22,6 @@ module timer_core(
                   input wire           start,
                   input wire           stop,
 
-                  output wire [31 : 0] curr_prescaler,
                   output wire [31 : 0] curr_timer,
 
                   output wire          ready
@@ -65,9 +64,8 @@ module timer_core(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign curr_prescaler = prescaler_reg;
-  assign curr_timer     = timer_reg;
-  assign ready  = ready_reg;
+  assign curr_timer = timer_reg;
+  assign ready      = ready_reg;
 
 
   //----------------------------------------------------------------
