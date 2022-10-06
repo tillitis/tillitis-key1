@@ -78,7 +78,7 @@ module mta1(
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
   reg [31 : 0] cdi_mem [0 : 7];
-  reg [31 : 0] cdi_mem_we;
+  reg          cdi_mem_we;
 
   reg [31 : 0] udi_mem [0 : 1];
   initial $readmemh(`UDI_HEX, udi_mem);
@@ -130,6 +130,7 @@ module mta1(
   //----------------------------------------------------------------
   // Module instance.
   //----------------------------------------------------------------
+  /* verilator lint_off PINMISSING */
   SB_RGBA_DRV #(
                 .CURRENT_MODE("0b1"),       // half-current mode
                 .RGB0_CURRENT("0b000001"),  // 2 mA
@@ -145,6 +146,7 @@ module mta1(
                             .RGB2PWM(led_reg[LED_B_BIT]),
                             .CURREN(1'b1)
     );
+  /* verilator lint_on PINMISSING */
 
 
   //----------------------------------------------------------------

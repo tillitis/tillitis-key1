@@ -146,7 +146,7 @@ lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
 	-DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
 	-DUDS_HEX=\"$(P)/data/uds.hex\" \
 	-DUDI_HEX=\"$(P)/data/udi.hex\" \
-	--top-module application_fpga $^
+	--top-module application_fpga $^ &> lint_issues.txt
 .PHONY: lint
 
 
@@ -257,6 +257,7 @@ clean: clean_fw
 	rm -f synth.{log,v,json} route.v application_fpga.{asc,bin,vcd} application_fpga_testfw.bin
 	rm -f tb_application_fpga.vvp synth_tb.vvp route_tb.vvp
 	rm -f *.vcd
+	rm -f lint_issues.txt
 	rm -rf verilated
 	rm -f tools/tpt/*.hex
 	rm -rf tools/tpt/__pycache__

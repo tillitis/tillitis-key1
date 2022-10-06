@@ -46,35 +46,37 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
   //----------------------------------------------------------------
   // Core instantiations.
   //----------------------------------------------------------------
+  /* verilator lint_off PINMISSING */
+
   // Use the FPGA internal High Frequency OSCillator as clock source.
   // 00: 48MHz, 01: 24MHz, 10: 12MHz, 11: 6MHz
-  /* verilator lint_off PINMISSING */
   SB_HFOSC #(.CLKHF_DIV("0b10")
-	     ) u_hfosc (.CLKHFPU(1'b1),.CLKHFEN(1'b1),.CLKHF(hfosc_clk));
-  /* verilator lint_on PINMISSING */
+	     ) hfosc_inst (.CLKHFPU(1'b1),.CLKHFEN(1'b1),.CLKHF(hfosc_clk));
 
 
-  // PLL to generate a new clock frequency based on the HFOSC clock.
-  /* verilator lint_off PINMISSING */
+  // Use a PLL to generate a new clock frequency based on the HFOSC clock.
   SB_PLL40_CORE #(
 		  .FEEDBACK_PATH("SIMPLE"),
 		  .DIVR(4'b0000),	// DIVR =  0
 		  .DIVF(7'b0101111),	// DIVF = 47
 		  .DIVQ(3'b101),	// DIVQ =  5
 		  .FILTER_RANGE(3'b001)	// FILTER_RANGE = 1
-		  ) uut (
+		  ) pll_inst (
 			 .RESETB(1'b1),
 			 .BYPASS(1'b0),
 			 .REFERENCECLK(hfosc_clk),
 			 .PLLOUTCORE(pll_clk)
 			 );
-  /* verilator lint_on PINMISSING */
 
-  // Use a global buffer to distribute the clock.
-  SB_GB SB_GB_i (
+
+  // Use a Global Buffer to distribute the clock.
+  SB_GB gb_inst (
 		 .USER_SIGNAL_TO_GLOBAL_BUFFER (pll_clk),
 		 .GLOBAL_BUFFER_OUTPUT (clk)
 		 );
+
+  /* verilator lint_on PINMISSING */
+
 
   //----------------------------------------------------------------
   // reg_update.

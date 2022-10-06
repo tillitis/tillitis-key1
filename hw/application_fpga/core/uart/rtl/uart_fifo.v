@@ -57,12 +57,10 @@ module uart_fifo(
 
   reg [7: 0]   in_ptr_reg;
   reg [7: 0]   in_ptr_new;
-  reg          in_ptr_inc;
   reg          in_ptr_we;
 
   reg [7: 0]   out_ptr_reg;
   reg [7: 0]   out_ptr_new;
-  reg          out_ptr_inc;
   reg          out_ptr_we;
 
   reg [7: 0]   byte_ctr_reg;

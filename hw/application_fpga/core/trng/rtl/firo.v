@@ -26,23 +26,26 @@ module firo(
   // Registers and wires.
   //----------------------------------------------------------------
   reg entropy_reg;
+
+  /* verilator lint_off UNOPTFLAT */
   wire [10 : 0] f;
+  /* verilator lint_on UNOPTFLAT */
 
 
   //---------------------------------------------------------------
   // Combinational loop inverters.
   //---------------------------------------------------------------
   /* verilator lint_off PINMISSING */
-  (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv1  (.I0(f[0]), .O(f[1]));
-  (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv2  (.I0(f[1]), .O(f[2]));
-  (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv3  (.I0(f[2]), .O(f[3]));
-  (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv4  (.I0(f[3]), .O(f[4]));
-  (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv5  (.I0(f[4]), .O(f[5]));
-  (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv6  (.I0(f[5]), .O(f[6]));
-  (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv7  (.I0(f[6]), .O(f[7]));
-  (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv8  (.I0(f[7]), .O(f[8]));
-  (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv9  (.I0(f[8]), .O(f[9]));
-  (* keep *) SB_LUT4 #(.LUT_INIT(1'b1)) osc_inv10 (.I0(f[9]), .O(f[10]));
+  (* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv1  (.I0(f[0]), .O(f[1]));
+  (* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv2  (.I0(f[1]), .O(f[2]));
+  (* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv3  (.I0(f[2]), .O(f[3]));
+  (* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv4  (.I0(f[3]), .O(f[4]));
+  (* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv5  (.I0(f[4]), .O(f[5]));
+  (* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv6  (.I0(f[5]), .O(f[6]));
+  (* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv7  (.I0(f[6]), .O(f[7]));
+  (* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv8  (.I0(f[7]), .O(f[8]));
+  (* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv9  (.I0(f[8]), .O(f[9]));
+  (* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv10 (.I0(f[9]), .O(f[10]));
   /* verilator lint_on PINMISSING */
 
 

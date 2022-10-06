@@ -58,7 +58,9 @@ module uart(
             input wire           cs,
             input wire           we,
             input wire [7 : 0]   address,
+  /* verilator lint_off UNUSED */
             input wire [31 : 0]  write_data,
+  /* verilator lint_on UNUSED */
             output wire [31 : 0] read_data,
             output wire          ready
            );

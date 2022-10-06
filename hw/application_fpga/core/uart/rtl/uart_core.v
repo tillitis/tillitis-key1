@@ -17,7 +17,7 @@
 //
 // Author: Joachim Strombergson
 // Copyright (c) 2014, Secworks Sweden AB
-// 
+//
 // SPDX-License-Identifier: BSD-2-Clause
 // Redistribution and use in source and binary forms, with or
 // without modification, are permitted provided that the following
@@ -96,8 +96,8 @@ module uart_core(
   reg [7 : 0]  rxd_byte_reg;
   reg          rxd_byte_we;
 
-  reg [4 : 0]  rxd_bit_ctr_reg;
-  reg [4 : 0]  rxd_bit_ctr_new;
+  reg [3 : 0]  rxd_bit_ctr_reg;
+  reg [3 : 0]  rxd_bit_ctr_new;
   reg          rxd_bit_ctr_we;
   reg          rxd_bit_ctr_rst;
   reg          rxd_bit_ctr_inc;
@@ -124,8 +124,8 @@ module uart_core(
   reg [7 : 0]  txd_byte_new;
   reg          txd_byte_we;
 
-  reg [4 : 0]  txd_bit_ctr_reg;
-  reg [4 : 0]  txd_bit_ctr_new;
+  reg [3 : 0]  txd_bit_ctr_reg;
+  reg [3 : 0]  txd_bit_ctr_new;
   reg          txd_bit_ctr_we;
   reg          txd_bit_ctr_rst;
   reg          txd_bit_ctr_inc;
@@ -175,14 +175,14 @@ module uart_core(
         rxd0_reg            <= 1'b0;
         rxd_reg             <= 1'b0;
         rxd_byte_reg        <= 8'h0;
-        rxd_bit_ctr_reg     <= 5'h0;
+        rxd_bit_ctr_reg     <= 4'h0;
         rxd_bitrate_ctr_reg <= 16'h0;
         rxd_syn_reg         <= 0;
         erx_ctrl_reg        <= ERX_IDLE;
 
         txd_reg             <= 1'b1;
         txd_byte_reg        <= 8'h0;
-        txd_bit_ctr_reg     <= 5'h0;
+        txd_bit_ctr_reg     <= 4'h0;
         txd_bitrate_ctr_reg <= 16'h0;
         txd_ready_reg       <= 1'b1;
         etx_ctrl_reg        <= ETX_IDLE;
@@ -247,11 +247,11 @@ module uart_core(
   //----------------------------------------------------------------
   always @*
     begin: rxd_bit_ctr
-      rxd_bit_ctr_new = 5'h0;
+      rxd_bit_ctr_new = 4'h0;
       rxd_bit_ctr_we  = 1'b0;
 
       if (rxd_bit_ctr_rst) begin
-        rxd_bit_ctr_new = 5'h0;
+        rxd_bit_ctr_new = 4'h0;
         rxd_bit_ctr_we  = 1'b1;
       end
 
@@ -294,11 +294,11 @@ module uart_core(
   //----------------------------------------------------------------
   always @*
     begin: txd_bit_ctr
-      txd_bit_ctr_new = 5'h0;
+      txd_bit_ctr_new = 4'h0;
       txd_bit_ctr_we  = 1'h0;
 
       if (txd_bit_ctr_rst) begin
-        txd_bit_ctr_new = 5'h0;
+        txd_bit_ctr_new = 4'h0;
         txd_bit_ctr_we  = 1'h1;
       end
 
@@ -391,7 +391,7 @@ module uart_core(
             rxd_byte_we         = 1;
             rxd_bit_ctr_inc     = 1;
             rxd_bitrate_ctr_rst = 1;
-            if (rxd_bit_ctr_reg == data_bits - 1) begin
+            if (rxd_bit_ctr_reg == (data_bits - 1)) begin
               erx_ctrl_new = ERX_STOP;
               erx_ctrl_we  = 1;
             end
@@ -501,7 +501,7 @@ module uart_core(
             end
 
             else begin
-              txd_new         = txd_byte_reg[txd_bit_ctr_reg];
+              txd_new         = txd_byte_reg[txd_bit_ctr_reg[2 : 0]];
               txd_we          = 1;
               txd_bit_ctr_inc = 1;
             end

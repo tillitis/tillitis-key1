@@ -17,7 +17,7 @@ module uds(
            input wire           clk,
            input wire           reset_n,
 
-	   output wire          fw_app_mode,
+	   input wire           fw_app_mode,
 
            input wire           cs,
            input wire  [7 : 0]  address,

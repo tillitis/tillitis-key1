@@ -366,29 +366,29 @@ module application_fpga(
 
       trng_cs             = 1'h0;
       trng_we             = |cpu_wstrb;
-      trng_address        = cpu_addr[10 : 2];
+      trng_address        = cpu_addr[9 : 2];
       trng_write_data     = cpu_wdata;
 
       timer_cs            = 1'h0;
       timer_we            = |cpu_wstrb;
-      timer_address       = cpu_addr[10 : 2];
+      timer_address       = cpu_addr[9 : 2];
       timer_write_data    = cpu_wdata;
 
       uds_cs              = 1'h0;
-      uds_address         = cpu_addr[10 : 2];
+      uds_address         = cpu_addr[9 : 2];
 
       uart_cs             = 1'h0;
       uart_we             = |cpu_wstrb;
-      uart_address        = cpu_addr[10 : 2];
+      uart_address        = cpu_addr[9 : 2];
       uart_write_data     = cpu_wdata;
 
       touch_sense_cs      = 1'h0;
       touch_sense_we      = |cpu_wstrb;
-      touch_sense_address = cpu_addr[10 : 2];
+      touch_sense_address = cpu_addr[9 : 2];
 
       mta1_cs             = 1'h0;
       mta1_we             = |cpu_wstrb;
-      mta1_address        = cpu_addr[10 : 2];
+      mta1_address        = cpu_addr[9 : 2];
       mta1_write_data     = cpu_wdata;
 
       if (cpu_valid && !muxed_ready_reg) begin

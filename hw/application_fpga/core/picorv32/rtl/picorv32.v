@@ -178,8 +178,9 @@ module picorv32 #(
 
 	reg [31:0] next_insn_opcode;
 	reg [31:0] dbg_insn_opcode;
-	reg [31:0] dbg_insn_addr;
 
+  /* verilator lint_off UNUSED */
+	reg [31:0] dbg_insn_addr;
 	wire dbg_mem_valid = mem_valid;
 	wire dbg_mem_instr = mem_instr;
 	wire dbg_mem_ready = mem_ready;
@@ -187,6 +188,7 @@ module picorv32 #(
 	wire [31:0] dbg_mem_wdata = mem_wdata;
 	wire [ 3:0] dbg_mem_wstrb = mem_wstrb;
 	wire [31:0] dbg_mem_rdata = mem_rdata;
+  /* verilator lint_on UNUSED */
 
 	assign pcpi_rs1 = reg_op1;
 	assign pcpi_rs2 = reg_op2;
@@ -372,7 +374,6 @@ module picorv32 #(
 	wire mem_la_use_prefetched_high_word = COMPRESSED_ISA && mem_la_firstword && prefetched_high_word && !clear_prefetched_high_word;
 	assign mem_xfer = (mem_valid && mem_ready) || (mem_la_use_prefetched_high_word && mem_do_rinst);
 
-	wire mem_busy = |{mem_do_prefetch, mem_do_rinst, mem_do_rdata, mem_do_wdata};
 	wire mem_done = resetn && ((mem_xfer && |mem_state && (mem_do_rinst || mem_do_rdata || mem_do_wdata)) || (&mem_state && mem_do_rinst)) &&
 			(!mem_la_firstword || (~&mem_rdata_latched[1:0] && mem_xfer));
 
@@ -687,6 +688,8 @@ module picorv32 #(
 	assign is_rdcycle_rdcycleh_rdinstr_rdinstrh = |{instr_rdcycle, instr_rdcycleh, instr_rdinstr, instr_rdinstrh};
 
 	reg [63:0] new_ascii_instr;
+
+  /* verilator lint_off UNUSED */
 	`FORMAL_KEEP reg [63:0] dbg_ascii_instr;
 	`FORMAL_KEEP reg [31:0] dbg_insn_imm;
 	`FORMAL_KEEP reg [4:0] dbg_insn_rs1;
@@ -696,6 +699,7 @@ module picorv32 #(
 	`FORMAL_KEEP reg [31:0] dbg_rs2val;
 	`FORMAL_KEEP reg dbg_rs1val_valid;
 	`FORMAL_KEEP reg dbg_rs2val_valid;
+  /* verilator lint_on UNUSED */
 
 	always @* begin
 		new_ascii_instr = " ";
@@ -764,7 +768,10 @@ module picorv32 #(
 	reg dbg_next;
 
 	wire launch_next_insn;
+
+  /* verilator lint_off UNUSED */
 	reg dbg_valid_insn;
+  /* verilator lint_on UNUSED */
 
 	reg [63:0] cached_ascii_instr;
 	reg [31:0] cached_insn_imm;
@@ -1176,7 +1183,9 @@ module picorv32 #(
 	reg [7:0] cpu_state;
 	reg [1:0] irq_state;
 
+  /* verilator lint_off UNUSED */
 	`FORMAL_KEEP reg [127:0] dbg_ascii_state;
+  /* verilator lint_on UNUSED */
 
 	always @* begin
 		dbg_ascii_state = "";
@@ -2318,7 +2327,9 @@ module picorv32_pcpi_fast_mul #(
 	input clk, resetn,
 
 	input             pcpi_valid,
+  /* verilator lint_off UNUSED */
 	input      [31:0] pcpi_insn,
+  /* verilator lint_on UNUSED */
 	input      [31:0] pcpi_rs1,
 	input      [31:0] pcpi_rs2,
 	output            pcpi_wr,
@@ -2416,7 +2427,9 @@ module picorv32_pcpi_div (
 	input clk, resetn,
 
 	input             pcpi_valid,
+  /* verilator lint_off UNUSED */
 	input      [31:0] pcpi_insn,
+  /* verilator lint_on UNUSED */
 	input      [31:0] pcpi_rs1,
 	input      [31:0] pcpi_rs2,
 	output reg        pcpi_wr,
