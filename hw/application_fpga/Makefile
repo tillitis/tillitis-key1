@@ -34,7 +34,7 @@ CC = clang-14
 
 CFLAGS = -target riscv32-unknown-none-elf -march=rv32imc -mabi=ilp32 \
    -static -std=gnu99 -O2 -ffast-math -fno-common -fno-builtin-printf \
-   -fno-builtin-putchar -nostdlib -mno-relax -Wall -flto
+   -fno-builtin-putchar -nostdlib -mno-relax -Wall -flto -DNOCONSOLE
 
 AS = clang-14
 ASFLAGS = -target riscv32-unknown-none-elf -march=rv32imc -mabi=ilp32 -mno-relax
