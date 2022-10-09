@@ -175,7 +175,7 @@ int main()
 		case FW_CMD_LOAD_APP_DATA:
 			puts("request: load-app-data\n");
 
-			if (hdr.len != 128 || *app_size == 0) {
+			if (hdr.len != 128 || *app_size == 0 || left == 0) {
 				// Bad length of this command or bad app size -
 				// they need to call FW_CMD_LOAD_APP_SIZE first
 				rsp[0] = STATUS_BAD;
