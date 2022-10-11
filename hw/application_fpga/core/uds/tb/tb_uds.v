@@ -42,6 +42,7 @@ module tb_uds();
 
   reg           tb_clk;
   reg           tb_reset_n;
+  reg           tb_fw_app_mode;
   reg           tb_cs;
   reg [7 : 0]   tb_address;
   wire [31 : 0] tb_read_data;
@@ -53,14 +54,15 @@ module tb_uds();
   // Device Under Test.
   //----------------------------------------------------------------
   uds dut(
-           .clk(tb_clk),
-           .reset_n(tb_reset_n),
+          .clk(tb_clk),
+          .reset_n(tb_reset_n),
 
-           .cs(tb_cs),
+	  .fw_app_mode(tb_fw_app_mode),
 
-           .address(tb_address),
-           .read_data(tb_read_data)
-           );
+          .cs(tb_cs),
+          .address(tb_address),
+          .read_data(tb_read_data)
+         );
 
 
   //----------------------------------------------------------------
@@ -161,10 +163,11 @@ module tb_uds();
       tc_ctr     = 0;
       tb_monitor = 0;
 
-      tb_clk        = 1'h0;
-      tb_reset_n    = 1'h1;
-      tb_cs         = 1'h0;
-      tb_address    = 8'h0;
+      tb_clk         = 1'h0;
+      tb_reset_n     = 1'h1;
+      tb_fw_app_mode = 1'h0;
+      tb_cs          = 1'h0;
+      tb_address     = 8'h0;
     end
   endtask // init_sim
 
@@ -203,11 +206,6 @@ module tb_uds();
 
       $display("");
       $display("--- test1: started.");
-
-      $display("--- test1: Reading NAME and version info.");
-      read_word(ADDR_NAME0);
-      read_word(ADDR_NAME1);
-      read_word(ADDR_VERSION);
 
       $display("--- test1: Dumping DUT state to show UDS contents");
       dump_dut_state();

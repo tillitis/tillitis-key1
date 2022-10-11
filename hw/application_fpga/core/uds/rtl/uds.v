@@ -29,16 +29,8 @@ module uds(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_NAME0        = 8'h00;
-  localparam ADDR_NAME1        = 8'h01;
-  localparam ADDR_VERSION      = 8'h02;
-
   localparam ADDR_UDS_FIRST    = 8'h10;
   localparam ADDR_UDS_LAST     = 8'h17;
-
-  localparam CORE_NAME0        = 32'h7564735f; // "uds_"
-  localparam CORE_NAME1        = 32'h6d656d20; // "mem "
-  localparam CORE_VERSION      = 32'h00000001;
 
 
   //----------------------------------------------------------------
@@ -98,18 +90,6 @@ module uds(
 
       if (cs) begin
 	tmp_ready = 1'h1;
-
-	if (address == ADDR_NAME0) begin
-	  tmp_read_data = CORE_NAME0;
-        end
-
-	if (address == ADDR_NAME1) begin
-	  tmp_read_data = CORE_NAME1;
-	end
-
-	if (address == ADDR_VERSION) begin
-	  tmp_read_data = CORE_VERSION;
-	end
 
 	if ((address >= ADDR_UDS_FIRST) && (address <= ADDR_UDS_LAST)) begin
 	  if (!fw_app_mode) begin

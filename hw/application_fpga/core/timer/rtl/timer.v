@@ -30,10 +30,6 @@ module timer(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_NAME0        = 8'h00;
-  localparam ADDR_NAME1        = 8'h01;
-  localparam ADDR_VERSION      = 8'h02;
-
   localparam ADDR_CTRL         = 8'h08;
   localparam CTRL_START_BIT    = 0;
   localparam CTRL_STOP_BIT     = 1;
@@ -43,10 +39,6 @@ module timer(
 
   localparam ADDR_PRESCALER    = 8'h0a;
   localparam ADDR_TIMER        = 8'h0b;
-
-  localparam CORE_NAME0        = 32'h74696d65; // "time"
-  localparam CORE_NAME1        = 32'h72202020; // "r   "
-  localparam CORE_VERSION      = 32'h00000003;
 
 
   //----------------------------------------------------------------
@@ -159,18 +151,6 @@ module timer(
         end
 
         else begin
-	  if (address == ADDR_NAME0) begin
-	    tmp_read_data = CORE_NAME0;
-          end
-
-	  if (address == ADDR_NAME1) begin
-	    tmp_read_data = CORE_NAME1;
-	  end
-
-	  if (address == ADDR_VERSION) begin
-	    tmp_read_data = CORE_VERSION;
-	  end
-
 	  if (address == ADDR_STATUS) begin
 	    tmp_read_data = {31'h0, core_ready};
 	  end

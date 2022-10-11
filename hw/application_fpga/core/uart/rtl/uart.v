@@ -69,10 +69,6 @@ module uart(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_CORE_NAME0   = 8'h00;
-  localparam ADDR_CORE_NAME1   = 8'h01;
-  localparam ADDR_CORE_VERSION = 8'h02;
-
   localparam ADDR_BIT_RATE     = 8'h10;
   localparam ADDR_DATA_BITS    = 8'h11;
   localparam ADDR_STOP_BITS    = 8'h12;
@@ -82,12 +78,6 @@ module uart(
 
   localparam ADDR_TX_STATUS    = 8'h40;
   localparam ADDR_TX_DATA      = 8'h41;
-
-
-  localparam CORE_NAME0   = 32'h75617274;  // "uart"
-  localparam CORE_NAME1   = 32'h20202020;  // "    "
-  localparam CORE_VERSION = 32'h00000004;
-
 
   // The default bit rate is based on target clock frequency
   // divided by the bit rate times in order to hit the
@@ -257,18 +247,6 @@ module uart(
 
 	else begin
           case (address)
-            ADDR_CORE_NAME0: begin
-              tmp_read_data = CORE_NAME0;
-            end
-
-            ADDR_CORE_NAME1: begin
-              tmp_read_data = CORE_NAME1;
-            end
-
-            ADDR_CORE_VERSION: begin
-              tmp_read_data = CORE_VERSION;
-            end
-
             ADDR_BIT_RATE: begin
               tmp_read_data = {16'h0, bit_rate_reg};
             end
