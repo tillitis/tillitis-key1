@@ -95,11 +95,13 @@ all: application_fpga.bin
 # The size_mismatch target make sure that we don't end up with an
 # incorrect BRAM_FW_SIZE
 # -------------------------------------------------------------------
-size_mismatch: firmware.elf
+%_size_mismatch: %.elf phony_explicit
 	@test $$($(SIZE) $< | awk 'NR==2{print $$4}') -le $$(( 32 / 8 * $(BRAM_FW_SIZE) )) || \
 	(echo "The 'BRAM_FW_SIZE' variable needs to be increased" && false)
-.PHONY: size_mismatch
 
+# can't make implicit rule .PHONY
+phone_explicit:
+.PHONY: phony_explicit
 
 #-------------------------------------------------------------------
 # Firmware generation.
@@ -120,9 +122,9 @@ testfw.elf: $(TESTFW_OBJS) $(P)/fw/mta1_mkdf/firmware.lds
 bram_fw.hex:
 	$(ICESTORM_PATH)icebram -v -g 32 $(BRAM_FW_SIZE) > $@
 
-firmware.hex: firmware.bin size_mismatch
+firmware.hex: firmware.bin firmware_size_mismatch
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
-testfw.hex: testfw.bin size_mismatch
+testfw.hex: testfw.bin testfw_size_mismatch
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
 
 %.bin: %.elf
