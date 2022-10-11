@@ -48,6 +48,7 @@ module application_fpga(
   localparam UDS_PREFIX         = 6'h02;
   localparam UART_PREFIX        = 6'h03;
   localparam TOUCH_SENSE_PREFIX = 6'h04;
+  localparam FW_RAM_PREFIX      = 6'h10;
   localparam MTA1_PREFIX        = 6'h3f;
 
 
@@ -121,6 +122,15 @@ module application_fpga(
   reg  [31 : 0] uart_write_data;
   wire [31 : 0] uart_read_data;
   wire          uart_ready;
+
+  /* verilator lint_off UNOPTFLAT */
+  reg           fw_ram_cs;
+  /* verilator lint_on UNOPTFLAT */
+  reg  [3 : 0]  fw_ram_we;
+  reg  [7 : 0]  fw_ram_address;
+  reg  [31 : 0] fw_ram_write_data;
+  wire [31 : 0] fw_ram_read_data;
+  wire          fw_ram_ready;
 
   /* verilator lint_off UNOPTFLAT */
   reg           touch_sense_cs;
@@ -215,6 +225,21 @@ module application_fpga(
                .read_data(ram_read_data),
 	       .ready(ram_ready)
                );
+
+
+  fw_ram fw_ram_inst(
+		     .clk(clk),
+		     .reset_n(reset_n),
+
+		     .fw_app_mode(fw_app_mode),
+
+		     .cs(fw_ram_cs),
+		     .we(fw_ram_we),
+		     .address(fw_ram_address),
+		     .write_data(fw_ram_write_data),
+		     .read_data(fw_ram_read_data),
+		     .ready(fw_ram_ready)
+		    );
 
 
   rosc trng_inst(
@@ -350,6 +375,11 @@ module application_fpga(
       ram_address         = cpu_addr[16 : 2];
       ram_write_data      = cpu_wdata;
 
+      fw_ram_cs           = 1'h0;
+      fw_ram_we           = cpu_wstrb;
+      fw_ram_address      = cpu_addr[9 : 2];
+      fw_ram_write_data   = cpu_wdata;
+
       trng_cs             = 1'h0;
       trng_we             = |cpu_wstrb;
       trng_address        = cpu_addr[9 : 2];
@@ -426,6 +456,12 @@ module application_fpga(
                 touch_sense_cs  = 1'h1;
 	        muxed_rdata_new = touch_sense_read_data;
 	        muxed_ready_new = touch_sense_ready;
+              end
+
+	      FW_RAM_PREFIX: begin
+                fw_ram_cs       = 1'h1;
+	        muxed_rdata_new = fw_ram_read_data;
+	        muxed_ready_new = fw_ram_ready;
               end
 
 	      MTA1_PREFIX: begin

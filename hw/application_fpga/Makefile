@@ -42,11 +42,11 @@ ASFLAGS = -target riscv32-unknown-none-elf -march=rv32imc -mabi=ilp32 -mno-relax
 ICE40_SIM_CELLS = $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 
-# FPGA specific Verilog source files.
+# FPGA specific source files.
 FPGA_SRC = $(P)/rtl/application_fpga.v \
 	   $(P)/rtl/clk_reset_gen.v
 
-# Verilator simulation  specific Verilog source files.
+# Verilator simulation specific source files.
 VERILATOR_FPGA_SRC = $(P)/tb/application_fpga_vsim.v \
 		     $(P)/tb/reset_gen_vsim.v
 
@@ -54,6 +54,7 @@ VERILATOR_FPGA_SRC = $(P)/tb/application_fpga_vsim.v \
 VERILOG_SRCS = \
 	$(P)/rtl/ram.v \
 	$(P)/rtl/rom.v \
+	$(P)/rtl/fw_ram.v \
 	$(P)/core/picorv32/rtl/picorv32.v \
 	$(P)/core/timer/rtl/timer_core.v \
 	$(P)/core/timer/rtl/timer.v \
