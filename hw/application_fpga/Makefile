@@ -100,7 +100,7 @@ all: application_fpga.bin
 	(echo "The 'BRAM_FW_SIZE' variable needs to be increased" && false)
 
 # can't make implicit rule .PHONY
-phone_explicit:
+phony_explicit:
 .PHONY: phony_explicit
 
 #-------------------------------------------------------------------
