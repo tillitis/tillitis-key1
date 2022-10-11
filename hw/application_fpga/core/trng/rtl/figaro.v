@@ -31,20 +31,12 @@ module figaro(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_NAME0        = 8'h00;
-  localparam ADDR_NAME1        = 8'h01;
-  localparam ADDR_VERSION      = 8'h02;
-
   localparam ADDR_STATUS       = 8'h09;
   localparam STATUS_READY_BIT  = 0;
 
   localparam ADDR_SAMPLE_RATE  = 8'h10;
 
   localparam ADDR_ENTROPY      = 8'h20;
-
-  localparam CORE_NAME0        = 32'h66696761; // "figa"
-  localparam CORE_NAME1        = 32'h726f2020; // "ro  "
-  localparam CORE_VERSION      = 32'h00000001;
 
 
   //----------------------------------------------------------------
@@ -101,18 +93,6 @@ module figaro(
 	end
 
 	else begin
-	  if (address == ADDR_NAME0) begin
-	    tmp_read_data = CORE_NAME0;
-          end
-
-	  if (address == ADDR_NAME1) begin
-	    tmp_read_data = CORE_NAME1;
-	  end
-
-	  if (address == ADDR_VERSION) begin
-	    tmp_read_data = CORE_VERSION;
-	  end
-
           if (address == ADDR_STATUS) begin
             tmp_read_data = {31'h0, core_ready};
           end

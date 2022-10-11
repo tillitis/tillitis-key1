@@ -270,41 +270,20 @@ Assigned core prefixes:
 | MTA1   | 0xff     |
 |        |          |
 
-Every core has a NAME1, NAME2, and VERSION to identify it.
-
-Examples:
-
-| *address*  | *description*   |
-|------------|-----------------|
-| 0xc3000004 | NAME1 in UART   |
-| 0xff000000 | NAME0 in MTA1   |
-| 0xff000008 | VERSION in MTA1 |
 
 *Nota bene*: All MMIO accesses should be 32 bit wide, e.g use `lw` and `sw`.
 
 | *name*             | *fw* | *app       | *size* | *type*  | *content* | *description*                                          |
 |--------------------|------|------------|--------|---------|-----------|--------------------------------------------------------|
-| `TRNG_NAME0`       | r    | r          | 4B     | char[4] |           | ID of core                                             |
-| `TRNG_NAME1`       | r    | r          | 4B     | char[4] |           | ID of core                                             |
-| `TRNG_VERSION`     | r    | r          | 4B     | u32     |           | Version of core                                        |
 | `TRNG_STATUS`      | r    | r          |        |         |           | TBD                                                    |
 | `TRNG_SAMPLE_RATE` |      | r          |        |         |           | TBD                                                    |
 | `TRNG_ENTROPY`     |      |            |        |         |           | TBD                                                    |
-| `TIMER_NAME0`      | r    | r          |        |         |           | ID of core                                             |
-| `TIMER_NAME1`      | r    | r          |        |         |           | ID of core                                             |
-| `TIMER_VERSION`    | r    | r          |        |         |           | Version of core                                        |
 | `TIMER_CTRL`       |      |            |        |         |           | TBD                                                    |
 | `TIMER_STATUS`     | r    |            |        |         |           | TBD                                                    |
 | `TIMER_PRESCALER`  |      | r/w        |        |         |           | TBD                                                    |
 | `TIMER_TIMER`      |      | r          |        |         |           | TBD                                                    |
-| `UDS_NAME0`        | r    | invisible  |        |         |           | ID of core                                             |
-| `UDS_NAME1`        | r    | invisible  |        |         |           | ID of core                                             |
-| `UDS_VERSION`      | r    | invisible  |        |         |           | Version of core                                        |
 | `UDS_START`        | r[^2]| invisible  | 4B     | u8[32]  |           | First word of Unique Device Secret key.                |
 | `UDS_LAST`         |      | invisible  |        |         |           | The last word of the UDS                               |
-| `UART_NAME0`       | r    | r          |        |         |           | ID of core                                             |
-| `UART_NAME1`       | r    | r          |        |         |           | ID of core                                             |
-| `UART_VERSION`     | r    | r          |        |         |           | Version of core                                        |
 | `UART_BITRATE`     | r/w  |            |        |         |           | TBD                                                    |
 | `UART_DATABITS`    | r/w  |            |        |         |           | TBD                                                    |
 | `UART_STOPBITS`    | r/w  |            |        |         |           | TBD                                                    |
@@ -312,9 +291,6 @@ Examples:
 | `UART_RX_DATA`     | r    | r          | 1B     | u8      |           | Data to read. Only LSB contains data                   |
 | `UART_TX_STATUS`   | r    | r          | 1B     | u8      |           | Non-zero when it's OK to write data                    |
 | `UART_TX_DATA`     | w    | w          | 1B     | u8      |           | Data to send. Only LSB contains data                   |
-| `TOUCH_NAME0`      | r    | r          |        |         |           | ID of core                                             |
-| `TOUCH_NAME1`      | r    | r          |        |         |           | ID of core                                             |
-| `TOUCH_VERSION`    | r    | r          |        |         |           | Version of core                                        |
 | `TOUCH_STATUS`     | r/w  | r/w        |        |         |           | STATUS_EVENT_BIT set 1 when touched; write to it after |
 | `UDA`              | r    |            | 16B    | u8[16]  |           | Unique Device Authentication key.                      |
 | `UDI`              | r    |            | 8B     | u64     |           | Unique Device ID (UDI).                                |
