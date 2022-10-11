@@ -22,7 +22,8 @@ YOSYS_PATH ?=
 NEXTPNR_PATH ?=
 ICESTORM_PATH ?=
 
-# Size in 32-bit words
+# Size in 32-bit words, must be divisible by 256 (pairs of EBRs, because 16
+# bits wide; an EBR is 128 32-bits words)
 BRAM_FW_SIZE ?= 1536
 
 PIN_FILE ?= application_fpga_mta1_usb_v1.pcf
