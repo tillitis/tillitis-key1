@@ -1,8 +1,11 @@
 //======================================================================
 //
-// figaro.v
-// --------
-// Top level wrapper for the figaro core.
+// rosc.v
+// ------
+// Digital ring oscillator based entropy generator.
+// Use this as a source of entropy, for example as seeds.
+// Do **NOT** use directly as random number in any security
+// related use cases.
 //
 //
 // Author: Joachim Strombergson
@@ -13,19 +16,19 @@
 
 `default_nettype none
 
-module figaro(
-              input wire           clk,
-              input wire           reset_n,
+module rosc(
+	    input wire           clk,
+	    input wire           reset_n,
 
-              input wire           cs,
-              input wire           we,
-              input wire  [7 : 0]  address,
-  /* verilator lint_off UNUSED */
-              input wire  [31 : 0] write_data,
-  /* verilator lint_on UNUSED */
-              output wire [31 : 0] read_data,
-	      output wire          ready
-             );
+	    input wire           cs,
+	    input wire           we,
+	    input wire  [7 : 0]  address,
+	    /* verilator lint_off UNUSED */
+	    input wire  [31 : 0] write_data,
+	    /* verilator lint_on UNUSED */
+	    output wire [31 : 0] read_data,
+	    output wire          ready
+	   );
 
 
   //----------------------------------------------------------------
@@ -298,8 +301,8 @@ module figaro(
       endcase // case (rosc_ctrl_reg)
     end
 
-endmodule // figaro
+endmodule // rosc
 
 //======================================================================
-// EOF figaro.v
+// EOF rosc.v
 //======================================================================

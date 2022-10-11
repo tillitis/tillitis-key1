@@ -275,9 +275,8 @@ Assigned core prefixes:
 
 | *name*             | *fw* | *app       | *size* | *type*  | *content* | *description*                                          |
 |--------------------|------|------------|--------|---------|-----------|--------------------------------------------------------|
-| `TRNG_STATUS`      | r    | r          |        |         |           | TBD                                                    |
-| `TRNG_SAMPLE_RATE` |      | r          |        |         |           | TBD                                                    |
-| `TRNG_ENTROPY`     |      |            |        |         |           | TBD                                                    |
+| `TRNG_STATUS`      | r    | r          |        |         |           | Non-zero when an entropy word is available.            |
+| `TRNG_ENTROPY`     | r    | r          |        |         |           | Entropy word. Reading a word will clear status.        |
 | `TIMER_CTRL`       |      |            |        |         |           | TBD                                                    |
 | `TIMER_STATUS`     | r    |            |        |         |           | TBD                                                    |
 | `TIMER_PRESCALER`  |      | r/w        |        |         |           | TBD                                                    |

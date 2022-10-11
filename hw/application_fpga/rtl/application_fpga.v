@@ -217,7 +217,7 @@ module application_fpga(
                );
 
 
-  figaro trng_inst(
+  rosc trng_inst(
 		   .clk(clk),
 		   .reset_n(reset_n),
 		   .cs(trng_cs),

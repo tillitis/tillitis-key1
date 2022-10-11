@@ -63,10 +63,7 @@ VERILOG_SRCS = \
 	$(P)/core/uart/rtl/uart_core.v \
 	$(P)/core/uart/rtl/uart_fifo.v \
 	$(P)/core/uart/rtl/uart.v \
-	$(P)/core/trng/rtl/firo.v \
-	$(P)/core/trng/rtl/garo.v \
-	$(P)/core/trng/rtl/figaro_core.v \
-	$(P)/core/trng/rtl/figaro.v
+	$(P)/core/trng/rtl/rosc.v
 
 FIRMWARE_DEPS = \
 	$(P)/fw/mta1_mkdf_mem.h \
