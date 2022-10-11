@@ -23,7 +23,7 @@ NEXTPNR_PATH ?=
 ICESTORM_PATH ?=
 
 # Size in 32-bit words
-BRAM_FW_SIZE ?= 2048
+BRAM_FW_SIZE ?= 1536
 
 PIN_FILE ?= application_fpga_mta1_usb_v1.pcf
 
