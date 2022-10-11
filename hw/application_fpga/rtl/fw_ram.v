@@ -53,7 +53,7 @@ module fw_ram(
 		      .WCLKE(1'h1),
 		      .WDATA(write_data[15:0]),
 		      .WE(|we),
-		      .MASK({{4{we[1]}}, {4{we[0]}}})
+		      .MASK({{8{we[1]}}, {8{we[0]}}})
 		     );
 
 
@@ -68,7 +68,7 @@ module fw_ram(
 		      .WCLKE(1'h1),
 		      .WDATA(write_data[31:16]),
 		      .WE(|we),
-		      .MASK({{4{we[3]}}, {4{we[2]}}})
+		      .MASK({{8{we[3]}}, {8{we[2]}}})
 		     );
 
 
