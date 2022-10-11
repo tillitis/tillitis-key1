@@ -31,43 +31,53 @@ module figaro(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_NAME0        = 8'h00;
-  localparam ADDR_NAME1        = 8'h01;
-  localparam ADDR_VERSION      = 8'h02;
-
+  // API
   localparam ADDR_STATUS       = 8'h09;
   localparam STATUS_READY_BIT  = 0;
-
-  localparam ADDR_SAMPLE_RATE  = 8'h10;
-
   localparam ADDR_ENTROPY      = 8'h20;
 
-  localparam CORE_NAME0        = 32'h66696761; // "figa"
-  localparam CORE_NAME1        = 32'h726f2020; // "ro  "
-  localparam CORE_VERSION      = 32'h00000001;
+  // Total number of ROSCs will be 2 x NUM_ROSC.
+  localparam SAMPLE_RATE = 16'h1000;
+  localparam NUM_ROSC    = 16;
 
-  localparam SAMPLE_RATE       = 24'h0001000;
+  localparam CTRL_SAMPLE1    = 0;
+  localparam CTRL_SAMPLE2    = 1;
+  localparam CTRL_DATA_READY = 2;
 
 
   //----------------------------------------------------------------
-  // Registers.
+  // Registers with associated wires.
   //----------------------------------------------------------------
-  reg [23 : 0] sample_rate_ctr_reg;
-  reg [23 : 0] sample_rate_ctr_new;
+  reg [16 : 0] cycle_ctr_reg;
+  reg [16 : 0] cycle_ctr_new;
+  reg          cycle_ctr_done;
+  reg          cycle_ctr_rst;
 
   reg [4 : 0]  bit_ctr_reg;
   reg [4 : 0]  bit_ctr_new;
   reg          bit_ctr_we;
 
-  reg [63 : 0] entropy_reg;
-  reg [63 : 0] entropy_new;
+  reg [31 : 0] entropy_reg;
+  reg [31 : 0] entropy_new;
   reg          entropy_we;
 
-  reg          ready_reg;
-  reg          ready_new;
-  reg          ready_we;
-  reg          ready_set;
-  reg          ready_rst;
+  reg [1 : 0]  sample1_reg;
+  reg [1 : 0]  sample1_new;
+  reg          sample1_we;
+
+  reg [1 : 0]  sample2_reg;
+  reg [1 : 0]  sample2_new;
+  reg          sample2_we;
+
+  reg          data_ready_reg;
+  reg          data_ready_new;
+  reg          data_ready_we;
+  reg          data_ready_set;
+  reg          data_ready_rst;
+
+  reg [1 : 0]  rosc_ctrl_reg;
+  reg [1 : 0]  rosc_ctrl_new;
+  reg          rosc_ctrl_we;
 
 
   //----------------------------------------------------------------
@@ -77,7 +87,11 @@ module figaro(
   reg           tmp_ready;
 
   /* verilator lint_off UNOPTFLAT */
-  wire [31 : 0] f;
+  wire [(NUM_ROSC - 1) : 0] f;
+  /* verilator lint_on UNOPTFLAT */
+
+  /* verilator lint_off UNOPTFLAT */
+  wire [(NUM_ROSC - 1) : 0] g;
   /* verilator lint_on UNOPTFLAT */
 
 
@@ -95,10 +109,12 @@ module figaro(
   //----------------------------------------------------------------
   genvar i;
   generate
-    for(i = 0 ; i < 32 ; i = i + 1)
+    for(i = 0 ; i < NUM_ROSC ; i = i + 1)
       begin: oscillators
 	/* verilator lint_off PINMISSING */
-	(* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv (.I0(f[i]), .O(f[i]));
+	(* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv_f (.I0(f[i]), .O(f[i]));
+
+	(* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv_g (.I0(g[i]), .O(g[i]));
 	/* verilator lint_off PINMISSING */
       end
   endgenerate
@@ -110,73 +126,43 @@ module figaro(
   always @(posedge clk)
      begin : reg_update
        if (!reset_n) begin
-         sample_rate_ctr_reg <= 24'h0;
-	 bit_ctr_reg         <= 6'h0;
-	 entropy_reg         <= 64'h0;
-	 ready_reg           <= 1'h0;
+         cycle_ctr_reg  <= 16'h0;
+	 bit_ctr_reg    <= 5'h0;
+	 sample1_reg    <= 2'h0;
+	 sample2_reg    <= 2'h0;
+	 entropy_reg    <= 32'h0;
+	 data_ready_reg <= 1'h0;
+	 rosc_ctrl_reg  <= CTRL_SAMPLE1;
        end
+
        else begin
-         sample_rate_ctr_reg <= sample_rate_ctr_new;
+         cycle_ctr_reg <= cycle_ctr_new;
 
          if (bit_ctr_we) begin
            bit_ctr_reg <= bit_ctr_new;
          end
 
+	 if (sample1_we) begin
+	   sample1_reg <= sample1_new;
+	 end
+
+	 if (sample2_we) begin
+	   sample2_reg <= sample2_new;
+	 end
+
          if (entropy_we) begin
            entropy_reg <= entropy_new;
          end
 
-	 if (ready_we) begin
-	   ready_reg <= ready_new;
+	 if (data_ready_we) begin
+	   data_ready_reg <= data_ready_new;
+	 end
+
+	 if (rosc_ctrl_we) begin
+	   rosc_ctrl_reg <= rosc_ctrl_new;
 	 end
        end
      end
-
-
-  //----------------------------------------------------------------
-  // ready_logic
-  //----------------------------------------------------------------
-  always @*
-    begin : ready_logic
-      ready_new = 1'h0;
-      ready_we  = 1'h0;
-
-      if (ready_set) begin
-	ready_new = 1'h1;
-	ready_we  = 1'h1;
-
-      end else if (ready_rst) begin
-	ready_new = 1'h0;
-	ready_we  = 1'h1;
-      end
-    end
-
-
-  //----------------------------------------------------------------
-  // entropy_logic
-  //----------------------------------------------------------------
-  always @*
-    begin : entropy_logic
-      bit_ctr_new = 6'h0;
-      bit_ctr_we  = 1'h0;
-      entropy_we  = 1'h0;
-      ready_set   = 1'h0;
-
-      entropy_new  = {entropy_reg[62 : 0], ^f};
-
-      sample_rate_ctr_new = sample_rate_ctr_reg + 1'h1;
-      if (sample_rate_ctr_reg == SAMPLE_RATE) begin
-	sample_rate_ctr_new = 24'h0;
-	entropy_we          = 1'h1;
-	bit_ctr_new         = bit_ctr_reg + 1'h1;
-	bit_ctr_we          = 1'h1;
-
-	if (bit_ctr_reg == 6'h3f) begin
-	  bit_ctr_new = 6'h0;
-	  ready_set   = 1'h1;
-	end
-      end
-    end
 
 
   //----------------------------------------------------------------
@@ -186,28 +172,132 @@ module figaro(
   //----------------------------------------------------------------
   always @*
     begin : api
-      reg [31 : 0] entropy;
-
-      ready_rst     = 1'h0;
-      tmp_read_data = 32'h0;
-      tmp_ready     = 1'h0;
-
-      entropy = entropy_reg[63 : 32] ^ entropy_reg[31 : 0];
+      data_ready_rst = 1'h0;
+      tmp_read_data  = 32'h0;
+      tmp_ready      = 1'h0;
 
       if (cs) begin
 	tmp_ready = 1'h1;
 	if (!we) begin
           if (address == ADDR_STATUS) begin
-            tmp_read_data = {31'h0, ready_reg};
+            tmp_read_data = {31'h0, data_ready_reg};
           end
 
           if (address == ADDR_ENTROPY) begin
-            tmp_read_data = entropy;
-	    ready_rst     = 1'h1;
+            tmp_read_data  = entropy_reg;
+	    data_ready_rst = 1'h1;
           end
 	end
       end
     end // api
+
+
+  //----------------------------------------------------------------
+  // data_ready_logic
+  //----------------------------------------------------------------
+  always @*
+    begin : data_ready_logic
+      data_ready_new = 1'h0;
+      data_ready_we  = 1'h0;
+
+      if (data_ready_set) begin
+	data_ready_new = 1'h1;
+	data_ready_we  = 1'h1;
+
+      end else if (data_ready_rst) begin
+	data_ready_new = 1'h0;
+	data_ready_we  = 1'h1;
+      end
+    end
+
+
+  //----------------------------------------------------------------
+  // cycle_ctr_logic
+  //----------------------------------------------------------------
+  always @*
+    begin : cycle_ctr_logic
+      cycle_ctr_done = 1'h0;
+      cycle_ctr_new = cycle_ctr_reg + 1'h1;
+
+      if (cycle_ctr_rst) begin
+	cycle_ctr_new = 24'h0;
+      end
+
+      if (cycle_ctr_reg == SAMPLE_RATE) begin
+	cycle_ctr_done = 1'h1;
+      end
+    end
+
+
+  //----------------------------------------------------------------
+  // rosc_ctrl_logic
+  //----------------------------------------------------------------
+  always @*
+    begin : rosc_ctrl_logic
+      reg xor_f;
+      reg xor_g;
+      reg xor_sample1;
+      reg xor_sample2;
+
+      sample1_we     = 1'h0;
+      sample2_we     = 1'h0;
+      cycle_ctr_rst  = 1'h0;
+      data_ready_set = 1'h0;
+      entropy_we     = 1'h0;
+      bit_ctr_new    = 6'h0;
+      bit_ctr_we     = 1'h0;
+      rosc_ctrl_new  = CTRL_SAMPLE1;
+      rosc_ctrl_we   = 1'h0;
+
+      xor_f           = ^f;
+      xor_g           = ^g;
+      xor_sample1 = ^sample1_reg;
+      xor_sample2 = ^sample2_reg;
+
+      sample1_new = {sample1_reg[0], xor_f};
+      sample2_new = {sample2_reg[0], xor_g};
+      entropy_new = {entropy_reg[30 : 0], xor_sample2};
+
+      if (bit_ctr_reg == 31) begin
+	data_ready_set = 1'h1;
+      end
+
+      case (rosc_ctrl_reg)
+	CTRL_SAMPLE1: begin
+	  if (cycle_ctr_done) begin
+	    cycle_ctr_rst = 1'h1;
+	    sample1_we    = 1'h1;
+	    sample2_we    = 1'h1;
+	    rosc_ctrl_new = CTRL_SAMPLE2;
+	    rosc_ctrl_we  = 1'h1;
+	  end
+	end
+
+	CTRL_SAMPLE2: begin
+	  if (cycle_ctr_done) begin
+	    cycle_ctr_rst = 1'h1;
+	    sample1_we    = 1'h1;
+	    sample2_we    = 1'h1;
+	    rosc_ctrl_new = CTRL_DATA_READY;
+	    rosc_ctrl_we  = 1'h1;
+	  end
+	end
+
+	CTRL_DATA_READY: begin
+	  if (xor_sample1 ^ xor_sample2) begin
+	    entropy_we = 1'h1;
+	    bit_ctr_new   = bit_ctr_reg + 1'h1;
+	    bit_ctr_we    = 1'h1;
+	  end
+	  rosc_ctrl_new = CTRL_SAMPLE1;
+	  rosc_ctrl_we  = 1'h1;
+	end
+
+	default: begin
+	end
+      endcase // case (rosc_ctrl_reg)
+    end
+
 endmodule // figaro
 
 //======================================================================
