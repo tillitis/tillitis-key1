@@ -84,19 +84,19 @@ will send a raw binary targeted to be loaded at `0x4001_0000` in the
 device.
 
   1. The host sends the User Supplied Secret (USS) by using the
-     `FW_CMD_LOAD_APP_SIZE` command.
+     `FW_CMD_LOAD_USS` command and gets a `FW_RSP_LOAD_USS` back.
   2. The host sends the size of the app by using the
      `FW_CMD_LOAD_APP_SIZE` command.
   3. The firmware executes `FW_CMD_LOAD_APP_SIZE` command, which
      stores the application size into `APP_SIZE`, and sets `APP_ADDR`
      to zero. A `FW_RSP_LOAD_APP_SIZE` reponse is sent back to the
      host, with the status of the action (ok/fail).
-  4. If the the host receive a sucessful command, it will send
-     multiple `FW_CMD_LOAD_APP_DATA` commands, containing the full
-     application.
+  4. If the the host receive a sucessful response, it will send
+     multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
+     full application.
   5. For each received `FW_CMD_LOAD_APP_DATA` command the firmware
      places the data into `0x4001_0000` and upwards. The firmware
-     response with `FW_RSP_LOAD_APP_DATA` response to the host for
+     replies with a `FW_RSP_LOAD_APP_DATA` response to the host for
      each received block.
   6. When the final block of the application image is received, we
      measure the application by computing a BLAKE2s digest over the
