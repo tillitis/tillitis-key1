@@ -26,8 +26,8 @@ specifications:
     should be the target.
   * 4 SPRAM x 32 KB => 128 KB RAM for application/software
 
-[^1]: Embedded Block RAM residing in the FPGA, can configured as RAM
-    or ROM.
+[^1]: Embedded Block RAM (also BRAM) residing in the FPGA, can
+    configured as RAM or ROM.
 
 ## Introduction
 
