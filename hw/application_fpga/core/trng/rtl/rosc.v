@@ -40,8 +40,8 @@ module rosc(
   localparam ADDR_ENTROPY      = 8'h20;
 
   // Total number of ROSCs will be 2 x NUM_ROSC.
-  localparam SAMPLE_RATE = 16'h1000;
-  localparam NUM_ROSC    = 16;
+  localparam SAMPLE_CYCLES = 16'h1000;
+  localparam NUM_ROSC      = 16;
 
   localparam CTRL_SAMPLE1    = 0;
   localparam CTRL_SAMPLE2    = 1;
@@ -226,7 +226,7 @@ module rosc(
 	cycle_ctr_new = 16'h0;
       end
 
-      if (cycle_ctr_reg == SAMPLE_RATE) begin
+      if (cycle_ctr_reg == SAMPLE_CYCLES) begin
 	cycle_ctr_done = 1'h1;
       end
     end
