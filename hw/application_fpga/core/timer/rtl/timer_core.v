@@ -34,7 +34,6 @@ module timer_core(
   localparam CTRL_IDLE      = 2'h0;
   localparam CTRL_PRESCALER = 2'h1;
   localparam CTRL_TIMER     = 2'h2;
-  localparam CTRL_DONE      = 2'h3;
 
 
   //----------------------------------------------------------------
@@ -169,14 +168,18 @@ module timer_core(
 
 	CTRL_PRESCALER: begin
 	  if (stop) begin
-            core_ctrl_new = CTRL_DONE;
+            ready_new     = 1'h1;
+            ready_we      = 1'h1;
+            core_ctrl_new = CTRL_IDLE;
             core_ctrl_we  = 1'h1;
 	  end
+
 	  else begin
 	    if (prescaler_reg == 0) begin
               core_ctrl_new = CTRL_TIMER;
               core_ctrl_we  = 1'h1;
 	    end
+
 	    else begin
 	      prescaler_dec = 1'h1;
 	    end
@@ -186,14 +189,20 @@ module timer_core(
 
 	CTRL_TIMER: begin
 	  if (stop) begin
-            core_ctrl_new = CTRL_DONE;
+            ready_new     = 1'h1;
+            ready_we      = 1'h1;
+            core_ctrl_new = CTRL_IDLE;
             core_ctrl_we  = 1'h1;
 	  end
+
 	  else begin
 	    if (timer_reg == 0) begin
-              core_ctrl_new = CTRL_DONE;
+              ready_new     = 1'h1;
+              ready_we      = 1'h1;
+              core_ctrl_new = CTRL_IDLE;
               core_ctrl_we  = 1'h1;
 	    end
+
 	    else begin
 	      prescaler_set = 1'h1;
 	      timer_dec     = 1'h1;
@@ -202,14 +211,6 @@ module timer_core(
 	    end
 	  end
 	end
-
-
-        CTRL_DONE: begin
-          ready_new     = 1'h1;
-          ready_we      = 1'h1;
-          core_ctrl_new = CTRL_IDLE;
-          core_ctrl_we  = 1'h1;
-        end
 
         default: begin
         end
