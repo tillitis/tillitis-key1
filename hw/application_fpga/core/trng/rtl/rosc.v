@@ -51,8 +51,8 @@ module rosc(
   //----------------------------------------------------------------
   // Registers with associated wires.
   //----------------------------------------------------------------
-  reg [16 : 0] cycle_ctr_reg;
-  reg [16 : 0] cycle_ctr_new;
+  reg [15 : 0] cycle_ctr_reg;
+  reg [15 : 0] cycle_ctr_new;
   reg          cycle_ctr_done;
   reg          cycle_ctr_rst;
 
@@ -223,7 +223,7 @@ module rosc(
       cycle_ctr_new = cycle_ctr_reg + 1'h1;
 
       if (cycle_ctr_rst) begin
-	cycle_ctr_new = 24'h0;
+	cycle_ctr_new = 16'h0;
       end
 
       if (cycle_ctr_reg == SAMPLE_RATE) begin
@@ -247,7 +247,7 @@ module rosc(
       cycle_ctr_rst  = 1'h0;
       data_ready_set = 1'h0;
       entropy_we     = 1'h0;
-      bit_ctr_new    = 6'h0;
+      bit_ctr_new    = 5'h0;
       bit_ctr_we     = 1'h0;
       rosc_ctrl_new  = CTRL_SAMPLE1;
       rosc_ctrl_we   = 1'h0;
