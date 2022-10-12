@@ -243,7 +243,7 @@ prog_flash_testfw: application_fpga_testfw.bin
 # Post build analysis.
 #-------------------------------------------------------------------
 timing: application_fpga.asc $(P)/data/$(PIN_FILE)
-	$(ICESTORM_PATH)icetime -c 12 -tmd up5k -P sg48 -p $(P)/data/$(PIN_FILE) -t $<
+	$(ICESTORM_PATH)icetime -c 18 -tmd up5k -P sg48 -p $(P)/data/$(PIN_FILE) -t $<
 
 view: tb_application_fpga_vcd
 	gtkwave $< application_fpga.gtkw
