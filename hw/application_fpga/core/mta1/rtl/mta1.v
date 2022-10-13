@@ -61,8 +61,6 @@ module mta1(
   localparam ADDR_APP_START  = 8'h0c;
   localparam ADDR_APP_SIZE   = 8'h0d;
 
-  localparam ADDR_DEBUG      = 8'h10;
-
   localparam ADDR_CDI_FIRST  = 8'h20;
   localparam ADDR_CDI_LAST   = 8'h27;
 
@@ -101,9 +99,6 @@ module mta1(
 
   reg [31 : 0] app_size_reg;
   reg          app_size_we;
-
-  reg [31 : 0] debug_reg;
-  reg          debug_we;
 
 
   //----------------------------------------------------------------
@@ -163,7 +158,6 @@ module mta1(
         gpio4_reg      <= 1'h0;
         app_start_reg  <= 32'h0;
         app_size_reg   <= 32'h0;
-	debug_reg      <= 32'h0;
 	cdi_mem[0]     <= 32'h0;
 	cdi_mem[1]     <= 32'h0;
 	cdi_mem[2]     <= 32'h0;
@@ -205,10 +199,6 @@ module mta1(
           app_size_reg <= write_data;
         end
 
-	if (debug_we) begin
-	  debug_reg <= write_data;
-	end
-
 	if (cdi_mem_we) begin
 	  cdi_mem[address[2 : 0]] <= write_data;
 	end
@@ -227,7 +217,6 @@ module mta1(
       gpio4_we      = 1'h0;
       app_start_we  = 1'h0;
       app_size_we   = 1'h0;
-      debug_we      = 1'h0;
       cdi_mem_we    = 1'h0;
       cdi_mem_we    = 1'h0;
       tmp_read_data = 32'h00000000;
@@ -259,10 +248,6 @@ module mta1(
 	    if (!switch_app_reg) begin
               app_size_we = 1'h1;
             end
-	  end
-
-	  if (address == ADDR_DEBUG) begin
-	    debug_we  = 1'h1;
 	  end
 
 	  if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
@@ -305,10 +290,6 @@ module mta1(
           if (address == ADDR_APP_SIZE) begin
             tmp_read_data = app_size_reg;
           end
-
-	  if (address == ADDR_DEBUG) begin
-	    tmp_read_data = debug_reg;
-	  end
 
 	  if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
 	    tmp_read_data = cdi_mem[address[2 : 0]];
