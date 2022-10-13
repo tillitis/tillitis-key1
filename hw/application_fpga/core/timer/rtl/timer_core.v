@@ -17,10 +17,9 @@ module timer_core(
                   input wire           clk,
                   input wire           reset_n,
 
-                  input wire [31 : 0]  prescaler_value,
-                  input wire [31 : 0]  timer_value,
-                  input wire           start,
-                  input wire           stop,
+                  input wire [31 : 0]  prescaler_init,
+                  input wire [31 : 0]  timer_init,
+                  input wire           run,
 
                   output wire [31 : 0] curr_timer,
 
@@ -109,7 +108,7 @@ module timer_core(
       prescaler_we  = 1'h0;
 
       if (prescaler_set) begin
-	prescaler_new = prescaler_value;
+	prescaler_new = prescaler_init;
 	prescaler_we  = 1'h1;
       end
       else if (prescaler_dec) begin
@@ -128,7 +127,7 @@ module timer_core(
       timer_we  = 1'h0;
 
       if (timer_set) begin
-	timer_new = timer_value;
+	timer_new = timer_init;
 	timer_we  = 1'h1;
       end
       else if (timer_dec) begin
@@ -154,7 +153,7 @@ module timer_core(
 
       case (core_ctrl_reg)
         CTRL_IDLE: begin
-          if (start)
+          if (run)
             begin
               ready_new     = 1'h0;
               ready_we      = 1'h1;
@@ -167,7 +166,7 @@ module timer_core(
 
 
 	CTRL_PRESCALER: begin
-	  if (stop) begin
+	  if (!run) begin
             ready_new     = 1'h1;
             ready_we      = 1'h1;
             core_ctrl_new = CTRL_IDLE;
@@ -188,7 +187,7 @@ module timer_core(
 
 
 	CTRL_TIMER: begin
-	  if (stop) begin
+	  if (!run) begin
             ready_new     = 1'h1;
             ready_we      = 1'h1;
             core_ctrl_new = CTRL_IDLE;
