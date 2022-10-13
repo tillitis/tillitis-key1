@@ -159,8 +159,13 @@ module timer_core(
               ready_we      = 1'h1;
 	      prescaler_set = 1'h1;
 	      timer_set     = 1'h1;
-              core_ctrl_new = CTRL_PRESCALER;
-              core_ctrl_we  = 1'h1;
+	      if (prescaler_init == 0) begin
+		core_ctrl_new = CTRL_TIMER;
+		core_ctrl_we  = 1'h1;
+		end else begin
+		  core_ctrl_new = CTRL_PRESCALER;
+		  core_ctrl_we  = 1'h1;
+		end
             end
         end
 
@@ -177,9 +182,7 @@ module timer_core(
 	    if (prescaler_reg == 0) begin
               core_ctrl_new = CTRL_TIMER;
               core_ctrl_we  = 1'h1;
-	    end
-
-	    else begin
+	    end else begin
 	      prescaler_dec = 1'h1;
 	    end
 	  end
@@ -203,10 +206,13 @@ module timer_core(
 	    end
 
 	    else begin
-	      prescaler_set = 1'h1;
-	      timer_dec     = 1'h1;
-              core_ctrl_new = CTRL_PRESCALER;
-              core_ctrl_we  = 1'h1;
+	      timer_dec = 1'h1;
+
+	      if (prescaler_init > 0) begin
+		prescaler_set = 1'h1;
+		core_ctrl_new = CTRL_PRESCALER;
+		core_ctrl_we  = 1'h1;
+	      end
 	    end
 	  end
 	end
