@@ -22,6 +22,7 @@ static volatile uint32_t *ver =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_
 static volatile uint32_t *cdi =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_CDI_FIRST;
 static volatile uint32_t *app_addr =   (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_APP_ADDR;
 static volatile uint32_t *app_size =   (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_APP_SIZE;
+static volatile uint8_t *fw_ram =      (volatile uint8_t *)MTA1_MKDF_MMIO_FW_RAM_BASE;
 
 #define LED_RED   (1 << MTA1_MKDF_MMIO_MTA1_LED_R_BIT)
 #define LED_GREEN (1 << MTA1_MKDF_MMIO_MTA1_LED_G_BIT)
@@ -59,6 +60,31 @@ static void print_digest(uint8_t *md)
 		lf();
 	}
 	lf();
+}
+
+// CDI = blake2s(uds, blake2s(app), uss)
+static void compute_cdi(uint8_t digest[32], uint8_t uss[32])
+{
+	uint32_t local_cdi[8];
+
+	// To protect UDS we use a special firmware-only RAM for both
+	// the in parameter to blake2s and the blake2s context.
+
+	// Only word aligned access to UDS
+	wordcpy((void *)fw_ram, (void *)uds, 8);
+	memcpy((void *)fw_ram + 32, digest, 32);
+	memcpy((void *)fw_ram + 64, uss, 32);
+
+	blake2s_ctx *secure_ctx = (blake2s_ctx *)(fw_ram + 96);
+
+	blake2s((void *)local_cdi, 32, NULL, 0,
+		(const void *)fw_ram, 96, secure_ctx);
+
+	// Write over the firmware-only RAM
+	memset((void *)fw_ram, 0, MTA1_MKDF_MMIO_FW_RAM_SIZE);
+
+	// Only word aligned access to CDI
+	wordcpy((void *)cdi, (void *)local_cdi, 8);
 }
 
 int main()
@@ -194,8 +220,6 @@ int main()
 			left -= nbytes;
 
 			if (left == 0) {
-				uint8_t scratch[96];
-
 				puts("Fully loaded ");
 				putinthex(*app_size);
 				lf();
@@ -203,21 +227,14 @@ int main()
 				*app_addr = APP_RAM_ADDR;
 				// Get the Blake2S digest of the app - store it
 				// for later queries
+				blake2s_ctx ctx;
+
 				blake2s(digest, 32, NULL, 0,
-					(const void *)*app_addr, *app_size);
+					(const void *)*app_addr, *app_size, &ctx);
 				print_digest(digest);
 
 				// CDI = hash(uds, hash(app), uss)
-				uint32_t local_cdi[8];
-
-				// Only word aligned access to UDS
-				wordcpy(scratch, (void *)uds, 8);
-				memcpy(scratch + 32, digest, 32);
-				memcpy(scratch + 64, uss, 32);
-				blake2s((void *)local_cdi, 32, NULL, 0,
-					(const void *)scratch, 96);
-				// Only word aligned access to CDI
-				wordcpy((void *)cdi, (void *)local_cdi, 8);
+				compute_cdi(digest, uss);
 			}
 
 			rsp[0] = STATUS_OK;
