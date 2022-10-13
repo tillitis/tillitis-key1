@@ -30,45 +30,50 @@ module fw_ram(
   //----------------------------------------------------------------
   // Registers and wires.
   //----------------------------------------------------------------
+  reg [31 : 0] tmp_read_data;
+  reg [31 : 0] mem_read_data;
   reg          ready_reg;
+  reg          fw_app_cs;
 
 
   //----------------------------------------------------------------
   // Concurrent assignment of ports.
   //----------------------------------------------------------------
+  assign read_data = tmp_read_data;
   assign ready     = ready_reg;
+  assign fw_app_cs = cs && ~fw_app_mode;
 
 
   //----------------------------------------------------------------
   // Block RAM instances.
   //----------------------------------------------------------------
   SB_RAM40_4K fw_ram0(
-		      .RDATA(read_data[15:0]),
+		      .RDATA(mem_read_data[15 : 0]),
 		      .RADDR(address),
 		      .RCLK(clk),
 		      .RCLKE(1'h1),
-		      .RE(cs),
+		      .RE(fw_app_cs),
 		      .WADDR(address),
 		      .WCLK(clk),
 		      .WCLKE(1'h1),
-		      .WDATA(write_data[15:0]),
-		      .WE(|we),
-		      .MASK({{8{we[1]}}, {8{we[0]}}})
+		      .WDATA(write_data[15 : 0]),
+		      .WE((|we && fw_app_cs)),
+		      .MASK({{8{~we[1]}}, {8{~we[0]}}})
 		     );
 
 
   SB_RAM40_4K fw_ram1(
-		      .RDATA(read_data[31:16]),
+		      .RDATA(mem_read_data[31 : 16]),
 		      .RADDR(address),
 		      .RCLK(clk),
 		      .RCLKE(1'h1),
-		      .RE(cs),
+		      .RE(fw_app_cs),
 		      .WADDR(address),
 		      .WCLK(clk),
 		      .WCLKE(1'h1),
-		      .WDATA(write_data[31:16]),
-		      .WE(|we),
-		      .MASK({{8{we[3]}}, {8{we[2]}}})
+		      .WDATA(write_data[31 : 16]),
+		      .WE((|we && fw_app_cs)),
+		      .MASK({{8{~we[3]}}, {8{~we[2]}}})
 		     );
 
 
@@ -82,6 +87,19 @@ module fw_ram(
       end
       else begin
         ready_reg <= cs;
+      end
+    end
+
+
+  //----------------------------------------------------------------
+  // read_mux
+  //----------------------------------------------------------------
+  always @*
+    begin : read_mux;
+      if (fw_app_cs) begin
+	tmp_read_data = mem_read_data;
+      end else begin
+	tmp_read_data = 32'h0;
       end
     end
 
