@@ -31,7 +31,8 @@ module timer(
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   localparam ADDR_CTRL       = 8'h08;
-  localparam CTRL_RUN_BIT    = 0;
+  localparam CTRL_START_BIT  = 0;
+  localparam CTRL_STOP_BIT   = 1;
 
   localparam ADDR_STATUS      = 8'h09;
   localparam STATUS_READY_BIT = 0;
@@ -49,8 +50,11 @@ module timer(
   reg [31 : 0] timer_reg;
   reg          timer_we;
 
-  reg          run_reg;
-  reg          run_we;
+  reg          start_reg;
+  reg          start_new;
+
+  reg          stop_reg;
+  reg          stop_new;
 
 
   //----------------------------------------------------------------
@@ -76,9 +80,12 @@ module timer(
   timer_core core(
                   .clk(clk),
                   .reset_n(reset_n),
+
                   .prescaler_init(prescaler_reg),
                   .timer_init(timer_reg),
-                  .run(run_reg),
+                  .start(start_reg),
+                  .stop(stop_reg),
+
 		  .curr_timer(core_curr_timer),
                   .ready(core_ready)
                  );
@@ -90,15 +97,14 @@ module timer(
   always @ (posedge clk)
     begin : reg_update
       if (!reset_n) begin
-	run_reg       <= 1'h0;
+	start_reg     <= 1'h0;
+	stop_reg      <= 1'h0;
 	prescaler_reg <= 32'h0;
 	timer_reg     <= 32'h0;
       end
-
       else begin
-	if (run_we) begin
-	  run_reg <= write_data[CTRL_RUN_BIT];
-	end
+	start_reg <= start_new;
+	stop_reg  <= stop_new;
 
 	if (prescaler_we) begin
 	  prescaler_reg <= write_data;
@@ -118,7 +124,8 @@ module timer(
   //----------------------------------------------------------------
   always @*
     begin : api
-      run_we        = 1'h0;
+      start_new     = 1'h0;
+      stop_new      = 1'h0;
       prescaler_we  = 1'h0;
       timer_we      = 1'h0;
       tmp_read_data = 32'h0;
@@ -129,7 +136,8 @@ module timer(
 
         if (we) begin
           if (address == ADDR_CTRL) begin
-	    run_we = 1'h1;
+	    start_new = write_data[CTRL_START_BIT];
+	    stop_new  = write_data[CTRL_STOP_BIT];
 	  end
 
 	  if (core_ready) begin
@@ -144,10 +152,6 @@ module timer(
         end
 
         else begin
-	  if (address == ADDR_CTRL) begin
-	    tmp_read_data = {31'h0, run_reg};
-	  end
-
 	  if (address == ADDR_STATUS) begin
 	    tmp_read_data = {31'h0, core_ready};
 	  end
