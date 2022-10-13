@@ -185,7 +185,7 @@ int main()
 	test_puts("\r\n");
 
 	if (b == 0x21) {
-	  test_puts("FAIL: Could not write and read back from FW RAM in app-mode.\r\n");
+	  test_puts("FAIL: Could write and read back from FW RAM in app-mode.\r\n");
 	  anyfailed = 1;
 	}
 
