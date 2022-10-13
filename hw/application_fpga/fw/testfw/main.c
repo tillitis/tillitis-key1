@@ -126,7 +126,25 @@ int main()
 		anyfailed = 1;
 	}
 
-	// Turn on application mode
+	// Test FW-RAM.
+	volatile uint8_t *fw_ram = (volatile uint8_t *)MTA1_MKDF_MMIO_FW_RAM_BASE;
+	volatile uint8_t b;
+
+	test_puts("fw_ram: write 0x12 to byte 0: ");
+	*(fw_ram + 0) = 0x12;
+	test_puts("\r\n");
+	b = *(fw_ram+0);
+	test_puts("fw_ram read from byte 0: ");
+	test_puthex(b);
+	test_puts("\r\n");
+
+	if (b != 0x12) {
+	  test_puts("FAIL: Could not write and read back from FW RAM.\r\n");
+	  anyfailed = 1;
+	}
+
+	// Turn on application mode.
+	// -------------------------
 	*switch_app = 1;
 
 	// Should NOT be able to read from UDS in app-mode.
@@ -157,6 +175,22 @@ int main()
 		anyfailed = 1;
 	}
 
+	// Test FW-RAM.
+	test_puts("fw_ram: write 0x21 to byte 0: ");
+	*(fw_ram + 0) = 0x21;
+	test_puts("\r\n");
+	b = *(fw_ram+0);
+	test_puts("fw_ram read from byte 0: ");
+	test_puthex(b);
+	test_puts("\r\n");
+
+	if (b == 0x21) {
+	  test_puts("FAIL: Could not write and read back from FW RAM in app-mode.\r\n");
+	  anyfailed = 1;
+	}
+
+
+	// Check and display test results.
 	if (anyfailed) {
 		test_puts("Some test failed!\r\n");
 	} else {
