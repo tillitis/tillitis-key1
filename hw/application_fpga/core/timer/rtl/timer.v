@@ -31,8 +31,6 @@ module timer(
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   localparam ADDR_CTRL       = 8'h08;
-  localparam CTRL_START_BIT  = 0;
-  localparam CTRL_STOP_BIT   = 1;
 
   localparam ADDR_STATUS      = 8'h09;
   localparam STATUS_READY_BIT = 0;
@@ -50,11 +48,8 @@ module timer(
   reg [31 : 0] timer_reg;
   reg          timer_we;
 
-  reg          start_reg;
-  reg          start_new;
-
-  reg          stop_reg;
-  reg          stop_new;
+  reg          start_stop_reg;
+  reg          start_stop_new;
 
 
   //----------------------------------------------------------------
@@ -83,8 +78,7 @@ module timer(
 
                   .prescaler_init(prescaler_reg),
                   .timer_init(timer_reg),
-                  .start(start_reg),
-                  .stop(stop_reg),
+                  .start_stop(start_stop_reg),
 
 		  .curr_timer(core_curr_timer),
                   .ready(core_ready)
@@ -97,14 +91,12 @@ module timer(
   always @ (posedge clk)
     begin : reg_update
       if (!reset_n) begin
-	start_reg     <= 1'h0;
-	stop_reg      <= 1'h0;
-	prescaler_reg <= 32'h0;
-	timer_reg     <= 32'h0;
+	start_stop_reg <= 1'h0;
+	prescaler_reg  <= 32'h0;
+	timer_reg      <= 32'h0;
       end
       else begin
-	start_reg <= start_new;
-	stop_reg  <= stop_new;
+	start_stop_reg <= start_stop_new;
 
 	if (prescaler_we) begin
 	  prescaler_reg <= write_data;
@@ -124,20 +116,18 @@ module timer(
   //----------------------------------------------------------------
   always @*
     begin : api
-      start_new     = 1'h0;
-      stop_new      = 1'h0;
-      prescaler_we  = 1'h0;
-      timer_we      = 1'h0;
-      tmp_read_data = 32'h0;
-      tmp_ready     = 1'h0;
+      start_stop_new = 1'h0;
+      prescaler_we   = 1'h0;
+      timer_we       = 1'h0;
+      tmp_read_data  = 32'h0;
+      tmp_ready      = 1'h0;
 
       if (cs) begin
 	tmp_ready = 1'h1;
 
         if (we) begin
           if (address == ADDR_CTRL) begin
-	    start_new = write_data[CTRL_START_BIT];
-	    stop_new  = write_data[CTRL_STOP_BIT];
+	    start_stop_new = 1'h1;
 	  end
 
 	  if (core_ready) begin
