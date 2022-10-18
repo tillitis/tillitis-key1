@@ -9,13 +9,14 @@
 #include "../mta1_mkdf_mem.h"
 
 // clang-format off
-volatile uint32_t *mta1name0 = (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_NAME0;
-volatile uint32_t *mta1name1 = (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_NAME1;
-volatile uint32_t *uds = (volatile uint32_t *)MTA1_MKDF_MMIO_UDS_FIRST;
-volatile uint32_t *uda = (volatile uint32_t *)MTA1_MKDF_MMIO_QEMU_UDA; // Only in QEMU right now
-volatile uint32_t *cdi = (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_CDI_FIRST;
-volatile uint32_t *udi = (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_UDI_FIRST;
+volatile uint32_t *mta1name0 =  (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_NAME0;
+volatile uint32_t *mta1name1 =  (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_NAME1;
+volatile uint32_t *uds =        (volatile uint32_t *)MTA1_MKDF_MMIO_UDS_FIRST;
+volatile uint32_t *uda =        (volatile uint32_t *)MTA1_MKDF_MMIO_QEMU_UDA; // Only in QEMU right now
+volatile uint32_t *cdi =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_CDI_FIRST;
+volatile uint32_t *udi =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_UDI_FIRST;
 volatile uint32_t *switch_app = (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_SWITCH_APP;
+volatile uint8_t  *fw_ram =     (volatile uint8_t  *)MTA1_MKDF_MMIO_FW_RAM_BASE;
 // clang-format on
 
 // TODO Real UDA is 4 words (16 bytes)
@@ -63,7 +64,7 @@ int main()
 	// Wait for terminal program and a character to be typed
 	in = readbyte();
 
-	test_puts("Hello, I'm testfw on:");
+	test_puts("I'm testfw on:");
 	// Output the MTA1 core's NAME0 and NAME1
 	uint32_t name;
 	wordcpy(&name, (void *)mta1name0, 1);
@@ -83,13 +84,13 @@ int main()
 	// Should get non-empty UDS
 	wordcpy(uds_local, (void *)uds, 8);
 	if (memeq(uds_local, uds_zeros, 8 * 4)) {
-		test_puts("FAIL: UDS empty!\r\n");
+		test_puts("FAIL: UDS empty\r\n");
 		anyfailed = 1;
 	}
 	// Should NOT be able to read from UDS again
 	wordcpy(uds_local, (void *)uds, 8);
 	if (!memeq(uds_local, uds_zeros, 8 * 4)) {
-		test_puts("FAIL: Could read UDS a second time!\r\n");
+		test_puts("FAIL: Read UDS a second time\r\n");
 		anyfailed = 1;
 	}
 
@@ -100,7 +101,7 @@ int main()
 	// // Should get non-empty UDA
 	// wordcpy(uda_local, (void *)uda, UDA_WORDS);
 	// if (memeq(uda_local, uda_zeros, UDA_WORDS*4)) {
-	// 	test_puts("FAIL: UDA empty!\r\n");
+	// 	test_puts("FAIL: UDA empty\r\n");
 	// 	anyfailed = 1;
 	// }
 
@@ -110,11 +111,11 @@ int main()
 	// Should get non-empty UDI
 	wordcpy(udi_local, (void *)udi, 2);
 	if (memeq(udi_local, udi_zeros, 2 * 4)) {
-		test_puts("FAIL: UDI empty!\r\n");
+		test_puts("FAIL: UDI empty\r\n");
 		anyfailed = 1;
 	}
 
-	// Should be able to write to CDI in non-app mode.
+	// Should be able to write to CDI in fw (non-app) mode.
 	uint32_t cdi_writetest[8] = {0xdeafbeef, 0xdeafbeef, 0xdeafbeef,
 				     0xdeafbeef, 0xdeafbeef, 0xdeafbeef,
 				     0xdeafbeef, 0xdeafbeef};
@@ -122,25 +123,15 @@ int main()
 	wordcpy((void *)cdi, cdi_writetest, 8);
 	wordcpy(cdi_readback, (void *)cdi, 8);
 	if (!memeq(cdi_writetest, cdi_readback, 8 * 4)) {
-		test_puts("FAIL: Could not write to CDI in non-app mode!\r\n");
+		test_puts("FAIL: Can't write CDI in fw mode\r\n");
 		anyfailed = 1;
 	}
 
 	// Test FW-RAM.
-	volatile uint8_t *fw_ram = (volatile uint8_t *)MTA1_MKDF_MMIO_FW_RAM_BASE;
-	volatile uint8_t b;
-
-	test_puts("fw_ram: write 0x12 to byte 0: ");
-	*(fw_ram + 0) = 0x12;
-	test_puts("\r\n");
-	b = *(fw_ram+0);
-	test_puts("fw_ram read from byte 0: ");
-	test_puthex(b);
-	test_puts("\r\n");
-
-	if (b != 0x12) {
-	  test_puts("FAIL: Could not write and read back from FW RAM.\r\n");
-	  anyfailed = 1;
+	*fw_ram = 0x12;
+	if (*fw_ram != 0x12) {
+		test_puts("FAIL: Can't write and read FW RAM in fw mode\r\n");
+		anyfailed = 1;
 	}
 
 	// Turn on application mode.
@@ -150,7 +141,7 @@ int main()
 	// Should NOT be able to read from UDS in app-mode.
 	wordcpy(uds_local, (void *)uds, 8);
 	if (!memeq(uds_local, uds_zeros, 8 * 4)) {
-		test_puts("FAIL: Could read from UDS in app-mode!\r\n");
+		test_puts("FAIL: Read from UDS in app-mode\r\n");
 		anyfailed = 1;
 	}
 
@@ -158,7 +149,7 @@ int main()
 	// // Now we should NOT be able to read from UDA.
 	// wordcpy(uda_local, (void *)uda, UDA_WORDS);
 	// if (!memeq(uda_local, uda_zeros, UDA_WORDS*4)) {
-	// 	test_puts("FAIL: Could read from UDA in app-mode!\r\n");
+	// 	test_puts("FAIL: Read from UDA in app-mode\r\n");
 	// 	anyfailed = 1;
 	// }
 
@@ -171,28 +162,20 @@ int main()
 	wordcpy((void *)cdi, cdi_zeros, 8);
 	wordcpy(cdi_local2, (void *)cdi, 8);
 	if (!memeq(cdi_local, cdi_local2, 8 * 4)) {
-		test_puts("FAIL: Could write to CDI in app-mode!\r\n");
+		test_puts("FAIL: Write to CDI in app-mode\r\n");
 		anyfailed = 1;
 	}
 
 	// Test FW-RAM.
-	test_puts("fw_ram: write 0x21 to byte 0: ");
-	*(fw_ram + 0) = 0x21;
-	test_puts("\r\n");
-	b = *(fw_ram+0);
-	test_puts("fw_ram read from byte 0: ");
-	test_puthex(b);
-	test_puts("\r\n");
-
-	if (b == 0x21) {
-	  test_puts("FAIL: Could write and read back from FW RAM in app-mode.\r\n");
-	  anyfailed = 1;
+	*fw_ram = 0x21;
+	if (*fw_ram == 0x21) {
+		test_puts("FAIL: Write and read FW RAM in app-mode\r\n");
+		anyfailed = 1;
 	}
-
 
 	// Check and display test results.
 	if (anyfailed) {
-		test_puts("Some test failed!\r\n");
+		test_puts("Some test FAILED!\r\n");
 	} else {
 		test_puts("All tests passed.\r\n");
 	}
