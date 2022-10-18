@@ -178,7 +178,7 @@ module timer_core(
 	  end
 
 	  else begin
-	    if (prescaler_reg == 0) begin
+	    if (prescaler_reg == 1) begin
               core_ctrl_new = CTRL_TIMER;
               core_ctrl_we  = 1'h1;
 	    end else begin
@@ -197,7 +197,7 @@ module timer_core(
 	  end
 
 	  else begin
-	    if (timer_reg == 0) begin
+	    if (timer_reg == 1) begin
               ready_new     = 1'h1;
               ready_we      = 1'h1;
               core_ctrl_new = CTRL_IDLE;
