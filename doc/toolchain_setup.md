@@ -86,7 +86,7 @@ mta1-usb-v1-programmer
 
 #### FW update of the programmer
 The programmer runs a FW needed to program the devices, the source code
-is available on Githun:
+is available on Github:
 
 https://github.com/Blinkinlabs/ice40_flasher
 
