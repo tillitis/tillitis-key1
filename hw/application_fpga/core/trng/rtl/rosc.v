@@ -42,6 +42,7 @@ module rosc(
   // Total number of ROSCs will be 2 x NUM_ROSC.
   localparam SAMPLE_CYCLES = 16'h1000;
   localparam NUM_ROSC      = 16;
+  localparam SKIP_BITS     = 32;
 
   localparam CTRL_SAMPLE1    = 0;
   localparam CTRL_SAMPLE2    = 1;
@@ -56,8 +57,10 @@ module rosc(
   reg          cycle_ctr_done;
   reg          cycle_ctr_rst;
 
-  reg [4 : 0]  bit_ctr_reg;
-  reg [4 : 0]  bit_ctr_new;
+  reg [7 : 0]  bit_ctr_reg;
+  reg [7 : 0]  bit_ctr_new;
+  reg          bit_ctr_inc;
+  reg          bit_ctr_rst;
   reg          bit_ctr_we;
 
   reg [31 : 0] entropy_reg;
@@ -75,8 +78,6 @@ module rosc(
   reg          data_ready_reg;
   reg          data_ready_new;
   reg          data_ready_we;
-  reg          data_ready_set;
-  reg          data_ready_rst;
 
   reg [1 : 0]  rosc_ctrl_reg;
   reg [1 : 0]  rosc_ctrl_new;
@@ -129,7 +130,7 @@ module rosc(
      begin : reg_update
        if (!reset_n) begin
          cycle_ctr_reg  <= 16'h0;
-	 bit_ctr_reg    <= 5'h0;
+	 bit_ctr_reg    <= 8'h0;
 	 sample1_reg    <= 2'h0;
 	 sample2_reg    <= 2'h0;
 	 entropy_reg    <= 32'h0;
@@ -174,9 +175,9 @@ module rosc(
   //----------------------------------------------------------------
   always @*
     begin : api
-      data_ready_rst = 1'h0;
-      tmp_read_data  = 32'h0;
-      tmp_ready      = 1'h0;
+      bit_ctr_rst   = 1'h0;
+      tmp_read_data = 32'h0;
+      tmp_ready     = 1'h0;
 
       if (cs) begin
 	tmp_ready = 1'h1;
@@ -187,8 +188,8 @@ module rosc(
           end
 
           if (address == ADDR_ENTROPY) begin
-            tmp_read_data  = entropy_reg;
-	    data_ready_rst = 1'h1;
+            tmp_read_data = entropy_reg;
+	    bit_ctr_rst   = 1'h1;
           end
 	end
       end
@@ -196,20 +197,29 @@ module rosc(
 
 
   //----------------------------------------------------------------
-  // data_ready_logic
+  // bit_ctr_logic
   //----------------------------------------------------------------
   always @*
-    begin : data_ready_logic
+    begin : bit_ctr_logic
+      bit_ctr_new    = 8'h0;
+      bit_ctr_we     = 1'h0;
       data_ready_new = 1'h0;
       data_ready_we  = 1'h0;
 
-      if (data_ready_set) begin
-	data_ready_new = 1'h1;
-	data_ready_we  = 1'h1;
-
-      end else if (data_ready_rst) begin
+      if (bit_ctr_rst) begin
+	bit_ctr_new    = 8'h0;
+	bit_ctr_we     = 1'h1;
 	data_ready_new = 1'h0;
 	data_ready_we  = 1'h1;
+      end
+      else if (bit_ctr_inc) begin
+	bit_ctr_new = bit_ctr_reg + 1'h1;
+	bit_ctr_we  = 1'h1;
+
+	if (bit_ctr_reg == SKIP_BITS) begin
+	  data_ready_new = 1'h1;
+	  data_ready_we  = 1'h1;
+	end
       end
     end
 
@@ -219,8 +229,8 @@ module rosc(
   //----------------------------------------------------------------
   always @*
     begin : cycle_ctr_logic
+      cycle_ctr_new  = cycle_ctr_reg + 1'h1;
       cycle_ctr_done = 1'h0;
-      cycle_ctr_new = cycle_ctr_reg + 1'h1;
 
       if (cycle_ctr_rst) begin
 	cycle_ctr_new = 16'h0;
@@ -244,26 +254,20 @@ module rosc(
 
       sample1_we     = 1'h0;
       sample2_we     = 1'h0;
-      cycle_ctr_rst  = 1'h0;
-      data_ready_set = 1'h0;
       entropy_we     = 1'h0;
-      bit_ctr_new    = 5'h0;
-      bit_ctr_we     = 1'h0;
+      cycle_ctr_rst  = 1'h0;
+      bit_ctr_inc    = 1'h0;
       rosc_ctrl_new  = CTRL_SAMPLE1;
       rosc_ctrl_we   = 1'h0;
 
-      xor_f           = ^f;
-      xor_g           = ^g;
+      xor_f       = ^f;
+      xor_g       = ^g;
       xor_sample1 = ^sample1_reg;
       xor_sample2 = ^sample2_reg;
 
       sample1_new = {sample1_reg[0], xor_f};
       sample2_new = {sample2_reg[0], xor_g};
-      entropy_new = {entropy_reg[30 : 0], xor_sample2};
-
-      if (bit_ctr_reg == 31) begin
-	data_ready_set = 1'h1;
-      end
+      entropy_new = {entropy_reg[30 : 0], xor_sample1 ^ xor_sample2};
 
       case (rosc_ctrl_reg)
 	CTRL_SAMPLE1: begin
@@ -287,11 +291,8 @@ module rosc(
 	end
 
 	CTRL_DATA_READY: begin
-	  if (xor_sample1 ^ xor_sample2) begin
-	    entropy_we = 1'h1;
-	    bit_ctr_new   = bit_ctr_reg + 1'h1;
-	    bit_ctr_we    = 1'h1;
-	  end
+	  entropy_we    = 1'h1;
+	  bit_ctr_inc   = 1'h1;
 	  rosc_ctrl_new = CTRL_SAMPLE1;
 	  rosc_ctrl_we  = 1'h1;
 	end
