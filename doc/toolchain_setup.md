@@ -84,24 +84,26 @@ The circuit board designs were all created in [KiCad
 These tools are needed to build the programmer firmware for the
 mta1-usb-v1-programmer
 
-#### FW update of the programmer
-The programmer runs a FW needed to program the devices, the source code
-is available on Github:
 
+#### FW update of programmer board
+
+The programmer board is running a custom firmware developed by Blinkinlabs. The source code
+for this firnware is available on Github:
 https://github.com/Blinkinlabs/ice40_flasher
 
-There is also a pre built FW binary for the programmer:
+There is also a pre built firmware binary available for the programmer board:
 https://github.com/Blinkinlabs/ice40_flasher/tree/main/bin
 
-Download the file programmer FW file "main.uf2" to your host computer.
+To update the firmware on the programmer board, either build the file "main.uf2", or download
+the pre built file to your host computer. Then do the following:
 
-To program do the following.
+1. Disconnect the programming board from the host computer
+2. Press and hold the "BOOTSEL" button on the RPi2040 sub board on the programming board
+3. Reconnect the programming board to the host computer
+4. Release the "BOOTSEL" button after connecting the programming board to the host. The board should now appear to the host as a USB connected storage device
+5. Open the storage device and drop the firmware file ("main.uf2") into the storage device
 
-1. Press the "BOOTSEL" button on the RPi2040 board while connecting the board to the host
-2. Release the button after cvonnecting the board to the host. The board will now appear to the host as a USB connected storage device
-3. Open the storage device and drop the FW file ("main.uf2") into the storage device
-
-The programmer will update its FW with the file and restart itself.
+The programmer will update its firmware with the file and restart itself. After reboot the storage device will automatically be disconnected.
 
 
 ### mta1-usb-v1: ch552 USB to Serial firmware
