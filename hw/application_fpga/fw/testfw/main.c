@@ -17,6 +17,10 @@ volatile uint32_t *cdi =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_CDI_FIR
 volatile uint32_t *udi =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_UDI_FIRST;
 volatile uint32_t *switch_app = (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_SWITCH_APP;
 volatile uint8_t  *fw_ram =     (volatile uint8_t  *)MTA1_MKDF_MMIO_FW_RAM_BASE;
+volatile uint32_t *timer =           (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_TIMER;
+volatile uint32_t *timer_prescaler = (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_PRESCALER;
+volatile uint32_t *timer_status =    (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_STATUS;
+volatile uint32_t *timer_ctrl =      (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_CTRL;
 // clang-format on
 
 // TODO Real UDA is 4 words (16 bytes)
@@ -55,6 +59,17 @@ void test_reverseword(uint32_t *wordp)
 {
 	*wordp = ((*wordp & 0xff000000) >> 24) | ((*wordp & 0x00ff0000) >> 8) |
 		 ((*wordp & 0x0000ff00) << 8) | ((*wordp & 0x000000ff) << 24);
+}
+
+uint32_t wait_timer_tick(uint32_t last_timer)
+{
+	uint32_t newtimer;
+	for (;;) {
+		newtimer = *timer;
+		if (newtimer != last_timer) {
+			return newtimer;
+		}
+	}
 }
 
 int main()
@@ -170,6 +185,43 @@ int main()
 	*fw_ram = 0x21;
 	if (*fw_ram == 0x21) {
 		test_puts("FAIL: Write and read FW RAM in app-mode\r\n");
+		anyfailed = 1;
+	}
+
+	test_puts("Testing timer...\r\n");
+	// Matching clock at 18 MHz, giving us timer in seconds
+	*timer_prescaler = 18 * 1000000;
+
+	// Test timer expiration after 1s
+	*timer = 1;
+	// Write anything to start timer
+	*timer_ctrl = 1;
+	for (;;) {
+		if (*timer_status &
+		    (1 << MTA1_MKDF_MMIO_TIMER_STATUS_READY_BIT)) {
+			// Timer expired (it is ready to start again)
+			break;
+		}
+	}
+
+	// Test to interrupt a timer - and reads from timer register
+	// Starting 10s timer and interrupting it in 3s...
+	*timer = 10;
+	*timer_ctrl = 1;
+	uint32_t last_timer = 10;
+	for (int i = 0; i < 3; i++) {
+		last_timer = wait_timer_tick(last_timer);
+	}
+	// Write anything to stop the timer
+	*timer_ctrl = 1;
+
+	if (!(*timer_status & (1 << MTA1_MKDF_MMIO_TIMER_STATUS_READY_BIT))) {
+		test_puts("FAIL: Timer didn't stop\r\n");
+		anyfailed = 1;
+	}
+
+	if (*timer != 10) {
+		test_puts("FAIL: Timer didn't reset to 10\r\n");
 		anyfailed = 1;
 	}
 

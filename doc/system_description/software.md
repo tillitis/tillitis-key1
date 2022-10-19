@@ -310,9 +310,9 @@ Assigned core prefixes:
 |--------------------|------|------------|--------|---------|-----------|-----------------------------------------------------------------------|
 | `TRNG_STATUS`      | r    | r          |        |         |           | Non-zero when an entropy word is available.                           |
 | `TRNG_ENTROPY`     | r    | r          | 4B     |         |           | Entropy word. Reading a word will clear status.                       |
-| `TIMER_CTRL`       | r/w  | r/w        |        |         |           | If bit zero is set when status is set, the timer will start running.  |
-|                    |      |            |        |         |           | If bit one is set when status is not set, the timer will stop running.|
-| `TIMER_STATUS`     | r    | r          |        |         |           | If bit zero is set, the timer is ready to start running.              |
+| `TIMER_CTRL`       | r/w  | r/w        |        |         |           | If bit 0 in TIMER_STATUS is set then writing here starts the timer.   |
+|                    |      |            |        |         |           | If bit 0 in TIMER_STATUS is unset then writing here stops the timer.  |
+| `TIMER_STATUS`     | r    | r          |        |         |           | If bit 0 is set, the timer is ready to start running.                 |
 | `TIMER_PRESCALER`  | r/w  | r/w        | 4B     |         |           | Prescaler init value. Write blocked when running.                     |
 | `TIMER_TIMER`      | r/w  | r/w        | 4B     |         |           | Timer init or current value when running. Write blocked when running. |
 | `UDS_START`        | r[^2]| invisible  | 4B     | u8[32]  |           | First word of Unique Device Secret key.                               |
