@@ -11,6 +11,14 @@ using firmware from this commit and onwards your CDI and with it the
 private key of the signerapp will change even if you haven't changed
 the app in any way.
 
+### Change of serial port communication speed
+
+For stability and speed considerations we're raising the speed used
+for communication with the device over the serial port. The serial
+port UART speed is raised from 38400 to 62500 bps (Bits Per Second).
+Host programs in the tillitis-key1-apps repo are also adjusted
+accordingly.
+
 ## engineering-release-1
 
 ### Hardware

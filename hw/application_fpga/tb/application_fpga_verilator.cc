@@ -24,9 +24,9 @@
 #include "Vapplication_fpga.h"
 #include "verilated.h"
 
-// Clock: 18 MHz, 38400 bps
-// Divisor = 18*10E6 / 38400 = 468.75 ~ 469
-#define BIT_DIV 469
+// Clock: 18 MHz, 62500 bps
+// Divisor = 18E6 / 62500 = 288
+#define BIT_DIV 288
 
 struct uart {
 	int bit_div;
