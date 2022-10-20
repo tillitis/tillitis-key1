@@ -1,7 +1,14 @@
+# TK1 Quickstart
 
 This document describes how to build the FPGA bitstream, including the
 firmware, and get this programmed onto the flash memory of the
 Tillitis Key 1 USB device.
+
+*Note well*: If you have an already flashed TK1 you don't need to do
+anything unless you want to set your own Unique Device Secret (UDS).
+You can start running apps on it immediately. See
+[tillitis-key1-apps](https://github.com/tillitis/tillitis-key1-apps)
+for a few examples.
 
 The Tillitis Key 1 kit includes:
 
@@ -12,7 +19,7 @@ The Tillitis Key 1 kit includes:
 - USB-C extension cable
 - USB-C to USB-A adapter
 
-# Programming FPGA bitstream and firmware onto Tillitis Key 1
+## Programming FPGA bitstream and firmware onto Tillitis Key 1
 
 Connect the programmer to the computer using the USB cable with
 micro-B plug.
@@ -39,7 +46,11 @@ refer to [toolchain_setup.md](toolchain_setup.md).
 
 You are now ready to generate the FPGA bitstream (including building
 the standard firmware) and program it onto the flash memory of the USB
-stick. The following should be run as your regular non-root user, but
+stick. Note that this will give a default Unique Device Secret. If you
+want to personalize your TK1, see under Device personalization below
+first.
+
+The following should be run as your regular non-root user, but
 the programming is currently done using `sudo` (so sudo is expected to
 be set up for your user; the Makefile runs `sudo tillitis-iceprog …`).
 
@@ -61,29 +72,29 @@ To learn more about the concepts and workings of the firmware, see:
 [system_description/system_description.md](system_description/system_description.md)
 and [system_description/software.md](system_description/software.md).
 
-# Device personalization
+## Device personalization - setting Unique Device Secret (UDS)
 
-To personalize Tillitis Key 1, you need to modify the hex file that
-contains the Unique Device Secret (UDS). You should also update the
-Unique Device Identity (UDI). These hex files are located in
+To personalize Tillitis Key 1 you need to modify the Unique Device
+Secret (UDS) and, maybe, the Unique Device Identity (UDI).
+
+The simplest way to generate a new UDS is to:
+
+```
+$ cd tillitis-key1/hw/application_fpga
+$ make secret
+```
+
+Then proceed with the `make prog_flash` as discussed above.
+
+In detail: You need to modify the hex file that contains the Unique
+Device Secret (UDS). You might also want to update the Unique Device
+Identity (UDI). These hex files are located in
 `hw/application_fpga/data/`. Note that after modify the files in this
 directory, you need to rebuild and program the device again (as
 above).
 
 To make this easier there is a tool that can generate these files. The
-tool can be found in `hw/application_fpga/tools/tpt`. The tool allow
-you to supply a secret used as part of the UDS generation. The tool
-can be run interactively, or by suppling inputs on the command line:
-
-```
-usage: tpt.py [-h] [-v] [--ent ENT] [--vid VID] [--pid PID] [--rev REV] [--serial SERIAL]
-
-options:
-  -h, --help       show this help message and exit
-  -v, --verbose    Verbose operation
-  --ent ENT        User supplied entropy
-  --vid VID        Vendor id (0 - 65535)
-  --pid PID        Product id (0 - 2555
-  --rev REV        Revision number (0 - 15)
-  --serial SERIAL  Serial number (0 - (2**31 - 1))
-```
+tool can be found in `hw/application_fpga/tools/tpt`. The tool by
+default allow you to supply a secret used as part of the UDS
+generation and only generates a new `uds.hex`. See `--help` for more
+flags.
