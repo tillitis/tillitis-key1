@@ -1,8 +1,8 @@
 //======================================================================
 //
-// mta1.v
-// ------
-// Top level information, debug and control core for the mta1 design.
+// tk1.v
+// -----
+// Top level information, debug and control core for the tk1 design.
 //
 //
 // Author: Joachim Strombergson
@@ -13,29 +13,29 @@
 
 `default_nettype none
 
-module mta1(
-	    input wire           clk,
-	    input wire           reset_n,
+module tk1(
+	   input wire           clk,
+	   input wire           reset_n,
 
-	    output wire          fw_app_mode,
+	   output wire          fw_app_mode,
 
-            output wire          led_r,
-            output wire          led_g,
-            output wire          led_b,
+           output wire          led_r,
+           output wire          led_g,
+           output wire          led_b,
 
-            input wire           gpio1,
-            input wire           gpio2,
-            output wire          gpio3,
-            output wire          gpio4,
+           input wire           gpio1,
+           input wire           gpio2,
+           output wire          gpio3,
+           output wire          gpio4,
 
-	    input wire           cs,
-	    input wire           we,
+	   input wire           cs,
+	   input wire           we,
 
-	    input wire  [7 : 0]  address,
-	    input wire [31 : 0]  write_data,
-	    output wire [31 : 0] read_data,
-	    output wire          ready
-	   );
+	   input wire  [7 : 0]  address,
+	   input wire [31 : 0]  write_data,
+	   output wire [31 : 0] read_data,
+	   output wire          ready
+	  );
 
 
   //----------------------------------------------------------------
@@ -67,9 +67,9 @@ module mta1(
   localparam ADDR_UDI_FIRST  = 8'h30;
   localparam ADDR_UDI_LAST   = 8'h31;
 
-  localparam MTA1_NAME0      = 32'h6d746131; // "mta1"
-  localparam MTA1_NAME1      = 32'h6d6b6466; // "mkdf"
-  localparam MTA1_VERSION    = 32'h00000004;
+  localparam TK1_NAME0       = 32'h746B3120; // "tk1 "
+  localparam TK1_NAME1       = 32'h6d6b6466; // "mkdf"
+  localparam TK1_VERSION     = 32'h00000004;
 
 
   //----------------------------------------------------------------
@@ -259,15 +259,15 @@ module mta1(
 
         else begin
 	  if (address == ADDR_NAME0) begin
-	    tmp_read_data = MTA1_NAME0;
+	    tmp_read_data = TK1_NAME0;
           end
 
 	  if (address == ADDR_NAME1) begin
-	    tmp_read_data = MTA1_NAME1;
+	    tmp_read_data = TK1_NAME1;
 	  end
 
 	  if (address == ADDR_VERSION) begin
-	    tmp_read_data = MTA1_VERSION;
+	    tmp_read_data = TK1_VERSION;
 	  end
 
 	  if (address == ADDR_SWITCH_APP) begin
@@ -302,8 +302,8 @@ module mta1(
       end
     end // api
 
-endmodule // mta1
+endmodule // tk1
 
 //======================================================================
-// EOF mta1.v
+// EOF tk1.v
 //======================================================================

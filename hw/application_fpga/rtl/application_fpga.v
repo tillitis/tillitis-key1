@@ -49,7 +49,7 @@ module application_fpga(
   localparam UART_PREFIX        = 6'h03;
   localparam TOUCH_SENSE_PREFIX = 6'h04;
   localparam FW_RAM_PREFIX      = 6'h10;
-  localparam MTA1_PREFIX        = 6'h3f;
+  localparam TK1_PREFIX         = 6'h3f;
 
 
   //----------------------------------------------------------------
@@ -141,13 +141,13 @@ module application_fpga(
   wire          touch_sense_ready;
 
   /* verilator lint_off UNOPTFLAT */
-  reg           mta1_cs;
+  reg           tk1_cs;
   /* verilator lint_on UNOPTFLAT */
-  reg           mta1_we;
-  reg  [7 : 0]  mta1_address;
-  reg [31 : 0]  mta1_write_data;
-  wire [31 : 0] mta1_read_data;
-  wire          mta1_ready;
+  reg           tk1_we;
+  reg  [7 : 0]  tk1_address;
+  reg [31 : 0]  tk1_write_data;
+  wire [31 : 0] tk1_read_data;
+  wire          tk1_ready;
   wire          fw_app_mode;
 
 
@@ -310,7 +310,7 @@ module application_fpga(
 			       );
 
 
-  mta1 mta1_inst(
+  tk1 tk1_inst(
 		 .clk(clk),
 		 .reset_n(reset_n),
 
@@ -325,12 +325,12 @@ module application_fpga(
                  .gpio3(app_gpio3),
                  .gpio4(app_gpio4),
 
-		 .cs(mta1_cs),
-		 .we(mta1_we),
-		 .address(mta1_address),
-		 .write_data(mta1_write_data),
-		 .read_data(mta1_read_data),
-		 .ready(mta1_ready)
+		 .cs(tk1_cs),
+		 .we(tk1_we),
+		 .address(tk1_address),
+		 .write_data(tk1_write_data),
+		 .read_data(tk1_read_data),
+		 .ready(tk1_ready)
 		 );
 
 
@@ -402,10 +402,10 @@ module application_fpga(
       touch_sense_we      = |cpu_wstrb;
       touch_sense_address = cpu_addr[9 : 2];
 
-      mta1_cs             = 1'h0;
-      mta1_we             = |cpu_wstrb;
-      mta1_address        = cpu_addr[9 : 2];
-      mta1_write_data     = cpu_wdata;
+      tk1_cs              = 1'h0;
+      tk1_we              = |cpu_wstrb;
+      tk1_address         = cpu_addr[9 : 2];
+      tk1_write_data      = cpu_wdata;
 
       if (cpu_valid && !muxed_ready_reg) begin
         case (area_prefix)
@@ -464,10 +464,10 @@ module application_fpga(
 	        muxed_ready_new = fw_ram_ready;
               end
 
-	      MTA1_PREFIX: begin
-                mta1_cs         = 1'h1;
-	        muxed_rdata_new = mta1_read_data;
-	        muxed_ready_new = mta1_ready;
+	      TK1_PREFIX: begin
+                tk1_cs          = 1'h1;
+	        muxed_rdata_new = tk1_read_data;
+	        muxed_ready_new = tk1_ready;
               end
 
               default: begin

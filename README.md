@@ -31,7 +31,7 @@ applications up to 64 KB with a 64 KB stack.
 * [Framing Protocol](doc/framing_protocol/framing_protocol.md)
 * [Boards](hw/boards/README.md)
 * [Software](doc/system_description/software.md)
-* [Firmware](hw/application_fpga/fw/mta1_mkdf/README.md)
+* [Firmware](hw/application_fpga/fw/tk1/README.md)
 * [Toolchain setup](doc/toolchain_setup.md)
 * [Quickstart](doc/quickstart.md) to program the Tillitis Key 1
 * [Release Notes](doc/release_notes.md)

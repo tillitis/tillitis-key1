@@ -3,7 +3,7 @@
 # application_fpga_mta1_usb_dev.pcf
 # ---------------------------------
 # Pin constraints file for the Application FPGA design used on the
-# Mullvad MTA1_USB_DEV board.
+# Tillitis MTA1_USB_DEV board.
 #
 #
 # Copyright (C) 2022 - Tillitis AB

@@ -61,30 +61,30 @@ VERILOG_SRCS = \
 	$(P)/core/timer/rtl/timer.v \
 	$(P)/core/uds/rtl/uds.v \
 	$(P)/core/touch_sense/rtl/touch_sense.v \
-	$(P)/core/mta1/rtl/mta1.v \
+	$(P)/core/tk1/rtl/tk1.v \
 	$(P)/core/uart/rtl/uart_core.v \
 	$(P)/core/uart/rtl/uart_fifo.v \
 	$(P)/core/uart/rtl/uart.v \
 	$(P)/core/trng/rtl/rosc.v
 
 FIRMWARE_DEPS = \
-	$(P)/fw/mta1_mkdf_mem.h \
-	$(P)/fw/mta1_mkdf/types.h \
-	$(P)/fw/mta1_mkdf/lib.h \
-	$(P)/fw/mta1_mkdf/proto.h
+	$(P)/fw/tk1_mem.h \
+	$(P)/fw/tk1/types.h \
+	$(P)/fw/tk1/lib.h \
+	$(P)/fw/tk1/proto.h
 
 FIRMWARE_OBJS = \
-	$(P)/fw/mta1_mkdf/main.o \
-	$(P)/fw/mta1_mkdf/start.o \
-	$(P)/fw/mta1_mkdf/proto.o \
-	$(P)/fw/mta1_mkdf/lib.o \
-	$(P)/fw/mta1_mkdf/blake2s/blake2s.o
+	$(P)/fw/tk1/main.o \
+	$(P)/fw/tk1/start.o \
+	$(P)/fw/tk1/proto.o \
+	$(P)/fw/tk1/lib.o \
+	$(P)/fw/tk1/blake2s/blake2s.o
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
-	$(P)/fw/mta1_mkdf/start.o \
-	$(P)/fw/mta1_mkdf/proto.o \
-	$(P)/fw/mta1_mkdf/lib.o
+	$(P)/fw/tk1/start.o \
+	$(P)/fw/tk1/proto.o \
+	$(P)/fw/tk1/lib.o
 
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
@@ -116,15 +116,15 @@ secret:
 # Firmware generation.
 # Included in the bitstream.
 #-------------------------------------------------------------------
-LDFLAGS=-T $(P)/fw/mta1_mkdf/firmware.lds
+LDFLAGS=-T $(P)/fw/tk1/firmware.lds
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
-firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/mta1_mkdf/firmware.lds
+firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
 
-testfw.elf: $(TESTFW_OBJS) $(P)/fw/mta1_mkdf/firmware.lds
+testfw.elf: $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@
 
 # Generate a fake BRAM file that will be filled in later after place-n-route

@@ -184,7 +184,7 @@ Available commands/reponses:
 
 #### `FW_{CMD,RSP}_VERIFY_DEVICE`
 
-Verification that the device is an authentic Mullvad
+Verification that the device is an authentic Tillitis
 device. Implemented using challenge/response.
 
 #### `FW_{CMD,RSP}_GET_APP_DIGEST`
@@ -305,8 +305,7 @@ v                                     v
 The memory exposes SoC functionality to the software when in firmware
 mode. It is a set of memory mapped registers (MMIO), starting at base
 address `0xc000_0000`. For specific offsets/bitmasks, see the file
-[mta1_mkdf_mem.h](../../hw/application_fpga/fw/mta1_mkdf_mem.h) (in
-this repo).
+[tk1_mem.h](../../hw/application_fpga/fw/tk1_mem.h) (in this repo).
 
 Assigned core prefixes:
 
@@ -320,7 +319,7 @@ Assigned core prefixes:
 | UART   | 0xc3     |
 | TOUCH  | 0xc4     |
 | FW_RAM | 0xd0     |
-| MTA1   | 0xff     |
+| TK1    | 0xff     |
 
 *Nota bene*: MMIO accesses should be 32 bit wide, e.g use `lw` and
 `sw`. Exceptions are `FW_RAM` and `QEMU_DEBUG`.
@@ -349,7 +348,7 @@ Assigned core prefixes:
 | `UDA`             | r     | invisible  | 16B    | u8[16]   |           | Unique Device Authentication key.                                     |
 | `UDI`             | r     | r          | 8B     | u64      |           | Unique Device ID (UDI).                                               |
 | `QEMU_DEBUG`      | w     | w          |        | u8       |           | Debug console (only in QEMU)                                          |
-| `NAME0`           | r     | r          | 4B     | char[4]  | "mta1"    | ID of core/stick                                                      |
+| `NAME0`           | r     | r          | 4B     | char[4]  | "tk1 "    | ID of core/stick                                                      |
 | `NAME1`           | r     | r          | 4B     | char[4]  | "mkdf"    | ID of core/stick                                                      |
 | `VERSION`         | r     | r          | 4B     | u32      | 1         | Current version.                                                      |
 | `SWITCH_APP`      | w     | invisible? | 1B     | u8       |           | Switch to application mode. Write non-zero to trigger.                |

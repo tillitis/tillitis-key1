@@ -4,16 +4,16 @@
  */
 
 #include "proto.h"
-#include "../mta1_mkdf_mem.h"
+#include "../tk1_mem.h"
 #include "lib.h"
 #include "types.h"
 
 // clang-format off
-static volatile uint32_t *can_rx = (volatile uint32_t *)MTA1_MKDF_MMIO_UART_RX_STATUS;
-static volatile uint32_t *rx =     (volatile uint32_t *)MTA1_MKDF_MMIO_UART_RX_DATA;
-static volatile uint32_t *can_tx = (volatile uint32_t *)MTA1_MKDF_MMIO_UART_TX_STATUS;
-static volatile uint32_t *tx =     (volatile uint32_t *)MTA1_MKDF_MMIO_UART_TX_DATA;
-static volatile uint32_t *led =    (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_LED;
+static volatile uint32_t *can_rx = (volatile uint32_t *)TK1_MMIO_UART_RX_STATUS;
+static volatile uint32_t *rx =     (volatile uint32_t *)TK1_MMIO_UART_RX_DATA;
+static volatile uint32_t *can_tx = (volatile uint32_t *)TK1_MMIO_UART_TX_STATUS;
+static volatile uint32_t *tx =     (volatile uint32_t *)TK1_MMIO_UART_TX_DATA;
+static volatile uint32_t *led =    (volatile uint32_t *)TK1_MMIO_TK1_LED;
 // clang-format on
 
 uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status, enum cmdlen len)

@@ -2,9 +2,9 @@
 
 ## Purpose and Revision
 The purpose of this document is to provide a description of the
-Tillitis Key 1 (TK1). What it is, what is supposed to be used for, by whom,
-where and possible use cases. The document also provides a functional level
-description of features and components of the mta1_mkdf.
+Tillitis Key 1 (TK1). What it is, what is supposed to be used for, by
+whom, where and possible use cases. The document also provides a
+functional level description of features and components of the TK1.
 
 Finally, the document acts as a requirement description. For the
 requirements, the document follows
@@ -60,7 +60,7 @@ The TK1 store and use the following assets internally:
 - UDS - Unique Device Secret. Provisioned and stored during
   device manufacturing. Never to be replaced during the life time of
   a given device. Used to derive application secrets. Must never leave
-  the device. Mullvad must NOT store a copy of the UDS.
+  the device. Tillitis must NOT store a copy of the UDS.
 
 - UDI - Unique Device ID. Provisioned and stored during
   device manufacturing. Never to be replaced or altered during the life
@@ -69,7 +69,7 @@ The TK1 store and use the following assets internally:
 - UDA - Unique Device Authentication Secret. Provisioned and stored during
   device manufacturing. Never to be replaced during the life time of
   a given device. Used to authenticate a specific device. Must never
-  leave the device. Mullvad MUST have a copy of the UDA.
+  leave the device. Tillitis MUST have a copy of the UDA.
 
 
 Additionally the following asset could be provided from the host:
@@ -100,8 +100,8 @@ libraries etc. Roughly these can be divided into:
 - host side application loader. Software that talks to the FW in the
   application_fpga to load a secure application
 
-- host side boot, management. Support software to boot, authenticate the
-  mta1_mkdf board connected to a host
+- host side boot, management. Support software to boot, authenticate
+  the TK1 board connected to a host
 
 - host side secure application. Software that communicates with the
   secure application running in the application_fpga as needed to solve
@@ -125,27 +125,27 @@ The Application FPGA hardware should provide the following:
    - Unique Device ID (UDI)
       - 64 bits
       - Readable via API before application start
-      - Generated and stored by Mullvad
+      - Generated and stored by Tillitis
 
    - Unique Device Authentication key (UDA)
       - At least 128 bits number
       - Readable by FW before application start
-      - Generated and stored by Mullvad
+      - Generated and stored by Tillitis
 
     - Unique Device Secret (UDS)
       - 256 bits
       - Readable by HW before application start
-      - Generated but NOT stored by Mullvad
+      - Generated but NOT stored by Tillitis
 
     - NAME
-      - 64 bits. ASCII string. "mta1_mkdf"
+      - 64 bits. ASCII string. "TK1 MKDF"
       - Readable via API before application start
-      - Set by Mullvad as part of FPGA design
+      - Set by Tillitis as part of FPGA design
 
     - VERSION: version
       - 32 bits. 32 bit data, for example 1
       - Readable via API before application start
-      - Set by Mullvad as part of FPGA design
+      - Set by Tillitis as part of FPGA design
 
 2. Communication
     - Rx-FIFO with status (data_available)

@@ -7,21 +7,21 @@
 
 ## 1 Introduction
 This document describes a proposal for a transport level communication
-protocol for the mta1_mkdf USB connected secure application device. The
-proposal describes the different endpoints, the different levels in the
-stack, framing and encoding.
+protocol for the TK1 USB connected secure application device. The
+proposal describes the different endpoints, the different levels in
+the stack, framing and encoding.
 
 
 ## 2 System description and problem statement
-The mta1_mkdf is a USB connected device. The device provides a secure
-compute platform and environment for applications providing some service
-and function to (the user of) the USB host. Examples of applications
-that can be implemented are AUTH token generators, Root of Trust, and
-signing oracles.
+The TK1 is a USB connected device. The device provides a secure
+compute platform and environment for applications providing some
+service and function to (the user of) the USB host. Examples of
+applications that can be implemented are AUTH token generators, Root
+of Trust, and signing oracles.
 
-The mta1_mkdf is implemented using FPGA devices, and the computer
-functionality is based on RISC-V. Conceptually, the mta1_mkdf consists
-of three levels:
+The TK1 is implemented using FPGA devices, and the computer
+functionality is based on RISC-V. Conceptually, the TK1 consists of
+three levels:
 
 1. The hardware level. The actual FPGA devices and the hardware
    implemented in them, for example the RISC-V core, the application and
@@ -29,33 +29,33 @@ of three levels:
    hardware access control.
 
 
-2. The mta1_mkdf  firmware and SDK level. The mta1_mkdf contains SW
-   functionality (called firmware - FW) used to set up the application
-   environment, but also provide the applications with things like host
-   communication (the protocol described in this document),  key
+2. The TK1 firmware and SDK level. The TK1 contains SW functionality
+   (called firmware - FW) used to set up the application environment,
+   but also provide the applications with things like host
+   communication (the protocol described in this document), key
    generation, timers etc.
 
    Similarly, the SDK provides similar convenience functions for the
     host side applications. Allowing host side applications to load
-    applications on the mta1_mkdf, and then communicate with, use the
-    applications running on the mta1_mkdf.
+    applications on the TK1, and then communicate with, use the
+    applications running on the TK1.
 
-3. The applications running on the mta1_mkdf, the corresponding host SW.
+3. The applications running on the TK1, the corresponding host SW.
 
 The hardware, the FW as well as the applications can be endpoints with
 which programs on the host may communicate. This means that we need to
-be able to address different endpoints in the mta1_mkdf. And, crucially,
-the applications and their corresponding host SW may communicate using
+be able to address different endpoints in the TK1. And, crucially, the
+applications and their corresponding host SW may communicate using
 custom protocols that are not known today.
 
 This means that we need a general transport mechanism for commands to,
-and responses from the endpoints in the mta1_mkdf. Due to the
-constrained environment the transport mechanism must be “light”, that is
-both easy to implement and to require few resources
+and responses from the endpoints in the TK1. Due to the constrained
+environment the transport mechanism must be “light”, that is both easy
+to implement and to require few resources
 
 
-### 2.1 mta1_mkdf system description details
-The mta1_mkdf consists of two FPGA devices - interface_fpga and
+### 2.1 TK1 system description details
+The TK1 consists of two FPGA devices - interface_fpga and
 application_fpga.
 
 The interface_fpga contains a USB core and FPGA-local control
@@ -91,9 +91,9 @@ and sending responses.
 
 ## 3 Protocol description
 The communication is driven by the host and the protocol is
-command-response based. The host sends a command, and the mta1_mkdf must
-always send a response to a given command. Commands are processed by the
-mta1_mkdf in order. If the host sends a new command before receiving a
+command-response based. The host sends a command, and the TK1 must
+always send a response to a given command. Commands are processed by
+the TK1 in order. If the host sends a new command before receiving a
 response to the previous command, it is the responsibility of the host
 to determine to which command a received response belongs to.
 
@@ -154,7 +154,7 @@ Some examples to clarify endpoints and commands:
 
 * 0x1a: A command to the application running in the application_fpga
   with 32 bytes of data. The data could be a 32 byte challenge to be
-  signed using a private key derived in the mta1_mkdf.
+  signed using a private key derived in the TK1.
 
 
 ### 3.2 Response frame format

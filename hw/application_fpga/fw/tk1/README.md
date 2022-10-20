@@ -20,11 +20,11 @@ the default `llvm-objcopy-14` and `llvm-size-14` define `OBJCOPY` and
 
 ## Using QEMU
 
-Checkout the `mta1` branch of [our version of the
+Checkout the `tk1` branch of [our version of the
 qemu](https://github.com/tillitis/qemu) and build:
 
 ```
-$ git clone -b mta1 https://github.com/tillitis/qemu
+$ git clone -b tk1 https://github.com/tillitis/qemu
 $ mkdir qemu/build
 $ cd qemu/build
 $ ../configure --target-list=riscv32-softmmu --disable-werror
@@ -37,7 +37,7 @@ issue](https://github.com/tillitis/qemu/issues/3).)
 Run it like this:
 
 ```
-$ /path/to/qemu/build/qemu-system-riscv32 -nographic -M mta1_mkdf,fifo=chrid -bios firmware.elf \
+$ /path/to/qemu/build/qemu-system-riscv32 -nographic -M tk1,fifo=chrid -bios firmware.elf \
   -chardev pty,id=chrid
 ```
 

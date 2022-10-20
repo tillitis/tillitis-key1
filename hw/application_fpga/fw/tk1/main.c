@@ -3,30 +3,30 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include "../mta1_mkdf_mem.h"
+#include "../tk1_mem.h"
 #include "blake2s/blake2s.h"
 #include "lib.h"
 #include "proto.h"
 #include "types.h"
 
 // In RAM + above the stack (0x40010000)
-#define APP_RAM_ADDR (MTA1_MKDF_RAM_BASE + 0x10000)
+#define APP_RAM_ADDR (TK1_RAM_BASE + 0x10000)
 #define APP_MAX_SIZE 65536
 
 // clang-format off
-static volatile uint32_t *uds =        (volatile uint32_t *)MTA1_MKDF_MMIO_UDS_FIRST;
-static volatile uint32_t *switch_app = (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_SWITCH_APP;
-static volatile uint32_t *name0 =      (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_NAME0;
-static volatile uint32_t *name1 =      (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_NAME1;
-static volatile uint32_t *ver =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_VERSION;
-static volatile uint32_t *cdi =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_CDI_FIRST;
-static volatile uint32_t *app_addr =   (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_APP_ADDR;
-static volatile uint32_t *app_size =   (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_APP_SIZE;
-static volatile uint8_t *fw_ram =      (volatile uint8_t *)MTA1_MKDF_MMIO_FW_RAM_BASE;
+static volatile uint32_t *uds =        (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
+static volatile uint32_t *switch_app = (volatile uint32_t *)TK1_MMIO_TK1_SWITCH_APP;
+static volatile uint32_t *name0 =      (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
+static volatile uint32_t *name1 =      (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
+static volatile uint32_t *ver =        (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
+static volatile uint32_t *cdi =        (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
+static volatile uint32_t *app_addr =   (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
+static volatile uint32_t *app_size =   (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
+static volatile uint8_t *fw_ram =      (volatile uint8_t *)TK1_MMIO_FW_RAM_BASE;
 
-#define LED_RED   (1 << MTA1_MKDF_MMIO_MTA1_LED_R_BIT)
-#define LED_GREEN (1 << MTA1_MKDF_MMIO_MTA1_LED_G_BIT)
-#define LED_BLUE  (1 << MTA1_MKDF_MMIO_MTA1_LED_B_BIT)
+#define LED_RED   (1 << TK1_MMIO_TK1_LED_R_BIT)
+#define LED_GREEN (1 << TK1_MMIO_TK1_LED_G_BIT)
+#define LED_BLUE  (1 << TK1_MMIO_TK1_LED_B_BIT)
 #define LED_WHITE (LED_RED | LED_GREEN | LED_BLUE)
 // clang-format on
 
@@ -81,7 +81,7 @@ static void compute_cdi(uint8_t digest[32], uint8_t uss[32])
 		(const void *)fw_ram, 96, secure_ctx);
 
 	// Write over the firmware-only RAM
-	memset((void *)fw_ram, 0, MTA1_MKDF_MMIO_FW_RAM_SIZE);
+	memset((void *)fw_ram, 0, TK1_MMIO_FW_RAM_SIZE);
 
 	// Only word aligned access to CDI
 	wordcpy((void *)cdi, (void *)local_cdi, 8);
@@ -265,13 +265,13 @@ int main()
 			lf();
 			// clang-format off
 			asm volatile(
-				"li a0, 0x40000000;" // MTA1_MKDF_RAM_BASE
+				"li a0, 0x40000000;" // TK1_RAM_BASE
 				"li a1, 0x40010000;"
 				"loop:;"
 				"sw zero, 0(a0);"
 				"addi a0, a0, 4;"
 				"blt a0, a1, loop;"
-				// Get value at MTA1_MKDF_MMIO_MTA1_APP_ADDR
+				// Get value at TK1_MMIO_TK1_APP_ADDR
 				"lui a0,0xff000;"
 				"lw a0,0x030(a0);"
 				"jalr x0,0(a0);"

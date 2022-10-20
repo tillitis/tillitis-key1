@@ -3,26 +3,26 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include "../mta1_mkdf/lib.h"
-#include "../mta1_mkdf/proto.h"
-#include "../mta1_mkdf/types.h"
-#include "../mta1_mkdf_mem.h"
+#include "../tk1/lib.h"
+#include "../tk1/proto.h"
+#include "../tk1/types.h"
+#include "../tk1_mem.h"
 
 // clang-format off
-volatile uint32_t *mta1name0 =  (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_NAME0;
-volatile uint32_t *mta1name1 =  (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_NAME1;
-volatile uint32_t *uds =        (volatile uint32_t *)MTA1_MKDF_MMIO_UDS_FIRST;
-volatile uint32_t *uda =        (volatile uint32_t *)MTA1_MKDF_MMIO_QEMU_UDA; // Only in QEMU right now
-volatile uint32_t *cdi =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_CDI_FIRST;
-volatile uint32_t *udi =        (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_UDI_FIRST;
-volatile uint32_t *switch_app = (volatile uint32_t *)MTA1_MKDF_MMIO_MTA1_SWITCH_APP;
-volatile uint8_t  *fw_ram =     (volatile uint8_t  *)MTA1_MKDF_MMIO_FW_RAM_BASE;
-volatile uint32_t *timer =           (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_TIMER;
-volatile uint32_t *timer_prescaler = (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_PRESCALER;
-volatile uint32_t *timer_status =    (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_STATUS;
-volatile uint32_t *timer_ctrl =      (volatile uint32_t *)MTA1_MKDF_MMIO_TIMER_CTRL;
-volatile uint32_t *trng_status =  (volatile uint32_t *)MTA1_MKDF_MMIO_TRNG_STATUS;
-volatile uint32_t *trng_entropy = (volatile uint32_t *)MTA1_MKDF_MMIO_TRNG_ENTROPY;
+volatile uint32_t *tk1name0 =   (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
+volatile uint32_t *tk1name1 =   (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
+volatile uint32_t *uds =        (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
+volatile uint32_t *uda =        (volatile uint32_t *)TK1_MMIO_QEMU_UDA; // Only in QEMU right now
+volatile uint32_t *cdi =        (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
+volatile uint32_t *udi =        (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
+volatile uint32_t *switch_app = (volatile uint32_t *)TK1_MMIO_TK1_SWITCH_APP;
+volatile uint8_t  *fw_ram =     (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
+volatile uint32_t *timer =           (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
+volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
+volatile uint32_t *timer_status =    (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
+volatile uint32_t *timer_ctrl =      (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
+volatile uint32_t *trng_status =  (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
+volatile uint32_t *trng_entropy = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
 // clang-format on
 
 // TODO Real UDA is 4 words (16 bytes)
@@ -82,13 +82,13 @@ int main()
 	in = readbyte();
 
 	test_puts("I'm testfw on:");
-	// Output the MTA1 core's NAME0 and NAME1
+	// Output the TK1 core's NAME0 and NAME1
 	uint32_t name;
-	wordcpy(&name, (void *)mta1name0, 1);
+	wordcpy(&name, (void *)tk1name0, 1);
 	test_reverseword(&name);
 	test_putsn((char *)&name, 4);
 	test_puts(" ");
-	wordcpy(&name, (void *)mta1name1, 1);
+	wordcpy(&name, (void *)tk1name1, 1);
 	test_reverseword(&name);
 	test_putsn((char *)&name, 4);
 	test_puts("\r\n");
@@ -199,8 +199,7 @@ int main()
 	// Write anything to start timer
 	*timer_ctrl = 1;
 	for (;;) {
-		if (*timer_status &
-		    (1 << MTA1_MKDF_MMIO_TIMER_STATUS_READY_BIT)) {
+		if (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_READY_BIT)) {
 			// Timer expired (it is ready to start again)
 			break;
 		}
@@ -217,7 +216,7 @@ int main()
 	// Write anything to stop the timer
 	*timer_ctrl = 1;
 
-	if (!(*timer_status & (1 << MTA1_MKDF_MMIO_TIMER_STATUS_READY_BIT))) {
+	if (!(*timer_status & (1 << TK1_MMIO_TIMER_STATUS_READY_BIT))) {
 		test_puts("FAIL: Timer didn't stop\r\n");
 		anyfailed = 1;
 	}
@@ -238,8 +237,7 @@ int main()
 	for (int j = 0; j < 8; j++) {
 		for (int i = 0; i < 8; i++) {
 			while ((*trng_status &
-				(1 << MTA1_MKDF_MMIO_TRNG_STATUS_READY_BIT)) ==
-			       0) {
+				(1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
 			}
 			uint32_t rnd = *trng_entropy;
 			test_puthexn((uint8_t *)&rnd, 4);
