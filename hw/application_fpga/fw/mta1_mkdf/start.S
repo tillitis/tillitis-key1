@@ -38,6 +38,14 @@ _start:
 	li x30,0
 	li x31,0
 
+	/* Clear all RAM */
+	li a0, 0x40000000 // RAM base
+	li a1, 0x40020000 // To end of SRAM
+clear:
+	sw zero, 0(a0)
+	addi a0, a0, 4
+	blt a0, a1, clear
+
         /* init stack to right under where we load app at 0x40010000 */
         li sp, 0x4000fff0
 
