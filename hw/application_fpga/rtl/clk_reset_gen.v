@@ -55,6 +55,16 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
 
 
   // Use a PLL to generate a new clock frequency based on the HFOSC clock.
+  //
+  // Given FEEDBACK_PATH=="SIMPLE", clock calculation according to 3.5.2 in
+  // FPGA-TN-02052-1-4-iCE40-sysCLOCK-PLL-Design-User-Guide.pdf
+  // https://www.latticesemi.com/view_document?document_id=47778 follows:
+  //
+  // F_pllout == (F_referenceclk * (DIVF + 1)) / (2^DIVQ * (DIVR + 1))
+  //
+  // Given the 12 MHz HFOSC clock set above, we get a final 18 MHz:
+  //
+  // (12000000 * (47 + 1)) / (2^5 * (0 + 1)) = 18000000
   SB_PLL40_CORE #(
 		  .FEEDBACK_PATH("SIMPLE"),
 		  .DIVR(4'b0000),	// DIVR =  0
