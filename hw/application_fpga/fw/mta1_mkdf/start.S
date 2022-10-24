@@ -46,8 +46,8 @@ clear:
 	addi a0, a0, 4
 	blt a0, a1, clear
 
-        /* init stack to right under where we load app at 0x40010000 */
-        li sp, 0x4000fff0
+	/* init stack to right under where we load app at 0x40010000 */
+	li sp, 0x4000fff0
 
 	/* copy data section */
 	la a0, _sidata

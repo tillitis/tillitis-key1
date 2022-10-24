@@ -24,10 +24,11 @@ specifications:
   * 30 EBR[^1] x 4 Kbit => 120 Kbit. PicoRV32 uses ~4 EBRs internally
     => 13 KB for Firmware. We should probably aim for less; 8 KB
     should be the target.
-  * 4 SPRAM x 32 KB => 128 KB RAM for application/software
+  * 4 SPRAM[^2] x 32 KB => 128 KB RAM for application/software
 
 [^1]: Embedded Block RAM (also BRAM) residing in the FPGA, can
     be configured as RAM or ROM.
+[^2]: Single Port RAM (also SRAM).
 
 ## Introduction
 
@@ -313,7 +314,7 @@ Assigned core prefixes:
 | `TIMER_STATUS`     | r    | r          |        |         |           | If bit 0 is set, the timer is ready to start running.                 |
 | `TIMER_PRESCALER`  | r/w  | r/w        | 4B     |         |           | Prescaler init value. Write blocked when running.                     |
 | `TIMER_TIMER`      | r/w  | r/w        | 4B     |         |           | Timer init or current value when running. Write blocked when running. |
-| `UDS_START`        | r[^2]| invisible  | 4B     | u8[32]  |           | First word of Unique Device Secret key.                               |
+| `UDS_START`        | r[^3]| invisible  | 4B     | u8[32]  |           | First word of Unique Device Secret key.                               |
 | `UDS_LAST`         |      | invisible  |        |         |           | The last word of the UDS                                              |
 | `UART_BITRATE`     | r/w  |            |        |         |           | TBD                                                                   |
 | `UART_DATABITS`    | r/w  |            |        |         |           | TBD                                                                   |
@@ -337,4 +338,4 @@ Assigned core prefixes:
 | `CDI_START`        | r/w  | r          | 32B    | u8[32]  |           | Compound Device Identifier (CDI). UDS+measurement...                  |
 | `CDI_LAST`         |      | r          |        |         |           | Last word of CDI                                                      |
 
-[^2]: The UDS can only be read *once* per power-cycle.
+[^3]: The UDS can only be read *once* per power-cycle.
