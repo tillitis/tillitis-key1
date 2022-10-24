@@ -160,7 +160,7 @@ Available commands/reponses:
 #### `FW_{CMD,RSP}_LOAD_APP_DATA`
 #### `FW_{CMD,RSP}_RUN_APP`
 #### `FW_{CMD,RSP}_NAME_VERSION`
-#### `FW_{CMD,RSP}_UID`
+#### `FW_{CMD,RSP}_UDI`
 
 #### `FW_{CMD,RSP}_VERIFY_DEVICE`
 
@@ -314,7 +314,7 @@ Assigned core prefixes:
 | `TIMER_STATUS`     | r    | r          |        |         |           | If bit 0 is set, the timer is ready to start running.                 |
 | `TIMER_PRESCALER`  | r/w  | r/w        | 4B     |         |           | Prescaler init value. Write blocked when running.                     |
 | `TIMER_TIMER`      | r/w  | r/w        | 4B     |         |           | Timer init or current value when running. Write blocked when running. |
-| `UDS_START`        | r[^3]| invisible  | 4B     | u8[32]  |           | First word of Unique Device Secret key.                               |
+| `UDS_FIRST`        | r[^3]| invisible  | 4B     | u8[32]  |           | First word of Unique Device Secret key.                               |
 | `UDS_LAST`         |      | invisible  |        |         |           | The last word of the UDS                                              |
 | `UART_BITRATE`     | r/w  |            |        |         |           | TBD                                                                   |
 | `UART_DATABITS`    | r/w  |            |        |         |           | TBD                                                                   |
@@ -324,8 +324,8 @@ Assigned core prefixes:
 | `UART_TX_STATUS`   | r    | r          | 1B     | u8      |           | Non-zero when it's OK to write data                                   |
 | `UART_TX_DATA`     | w    | w          | 1B     | u8      |           | Data to send. Only LSB contains data                                  |
 | `TOUCH_STATUS`     | r/w  | r/w        |        |         |           | STATUS_EVENT_BIT is set when touched; write to it after               |
-| `UDA`              | r    |            | 16B    | u8[16]  |           | Unique Device Authentication key.                                     |
-| `UDI`              | r    |            | 8B     | u64     |           | Unique Device ID (UDI).                                               |
+| `UDA`              | r    | invisible  | 16B    | u8[16]  |           | Unique Device Authentication key.                                     |
+| `UDI`              | r    | r          | 8B     | u64     |           | Unique Device ID (UDI).                                               |
 | `QEMU_DEBUG`       | w    | w          |        | u8      |           | Debug console (only in QEMU)                                          |
 | `NAME0`            | r    | r          | 4B     | char[4] | "mta1"    | ID of core/stick                                                      |
 | `NAME1`            | r    | r          | 4B     | char[4] | "mkdf"    | ID of core/stick                                                      |
@@ -335,7 +335,7 @@ Assigned core prefixes:
 | `GPIO`             |      |            |        |         |           |                                                                       |
 | `APP_ADDR`         | r/w  | r          | 4B     | u32     |           | Application address (0x4000_0000)                                     |
 | `APP_SIZE`         | r/w  | r          | 4B     | u32     |           | Application size                                                      |
-| `CDI_START`        | r/w  | r          | 32B    | u8[32]  |           | Compound Device Identifier (CDI). UDS+measurement...                  |
+| `CDI_FIRST`        | r/w  | r          | 32B    | u8[32]  |           | Compound Device Identifier (CDI). UDS+measurement...                  |
 | `CDI_LAST`         |      | r          |        |         |           | Last word of CDI                                                      |
 
 [^3]: The UDS can only be read *once* per power-cycle.

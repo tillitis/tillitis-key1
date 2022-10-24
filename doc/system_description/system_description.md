@@ -122,7 +122,7 @@ libraries etc. Roughly these can be divided into:
 The Application FPGA hardware should provide the following:
 
 1. Fixed information
-   - Unique Device ID (UID)
+   - Unique Device ID (UDI)
       - 64 bits
       - Readable via API before application start
       - Generated and stored by Mullvad
@@ -190,7 +190,7 @@ functionality:
 
 - Read access to fixed values:
   - application_fpga name and version strings
-  - Unique Device ID (UID)
+  - Unique Device ID (UDI)
 
 - Read and write to test register used for debugging
 
