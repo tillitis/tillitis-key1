@@ -61,16 +61,16 @@ def gen_udi(verbose, pid, vid, rev, serial):
         print("Generating UDI")
 
     if vid == None:
-        vid = int(input("Enter Vendor ID (0 - 65535): "))
+        vid = int(input("Enter Vendor ID (0 -- 65535): "))
 
     if pid == None:
-        pid = int(input("Enter Product ID (0 - 255): "))
+        pid = int(input("Enter Product ID (0 -- 255): "))
 
     if rev == None:
-        rev = int(input("Enter revision (0 - 15): "))
+        rev = int(input("Enter revision (0 -- 15): "))
 
     if serial == None:
-        serial = int(input("Enter serial number (0 - (2**32 -1)): "))
+        serial = int(input("Enter serial number (0 -- (2**32 -1)): "))
 
     assert vid < 65536
     assert pid < 256
@@ -105,10 +105,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Verbose operation", action="store_true")
     parser.add_argument("--ent", help="User supplied entropy", type=str)
-    parser.add_argument("--vid", help="Vendor id (0 - 65535)",  type=int, default=0)
-    parser.add_argument("--pid", help="Product id (0 - 2555", type=int, default=0)
-    parser.add_argument("--rev", help="Revision number (0 - 15)", type=int, default=0)
-    parser.add_argument("--serial", help="Serial number (0 - (2**31 - 1))", type=int, default=0)
+    parser.add_argument("--vid", help="Vendor id (0 -- 65535)",  type=int, default=0)
+    parser.add_argument("--pid", help="Product id (0 -- 255", type=int, default=0)
+    parser.add_argument("--rev", help="Revision number (0 -- 15)", type=int, default=0)
+    parser.add_argument("--serial", help="Serial number (0 -- (2**31 - 1))", type=int, default=0)
     args = parser.parse_args()
 
     if args.verbose:
