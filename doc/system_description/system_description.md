@@ -200,7 +200,7 @@ functionality:
 
 - Receive, store and measure a secure application
 
-- Derive Application Master Secret (AMS) given measurement, UDS and USS
+- Derive Compound Device Identifier (CDI) given measurement, UDS and USS
 
 - Provide hashing using Blake2s
 
