@@ -64,3 +64,5 @@ fp-info-cache
 *.net
 *.dsn
 *.ses
+
+__pycache__
