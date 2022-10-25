@@ -37,8 +37,8 @@ application mode. The firmware mode has the responsibility of
 receiving, measuring, and loading the application.
 
 The firmware and application uses a memory mapped IO for SoC
-communication. This MMIO resides at `0xc000_0000`. *Nota bene*: All
-access to MMIO should be word (32 bit) aligned.
+communication. This MMIO resides at `0xc000_0000`. *Nota bene*: Almost
+all access to MMIO should be word (32 bit) aligned. See table below.
 
 The application has a constrained variant of the firmware memory map,
 which is outlined below. E.g. UDS isn't readable, and the `APP_{ADDR,
@@ -116,6 +116,26 @@ stack/data at reset, as the firmware does. Further; the firmware need
 to check application image is sane. The shared firmware data area
 (e.g. `.data` and the stack must be cleared prior launching the
 application.
+
+### CDI computation
+
+The CDI is computed by:
+
+```
+CDI = blake2s(UDS, blake2s(app), USS)
+```
+
+In an ideal world, software would never be able to read UDS at all and
+we would have a BLAKE2s function in hardware that would be the only
+thing able to read the UDS. Unfortunately, we couldn't fit a BLAKE2s
+implementation in the FPGA at this time.
+
+The firmware instead does the CDI computation using the special
+firmware-only `FW_RAM` which is invisible after switching to app mode.
+The `blake2s()` function in the firmware is fed with a buffer in
+`FW_RAM` containing the UDS, the app digest, and the USS. It is also
+fed with a context used for computations that is also part of the
+`FW_RAM`.
 
 ### Loading the User Supplied Secret (USS)
 
@@ -299,43 +319,44 @@ Assigned core prefixes:
 | UDS    | 0xc2     |
 | UART   | 0xc3     |
 | TOUCH  | 0xc4     |
+| FW_RAM | 0xd0     |
 | MTA1   | 0xff     |
-|        |          |
 
+*Nota bene*: MMIO accesses should be 32 bit wide, e.g use `lw` and
+`sw`. Exceptions are `FW_RAM` and `QEMU_DEBUG`.
 
-*Nota bene*: All MMIO accesses should be 32 bit wide, e.g use `lw` and `sw`.
-
-| *name*             | *fw* | *app       | *size* | *type*  | *content* | *description*                                                         |
-|--------------------|------|------------|--------|---------|-----------|-----------------------------------------------------------------------|
-| `TRNG_STATUS`      | r    | r          |        |         |           | STATUS_READY_BIT is set when an entropy word is available.            |
-| `TRNG_ENTROPY`     | r    | r          | 4B     | u32     |           | Entropy word. Reading a word will clear status.                       |
-| `TIMER_CTRL`       | r/w  | r/w        |        |         |           | If bit 0 in TIMER_STATUS is set then writing here starts the timer.   |
-|                    |      |            |        |         |           | If bit 0 in TIMER_STATUS is unset then writing here stops the timer.  |
-| `TIMER_STATUS`     | r    | r          |        |         |           | If bit 0 is set, the timer is ready to start running.                 |
-| `TIMER_PRESCALER`  | r/w  | r/w        | 4B     |         |           | Prescaler init value. Write blocked when running.                     |
-| `TIMER_TIMER`      | r/w  | r/w        | 4B     |         |           | Timer init or current value when running. Write blocked when running. |
-| `UDS_FIRST`        | r[^3]| invisible  | 4B     | u8[32]  |           | First word of Unique Device Secret key.                               |
-| `UDS_LAST`         |      | invisible  |        |         |           | The last word of the UDS                                              |
-| `UART_BITRATE`     | r/w  |            |        |         |           | TBD                                                                   |
-| `UART_DATABITS`    | r/w  |            |        |         |           | TBD                                                                   |
-| `UART_STOPBITS`    | r/w  |            |        |         |           | TBD                                                                   |
-| `UART_RX_STATUS`   | r    | r          | 1B     | u8      |           | Non-zero when there is data to read                                   |
-| `UART_RX_DATA`     | r    | r          | 1B     | u8      |           | Data to read. Only LSB contains data                                  |
-| `UART_TX_STATUS`   | r    | r          | 1B     | u8      |           | Non-zero when it's OK to write data                                   |
-| `UART_TX_DATA`     | w    | w          | 1B     | u8      |           | Data to send. Only LSB contains data                                  |
-| `TOUCH_STATUS`     | r/w  | r/w        |        |         |           | STATUS_EVENT_BIT is set when touched; write to it after               |
-| `UDA`              | r    | invisible  | 16B    | u8[16]  |           | Unique Device Authentication key.                                     |
-| `UDI`              | r    | r          | 8B     | u64     |           | Unique Device ID (UDI).                                               |
-| `QEMU_DEBUG`       | w    | w          |        | u8      |           | Debug console (only in QEMU)                                          |
-| `NAME0`            | r    | r          | 4B     | char[4] | "mta1"    | ID of core/stick                                                      |
-| `NAME1`            | r    | r          | 4B     | char[4] | "mkdf"    | ID of core/stick                                                      |
-| `VERSION`          | r    | r          | 4B     | u32     | 1         | Current version.                                                      |
-| `SWITCH_APP`       | w    | invisible? | 1B     | u8      |           | Switch to application mode. Write non-zero to trigger.                |
-| `LED`              | w    | w          | 1B     | u8      |           |                                                                       |
-| `GPIO`             |      |            |        |         |           |                                                                       |
-| `APP_ADDR`         | r/w  | r          | 4B     | u32     |           | Application address (0x4000_0000)                                     |
-| `APP_SIZE`         | r/w  | r          | 4B     | u32     |           | Application size                                                      |
-| `CDI_FIRST`        | r/w  | r          | 32B    | u8[32]  |           | Compound Device Identifier (CDI). UDS+measurement...                  |
-| `CDI_LAST`         |      | r          |        |         |           | Last word of CDI                                                      |
+| *name*            | *fw*  | *app       | *size* | *type*   | *content* | *description*                                                         |
+|-------------------|-------|------------|--------|----------|-----------|-----------------------------------------------------------------------|
+| `TRNG_STATUS`     | r     | r          |        |          |           | STATUS_READY_BIT is set when an entropy word is available.            |
+| `TRNG_ENTROPY`    | r     | r          | 4B     | u32      |           | Entropy word. Reading a word will clear status.                       |
+| `TIMER_CTRL`      | r/w   | r/w        |        |          |           | If bit 0 in TIMER_STATUS is set then writing here starts the timer.   |
+|                   |       |            |        |          |           | If bit 0 in TIMER_STATUS is unset then writing here stops the timer.  |
+| `TIMER_STATUS`    | r     | r          |        |          |           | If bit 0 is set, the timer is ready to start running.                 |
+| `TIMER_PRESCALER` | r/w   | r/w        | 4B     |          |           | Prescaler init value. Write blocked when running.                     |
+| `TIMER_TIMER`     | r/w   | r/w        | 4B     |          |           | Timer init or current value when running. Write blocked when running. |
+| `UDS_FIRST`       | r[^3] | invisible  | 4B     | u8[32]   |           | First word of Unique Device Secret key.                               |
+| `UDS_LAST`        |       | invisible  |        |          |           | The last word of the UDS                                              |
+| `UART_BITRATE`    | r/w   |            |        |          |           | TBD                                                                   |
+| `UART_DATABITS`   | r/w   |            |        |          |           | TBD                                                                   |
+| `UART_STOPBITS`   | r/w   |            |        |          |           | TBD                                                                   |
+| `UART_RX_STATUS`  | r     | r          | 1B     | u8       |           | Non-zero when there is data to read                                   |
+| `UART_RX_DATA`    | r     | r          | 1B     | u8       |           | Data to read. Only LSB contains data                                  |
+| `UART_TX_STATUS`  | r     | r          | 1B     | u8       |           | Non-zero when it's OK to write data                                   |
+| `UART_TX_DATA`    | w     | w          | 1B     | u8       |           | Data to send. Only LSB contains data                                  |
+| `TOUCH_STATUS`    | r/w   | r/w        |        |          |           | STATUS_EVENT_BIT is set when touched; write to it after               |
+| `FW_RAM`          | r/w   | invisible  | 1 kiB  | u8[1024] |           | Firmware-only RAM.                                                    |
+| `UDA`             | r     | invisible  | 16B    | u8[16]   |           | Unique Device Authentication key.                                     |
+| `UDI`             | r     | r          | 8B     | u64      |           | Unique Device ID (UDI).                                               |
+| `QEMU_DEBUG`      | w     | w          |        | u8       |           | Debug console (only in QEMU)                                          |
+| `NAME0`           | r     | r          | 4B     | char[4]  | "mta1"    | ID of core/stick                                                      |
+| `NAME1`           | r     | r          | 4B     | char[4]  | "mkdf"    | ID of core/stick                                                      |
+| `VERSION`         | r     | r          | 4B     | u32      | 1         | Current version.                                                      |
+| `SWITCH_APP`      | w     | invisible? | 1B     | u8       |           | Switch to application mode. Write non-zero to trigger.                |
+| `LED`             | w     | w          | 1B     | u8       |           |                                                                       |
+| `GPIO`            |       |            |        |          |           |                                                                       |
+| `APP_ADDR`        | r/w   | r          | 4B     | u32      |           | Application address (0x4000_0000)                                     |
+| `APP_SIZE`        | r/w   | r          | 4B     | u32      |           | Application size                                                      |
+| `CDI_FIRST`       | r/w   | r          | 32B    | u8[32]   |           | Compound Device Identifier (CDI). UDS+measurement...                  |
+| `CDI_LAST`        |       | r          |        |          |           | Last word of CDI                                                      |
 
 [^3]: The UDS can only be read *once* per power-cycle.
