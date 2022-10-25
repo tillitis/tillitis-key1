@@ -9,8 +9,11 @@ USB_VID = 0xcafe
 
 class ice40_flasher:
     def __init__(self):
+        self.dev = None
         for dict in hid.enumerate(USB_VID):
             self.dev = hid.Device(dict['vendor_id'], dict['product_id'])
+        if self.dev is None:
+            raise IOError("Couldn't find any hid device with vendor id 0x%x" % (USB_VID))
 
     def close(self):
         self.dev.close()
