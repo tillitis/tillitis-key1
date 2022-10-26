@@ -151,9 +151,21 @@ int main()
 		anyfailed = 1;
 	}
 
+	uint32_t sw = *switch_app;
+	if (sw != 0) {
+		test_puts("FAIL: switch_app is not 0 in fw mode\r\n");
+		anyfailed = 1;
+	}
+
 	// Turn on application mode.
 	// -------------------------
 	*switch_app = 1;
+
+	sw = *switch_app;
+	if (sw != 0xffffffff) {
+		test_puts("FAIL: switch_app is not 0xffffffff in app mode\r\n");
+		anyfailed = 1;
+	}
 
 	// Should NOT be able to read from UDS in app-mode.
 	wordcpy(uds_local, (void *)uds, 8);
