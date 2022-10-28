@@ -84,9 +84,8 @@ module uart_fifo(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign in_ack = in_ack_reg;
-
-  assign out_syn  = |byte_ctr_reg;
+  assign in_ack   = in_ack_reg;
+  assign out_syn  = ~fifo_empty;
   assign out_data = fifo_mem[out_ptr_reg];
 
 
