@@ -3,6 +3,7 @@
 // uart_fifo.v
 // -----------
 // FIFO for rx and tx data buffering in the UART.
+// The code should allocate a single EBR in a iCE40UP device.
 //
 //
 // Author: Joachim Strombergson
@@ -74,6 +75,13 @@ module uart_fifo(
 
 
   //----------------------------------------------------------------
+  // Wires
+  //----------------------------------------------------------------
+  reg fifo_empty;
+  reg fifo_full;
+
+
+  //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign in_ack = in_ack_reg;
@@ -120,8 +128,18 @@ module uart_fifo(
   //----------------------------------------------------------------
   always @*
     begin : byte_ctr
+      fifo_empty   = 1'h0;
+      fifo_full    = 1'h0;
       byte_ctr_new = 9'h0;
       byte_ctr_we  = 1'h0;
+
+      if (byte_ctr_reg == 9'h0) begin
+	fifo_empty = 1'h1;
+      end
+
+      if (byte_ctr_reg == 9'h1ff) begin
+	fifo_full = 1'h1;
+      end
 
       if ((byte_ctr_inc) && (!byte_ctr_dec)) begin
 	byte_ctr_new = byte_ctr_reg + 1'h1;
@@ -143,10 +161,11 @@ module uart_fifo(
       fifo_mem_we  = 1'h0;
       in_ack_new   = 1'h0;
       byte_ctr_inc = 1'h0;
-      in_ptr_new   = in_ptr_reg + 1'h1;
       in_ptr_we    = 1'h0;
 
-      if ((in_syn) && (!in_ack) && (byte_ctr_reg < 9'h1ff)) begin
+      in_ptr_new   = in_ptr_reg + 1'h1;
+
+      if ((in_syn) && (!in_ack) && (!fifo_full)) begin
 	fifo_mem_we  = 1'h1;
 	in_ack_new   = 1'h1;
 	byte_ctr_inc = 1'h1;
@@ -161,10 +180,11 @@ module uart_fifo(
   always @*
     begin : out_logic
       byte_ctr_dec = 1'h0;
-      out_ptr_new  = out_ptr_reg + 1'h1;
       out_ptr_we   = 1'h0;
 
-      if ((out_ack) && (byte_ctr_reg > 9'h0)) begin
+      out_ptr_new  = out_ptr_reg + 1'h1;
+
+      if ((out_ack) && (!fifo_empty)) begin
 	byte_ctr_dec = 1'h1;
 	out_ptr_we   = 1'h1;
       end
