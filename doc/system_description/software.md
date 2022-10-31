@@ -63,7 +63,9 @@ between the host and the device.
 ## Firmware
 
 The device has 128 KB RAM. The current firmware loads the app at the
-upper 64 KB. The lower 64 KB is currently set up as stack for the app.
+upper 100 KB. The lower 28 KB is set up as stack for the app. A
+smaller app that wants a larger stack could relocate itself on
+startup.
 
 The firmware is part of FPGA bitstream (ROM), and is loaded at
 `0x0000_0000`.
@@ -73,7 +75,7 @@ The firmware is part of FPGA bitstream (ROM), and is loaded at
 The PicoRV32 starts executing at `0x0000_0000`. Our firmware starts at
 `_start` from `start.S` which initializes the `.data`, and `.bss` at
 `0x4000_0000` and upwards. A stack is also initialized, starting at
-0x4000_fff0 and downwards. When the initialization is finished, the
+0x4000_6ff0 and downwards. When the initialization is finished, the
 firmware waits for incoming commands from the host, by busy-polling
 the `UART_RX_{STATUS,DATA}` registers. When a complete command is
 read, the firmware executes the command.
@@ -355,8 +357,8 @@ Assigned core prefixes:
 |                   |       |           |        |          |           | returns 0 if device is in firmware mode, 0xffffffff if in app mode.    |
 | `LED`             | w     | w         | 1B     | u8       |           |                                                                        |
 | `GPIO`            |       |           |        |          |           |                                                                        |
-| `APP_ADDR`        | r/w   | r         | 4B     | u32      |           | Application address (0x4000_0000)                                      |
-| `APP_SIZE`        | r/w   | r         | 4B     | u32      |           | Application size                                                       |
+| `APP_ADDR`        | r/w   | r         | 4B     | u32      |           | Firmware stores app load address here, so app can read its own location|
+| `APP_SIZE`        | r/w   | r         | 4B     | u32      |           | Firmware stores app app size here, so app can read its own size        |
 | `CDI_FIRST`       | r/w   | r         | 32B    | u8[32]   |           | Compound Device Identifier (CDI). UDS+measurement...                   |
 | `CDI_LAST`        |       | r         |        |          |           | Last word of CDI                                                       |
 

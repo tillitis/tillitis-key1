@@ -18,8 +18,9 @@ user-provided seed, is used to derive key material unique to each
 application. This allows users to build and load their own apps, while
 ensuring that each app loaded will have its own cryptographic
 identity. The design is similar to TCG DICE. The Tillitis Key 1
-platform has 128 KB of RAM. The current firmware design allows for
-applications up to 64 KB with a 64 KB stack.
+platform has 128 KB of RAM. The current firmware is designed to load
+an app that is up to 100 KB in size, and gives it a stack of 28 KB. A
+smaller ap may move itself in memory, in order to have a larger stack.
 
 ![Tillitis Key 1 PCB, first implementation](doc/images/mta1-usb-v1.jpg)
 *Tillitis Key 1 PCB, first implementation*
