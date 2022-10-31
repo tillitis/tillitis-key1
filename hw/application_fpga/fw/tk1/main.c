@@ -77,8 +77,8 @@ static void compute_cdi(uint8_t digest[32], uint8_t uss[32])
 
 	blake2s_ctx *secure_ctx = (blake2s_ctx *)(fw_ram + 96);
 
-	blake2s((void *)local_cdi, 32, NULL, 0,
-		(const void *)fw_ram, 96, secure_ctx);
+	blake2s((void *)local_cdi, 32, NULL, 0, (const void *)fw_ram, 96,
+		secure_ctx);
 
 	// Write over the firmware-only RAM
 	memset((void *)fw_ram, 0, TK1_MMIO_FW_RAM_SIZE);
@@ -230,7 +230,8 @@ int main()
 				blake2s_ctx ctx;
 
 				blake2s(digest, 32, NULL, 0,
-					(const void *)*app_addr, *app_size, &ctx);
+					(const void *)*app_addr, *app_size,
+					&ctx);
 				print_digest(digest);
 
 				// CDI = hash(uds, hash(app), uss)
