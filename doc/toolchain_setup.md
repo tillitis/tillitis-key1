@@ -16,7 +16,8 @@ These steps are used to build and install the
                          libboost-dev libboost-filesystem-dev \
                          libboost-thread-dev libboost-program-options-dev \
                          libboost-iostreams-dev cmake libhidapi-dev \
-                         ninja-build libglib2.0-dev libpixman-1-dev
+                         ninja-build libglib2.0-dev libpixman-1-dev \
+                         golang
 
     git clone https://github.com/YosysHQ/icestorm
     cd icestorm
