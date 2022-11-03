@@ -245,7 +245,8 @@ int main()
 			putinthex(local_app_size);
 			lf();
 
-			if (local_app_size > TK1_APP_MAX_SIZE) {
+			if (local_app_size == 0 ||
+			    local_app_size > TK1_APP_MAX_SIZE) {
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_LOAD_APP, rsp);
 				break;
