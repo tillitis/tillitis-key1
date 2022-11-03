@@ -64,8 +64,8 @@ between the host and the device.
 
 The device has 128 KB RAM. The current firmware loads the app at the
 upper 100 KB. The lower 28 KB is set up as stack for the app. A
-smaller app that wants a larger stack could relocate itself on
-startup.
+smaller app that wants continuous memory may want to relocate itself
+when starting.
 
 The firmware is part of FPGA bitstream (ROM), and is loaded at
 `0x0000_0000`.
@@ -83,7 +83,7 @@ read, the firmware executes the command.
 ### Loading an application
 
 The purpose of the firmware is to bootstrap an application. The host
-will send a raw binary targeted to be loaded at `0x4001_0000` in the
+will send a raw binary targeted to be loaded at `0x4000_7000` in the
 device.
 
   1. The host sends the User Supplied Secret (USS) by using the
@@ -98,7 +98,7 @@ device.
      multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
      full application.
   5. For each received `FW_CMD_LOAD_APP_DATA` command the firmware
-     places the data into `0x4001_0000` and upwards. The firmware
+     places the data into `0x4000_7000` and upwards. The firmware
      replies with a `FW_RSP_LOAD_APP_DATA` response to the host for
      each received block.
   6. When the final block of the application image is received, we
@@ -107,7 +107,7 @@ device.
 
      The Compound Device Identifier is computed by using the `UDS`,
      the measurement of the application, and the `USS`, and placed in
-     the `CDI` register. Then `0x4001_0000` is written to `APP_ADDR`.
+     the `CDI` register. Then `0x4000_7000` is written to `APP_ADDR`.
      The final `FW_RSP_LOAD_APP_DATA` response is sent to the host,
      completing the loading.
 

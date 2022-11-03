@@ -20,7 +20,8 @@ ensuring that each app loaded will have its own cryptographic
 identity. The design is similar to TCG DICE. The Tillitis Key 1
 platform has 128 KB of RAM. The current firmware is designed to load
 an app that is up to 100 KB in size, and gives it a stack of 28 KB. A
-smaller ap may move itself in memory, in order to have a larger stack.
+smaller app may want to move itself in memory to get larger continuous
+memory.
 
 ![Tillitis Key 1 PCB, first implementation](doc/images/mta1-usb-v1.jpg)
 *Tillitis Key 1 PCB, first implementation*
