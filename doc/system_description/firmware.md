@@ -18,6 +18,49 @@ If your available `objcopy` and `size` commands is anything other than
 the default `llvm-objcopy` and `llvm-size` define `OBJCOPY` and `SIZE`
 to whatever they're called on your system.
 
+## Firmware state machine
+
+States:
+
+- `initial` - At start.
+- `init_loading` - Reset app digest, size, `USS` and load address.
+- `loading` - Expect more app data or a reset by `LoadApp()`.
+- `run` - Computes CDI and starts the device app.
+
+Commands in state `initial`:
+
+| *command*          | *next state*   |
+|--------------------|----------------|
+| NameVersion()      | unchanged      |
+| LoadApp(size, uss) | `init_loading` |
+|                    |                |
+
+Commands in `initial_loading`:
+
+| *command*          | *next state*   |
+|--------------------|----------------|
+| NameVersion()      | unchanged      |
+| LoadApp(size, uss) | `init_loading` |
+| LoadAppData(data)  | `loading`      |
+|                    |                |
+
+Commands in `loading`:
+
+| *command*          | *next state*                     |
+|--------------------|----------------------------------|
+| NameVersion()      | unchanged                        |
+| LoadApp(size, uss) | `init_loading`                   |
+| LoadAppData(data)  | `loading` or `run` on last chunk |
+|                    |                                  |
+
+Behaviour:
+
+- NameVersion: identifies stick.
+- LoadApp(size, uss): Start loading an app with this size and user
+  supplied secret.
+- LoadAppData(data): Load chunk of data of app. When last data chunk
+  is received we compute and return the digest.
+    
 ## Using QEMU
 
 Checkout the `tk1` branch of [our version of the

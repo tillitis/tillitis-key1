@@ -60,9 +60,10 @@ static void print_digest(uint8_t *md)
 }
 
 // CDI = blake2s(uds, blake2s(app), uss)
-static void compute_cdi(uint8_t digest[32], uint8_t uss[32])
+static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 {
 	uint32_t local_cdi[8];
+	int len;
 
 	// To protect UDS we use a special firmware-only RAM for both
 	// the in parameter to blake2s and the blake2s context.
@@ -70,11 +71,16 @@ static void compute_cdi(uint8_t digest[32], uint8_t uss[32])
 	// Only word aligned access to UDS
 	wordcpy((void *)fw_ram, (void *)uds, 8);
 	memcpy((void *)fw_ram + 32, digest, 32);
-	memcpy((void *)fw_ram + 64, uss, 32);
+	if (use_uss != 0) {
+		memcpy((void *)fw_ram + 64, uss, 32);
+		len = 96;
+	} else {
+		len = 64;
+	}
 
-	blake2s_ctx *secure_ctx = (blake2s_ctx *)(fw_ram + 96);
+	blake2s_ctx *secure_ctx = (blake2s_ctx *)(fw_ram + len);
 
-	blake2s((void *)local_cdi, 32, NULL, 0, (const void *)fw_ram, 96,
+	blake2s((void *)local_cdi, 32, NULL, 0, (const void *)fw_ram, len,
 		secure_ctx);
 
 	// Write over the firmware-only RAM
@@ -83,6 +89,13 @@ static void compute_cdi(uint8_t digest[32], uint8_t uss[32])
 	// Only word aligned access to CDI
 	wordcpy((void *)cdi, (void *)local_cdi, 8);
 }
+
+enum state {
+	FW_STATE_INITIAL,
+	FW_STATE_INIT_LOADING,
+	FW_STATE_LOADING,
+	FW_STATE_RUN
+};
 
 int main()
 {
@@ -94,12 +107,71 @@ int main()
 	uint8_t rsp[CMDLEN_MAXBYTES];
 	uint8_t *loadaddr = (uint8_t *)TK1_APP_ADDR;
 	int left = 0; // Bytes left to receive
+	uint8_t use_uss = FALSE;
 	uint8_t uss[32] = {0};
 	uint8_t digest[32] = {0};
+	enum state state = FW_STATE_INITIAL;
 
 	print_hw_version(local_name0, local_name1, local_ver);
 
 	for (;;) {
+		switch (state) {
+		case FW_STATE_INITIAL:
+			break;
+
+		case FW_STATE_INIT_LOADING:
+			*app_addr = 0;
+			left = *app_size;
+
+			// Reset where to start loading the program
+			loadaddr = (uint8_t *)TK1_APP_ADDR;
+			break;
+
+		case FW_STATE_LOADING:
+			break;
+
+		case FW_STATE_RUN:
+			*app_addr = TK1_APP_ADDR;
+
+			// CDI = hash(uds, hash(app), uss)
+			compute_cdi(digest, use_uss, uss);
+
+			// Flip over to application mode
+			*switch_app = 1;
+
+			// Jump to app - doesn't return
+			// First clears memory of firmware remains
+			puts("Jumping to ");
+			putinthex(*app_addr);
+			lf();
+			// clang-format off
+			asm volatile(
+				// Clear the stack
+				"li a0, 0x40000000;" // TK1_RAM_BASE
+				"li a1, 0x40007000;" // TK1_APP_ADDR
+				"loop:;"
+				"sw zero, 0(a0);"
+				"addi a0, a0, 4;"
+				"blt a0, a1, loop;"
+				// Get value at TK1_MMIO_TK1_APP_ADDR
+				"lui a0,0xff000;"
+				"lw a0,0x030(a0);"
+				"jalr x0,0(a0);"
+				::: "memory");
+			// clang-format on
+			break; // This is never reached!
+
+		default:
+			// Unknown state!?
+			puts("Unknown firmware state 0x");
+			puthex(state);
+			lf();
+
+			asm volatile("forever:;"
+				     "j forever;");
+			break; // Not reached
+		}
+
 		// blocking; fw flashing white while waiting for cmd
 		uint8_t in = readbyte_ledflash(LED_WHITE, 800000);
 
@@ -137,6 +209,7 @@ int main()
 			memcpy(rsp + 8, (uint8_t *)&local_ver, 4);
 
 			fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
+			// state unchanged
 			break;
 
 		case FW_CMD_GET_UDI:
@@ -154,29 +227,13 @@ int main()
 			fwreply(hdr, FW_RSP_GET_UDI, rsp);
 			break;
 
-		case FW_CMD_LOAD_USS:
-			puts("cmd: load-uss\n");
+		case FW_CMD_LOAD_APP:
+			puts("cmd: load-app(size, uss)\n");
 
 			if (hdr.len != 128) {
-				// Bad cmd length
-				rsp[0] = STATUS_BAD;
-				fwreply(hdr, FW_RSP_LOAD_USS, rsp);
-				break;
-			}
-
-			memcpy(uss, cmd + 1, 32);
-
-			rsp[0] = STATUS_OK;
-			fwreply(hdr, FW_RSP_LOAD_USS, rsp);
-			break;
-
-		case FW_CMD_LOAD_APP_SIZE:
-			puts("cmd: load-app-size\n");
-
-			if (hdr.len != 32) {
 				// Bad length
 				rsp[0] = STATUS_BAD;
-				fwreply(hdr, FW_RSP_LOAD_APP_SIZE, rsp);
+				fwreply(hdr, FW_RSP_LOAD_APP, rsp);
 				break;
 			}
 
@@ -191,31 +248,32 @@ int main()
 
 			if (local_app_size > TK1_APP_MAX_SIZE) {
 				rsp[0] = STATUS_BAD;
-				fwreply(hdr, FW_RSP_LOAD_APP_SIZE, rsp);
+				fwreply(hdr, FW_RSP_LOAD_APP, rsp);
 				break;
 			}
 
 			*app_size = local_app_size;
-			*app_addr = 0;
-			// Clear digest as GET_APP_DIGEST returns it even if it
-			// has not been calculated
-			memset(digest, 0, 32);
 
-			// Reset where to start loading the program
-			loadaddr = (uint8_t *)TK1_APP_ADDR;
-			left = *app_size;
+			// Do we have a USS at all?
+			if (cmd[5] != 0) {
+				// Yes
+				use_uss = TRUE;
+				memcpy(uss, cmd + 6, 32);
+			} else {
+				use_uss = FALSE;
+			}
 
 			rsp[0] = STATUS_OK;
-			fwreply(hdr, FW_RSP_LOAD_APP_SIZE, rsp);
+			fwreply(hdr, FW_RSP_LOAD_APP, rsp);
+
+			state = FW_STATE_INIT_LOADING;
 			break;
 
 		case FW_CMD_LOAD_APP_DATA:
 			puts("cmd: load-app-data\n");
 
-			if (hdr.len != 128 || *app_size == 0 ||
-			    *app_addr != 0) {
-				// Bad length, or app_size not yet set, or
-				// app_addr already set (fully loaded!)
+			if (state != FW_STATE_INIT_LOADING &&
+			    state != FW_STATE_LOADING) {
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
 				break;
@@ -236,68 +294,27 @@ int main()
 				putinthex(*app_size);
 				lf();
 
-				*app_addr = TK1_APP_ADDR;
 				// Get the Blake2S digest of the app - store it
 				// for later queries
 				blake2s_ctx ctx;
 
 				blake2s(digest, 32, NULL, 0,
-					(const void *)*app_addr, *app_size,
+					(const void *)TK1_APP_ADDR, *app_size,
 					&ctx);
 				print_digest(digest);
 
-				// CDI = hash(uds, hash(app), uss)
-				compute_cdi(digest, uss);
-			}
+				rsp[0] = STATUS_OK;
+				memcpy(&rsp[1], &digest, 32);
+				fwreply(hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
 
-			rsp[0] = STATUS_OK;
-			fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
-			break;
-
-		case FW_CMD_RUN_APP:
-			puts("cmd: run-app\n");
-
-			if (hdr.len != 1 || *app_size == 0 || *app_addr == 0) {
-				// Bad cmd length, or app_size or app_addr are
-				// not yet set
-				rsp[0] = STATUS_BAD;
-				fwreply(hdr, FW_RSP_RUN_APP, rsp);
+				state = FW_STATE_RUN;
 				break;
 			}
 
 			rsp[0] = STATUS_OK;
-			fwreply(hdr, FW_RSP_RUN_APP, rsp);
+			fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
 
-			// Flip over to application mode
-			*switch_app = 1;
-
-			// Jump to app - doesn't return
-			// First clears memory of firmware remains
-			puts("Jumping to ");
-			putinthex(*app_addr);
-			lf();
-			// clang-format off
-			asm volatile(
-				// Clear the stack
-				"li a0, 0x40000000;" // TK1_RAM_BASE
-				"li a1, 0x40007000;" // TK1_APP_ADDR
-				"loop:;"
-				"sw zero, 0(a0);"
-				"addi a0, a0, 4;"
-				"blt a0, a1, loop;"
-				// Get value at TK1_MMIO_TK1_APP_ADDR
-				"lui a0,0xff000;"
-				"lw a0,0x030(a0);"
-				"jalr x0,0(a0);"
-				::: "memory");
-			// clang-format on
-			break; // This is never reached!
-
-		case FW_CMD_GET_APP_DIGEST:
-			puts("cmd: get-app-digest\n");
-
-			memcpy(rsp, &digest, 32);
-			fwreply(hdr, FW_RSP_GET_APP_DIGEST, rsp);
+			state = FW_STATE_LOADING;
 			break;
 
 		default:

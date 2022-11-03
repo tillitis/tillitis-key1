@@ -16,4 +16,7 @@ typedef unsigned long size_t;
 
 #define NULL ((char *)0)
 
+#define FALSE 0
+#define TRUE !FALSE
+
 #endif

@@ -26,21 +26,15 @@ enum cmdlen {
 
 // clang-format off
 enum fwcmd {
-	FW_CMD_NAME_VERSION	= 0x01,
-	FW_RSP_NAME_VERSION	= 0x02,
-	FW_CMD_LOAD_APP_SIZE	= 0x03,
-	FW_RSP_LOAD_APP_SIZE	= 0x04,
-	FW_CMD_LOAD_APP_DATA	= 0x05,
-	FW_RSP_LOAD_APP_DATA	= 0x06,
-	FW_CMD_RUN_APP		= 0x07,
-	FW_RSP_RUN_APP		= 0x08,
-	FW_CMD_GET_APP_DIGEST	= 0x09,
-	FW_CMD_LOAD_USS		= 0x0a,
-	FW_RSP_LOAD_USS		= 0x0b,
-	FW_CMD_GET_UDI		= 0x0c,
-	FW_RSP_GET_UDI		= 0x0d,
-	/* ... */
-	FW_RSP_GET_APP_DIGEST	= 0x10, // encoded as 0x10 for backwards compatibility
+	FW_CMD_NAME_VERSION		= 0x01,
+	FW_RSP_NAME_VERSION		= 0x02,
+	FW_CMD_LOAD_APP			= 0x03,
+	FW_RSP_LOAD_APP			= 0x04,
+	FW_CMD_LOAD_APP_DATA		= 0x05,
+	FW_RSP_LOAD_APP_DATA		= 0x06,
+	FW_RSP_LOAD_APP_DATA_READY	= 0x07,
+	FW_CMD_GET_UDI			= 0x08,
+	FW_RSP_GET_UDI			= 0x09,
 };
 // clang-format on
 
