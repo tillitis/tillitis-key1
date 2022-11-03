@@ -71,12 +71,7 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 		nbytes = 32;
 		break;
 
-	case FW_RSP_LOAD_USS:
-		len = LEN_4;
-		nbytes = 4;
-		break;
-
-	case FW_RSP_LOAD_APP_SIZE:
+	case FW_RSP_LOAD_APP:
 		len = LEN_4;
 		nbytes = 4;
 		break;
@@ -86,12 +81,7 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 		nbytes = 4;
 		break;
 
-	case FW_RSP_RUN_APP:
-		len = LEN_4;
-		nbytes = 4;
-		break;
-
-	case FW_RSP_GET_APP_DIGEST:
+	case FW_RSP_LOAD_APP_DATA_READY:
 		len = LEN_128;
 		nbytes = 128;
 		break;
