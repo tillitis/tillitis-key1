@@ -2322,7 +2322,7 @@
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp 41de8faf-9d06-43fb-a2a5-92faa4af401c)
     )
-    (fp_text value "10pF" (at 0 1.16) (layer "F.Fab") hide
+    (fp_text value "2.7pF" (at 0 1.16) (layer "F.Fab") hide
       (effects (font (size 1 1) (thickness 0.15)))
       (tstamp e6a2e2f5-e16e-4b8a-a1a5-8d78c5b541a1)
     )
@@ -2356,9 +2356,13 @@
     (at 126.2 94 90)
     (descr "Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf), generated with kicad-footprint-generator")
     (tags "capacitor")
-    (property "Extended Value" "16V")
+    (property "Extended Value" "16V,X5R,10%")
+    (property "Manufacturer" "Fenghua")
+    (property "Manufacturer Part Number" "1206X106K160NT")
     (property "Sheetfile" "application_fpga.kicad_sch")
     (property "Sheetname" "Application FPGA")
+    (property "Supplier" "LCSC")
+    (property "Supplier Part Number" "C105478")
     (path "/00000000-0000-0000-0000-0000611cc101/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020")
     (attr smd)
     (fp_text reference "C8" (at 3.7 0.2 90) (layer "F.SilkS") hide

@@ -704,7 +704,7 @@
       (reference "C26") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/391c56db-bc39-4ec7-bb45-dcbe1aaf2b1a"
-      (reference "C27") (unit 1) (value "10pF") (footprint "mta1:CAPC1005X06L")
+      (reference "C27") (unit 1) (value "2.7pF") (footprint "mta1:CAPC1005X06L")
     )
     (path "/00000000-0000-0000-0000-0000611a4eb9/00000000-0000-0000-0000-0000618029cb"
       (reference "D1") (unit 1) (value "0402 indicator LED, blue") (footprint "LED_SMD:LED_0402_1005Metric")
