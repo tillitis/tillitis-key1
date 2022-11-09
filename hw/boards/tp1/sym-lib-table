@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name "mta1")(type "KiCad")(uri "${KIPRJMOD}/../mta1-library/mta1.kicad_sym")(options "")(descr ""))
+  (lib (name "MCU_RaspberryPi_and_Boards")(type "KiCad")(uri "C:/Users/matt/Other-Repos/tillitis-key1/hw/boards/KiCad-RP Pico/RP-Pico-Libraries/MCU_RaspberryPi_and_Boards.kicad_sym")(options "")(descr ""))
+)
