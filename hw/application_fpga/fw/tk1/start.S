@@ -39,15 +39,15 @@ _start:
 	li x31,0
 
 	/* Clear all RAM */
-	li a0, 0x40000000 // RAM base
-	li a1, 0x40020000 // To end of SRAM
+	li a0, 0x40000000 // TK1_RAM_BASE
+	li a1, 0x40020000 // TK1_RAM_BASE + TK1_RAM_SIZE
 clear:
 	sw zero, 0(a0)
 	addi a0, a0, 4
 	blt a0, a1, clear
 
-	/* init stack to right under where we load app at 0x40010000 */
-	li sp, 0x4000fff0
+	/* init stack below 0x40007000 (TK1_APP_ADDR) where we load app */
+	li sp, 0x40006ff0
 
 	/* copy data section */
 	la a0, _sidata

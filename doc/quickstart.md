@@ -35,7 +35,10 @@ the touch sensor is located (next to the LED). Note that connecting
 the USB stick to the computer is not required for programming it. Note
 also that with this setup, to reset the USB stick back to firmware
 mode after loading an app, you need to unplug both the USB cable to
-the stick and the one to the programmer.
+the stick and the one to the programmer. Alternatively, you can try
+the script in `../hw/application_fpga/tools/reset-tk1` which pokes at
+the TK1 that's sitting in the jig, leaving it in firmware mode so that
+a new app can be loaded.
 
 On Linux, `lsusb` should list the connected programmer as `cafe:4004
 Blinkinlabs ICE40 programmer`. If the USB stick is also connected it

@@ -9,10 +9,6 @@
 #include "proto.h"
 #include "types.h"
 
-// In RAM + above the stack (0x40010000)
-#define APP_RAM_ADDR (TK1_RAM_BASE + 0x10000)
-#define APP_MAX_SIZE 65536
-
 // clang-format off
 static volatile uint32_t *uds =        (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
 static volatile uint32_t *switch_app = (volatile uint32_t *)TK1_MMIO_TK1_SWITCH_APP;
@@ -95,7 +91,7 @@ int main()
 	struct frame_header hdr; // Used in both directions
 	uint8_t cmd[CMDLEN_MAXBYTES];
 	uint8_t rsp[CMDLEN_MAXBYTES];
-	uint8_t *loadaddr = (uint8_t *)APP_RAM_ADDR;
+	uint8_t *loadaddr = (uint8_t *)TK1_APP_ADDR;
 	int left = 0; // Bytes left to receive
 	uint8_t uss[32] = {0};
 	uint8_t digest[32] = {0};
@@ -177,7 +173,7 @@ int main()
 			putinthex(local_app_size);
 			lf();
 
-			if (local_app_size > APP_MAX_SIZE) {
+			if (local_app_size > TK1_APP_MAX_SIZE) {
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_LOAD_APP_SIZE, rsp);
 				break;
@@ -190,7 +186,7 @@ int main()
 			memset(digest, 0, 32);
 
 			// Reset where to start loading the program
-			loadaddr = (uint8_t *)APP_RAM_ADDR;
+			loadaddr = (uint8_t *)TK1_APP_ADDR;
 			left = *app_size;
 
 			rsp[0] = STATUS_OK;
@@ -224,7 +220,7 @@ int main()
 				putinthex(*app_size);
 				lf();
 
-				*app_addr = APP_RAM_ADDR;
+				*app_addr = TK1_APP_ADDR;
 				// Get the Blake2S digest of the app - store it
 				// for later queries
 				blake2s_ctx ctx;
@@ -266,8 +262,9 @@ int main()
 			lf();
 			// clang-format off
 			asm volatile(
+				// Clear the stack
 				"li a0, 0x40000000;" // TK1_RAM_BASE
-				"li a1, 0x40010000;"
+				"li a1, 0x40007000;" // APP_RAM_ADDR
 				"loop:;"
 				"sw zero, 0(a0);"
 				"addi a0, a0, 4;"
