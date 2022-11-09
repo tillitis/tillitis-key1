@@ -49,11 +49,11 @@ module fw_ram(
   //----------------------------------------------------------------
   SB_RAM40_4K fw_ram0(
 		      .RDATA(mem_read_data[15 : 0]),
-		      .RADDR(address),
+		      .RADDR({3'h0, address}),
 		      .RCLK(clk),
 		      .RCLKE(1'h1),
 		      .RE(fw_app_cs),
-		      .WADDR(address),
+		      .WADDR({3'h0, address}),
 		      .WCLK(clk),
 		      .WCLKE(1'h1),
 		      .WDATA(write_data[15 : 0]),
@@ -64,11 +64,11 @@ module fw_ram(
 
   SB_RAM40_4K fw_ram1(
 		      .RDATA(mem_read_data[31 : 16]),
-		      .RADDR(address),
+		      .RADDR({3'h0, address}),
 		      .RCLK(clk),
 		      .RCLKE(1'h1),
 		      .RE(fw_app_cs),
-		      .WADDR(address),
+		      .WADDR({3'h0, address}),
 		      .WCLK(clk),
 		      .WCLKE(1'h1),
 		      .WDATA(write_data[31 : 16]),
