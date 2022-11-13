@@ -419,7 +419,7 @@
       "idf": "",
       "netlist": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "tp1.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""
