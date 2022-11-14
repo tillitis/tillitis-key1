@@ -1,0 +1,1535 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tk1\tk1.kicad_sch</source>
+    <date>11/14/2022 12:40:26 PM</date>
+    <tool>Eeschema (6.0.4)</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title>TK1</title>
+        <company>Tillitis AB</company>
+        <rev>V1</rev>
+        <date>2021-09-29</date>
+        <source>tk1.kicad_sch</source>
+        <comment number="1" value="2022"/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+    <sheet number="2" name="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/">
+      <title_block>
+        <title>Application FPGA</title>
+        <company>Tillitis AB</company>
+        <rev>V1</rev>
+        <date>2021-09-29</date>
+        <source>application_fpga.kicad_sch</source>
+        <comment number="1" value="2022"/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+    <sheet number="3" name="/USB to Serial converter/" tstamps="/00000000-0000-0000-0000-00006161400b/">
+      <title_block>
+        <title>USB-to-Serial Interface</title>
+        <company>Tillitis AB</company>
+        <rev>V1</rev>
+        <date>2021-09-29</date>
+        <source>usb_to_serial.kicad_sch</source>
+        <comment number="1" value="2022"/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+    <sheet number="4" name="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/">
+      <title_block>
+        <title>Power Supply</title>
+        <company>Tillitis AB</company>
+        <rev>V1</rev>
+        <date>2021-09-29</date>
+        <source>powersupply.kicad_sch</source>
+        <comment number="1" value="2022"/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="C8">
+      <value>1uF</value>
+      <footprint>Capacitor_SMD:C_1206_3216Metric</footprint>
+      <fields>
+        <field name="Extended Value">50V,X7R,10%,1.6mm thickness</field>
+        <field name="Manufacturer">TDK Corporation</field>
+        <field name="Manufacturer Part Number">C3216X7R1H105K160AE</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">445-8904-2-ND</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Extended Value" value="50V,X7R,10%,1.6mm thickness"/>
+      <property name="Manufacturer" value="TDK Corporation"/>
+      <property name="Manufacturer Part Number" value="C3216X7R1H105K160AE"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="445-8904-2-ND"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>0f8bd06f-60b1-4be8-90d9-1a7f1cd60020</tstamps>
+    </comp>
+    <comp ref="C16">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000617f14fe</tstamps>
+    </comp>
+    <comp ref="C17">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000617f1500</tstamps>
+    </comp>
+    <comp ref="C18">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000617f1503</tstamps>
+    </comp>
+    <comp ref="C19">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000615530a8</tstamps>
+    </comp>
+    <comp ref="C20">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000617f1506</tstamps>
+    </comp>
+    <comp ref="C21">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000615530a2</tstamps>
+    </comp>
+    <comp ref="C22">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000617f14fd</tstamps>
+    </comp>
+    <comp ref="C23">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>17dff2a5-14b1-4b13-b0b5-dee2988a7fcc</tstamps>
+    </comp>
+    <comp ref="C25">
+      <value>10uF</value>
+      <footprint>mta1:CAPC1608X09L</footprint>
+      <fields>
+        <field name="Extended Value">10V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="10V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000617217f5</tstamps>
+    </comp>
+    <comp ref="C26">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>8474ba4a-e004-4036-b038-4ff6552cee7d</tstamps>
+    </comp>
+    <comp ref="C27">
+      <value>1pF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>391c56db-bc39-4ec7-bb45-dcbe1aaf2b1a</tstamps>
+    </comp>
+    <comp ref="D3">
+      <value>LED_ARGB</value>
+      <footprint>mta1:0402rgb-1010</footprint>
+      <fields>
+        <field name="Manufacturer">Foshan NationStar</field>
+        <field name="Manufacturer Part Number">FC-B1010RGBT-HG</field>
+        <field name="Supplier">LCSC</field>
+        <field name="Supplier Part Number">C158099</field>
+      </fields>
+      <libsource lib="mta1" part="FC-B1010RGBT-HG" description=""/>
+      <property name="Manufacturer" value="Foshan NationStar"/>
+      <property name="Manufacturer Part Number" value="FC-B1010RGBT-HG"/>
+      <property name="Supplier" value="LCSC"/>
+      <property name="Supplier Part Number" value="C158099"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000615e01fa</tstamps>
+    </comp>
+    <comp ref="FB3">
+      <value>BLM18KG300TN1D</value>
+      <footprint>mta1:Ferritbead_0603_1608Metric</footprint>
+      <fields>
+        <field name="Manufacturer">Murata</field>
+        <field name="Manufacturer Part Number">BLM18KG300TN1D</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">490-5447-1-ND</field>
+      </fields>
+      <libsource lib="mta1" part="Ferrite_Bead-Device" description=""/>
+      <property name="Manufacturer" value="Murata"/>
+      <property name="Manufacturer Part Number" value="BLM18KG300TN1D"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="490-5447-1-ND"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000617217ef</tstamps>
+    </comp>
+    <comp ref="R16">
+      <value>1k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000615e0200</tstamps>
+    </comp>
+    <comp ref="R17">
+      <value>1k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000617f150b</tstamps>
+    </comp>
+    <comp ref="R18">
+      <value>1k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-0000617f150c</tstamps>
+    </comp>
+    <comp ref="R19">
+      <value>10k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-00006138f043</tstamps>
+    </comp>
+    <comp ref="R20">
+      <value>10k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-00006138caff</tstamps>
+    </comp>
+    <comp ref="R23">
+      <value>10k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>fe6cb91d-e57b-4761-a6eb-995b9ad40281</tstamps>
+    </comp>
+    <comp ref="R24">
+      <value>10k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>d3227fe1-e3fb-433e-8be2-5ff5302bdec8</tstamps>
+    </comp>
+    <comp ref="R25">
+      <value>10k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>1dc40799-6ae3-4c4a-b25a-16b0a8f8d3c0</tstamps>
+    </comp>
+    <comp ref="R26">
+      <value>10k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>7732c5e0-271e-4de5-9ee2-962192432222</tstamps>
+    </comp>
+    <comp ref="R30">
+      <value>2k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,1%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,1%"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>6bc1edc9-8890-4578-b994-f654ccefb54e</tstamps>
+    </comp>
+    <comp ref="U6">
+      <value>ICE40UP5K-SG48ITR</value>
+      <footprint>Package_DFN_QFN:QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm</footprint>
+      <datasheet>http://www.latticesemi.com/Products/FPGAandCPLD/iCE40Ultra</datasheet>
+      <fields>
+        <field name="Manufacturer">Lattice</field>
+        <field name="Manufacturer Part Number">ICE40UP5K-SG48ITR</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">220-2145-2-ND</field>
+      </fields>
+      <libsource lib="mta1" part="ICE40UP5K-SG48ITR" description="iCE40 UltraPlus FPGA, 5280 LUTs, 1.2V, 48-pin QFN"/>
+      <property name="Manufacturer" value="Lattice"/>
+      <property name="Manufacturer Part Number" value="ICE40UP5K-SG48ITR"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="220-2145-2-ND"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>00000000-0000-0000-0000-00006131a243</tstamps>
+    </comp>
+    <comp ref="U8">
+      <value>W25Q80DVUXIE</value>
+      <footprint>mta1:W25Q80DVUXIE</footprint>
+      <datasheet>https://www.winbond.com/resource-files/w25x40cl_f%2020140325.pdf</datasheet>
+      <fields>
+        <field name="Manufacturer">Winbond Electronics</field>
+        <field name="Manufacturer Part Number">W25Q80DVUXIE</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">W25Q80DVUXIETR-ND</field>
+      </fields>
+      <libsource lib="mta1" part="W25Q80DVUXIE" description="IC FLASH 8MBIT SPI 104MHZ 8USON"/>
+      <property name="Manufacturer" value="Winbond Electronics"/>
+      <property name="Manufacturer Part Number" value="W25Q80DVUXIE"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="W25Q80DVUXIETR-ND"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>fb1bfba7-59bf-4387-b0fd-53ae34c08235</tstamps>
+    </comp>
+    <comp ref="U10">
+      <value>PT2043AT6</value>
+      <footprint>Package_TO_SOT_SMD:SOT-23-6</footprint>
+      <fields>
+        <field name="Manufacturer">PinTeng</field>
+        <field name="Manufacturer Part Number">PT2043AT6</field>
+        <field name="Supplier">LCSC</field>
+        <field name="Supplier Part Number">C2914233</field>
+      </fields>
+      <libsource lib="mta1" part="PT2043AT6" description=""/>
+      <property name="Manufacturer" value="PinTeng"/>
+      <property name="Manufacturer Part Number" value="PT2043AT6"/>
+      <property name="Supplier" value="LCSC"/>
+      <property name="Supplier Part Number" value="C2914233"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>206cf77e-9615-45a1-84e2-dd89660f9255</tstamps>
+    </comp>
+    <comp ref="C7">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="USB to Serial converter"/>
+      <property name="Sheetfile" value="usb_to_serial.kicad_sch"/>
+      <sheetpath names="/USB to Serial converter/" tstamps="/00000000-0000-0000-0000-00006161400b/"/>
+      <tstamps>76a5b2c4-6b71-4a39-a2e8-5088b310a11a</tstamps>
+    </comp>
+    <comp ref="C13">
+      <value>0.10uF</value>
+      <footprint>mta1:CAPC1005X06L</footprint>
+      <fields>
+        <field name="Extended Value">16V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="16V,X5R,20%"/>
+      <property name="Sheetname" value="USB to Serial converter"/>
+      <property name="Sheetfile" value="usb_to_serial.kicad_sch"/>
+      <sheetpath names="/USB to Serial converter/" tstamps="/00000000-0000-0000-0000-00006161400b/"/>
+      <tstamps>00000000-0000-0000-0000-0000617f1504</tstamps>
+    </comp>
+    <comp ref="P1">
+      <value>USB_C_Plug</value>
+      <footprint>mta1:U261-241N-4BS60</footprint>
+      <datasheet>https://www.usb.org/sites/default/files/documents/usb_type-c.zip</datasheet>
+      <fields>
+        <field name="Manufacturer">XKB</field>
+        <field name="Manufacturer Part Number">U261-241N-4BS60</field>
+        <field name="Supplier">LCSC</field>
+        <field name="Supplier Part Number">C319150</field>
+      </fields>
+      <libsource lib="Connector" part="USB_C_Plug" description="USB Type-C Plug connector"/>
+      <property name="Manufacturer" value="XKB"/>
+      <property name="Manufacturer Part Number" value="U261-241N-4BS60"/>
+      <property name="Supplier" value="LCSC"/>
+      <property name="Supplier Part Number" value="C319150"/>
+      <property name="Sheetname" value="USB to Serial converter"/>
+      <property name="Sheetfile" value="usb_to_serial.kicad_sch"/>
+      <sheetpath names="/USB to Serial converter/" tstamps="/00000000-0000-0000-0000-00006161400b/"/>
+      <tstamps>7b422c5e-fd7b-4ac9-8400-966a18c34fdc</tstamps>
+    </comp>
+    <comp ref="R29">
+      <value>5.1k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,1%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,1%"/>
+      <property name="Sheetname" value="USB to Serial converter"/>
+      <property name="Sheetfile" value="usb_to_serial.kicad_sch"/>
+      <sheetpath names="/USB to Serial converter/" tstamps="/00000000-0000-0000-0000-00006161400b/"/>
+      <tstamps>9858cd2c-db03-45a0-8bc5-55a6c8037bff</tstamps>
+    </comp>
+    <comp ref="U3">
+      <value>CH552E</value>
+      <footprint>Package_SO:MSOP-10_3x3mm_P0.5mm</footprint>
+      <fields>
+        <field name="Manufacturer">WCH</field>
+        <field name="Manufacturer Part Number">CH552E</field>
+        <field name="Supplier">LCSC</field>
+        <field name="Supplier Part Number">C967938</field>
+      </fields>
+      <libsource lib="mta1" part="CH552E" description="8-bit enhanced USB microcontroller CH552"/>
+      <property name="Manufacturer" value="WCH"/>
+      <property name="Manufacturer Part Number" value="CH552E"/>
+      <property name="Supplier" value="LCSC"/>
+      <property name="Supplier Part Number" value="C967938"/>
+      <property name="Sheetname" value="USB to Serial converter"/>
+      <property name="Sheetfile" value="usb_to_serial.kicad_sch"/>
+      <sheetpath names="/USB to Serial converter/" tstamps="/00000000-0000-0000-0000-00006161400b/"/>
+      <tstamps>b87ef039-9982-4e55-98fc-83a90017fbb0</tstamps>
+    </comp>
+    <comp ref="U5">
+      <value>USBLC6-2SC6</value>
+      <footprint>Package_TO_SOT_SMD:SOT-23-6</footprint>
+      <datasheet>https://www.st.com/resource/en/datasheet/usblc6-2.pdf</datasheet>
+      <fields>
+        <field name="Manufacturer">ST</field>
+        <field name="Manufacturer Part Number">USBLC6-2SC6</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">497-5235-1-ND</field>
+      </fields>
+      <libsource lib="Power_Protection" part="USBLC6-2SC6" description="Very low capacitance ESD protection diode, 2 data-line, SOT-23-6"/>
+      <property name="Manufacturer" value="ST"/>
+      <property name="Manufacturer Part Number" value="USBLC6-2SC6"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="497-5235-1-ND"/>
+      <property name="Sheetname" value="USB to Serial converter"/>
+      <property name="Sheetfile" value="usb_to_serial.kicad_sch"/>
+      <sheetpath names="/USB to Serial converter/" tstamps="/00000000-0000-0000-0000-00006161400b/"/>
+      <tstamps>00000000-0000-0000-0000-00006179d455</tstamps>
+    </comp>
+    <comp ref="C1">
+      <value>10uF</value>
+      <footprint>mta1:CAPC1608X09L</footprint>
+      <fields>
+        <field name="Extended Value">10V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="10V,X5R,20%"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-0000612188a6</tstamps>
+    </comp>
+    <comp ref="C2">
+      <value>10uF</value>
+      <footprint>mta1:CAPC1608X09L</footprint>
+      <fields>
+        <field name="Extended Value">10V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="10V,X5R,20%"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-00006126b7fb</tstamps>
+    </comp>
+    <comp ref="C3">
+      <value>10uF</value>
+      <footprint>mta1:CAPC1608X09L</footprint>
+      <fields>
+        <field name="Extended Value">10V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="10V,X5R,20%"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-00006124bc7c</tstamps>
+    </comp>
+    <comp ref="C4">
+      <value>10uF</value>
+      <footprint>mta1:CAPC1608X09L</footprint>
+      <fields>
+        <field name="Extended Value">10V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="10V,X5R,20%"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-0000612750eb</tstamps>
+    </comp>
+    <comp ref="C5">
+      <value>10uF</value>
+      <footprint>mta1:CAPC1608X09L</footprint>
+      <fields>
+        <field name="Extended Value">10V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="10V,X5R,20%"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-000061222da3</tstamps>
+    </comp>
+    <comp ref="C6">
+      <value>10uF</value>
+      <footprint>mta1:CAPC1608X09L</footprint>
+      <fields>
+        <field name="Extended Value">10V,X5R,20%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="10V,X5R,20%"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-00006174ea42</tstamps>
+    </comp>
+    <comp ref="D1">
+      <value>0402 indicator LED, blue</value>
+      <footprint>LED_SMD:LED_0402_1005Metric</footprint>
+      <fields>
+        <field name="Manufacturer">Foshan NationStar</field>
+        <field name="Manufacturer Part Number">NCD0402B1</field>
+        <field name="Supplier">LCSC</field>
+        <field name="Supplier Part Number">C130724</field>
+      </fields>
+      <libsource lib="Device" part="LED" description="Light emitting diode"/>
+      <property name="Manufacturer" value="Foshan NationStar"/>
+      <property name="Manufacturer Part Number" value="NCD0402B1"/>
+      <property name="Supplier" value="LCSC"/>
+      <property name="Supplier Part Number" value="C130724"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-0000618029cb</tstamps>
+    </comp>
+    <comp ref="R1">
+      <value>10k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-00006121b215</tstamps>
+    </comp>
+    <comp ref="R2">
+      <value>10k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-00006123854c</tstamps>
+    </comp>
+    <comp ref="R3">
+      <value>1k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-0000618005cf</tstamps>
+    </comp>
+    <comp ref="R22">
+      <value>10k</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>c4c2a4ce-d12c-46e7-abc7-438cb069e22d</tstamps>
+    </comp>
+    <comp ref="U1">
+      <value>MCP1824T-2502EOT</value>
+      <footprint>Package_TO_SOT_SMD:SOT-23-5</footprint>
+      <datasheet>https://www.mouser.se/datasheet/2/268/22070a-53890.pdf</datasheet>
+      <fields>
+        <field name="Manufacturer">Microchip</field>
+        <field name="Manufacturer Part Number">MCP1824T-2502EOT</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">MCP1824T-2502E/OTCT-ND</field>
+      </fields>
+      <libsource lib="mta1" part="MCP1824T-2502EOT" description="IC REG LINEAR 2.5V 300MA SOT23-5"/>
+      <property name="Manufacturer" value="Microchip"/>
+      <property name="Manufacturer Part Number" value="MCP1824T-2502EOT"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="MCP1824T-2502E/OTCT-ND"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-00006126a5e3</tstamps>
+    </comp>
+    <comp ref="U2">
+      <value>MIC5258-1.2YM5</value>
+      <footprint>Package_TO_SOT_SMD:SOT-23-5</footprint>
+      <datasheet>https://eu.mouser.com/datasheet/2/268/mic5258-1891212.pdf</datasheet>
+      <fields>
+        <field name="Manufacturer">Micrel Inc.</field>
+        <field name="Manufacturer Part Number">MIC5258-1.2YM5</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">2156-MIC5258-1.2YM5-ND</field>
+      </fields>
+      <libsource lib="mta1" part="MIC5258-1.2YM5-TR" description="IC REG LINEAR 1.2V 150MA SOT23-5"/>
+      <property name="Manufacturer" value="Micrel Inc."/>
+      <property name="Manufacturer Part Number" value="MIC5258-1.2YM5"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="2156-MIC5258-1.2YM5-ND"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-00006125d556</tstamps>
+    </comp>
+    <comp ref="U9">
+      <value>NCP752BSN33T1G</value>
+      <footprint>mta1:NCP752BSN33T1G</footprint>
+      <fields>
+        <field name="Manufacturer">onsemi</field>
+        <field name="Manufacturer Part Number">NCP752BSN33T1G</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">NCP752BSN33T1GOSCT-ND</field>
+      </fields>
+      <libsource lib="mta1" part="NCP752BSN33T1G" description="IC REG LINEAR 3.3V 200MA 5TSOP"/>
+      <property name="Manufacturer" value="onsemi"/>
+      <property name="Manufacturer Part Number" value="NCP752BSN33T1G"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="NCP752BSN33T1GOSCT-ND"/>
+      <property name="Sheetname" value="Power Supply"/>
+      <property name="Sheetfile" value="powersupply.kicad_sch"/>
+      <sheetpath names="/Power Supply/" tstamps="/00000000-0000-0000-0000-0000611a4eb9/"/>
+      <tstamps>00000000-0000-0000-0000-0000616b8c22</tstamps>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Connector" part="TestPoint">
+      <description>test point</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Pin*</fp>
+        <fp>Test*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">TP</field>
+        <field name="Value">TestPoint</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Connector" part="USB_C_Plug">
+      <description>USB Type-C Plug connector</description>
+      <docs>https://www.usb.org/sites/default/files/documents/usb_type-c.zip</docs>
+      <footprints>
+        <fp>USB*C*Plug*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">P</field>
+        <field name="Value">USB_C_Plug</field>
+        <field name="Datasheet">https://www.usb.org/sites/default/files/documents/usb_type-c.zip</field>
+      </fields>
+      <pins>
+        <pin num="A1" name="GND" type="passive"/>
+        <pin num="A2" name="TX1+" type="bidirectional"/>
+        <pin num="A3" name="TX1-" type="bidirectional"/>
+        <pin num="A4" name="VBUS" type="passive"/>
+        <pin num="A5" name="CC" type="bidirectional"/>
+        <pin num="A6" name="D+" type="bidirectional"/>
+        <pin num="A7" name="D-" type="bidirectional"/>
+        <pin num="A8" name="SBU1" type="bidirectional"/>
+        <pin num="A9" name="VBUS" type="passive"/>
+        <pin num="A10" name="RX2-" type="bidirectional"/>
+        <pin num="A11" name="RX2+" type="bidirectional"/>
+        <pin num="A12" name="GND" type="passive"/>
+        <pin num="B1" name="GND" type="passive"/>
+        <pin num="B2" name="TX2+" type="bidirectional"/>
+        <pin num="B3" name="TX2-" type="bidirectional"/>
+        <pin num="B4" name="VBUS" type="passive"/>
+        <pin num="B5" name="VCONN" type="bidirectional"/>
+        <pin num="B8" name="SBU2" type="bidirectional"/>
+        <pin num="B9" name="VBUS" type="passive"/>
+        <pin num="B10" name="RX1-" type="bidirectional"/>
+        <pin num="B11" name="RX1+" type="bidirectional"/>
+        <pin num="B12" name="GND" type="passive"/>
+        <pin num="S1" name="SHIELD" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="C">
+      <description>Unpolarized capacitor</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>C_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">C</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="LED">
+      <description>Light emitting diode</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>LED*</fp>
+        <fp>LED_SMD:*</fp>
+        <fp>LED_THT:*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">D</field>
+        <field name="Value">LED</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="K" type="passive"/>
+        <pin num="2" name="A" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="R">
+      <description>Resistor</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>R_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Power_Protection" part="USBLC6-2SC6">
+      <description>Very low capacitance ESD protection diode, 2 data-line, SOT-23-6</description>
+      <docs>https://www.st.com/resource/en/datasheet/usblc6-2.pdf</docs>
+      <footprints>
+        <fp>SOT?23*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">USBLC6-2SC6</field>
+        <field name="Footprint">Package_TO_SOT_SMD:SOT-23-6</field>
+        <field name="Datasheet">https://www.st.com/resource/en/datasheet/usblc6-2.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="I/O1" type="passive"/>
+        <pin num="2" name="GND" type="passive"/>
+        <pin num="3" name="I/O2" type="passive"/>
+        <pin num="4" name="I/O2" type="passive"/>
+        <pin num="5" name="VBUS" type="passive"/>
+        <pin num="6" name="I/O1" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="CH552E">
+      <description>8-bit enhanced USB microcontroller CH552</description>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">CH552E</field>
+      </fields>
+      <pins>
+        <pin num="1" name="RTS(P1.4)" type="output"/>
+        <pin num="2" name="CTS(P1.5)" type="input"/>
+        <pin num="3" name="RX(PP1.6)" type="input"/>
+        <pin num="4" name="TX(P1.7)" type="output"/>
+        <pin num="5" name="RST" type="bidirectional"/>
+        <pin num="6" name="UDP(P3.6)" type="bidirectional"/>
+        <pin num="7" name="UDM(P3.7)" type="bidirectional"/>
+        <pin num="8" name="GND" type="power_in"/>
+        <pin num="9" name="VCC" type="power_in"/>
+        <pin num="10" name="V33" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="FC-B1010RGBT-HG">
+      <footprints>
+        <fp>LED*</fp>
+        <fp>LED_SMD:*</fp>
+        <fp>LED_THT:*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">D</field>
+        <field name="Value">FC-B1010RGBT-HG</field>
+        <field name="Footprint">mta1:0402rgb-1010</field>
+      </fields>
+      <pins>
+        <pin num="1" name="A" type="passive"/>
+        <pin num="2" name="RK" type="passive"/>
+        <pin num="3" name="GK" type="passive"/>
+        <pin num="4" name="BK" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="Ferrite_Bead-Device">
+      <footprints>
+        <fp>Inductor_*</fp>
+        <fp>L_*</fp>
+        <fp>*Ferrite*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">FB</field>
+        <field name="Value">Ferrite_Bead-Device</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="ICE40UP5K-SG48ITR">
+      <description>iCE40 UltraPlus FPGA, 5280 LUTs, 1.2V, 48-pin QFN</description>
+      <docs>http://www.latticesemi.com/Products/FPGAandCPLD/iCE40Ultra</docs>
+      <footprints>
+        <fp>QFN*7x7mm*P0.5mm*EP5.6x5.6mm*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">ICE40UP5K-SG48ITR</field>
+        <field name="Footprint">Package_DFN_QFN:QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm</field>
+        <field name="Datasheet">http://www.latticesemi.com/Products/FPGAandCPLD/iCE40Ultra</field>
+      </fields>
+      <pins>
+        <pin num="1" name="VCCIO_2" type="power_in"/>
+        <pin num="2" name="IOB_6a" type="bidirectional"/>
+        <pin num="3" name="IOB_9b" type="bidirectional"/>
+        <pin num="4" name="IOB_8a" type="bidirectional"/>
+        <pin num="5" name="VCC" type="power_in"/>
+        <pin num="6" name="IOB_13b" type="bidirectional"/>
+        <pin num="7" name="CDONE" type="open_collector"/>
+        <pin num="8" name="~{CRESET}" type="input"/>
+        <pin num="9" name="IOB_16a" type="bidirectional"/>
+        <pin num="10" name="IOB_18a" type="bidirectional"/>
+        <pin num="11" name="IOB_20a" type="bidirectional"/>
+        <pin num="12" name="IOB_22b" type="bidirectional"/>
+        <pin num="13" name="IOB_24a" type="bidirectional"/>
+        <pin num="14" name="IOB_32a_SPI_SO" type="bidirectional"/>
+        <pin num="15" name="IOB_34a_SPI_SCK" type="bidirectional"/>
+        <pin num="16" name="IOB_35b_SPI_SS" type="bidirectional"/>
+        <pin num="17" name="IOB_33b_SPI_SI" type="bidirectional"/>
+        <pin num="18" name="IOB_31b" type="bidirectional"/>
+        <pin num="19" name="IOB_29b" type="bidirectional"/>
+        <pin num="20" name="IOB_25b_G3" type="bidirectional"/>
+        <pin num="21" name="IOB_23b" type="bidirectional"/>
+        <pin num="22" name="SPI_VCCIO1" type="power_in"/>
+        <pin num="23" name="IOT_37a" type="bidirectional"/>
+        <pin num="24" name="VPP_2V5" type="power_in"/>
+        <pin num="25" name="IOT_36b" type="bidirectional"/>
+        <pin num="26" name="IOT_39a" type="bidirectional"/>
+        <pin num="27" name="IOT_38b" type="bidirectional"/>
+        <pin num="28" name="IOT_41a" type="bidirectional"/>
+        <pin num="29" name="VCCPLL" type="power_in"/>
+        <pin num="30" name="VCC" type="power_in"/>
+        <pin num="31" name="IOT_42b" type="bidirectional"/>
+        <pin num="32" name="IOT_43a" type="bidirectional"/>
+        <pin num="33" name="VCCIO_0" type="power_in"/>
+        <pin num="34" name="IOT_44b" type="bidirectional"/>
+        <pin num="35" name="IOT_46b_G0" type="bidirectional"/>
+        <pin num="36" name="IOT_48b" type="bidirectional"/>
+        <pin num="37" name="IOT_45a_G1" type="bidirectional"/>
+        <pin num="38" name="IOT_50b" type="bidirectional"/>
+        <pin num="39" name="RGB0" type="open_collector"/>
+        <pin num="40" name="RGB1" type="open_collector"/>
+        <pin num="41" name="RGB2" type="open_collector"/>
+        <pin num="42" name="IOT_51a" type="bidirectional"/>
+        <pin num="43" name="IOT_49a" type="bidirectional"/>
+        <pin num="44" name="IOB_3b_G6" type="bidirectional"/>
+        <pin num="45" name="IOB_5b" type="bidirectional"/>
+        <pin num="46" name="IOB_0a" type="bidirectional"/>
+        <pin num="47" name="IOB_2a" type="bidirectional"/>
+        <pin num="48" name="IOB_4a" type="bidirectional"/>
+        <pin num="49" name="GND" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="MCP1824T-2502EOT">
+      <description>IC REG LINEAR 2.5V 300MA SOT23-5</description>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">MCP1824T-2502EOT</field>
+        <field name="Footprint">Package_TO_SOT_SMD:SOT-23-5</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Vin" type="power_in"/>
+        <pin num="2" name="GND" type="power_in"/>
+        <pin num="3" name="/SHDN" type="input"/>
+        <pin num="4" name="PWRGD" type="open_collector"/>
+        <pin num="5" name="Vout" type="power_out"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="MIC5258-1.2YM5-TR">
+      <description>IC REG LINEAR 1.2V 150MA SOT23-5</description>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">MIC5258-1.2YM5-TR</field>
+        <field name="Footprint">Package_TO_SOT_SMD:SOT-23-5</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Vin" type="power_in"/>
+        <pin num="2" name="GND" type="power_in"/>
+        <pin num="3" name="EN" type="input"/>
+        <pin num="4" name="PG" type="open_collector"/>
+        <pin num="5" name="Vout" type="power_out"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="NCP752BSN33T1G">
+      <description>IC REG LINEAR 3.3V 200MA 5TSOP</description>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">NCP752BSN33T1G</field>
+      </fields>
+      <pins>
+        <pin num="1" name="IN" type="power_in"/>
+        <pin num="2" name="GND" type="power_in"/>
+        <pin num="3" name="EN" type="input"/>
+        <pin num="4" name="PG" type="open_collector"/>
+        <pin num="5" name="OUT" type="power_out"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="PT2043AT6">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">PT2043AT6</field>
+        <field name="Footprint">Package_TO_SOT_SMD:SOT-23-6</field>
+      </fields>
+      <pins>
+        <pin num="1" name="QC" type="output"/>
+        <pin num="2" name="VSS" type="power_in"/>
+        <pin num="3" name="TCH" type="input"/>
+        <pin num="4" name="AHLB" type="input"/>
+        <pin num="5" name="VDD" type="power_in"/>
+        <pin num="6" name="TOG" type="input"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="W25Q80DVUXIE">
+      <description>IC FLASH 8MBIT SPI 104MHZ 8USON</description>
+      <docs>https://www.winbond.com/resource-files/w25x40cl_f%2020140325.pdf</docs>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">W25Q80DVUXIE</field>
+        <field name="Footprint">mta1:W25Q80DVUXIE</field>
+        <field name="Datasheet">https://www.winbond.com/resource-files/w25x40cl_f%2020140325.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="~{CS}" type="input"/>
+        <pin num="2" name="DO(IO1)" type="bidirectional"/>
+        <pin num="3" name="IO2" type="bidirectional"/>
+        <pin num="4" name="GND" type="power_in"/>
+        <pin num="5" name="DI(IO0)" type="bidirectional"/>
+        <pin num="6" name="CLK" type="input"/>
+        <pin num="7" name="IO3" type="bidirectional"/>
+        <pin num="8" name="VCC" type="power_in"/>
+        <pin num="9" name="EXP" type="no_connect"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="Connector">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Connector.kicad_sym</uri>
+    </library>
+    <library logical="Device">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Device.kicad_sym</uri>
+    </library>
+    <library logical="Power_Protection">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Power_Protection.kicad_sym</uri>
+    </library>
+    <library logical="mta1">
+      <uri>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tk1/../mta1-library/mta1.kicad_sym</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="+1V2">
+      <node ref="C16" pin="1" pintype="passive"/>
+      <node ref="C20" pin="1" pintype="passive"/>
+      <node ref="C5" pin="1" pintype="passive"/>
+      <node ref="FB3" pin="2" pintype="passive"/>
+      <node ref="U2" pin="5" pinfunction="Vout" pintype="power_out"/>
+      <node ref="U6" pin="30" pinfunction="VCC" pintype="power_in"/>
+      <node ref="U6" pin="5" pinfunction="VCC" pintype="power_in"/>
+    </net>
+    <net code="2" name="+2V5">
+      <node ref="C18" pin="1" pintype="passive"/>
+      <node ref="C4" pin="1" pintype="passive"/>
+      <node ref="D1" pin="2" pinfunction="A" pintype="passive"/>
+      <node ref="U1" pin="5" pinfunction="Vout" pintype="power_out"/>
+      <node ref="U6" pin="24" pinfunction="VPP_2V5" pintype="power_in"/>
+    </net>
+    <net code="3" name="+3V3">
+      <node ref="C13" pin="1" pintype="passive"/>
+      <node ref="C19" pin="1" pintype="passive"/>
+      <node ref="C21" pin="1" pintype="passive"/>
+      <node ref="C22" pin="1" pintype="passive"/>
+      <node ref="C23" pin="1" pintype="passive"/>
+      <node ref="C26" pin="1" pintype="passive"/>
+      <node ref="C3" pin="1" pintype="passive"/>
+      <node ref="C7" pin="1" pintype="passive"/>
+      <node ref="D3" pin="1" pinfunction="A" pintype="passive"/>
+      <node ref="R19" pin="1" pintype="passive"/>
+      <node ref="R20" pin="1" pintype="passive"/>
+      <node ref="R23" pin="1" pintype="passive"/>
+      <node ref="R24" pin="1" pintype="passive"/>
+      <node ref="R25" pin="1" pintype="passive"/>
+      <node ref="R26" pin="1" pintype="passive"/>
+      <node ref="U10" pin="5" pinfunction="VDD" pintype="power_in"/>
+      <node ref="U3" pin="10" pinfunction="V33" pintype="passive"/>
+      <node ref="U3" pin="9" pinfunction="VCC" pintype="power_in"/>
+      <node ref="U6" pin="1" pinfunction="VCCIO_2" pintype="power_in"/>
+      <node ref="U6" pin="22" pinfunction="SPI_VCCIO1" pintype="power_in"/>
+      <node ref="U6" pin="33" pinfunction="VCCIO_0" pintype="power_in"/>
+      <node ref="U8" pin="8" pinfunction="VCC" pintype="power_in"/>
+      <node ref="U9" pin="5" pinfunction="OUT" pintype="power_out"/>
+    </net>
+    <net code="4" name="+5V">
+      <node ref="C1" pin="1" pintype="passive"/>
+      <node ref="C2" pin="1" pintype="passive"/>
+      <node ref="C6" pin="1" pintype="passive"/>
+      <node ref="P1" pin="A4" pinfunction="VBUS" pintype="passive"/>
+      <node ref="P1" pin="A9" pinfunction="VBUS" pintype="passive"/>
+      <node ref="P1" pin="B4" pinfunction="VBUS" pintype="passive"/>
+      <node ref="P1" pin="B9" pinfunction="VBUS" pintype="passive"/>
+      <node ref="R1" pin="1" pintype="passive"/>
+      <node ref="R2" pin="1" pintype="passive"/>
+      <node ref="R22" pin="1" pintype="passive"/>
+      <node ref="U1" pin="1" pinfunction="Vin" pintype="power_in"/>
+      <node ref="U2" pin="1" pinfunction="Vin" pintype="power_in"/>
+      <node ref="U5" pin="5" pinfunction="VBUS" pintype="passive"/>
+      <node ref="U9" pin="1" pinfunction="IN" pintype="power_in"/>
+    </net>
+    <net code="5" name="/Application FPGA/APP_+1.2_PLL">
+      <node ref="C17" pin="1" pintype="passive"/>
+      <node ref="C25" pin="1" pintype="passive"/>
+      <node ref="FB3" pin="1" pintype="passive"/>
+      <node ref="U6" pin="29" pinfunction="VCCPLL" pintype="power_in"/>
+    </net>
+    <net code="6" name="/Application FPGA/APP_FLASH_HOLD">
+      <node ref="R26" pin="2" pintype="passive"/>
+      <node ref="U8" pin="7" pinfunction="IO3" pintype="bidirectional"/>
+    </net>
+    <net code="7" name="/Application FPGA/APP_FLASH_WP">
+      <node ref="R25" pin="2" pintype="passive"/>
+      <node ref="U8" pin="3" pinfunction="IO2" pintype="bidirectional"/>
+    </net>
+    <net code="8" name="/Application FPGA/TOUCH_PAD">
+      <node ref="C8" pin="1" pintype="passive"/>
+      <node ref="C8" pin="2" pintype="passive"/>
+      <node ref="R30" pin="2" pintype="passive"/>
+    </net>
+    <net code="9" name="/USB to Serial converter/INT_USB_IN_D+">
+      <node ref="P1" pin="A6" pinfunction="D+" pintype="bidirectional"/>
+      <node ref="U5" pin="6" pinfunction="I/O1" pintype="passive"/>
+    </net>
+    <net code="10" name="/USB to Serial converter/INT_USB_IN_D-">
+      <node ref="P1" pin="A7" pinfunction="D-" pintype="bidirectional"/>
+      <node ref="U5" pin="4" pinfunction="I/O2" pintype="passive"/>
+    </net>
+    <net code="11" name="APP_CDONE">
+      <node ref="R19" pin="2" pintype="passive"/>
+      <node ref="U6" pin="7" pinfunction="CDONE" pintype="open_collector"/>
+    </net>
+    <net code="12" name="APP_CRESET">
+      <node ref="R20" pin="2" pintype="passive"/>
+      <node ref="U6" pin="8" pinfunction="~{CRESET}" pintype="input"/>
+    </net>
+    <net code="13" name="APP_GPIO1">
+      <node ref="U6" pin="36" pinfunction="IOT_48b" pintype="bidirectional"/>
+    </net>
+    <net code="14" name="APP_GPIO2">
+      <node ref="U6" pin="38" pinfunction="IOT_50b" pintype="bidirectional"/>
+    </net>
+    <net code="15" name="APP_GPIO3">
+      <node ref="U6" pin="45" pinfunction="IOB_5b" pintype="bidirectional"/>
+    </net>
+    <net code="16" name="APP_GPIO4">
+      <node ref="U6" pin="46" pinfunction="IOB_0a" pintype="bidirectional"/>
+    </net>
+    <net code="17" name="APP_ICE_MISO">
+      <node ref="U6" pin="14" pinfunction="IOB_32a_SPI_SO" pintype="bidirectional"/>
+      <node ref="U8" pin="5" pinfunction="DI(IO0)" pintype="bidirectional"/>
+    </net>
+    <net code="18" name="APP_ICE_MOSI">
+      <node ref="U6" pin="17" pinfunction="IOB_33b_SPI_SI" pintype="bidirectional"/>
+      <node ref="U8" pin="2" pinfunction="DO(IO1)" pintype="bidirectional"/>
+    </net>
+    <net code="19" name="APP_ICE_SCK">
+      <node ref="R24" pin="2" pintype="passive"/>
+      <node ref="U6" pin="15" pinfunction="IOB_34a_SPI_SCK" pintype="bidirectional"/>
+      <node ref="U8" pin="6" pinfunction="CLK" pintype="input"/>
+    </net>
+    <net code="20" name="APP_ICE_SS">
+      <node ref="R23" pin="2" pintype="passive"/>
+      <node ref="U6" pin="16" pinfunction="IOB_35b_SPI_SS" pintype="bidirectional"/>
+      <node ref="U8" pin="1" pinfunction="~{CS}" pintype="input"/>
+    </net>
+    <net code="21" name="APP_LED_BLUE">
+      <node ref="R18" pin="1" pintype="passive"/>
+      <node ref="U6" pin="41" pinfunction="RGB2" pintype="open_collector"/>
+    </net>
+    <net code="22" name="APP_LED_GREEN">
+      <node ref="R17" pin="1" pintype="passive"/>
+      <node ref="U6" pin="40" pinfunction="RGB1" pintype="open_collector"/>
+    </net>
+    <net code="23" name="APP_LED_RED">
+      <node ref="R16" pin="1" pintype="passive"/>
+      <node ref="U6" pin="39" pinfunction="RGB0" pintype="open_collector"/>
+    </net>
+    <net code="24" name="GND">
+      <node ref="C1" pin="2" pintype="passive"/>
+      <node ref="C13" pin="2" pintype="passive"/>
+      <node ref="C16" pin="2" pintype="passive"/>
+      <node ref="C17" pin="2" pintype="passive"/>
+      <node ref="C18" pin="2" pintype="passive"/>
+      <node ref="C19" pin="2" pintype="passive"/>
+      <node ref="C2" pin="2" pintype="passive"/>
+      <node ref="C20" pin="2" pintype="passive"/>
+      <node ref="C21" pin="2" pintype="passive"/>
+      <node ref="C22" pin="2" pintype="passive"/>
+      <node ref="C23" pin="2" pintype="passive"/>
+      <node ref="C25" pin="2" pintype="passive"/>
+      <node ref="C26" pin="2" pintype="passive"/>
+      <node ref="C27" pin="2" pintype="passive"/>
+      <node ref="C3" pin="2" pintype="passive"/>
+      <node ref="C4" pin="2" pintype="passive"/>
+      <node ref="C5" pin="2" pintype="passive"/>
+      <node ref="C6" pin="2" pintype="passive"/>
+      <node ref="C7" pin="2" pintype="passive"/>
+      <node ref="P1" pin="A1" pinfunction="GND" pintype="passive"/>
+      <node ref="P1" pin="A12" pinfunction="GND" pintype="passive"/>
+      <node ref="P1" pin="B1" pinfunction="GND" pintype="passive"/>
+      <node ref="P1" pin="B12" pinfunction="GND" pintype="passive"/>
+      <node ref="P1" pin="S1" pinfunction="SHIELD" pintype="passive"/>
+      <node ref="R29" pin="2" pintype="passive"/>
+      <node ref="R3" pin="2" pintype="passive"/>
+      <node ref="U1" pin="2" pinfunction="GND" pintype="power_in"/>
+      <node ref="U10" pin="2" pinfunction="VSS" pintype="power_in"/>
+      <node ref="U10" pin="4" pinfunction="AHLB" pintype="input"/>
+      <node ref="U10" pin="6" pinfunction="TOG" pintype="input"/>
+      <node ref="U2" pin="2" pinfunction="GND" pintype="power_in"/>
+      <node ref="U3" pin="8" pinfunction="GND" pintype="power_in"/>
+      <node ref="U5" pin="2" pinfunction="GND" pintype="passive"/>
+      <node ref="U6" pin="49" pinfunction="GND" pintype="power_in"/>
+      <node ref="U8" pin="4" pinfunction="GND" pintype="power_in"/>
+      <node ref="U9" pin="2" pinfunction="GND" pintype="power_in"/>
+    </net>
+    <net code="25" name="INTERFACE_CTS">
+      <node ref="U3" pin="2" pinfunction="CTS(P1.5)" pintype="input"/>
+      <node ref="U6" pin="27" pinfunction="IOT_38b" pintype="bidirectional"/>
+    </net>
+    <net code="26" name="INTERFACE_RTS">
+      <node ref="U3" pin="1" pinfunction="RTS(P1.4)" pintype="output"/>
+      <node ref="U6" pin="28" pinfunction="IOT_41a" pintype="bidirectional"/>
+    </net>
+    <net code="27" name="INTERFACE_RX">
+      <node ref="U3" pin="3" pinfunction="RX(PP1.6)" pintype="input"/>
+      <node ref="U6" pin="26" pinfunction="IOT_39a" pintype="bidirectional"/>
+    </net>
+    <net code="28" name="INTERFACE_TX">
+      <node ref="U3" pin="4" pinfunction="TX(P1.7)" pintype="output"/>
+      <node ref="U6" pin="25" pinfunction="IOT_36b" pintype="bidirectional"/>
+    </net>
+    <net code="29" name="INT_USB_D+">
+      <node ref="U3" pin="6" pinfunction="UDP(P3.6)" pintype="bidirectional"/>
+      <node ref="U5" pin="1" pinfunction="I/O1" pintype="passive"/>
+    </net>
+    <net code="30" name="INT_USB_D-">
+      <node ref="U3" pin="7" pinfunction="UDM(P3.7)" pintype="bidirectional"/>
+      <node ref="U5" pin="3" pinfunction="I/O2" pintype="passive"/>
+    </net>
+    <net code="31" name="Net-(C27-Pad1)">
+      <node ref="C27" pin="1" pintype="passive"/>
+      <node ref="R30" pin="1" pintype="passive"/>
+      <node ref="U10" pin="3" pinfunction="TCH" pintype="input"/>
+    </net>
+    <net code="32" name="Net-(D1-Pad1)">
+      <node ref="D1" pin="1" pinfunction="K" pintype="passive"/>
+      <node ref="R3" pin="1" pintype="passive"/>
+    </net>
+    <net code="33" name="Net-(D3-Pad2)">
+      <node ref="D3" pin="2" pinfunction="RK" pintype="passive"/>
+      <node ref="R16" pin="2" pintype="passive"/>
+    </net>
+    <net code="34" name="Net-(D3-Pad3)">
+      <node ref="D3" pin="3" pinfunction="GK" pintype="passive"/>
+      <node ref="R17" pin="2" pintype="passive"/>
+    </net>
+    <net code="35" name="Net-(D3-Pad4)">
+      <node ref="D3" pin="4" pinfunction="BK" pintype="passive"/>
+      <node ref="R18" pin="2" pintype="passive"/>
+    </net>
+    <net code="36" name="Net-(P1-PadA5)">
+      <node ref="P1" pin="A5" pinfunction="CC" pintype="bidirectional"/>
+      <node ref="R29" pin="1" pintype="passive"/>
+    </net>
+    <net code="37" name="Net-(R1-Pad2)">
+      <node ref="R1" pin="2" pintype="passive"/>
+      <node ref="U2" pin="3" pinfunction="EN" pintype="input"/>
+    </net>
+    <net code="38" name="SPI_VCC_OK">
+      <node ref="R22" pin="2" pintype="passive"/>
+      <node ref="U1" pin="3" pinfunction="/SHDN" pintype="input"/>
+      <node ref="U9" pin="4" pinfunction="PG" pintype="open_collector"/>
+    </net>
+    <net code="39" name="TOUCH_EVENT">
+      <node ref="U10" pin="1" pinfunction="QC" pintype="output"/>
+      <node ref="U6" pin="6" pinfunction="IOB_13b" pintype="bidirectional"/>
+    </net>
+    <net code="40" name="VCC_OK">
+      <node ref="R2" pin="2" pintype="passive"/>
+      <node ref="U2" pin="4" pinfunction="PG" pintype="open_collector"/>
+      <node ref="U9" pin="3" pinfunction="EN" pintype="input"/>
+    </net>
+    <net code="41" name="unconnected-(P1-PadA2)">
+      <node ref="P1" pin="A2" pinfunction="TX1+" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="42" name="unconnected-(P1-PadA3)">
+      <node ref="P1" pin="A3" pinfunction="TX1-" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="43" name="unconnected-(P1-PadA8)">
+      <node ref="P1" pin="A8" pinfunction="SBU1" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="44" name="unconnected-(P1-PadA10)">
+      <node ref="P1" pin="A10" pinfunction="RX2-" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="45" name="unconnected-(P1-PadA11)">
+      <node ref="P1" pin="A11" pinfunction="RX2+" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="46" name="unconnected-(P1-PadB2)">
+      <node ref="P1" pin="B2" pinfunction="TX2+" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="47" name="unconnected-(P1-PadB3)">
+      <node ref="P1" pin="B3" pinfunction="TX2-" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="48" name="unconnected-(P1-PadB5)">
+      <node ref="P1" pin="B5" pinfunction="VCONN" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="49" name="unconnected-(P1-PadB8)">
+      <node ref="P1" pin="B8" pinfunction="SBU2" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="50" name="unconnected-(P1-PadB10)">
+      <node ref="P1" pin="B10" pinfunction="RX1-" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="51" name="unconnected-(P1-PadB11)">
+      <node ref="P1" pin="B11" pinfunction="RX1+" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="52" name="unconnected-(U1-Pad4)">
+      <node ref="U1" pin="4" pinfunction="PWRGD" pintype="open_collector+no_connect"/>
+    </net>
+    <net code="53" name="unconnected-(U3-Pad5)">
+      <node ref="U3" pin="5" pinfunction="RST" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="54" name="unconnected-(U6-Pad2)">
+      <node ref="U6" pin="2" pinfunction="IOB_6a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="55" name="unconnected-(U6-Pad3)">
+      <node ref="U6" pin="3" pinfunction="IOB_9b" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="56" name="unconnected-(U6-Pad4)">
+      <node ref="U6" pin="4" pinfunction="IOB_8a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="57" name="unconnected-(U6-Pad9)">
+      <node ref="U6" pin="9" pinfunction="IOB_16a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="58" name="unconnected-(U6-Pad10)">
+      <node ref="U6" pin="10" pinfunction="IOB_18a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="59" name="unconnected-(U6-Pad11)">
+      <node ref="U6" pin="11" pinfunction="IOB_20a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="60" name="unconnected-(U6-Pad12)">
+      <node ref="U6" pin="12" pinfunction="IOB_22b" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="61" name="unconnected-(U6-Pad13)">
+      <node ref="U6" pin="13" pinfunction="IOB_24a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="62" name="unconnected-(U6-Pad18)">
+      <node ref="U6" pin="18" pinfunction="IOB_31b" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="63" name="unconnected-(U6-Pad19)">
+      <node ref="U6" pin="19" pinfunction="IOB_29b" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="64" name="unconnected-(U6-Pad20)">
+      <node ref="U6" pin="20" pinfunction="IOB_25b_G3" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="65" name="unconnected-(U6-Pad21)">
+      <node ref="U6" pin="21" pinfunction="IOB_23b" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="66" name="unconnected-(U6-Pad23)">
+      <node ref="U6" pin="23" pinfunction="IOT_37a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="67" name="unconnected-(U6-Pad31)">
+      <node ref="U6" pin="31" pinfunction="IOT_42b" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="68" name="unconnected-(U6-Pad32)">
+      <node ref="U6" pin="32" pinfunction="IOT_43a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="69" name="unconnected-(U6-Pad34)">
+      <node ref="U6" pin="34" pinfunction="IOT_44b" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="70" name="unconnected-(U6-Pad35)">
+      <node ref="U6" pin="35" pinfunction="IOT_46b_G0" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="71" name="unconnected-(U6-Pad37)">
+      <node ref="U6" pin="37" pinfunction="IOT_45a_G1" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="72" name="unconnected-(U6-Pad42)">
+      <node ref="U6" pin="42" pinfunction="IOT_51a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="73" name="unconnected-(U6-Pad43)">
+      <node ref="U6" pin="43" pinfunction="IOT_49a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="74" name="unconnected-(U6-Pad44)">
+      <node ref="U6" pin="44" pinfunction="IOB_3b_G6" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="75" name="unconnected-(U6-Pad47)">
+      <node ref="U6" pin="47" pinfunction="IOB_2a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="76" name="unconnected-(U6-Pad48)">
+      <node ref="U6" pin="48" pinfunction="IOB_4a" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="77" name="unconnected-(U8-Pad9)">
+      <node ref="U8" pin="9" pinfunction="EXP" pintype="no_connect"/>
+    </net>
+  </nets>
+</export>

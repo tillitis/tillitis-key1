@@ -5,8 +5,8 @@
   (paper "A4")
 
   (title_block
-    (title "TK1")
-    (date "2021-09-29")
+    (title "TK-1")
+    (date "2021-11-14")
     (rev "V1")
     (company "Tillitis AB")
     (comment 1 "2022")
@@ -385,7 +385,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid af384b37-0d3e-4773-8aa7-c84ea245fb91)
   )
-  (text "Tillitis TK1" (at 106.68 24.13 0)
+  (text "Tillitis TK-1" (at 106.68 24.13 0)
     (effects (font (size 6 6) (thickness 0.254) bold) (justify left bottom))
     (uuid b67afca8-98b4-4a81-9edf-4865efd15bb7)
   )
@@ -764,64 +764,64 @@
       (reference "R30") (unit 1) (value "2k") (footprint "mta1:ERJ2G(0402)_L")
     )
     (path "/00000000-0000-0000-0000-0000611a4eb9/00000000-0000-0000-0000-000061804e06"
-      (reference "TP1") (unit 1) (value "5V") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP1") (unit 1) (value "5V") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611a4eb9/00000000-0000-0000-0000-000061290a70"
-      (reference "TP2") (unit 1) (value "3V3") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP2") (unit 1) (value "3V3") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611a4eb9/00000000-0000-0000-0000-000061293ed2"
-      (reference "TP3") (unit 1) (value "2V5") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP3") (unit 1) (value "2V5") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611a4eb9/00000000-0000-0000-0000-0000612c6885"
-      (reference "TP4") (unit 1) (value "1V2") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP4") (unit 1) (value "1V2") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/ab35f289-cbe7-449b-a15d-459a3b4e9240"
-      (reference "TP5") (unit 1) (value "APP_GND") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP5") (unit 1) (value "APP_GND") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-00006161400b/fb64afad-a905-4f4b-98a2-d21a64bd12f3"
-      (reference "TP6") (unit 1) (value "INT_TX") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP6") (unit 1) (value "INT_TX") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-00006161400b/1f54ffea-0a26-464d-98d4-30979db7344f"
-      (reference "TP7") (unit 1) (value "INT_RX") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP7") (unit 1) (value "INT_RX") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-00006161400b/74f30866-0d52-4558-88d9-da85c982a4ac"
-      (reference "TP8") (unit 1) (value "INT_RTS") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP8") (unit 1) (value "INT_RTS") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-00006161400b/d9fa1bba-ba87-4376-952a-41bb8392f957"
-      (reference "TP9") (unit 1) (value "INT_CTS") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP9") (unit 1) (value "INT_CTS") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/b84f4f68-cc10-43a0-962e-10a1890e7eaf"
-      (reference "TP12") (unit 1) (value "APP_ICE_SCK") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP12") (unit 1) (value "APP_ICE_SCK") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/f77c0061-34af-41f5-8a00-bb8ae07fe922"
-      (reference "TP13") (unit 1) (value "APP_ICE_SS") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP13") (unit 1) (value "APP_ICE_SS") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/3c9864fc-0a77-4fe0-8c96-c0260a516ba1"
-      (reference "TP14") (unit 1) (value "APP_ICE_MOSI") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP14") (unit 1) (value "APP_ICE_MOSI") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/0f9d611d-221f-42fe-a161-07c0ff52c542"
-      (reference "TP15") (unit 1) (value "APP_ICE_MISO") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP15") (unit 1) (value "APP_ICE_MISO") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/d7bf813c-bb4e-4ed8-b86f-d9ec1d86656d"
-      (reference "TP16") (unit 1) (value "APP_CRESET") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP16") (unit 1) (value "APP_CRESET") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/32f54cf3-1e0f-4aaa-b508-267b9568217c"
-      (reference "TP17") (unit 1) (value "APP_CDONE") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP17") (unit 1) (value "APP_CDONE") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/e7d44998-7d27-4371-9f3d-0a968eddee9d"
-      (reference "TP18") (unit 1) (value "APP_GPIO1") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP18") (unit 1) (value "APP_GPIO1") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/855a271d-d14e-4340-88ef-5eb1d2805d77"
-      (reference "TP19") (unit 1) (value "APP_GPIO2") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP19") (unit 1) (value "APP_GPIO2") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/8aa5c85f-46b3-4ac4-bd48-3e3352ebb3f6"
-      (reference "TP20") (unit 1) (value "APP_GPIO3") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP20") (unit 1) (value "APP_GPIO3") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/a6d52094-2dbe-49fa-99c1-8b125d3ae4c6"
-      (reference "TP21") (unit 1) (value "APP_GPIO4") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP21") (unit 1) (value "APP_GPIO4") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611a4eb9/f74c1147-0f6c-4852-95d4-43a254720c79"
-      (reference "TP28") (unit 1) (value "GND") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP28") (unit 1) (value "GND") (footprint "mta1:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611a4eb9/00000000-0000-0000-0000-00006126a5e3"
       (reference "U1") (unit 1) (value "MCP1824T-2502EOT") (footprint "Package_TO_SOT_SMD:SOT-23-5")
