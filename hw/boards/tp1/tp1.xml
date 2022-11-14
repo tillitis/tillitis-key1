@@ -2,7 +2,7 @@
 <export version="E">
   <design>
     <source>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tp1\tp1.kicad_sch</source>
-    <date>11/14/2022 1:59:33 PM</date>
+    <date>11/14/2022 3:20:01 PM</date>
     <tool>Eeschema (6.0.4)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -42,6 +42,86 @@
       <property name="Sheetfile" value="tp1.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>d680d5fd-0440-4126-9a50-a6dd4afb33a8</tstamps>
+    </comp>
+    <comp ref="FOOT1">
+      <value>Rubber Foot</value>
+      <fields>
+        <field name="Extended Value">8mm diameter x 2.8mm height, self-adhesive foot</field>
+        <field name="Manufacturer">3M</field>
+        <field name="Manufacturer Part Number">SJ5076</field>
+        <field name="Supplier">RS</field>
+        <field name="Supplier Part Number">120-6041</field>
+      </fields>
+      <libsource lib="mta1" part="Foot" description=""/>
+      <property name="Extended Value" value="8mm diameter x 2.8mm height, self-adhesive foot"/>
+      <property name="Manufacturer" value="3M"/>
+      <property name="Manufacturer Part Number" value="SJ5076"/>
+      <property name="Supplier" value="RS"/>
+      <property name="Supplier Part Number" value="120-6041"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ae58ff93-b304-4897-a1be-e11c495fe6c7</tstamps>
+    </comp>
+    <comp ref="FOOT2">
+      <value>Rubber Foot</value>
+      <fields>
+        <field name="Extended Value">8mm diameter x 2.8mm height, self-adhesive foot</field>
+        <field name="Manufacturer">3M</field>
+        <field name="Manufacturer Part Number">SJ5076</field>
+        <field name="Supplier">RS</field>
+        <field name="Supplier Part Number">120-6041</field>
+      </fields>
+      <libsource lib="mta1" part="Foot" description=""/>
+      <property name="Extended Value" value="8mm diameter x 2.8mm height, self-adhesive foot"/>
+      <property name="Manufacturer" value="3M"/>
+      <property name="Manufacturer Part Number" value="SJ5076"/>
+      <property name="Supplier" value="RS"/>
+      <property name="Supplier Part Number" value="120-6041"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>5071d3d8-892e-443f-a709-e0be394922d4</tstamps>
+    </comp>
+    <comp ref="FOOT3">
+      <value>Rubber Foot</value>
+      <fields>
+        <field name="Extended Value">8mm diameter x 2.8mm height, self-adhesive foot</field>
+        <field name="Manufacturer">3M</field>
+        <field name="Manufacturer Part Number">SJ5076</field>
+        <field name="Supplier">RS</field>
+        <field name="Supplier Part Number">120-6041</field>
+      </fields>
+      <libsource lib="mta1" part="Foot" description=""/>
+      <property name="Extended Value" value="8mm diameter x 2.8mm height, self-adhesive foot"/>
+      <property name="Manufacturer" value="3M"/>
+      <property name="Manufacturer Part Number" value="SJ5076"/>
+      <property name="Supplier" value="RS"/>
+      <property name="Supplier Part Number" value="120-6041"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>8816c368-e361-405c-bb00-0ef1b938f6c9</tstamps>
+    </comp>
+    <comp ref="FOOT4">
+      <value>Rubber Foot</value>
+      <fields>
+        <field name="Extended Value">8mm diameter x 2.8mm height, self-adhesive foot</field>
+        <field name="Manufacturer">3M</field>
+        <field name="Manufacturer Part Number">SJ5076</field>
+        <field name="Supplier">RS</field>
+        <field name="Supplier Part Number">120-6041</field>
+      </fields>
+      <libsource lib="mta1" part="Foot" description=""/>
+      <property name="Extended Value" value="8mm diameter x 2.8mm height, self-adhesive foot"/>
+      <property name="Manufacturer" value="3M"/>
+      <property name="Manufacturer Part Number" value="SJ5076"/>
+      <property name="Supplier" value="RS"/>
+      <property name="Supplier Part Number" value="120-6041"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d8f44dfa-f013-4dd2-afa1-8d9a59040b84</tstamps>
     </comp>
     <comp ref="J3">
       <value>BC-1-208</value>
@@ -252,6 +332,57 @@
       <sheetpath names="/" tstamps="/"/>
       <tstamps>778d5535-7de9-4935-9676-7a512c0646c9</tstamps>
     </comp>
+    <comp ref="SCREW1">
+      <value>M3 Buttonhead Screw</value>
+      <fields>
+        <field name="Extended Value">M3x0.5mm buttonhead screw, stainless steel, 5mm length</field>
+        <field name="Supplier">McMaster-Carr</field>
+        <field name="Supplier Part Number">94500A263</field>
+      </fields>
+      <libsource lib="mta1" part="Screw" description=""/>
+      <property name="Supplier" value="McMaster-Carr"/>
+      <property name="Supplier Part Number" value="94500A263"/>
+      <property name="Extended Value" value="M3x0.5mm buttonhead screw, stainless steel, 5mm length"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>f28fddc9-1d95-482f-b439-d71829a059ae</tstamps>
+    </comp>
+    <comp ref="SCREW2">
+      <value>M3 Buttonhead Screw</value>
+      <fields>
+        <field name="Extended Value">M3x0.5mm buttonhead screw, stainless steel, 5mm length</field>
+        <field name="Supplier">McMaster-Carr</field>
+        <field name="Supplier Part Number">94500A263</field>
+      </fields>
+      <libsource lib="mta1" part="Screw" description=""/>
+      <property name="Supplier" value="McMaster-Carr"/>
+      <property name="Supplier Part Number" value="94500A263"/>
+      <property name="Extended Value" value="M3x0.5mm buttonhead screw, stainless steel, 5mm length"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e0fe93aa-01b7-4df1-8aae-5662e8118bb7</tstamps>
+    </comp>
+    <comp ref="SCREW3">
+      <value>M3 Buttonhead Screw</value>
+      <fields>
+        <field name="Extended Value">M3x0.5mm buttonhead screw, stainless steel, 5mm length</field>
+        <field name="Supplier">McMaster-Carr</field>
+        <field name="Supplier Part Number">94500A263</field>
+      </fields>
+      <libsource lib="mta1" part="Screw" description=""/>
+      <property name="Supplier" value="McMaster-Carr"/>
+      <property name="Supplier Part Number" value="94500A263"/>
+      <property name="Extended Value" value="M3x0.5mm buttonhead screw, stainless steel, 5mm length"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>fac227cf-a841-44ae-9685-635d62b8ec88</tstamps>
+    </comp>
     <comp ref="U2">
       <value>Pico</value>
       <footprint>MCU_RaspberryPi_and_Boards:RPi_Pico_SMD</footprint>
@@ -454,6 +585,18 @@
         <pin num="6" name="6" type="passive"/>
         <pin num="7" name="7" type="passive"/>
       </pins>
+    </libpart>
+    <libpart lib="mta1" part="Foot">
+      <fields>
+        <field name="Reference">FOOT</field>
+        <field name="Value">Foot</field>
+      </fields>
+    </libpart>
+    <libpart lib="mta1" part="Screw">
+      <fields>
+        <field name="Reference">SCREW?</field>
+        <field name="Value">Screw</field>
+      </fields>
     </libpart>
   </libparts>
   <libraries>
