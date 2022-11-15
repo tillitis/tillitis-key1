@@ -1,4 +1,4 @@
-### Module positions - created on Mon Nov 14 13:05:08 2022 ###
+### Module positions - created on Tue Nov 15 14:04:36 2022 ###
 ### Printed by Pcbnew version (6.0.4)
 ## Unit = mm, Angle = deg.
 ## Side : top
@@ -26,6 +26,8 @@ C27       1pF                       CAPC1005X06L                           25.75
 D1        0402_indicator_LED,_blue  LED_0402_1005Metric                    12.5000    10.1000  180.0000  top
 D3        LED_ARGB                  0402rgb-1010                           26.0000     2.0000   90.0000  top
 FB3       BLM18KG300TN1D            Ferritbead_0603_1608Metric             11.5000     2.1500  -90.0000  top
+FID1      Fiducial                  Fiducial_0.75mm_Mask1.5mm               1.5000    12.4500    0.0000  top
+FID2      Fiducial                  Fiducial_0.75mm_Mask1.5mm              24.2500     4.2000    0.0000  top
 P1        USB_C_Plug                U261-241N-4BS60                         1.0500     6.9500    0.0000  top
 R1        10k                       ERJ2G(0402)_L                           3.5500    12.2500  -90.0000  top
 R2        10k                       ERJ2G(0402)_L                           3.5500     8.3000  -90.0000  top

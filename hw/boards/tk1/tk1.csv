@@ -1,5 +1,5 @@
 "Source:","C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tk1\tk1.kicad_sch"
-"Date:","11/14/2022 12:40:26 PM"
+"Date:","11/15/2022 2:04:00 PM"
 "Tool:","Eeschema (6.0.4)"
 "Generator:","C:\Program Files\KiCad\6.0\bin\scripting\plugins/bom_csv_grouped_by_extended_value.py"
 "Component Count:","47"
@@ -23,4 +23,4 @@
 "U6","1","ICE40UP5K-SG48ITR","Package_DFN_QFN:QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm","iCE40 UltraPlus FPGA, 5280 LUTs, 1.2V, 48-pin QFN","Lattice","ICE40UP5K-SG48ITR","Digikey","220-2145-2-ND"
 "U8","1","W25Q80DVUXIE","mta1:W25Q80DVUXIE","IC FLASH 8MBIT SPI 104MHZ 8USON","Winbond Electronics","W25Q80DVUXIE","Digikey","W25Q80DVUXIETR-ND"
 "U9","1","NCP752BSN33T1G","mta1:NCP752BSN33T1G","IC REG LINEAR 3.3V 200MA 5TSOP","onsemi","NCP752BSN33T1G","Digikey","NCP752BSN33T1GOSCT-ND"
-"U10","1","PT2043AT6","Package_TO_SOT_SMD:SOT-23-6","","PinTeng","PT2043AT6","LCSC","C2914233"
+"U10","1","PT2043AT6","Package_TO_SOT_SMD:SOT-23-6","SOT-23-6 Touch Sensors ROHS","PinTeng","PT2043AT6","LCSC","C2914233"

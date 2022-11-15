@@ -76,8 +76,10 @@
         "courtyards_overlap|119129999|89503441|00000000-0000-0000-0000-000061552d80|6642fc52-a8a5-46d7-baa8-3fa36d7485f9",
         "courtyards_overlap|122985323|90699999|00000000-0000-0000-0000-000061552bde|8a425e76-43cc-43f5-a37e-2f5fd65752a7",
         "courtyards_overlap|122985323|90699999|8a425e76-43cc-43f5-a37e-2f5fd65752a7|00000000-0000-0000-0000-000061552bde",
+        "courtyards_overlap|123867317|95826121|a9dc0c59-b820-453f-94ad-ca6fe558a198|00000000-0000-0000-0000-000061552d80",
         "courtyards_overlap|125050001|92563069|00000000-0000-0000-0000-000061552981|aff9b94a-3155-4d61-8287-3dc8c06c9c02",
         "courtyards_overlap|125050001|92563069|aff9b94a-3155-4d61-8287-3dc8c06c9c02|00000000-0000-0000-0000-000061552981",
+        "courtyards_overlap|125128899|96299999|a9dc0c59-b820-453f-94ad-ca6fe558a198|aff9b94a-3155-4d61-8287-3dc8c06c9c02",
         "silk_over_copper|101399150|99725850|415e16b8-6b2d-45a0-8768-17340423ff22|f7241cad-2f53-4952-a61b-73042c7feb93",
         "silk_over_copper|101399150|99725850|415e16b8-6b2d-45a0-8768-17340423ff22|fe6d9248-0cc4-46a4-ae8e-05e05dd2a86e",
         "silk_overlap|107643750|90560000|43a44da6-8a26-4f6b-bfab-90bd54eff706|3380a407-9e97-471c-8138-3f5ae456a02d",
@@ -443,7 +445,7 @@
       "idf": "",
       "netlist": "../../../../../../../../../Desktop/mta1_signer_pmod.net",
       "specctra_dsn": "",
-      "step": "mta1_usb.step",
+      "step": "tk1.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""

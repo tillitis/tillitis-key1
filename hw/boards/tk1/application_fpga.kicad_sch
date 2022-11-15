@@ -749,6 +749,9 @@
       (property "Datasheet" "" (id 3) (at -21.59 12.7 0)
         (effects (font (size 1.27 1.27)) hide)
       )
+      (property "ki_description" "SOT-23-6 Touch Sensors ROHS" (id 4) (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
       (symbol "PT2043AT6_1_1"
         (rectangle (start -7.62 7.62) (end 7.62 -7.62)
           (stroke (width 0.254) (type default) (color 0 0 0 0))
@@ -1041,6 +1044,7 @@
       )
     )
   )
+
 
   (junction (at 201.93 82.55) (diameter 0) (color 0 0 0 0)
     (uuid 1bdf2b87-e380-4485-8219-3210fd09433f)
@@ -2808,8 +2812,8 @@
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 206cf77e-9615-45a1-84e2-dd89660f9255)
     (property "Reference" "U10" (id 0) (at 224.79 90.17 0))
-    (property "Value" "PT2043AT6" (id 1) (at 224.79 92.71 0))
-    (property "Footprint" "Package_TO_SOT_SMD:SOT-23-6" (id 2) (at 203.2 90.17 0)
+    (property "Value" "" (id 1) (at 224.79 92.71 0))
+    (property "Footprint" "" (id 2) (at 203.2 90.17 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "" (id 3) (at 203.2 90.17 0)

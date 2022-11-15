@@ -2,14 +2,14 @@
 <export version="E">
   <design>
     <source>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tk1\tk1.kicad_sch</source>
-    <date>11/14/2022 12:40:26 PM</date>
+    <date>11/15/2022 2:04:00 PM</date>
     <tool>Eeschema (6.0.4)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
-        <title>TK1</title>
+        <title>TK-1</title>
         <company>Tillitis AB</company>
         <rev>V1</rev>
-        <date>2021-09-29</date>
+        <date>2021-11-14</date>
         <source>tk1.kicad_sch</source>
         <comment number="1" value="2022"/>
         <comment number="2" value=""/>
@@ -27,7 +27,7 @@
         <title>Application FPGA</title>
         <company>Tillitis AB</company>
         <rev>V1</rev>
-        <date>2021-09-29</date>
+        <date>2021-11-14</date>
         <source>application_fpga.kicad_sch</source>
         <comment number="1" value="2022"/>
         <comment number="2" value=""/>
@@ -45,7 +45,7 @@
         <title>USB-to-Serial Interface</title>
         <company>Tillitis AB</company>
         <rev>V1</rev>
-        <date>2021-09-29</date>
+        <date>2021-11-14</date>
         <source>usb_to_serial.kicad_sch</source>
         <comment number="1" value="2022"/>
         <comment number="2" value=""/>
@@ -63,7 +63,7 @@
         <title>Power Supply</title>
         <company>Tillitis AB</company>
         <rev>V1</rev>
-        <date>2021-09-29</date>
+        <date>2021-11-14</date>
         <source>powersupply.kicad_sch</source>
         <comment number="1" value="2022"/>
         <comment number="2" value=""/>
@@ -501,7 +501,7 @@
         <field name="Supplier">LCSC</field>
         <field name="Supplier Part Number">C2914233</field>
       </fields>
-      <libsource lib="mta1" part="PT2043AT6" description=""/>
+      <libsource lib="mta1" part="PT2043AT6" description="SOT-23-6 Touch Sensors ROHS"/>
       <property name="Manufacturer" value="PinTeng"/>
       <property name="Manufacturer Part Number" value="PT2043AT6"/>
       <property name="Supplier" value="LCSC"/>
@@ -948,6 +948,18 @@
         <pin num="2" name="" type="passive"/>
       </pins>
     </libpart>
+    <libpart lib="Mechanical" part="Fiducial">
+      <description>Fiducial Marker</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Fiducial*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">FID</field>
+        <field name="Value">Fiducial</field>
+        <field name="Datasheet">~</field>
+      </fields>
+    </libpart>
     <libpart lib="Power_Protection" part="USBLC6-2SC6">
       <description>Very low capacitance ESD protection diode, 2 data-line, SOT-23-6</description>
       <docs>https://www.st.com/resource/en/datasheet/usblc6-2.pdf</docs>
@@ -1130,6 +1142,7 @@
       </pins>
     </libpart>
     <libpart lib="mta1" part="PT2043AT6">
+      <description>SOT-23-6 Touch Sensors ROHS</description>
       <fields>
         <field name="Reference">U</field>
         <field name="Value">PT2043AT6</field>
@@ -1172,6 +1185,9 @@
     </library>
     <library logical="Device">
       <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Device.kicad_sym</uri>
+    </library>
+    <library logical="Mechanical">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Mechanical.kicad_sym</uri>
     </library>
     <library logical="Power_Protection">
       <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Power_Protection.kicad_sym</uri>
