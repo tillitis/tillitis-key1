@@ -2,7 +2,7 @@
 <export version="E">
   <design>
     <source>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tp1\tp1.kicad_sch</source>
-    <date>11/14/2022 3:20:01 PM</date>
+    <date>11/15/2022 10:47:10 AM</date>
     <tool>Eeschema (6.0.4)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -43,6 +43,33 @@
       <sheetpath names="/" tstamps="/"/>
       <tstamps>d680d5fd-0440-4126-9a50-a6dd4afb33a8</tstamps>
     </comp>
+    <comp ref="FID1">
+      <value>Fiducial</value>
+      <footprint>Fiducial:Fiducial_1mm_Mask2mm</footprint>
+      <libsource lib="Mechanical" part="Fiducial" description="Fiducial Marker"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>639ac7f7-87e9-4157-adbd-230a85352940</tstamps>
+    </comp>
+    <comp ref="FID2">
+      <value>Fiducial</value>
+      <footprint>Fiducial:Fiducial_1mm_Mask2mm</footprint>
+      <libsource lib="Mechanical" part="Fiducial" description="Fiducial Marker"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d1633098-f717-49a7-9988-21555d90237c</tstamps>
+    </comp>
+    <comp ref="FID3">
+      <value>Fiducial</value>
+      <footprint>Fiducial:Fiducial_1mm_Mask2mm</footprint>
+      <libsource lib="Mechanical" part="Fiducial" description="Fiducial Marker"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>05a82464-3190-4ee2-9948-9191f2c0bed6</tstamps>
+    </comp>
     <comp ref="FOOT1">
       <value>Rubber Foot</value>
       <fields>
@@ -60,6 +87,7 @@
       <property name="Supplier Part Number" value="120-6041"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>ae58ff93-b304-4897-a1be-e11c495fe6c7</tstamps>
     </comp>
@@ -80,6 +108,7 @@
       <property name="Supplier Part Number" value="120-6041"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>5071d3d8-892e-443f-a709-e0be394922d4</tstamps>
     </comp>
@@ -100,6 +129,7 @@
       <property name="Supplier Part Number" value="120-6041"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>8816c368-e361-405c-bb00-0ef1b938f6c9</tstamps>
     </comp>
@@ -120,6 +150,7 @@
       <property name="Supplier Part Number" value="120-6041"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>d8f44dfa-f013-4dd2-afa1-8d9a59040b84</tstamps>
     </comp>
@@ -385,7 +416,7 @@
     </comp>
     <comp ref="U2">
       <value>Pico</value>
-      <footprint>MCU_RaspberryPi_and_Boards:RPi_Pico_SMD</footprint>
+      <footprint>MCU_RaspberryPi_and_Boards:RPi_Pico_SMD_reflow</footprint>
       <fields>
         <field name="Manufacturer">Raspberry Pi</field>
         <field name="Manufacturer Part Number">SC0915</field>
@@ -523,6 +554,18 @@
         <pin num="43" name="SWDIO" type="bidirectional"/>
       </pins>
     </libpart>
+    <libpart lib="Mechanical" part="Fiducial">
+      <description>Fiducial Marker</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Fiducial*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">FID</field>
+        <field name="Value">Fiducial</field>
+        <field name="Datasheet">~</field>
+      </fields>
+    </libpart>
     <libpart lib="Transistor_FET" part="AO3400A">
       <description>30V Vds, 5.7A Id, N-Channel MOSFET, SOT-23</description>
       <docs>http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf</docs>
@@ -608,6 +651,9 @@
     </library>
     <library logical="MCU_RaspberryPi_and_Boards">
       <uri>C:/Users/matt/Other-Repos/tillitis-key1/hw/boards/KiCad-RP Pico/RP-Pico-Libraries/MCU_RaspberryPi_and_Boards.kicad_sym</uri>
+    </library>
+    <library logical="Mechanical">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Mechanical.kicad_sym</uri>
     </library>
     <library logical="Transistor_FET">
       <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Transistor_FET.kicad_sym</uri>
