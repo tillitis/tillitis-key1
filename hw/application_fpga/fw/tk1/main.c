@@ -264,7 +264,7 @@ int main()
 			asm volatile(
 				// Clear the stack
 				"li a0, 0x40000000;" // TK1_RAM_BASE
-				"li a1, 0x40007000;" // APP_RAM_ADDR
+				"li a1, 0x40007000;" // TK1_APP_ADDR
 				"loop:;"
 				"sw zero, 0(a0);"
 				"addi a0, a0, 4;"
