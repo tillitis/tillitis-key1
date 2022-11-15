@@ -20,6 +20,7 @@ static volatile uint32_t *cdi =        (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIR
 static volatile uint32_t *app_addr =   (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
 static volatile uint32_t *app_size =   (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
 static volatile uint8_t  *fw_ram =     (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
+static volatile uint32_t *led =        (volatile uint32_t *)TK1_MMIO_TK1_LED;
 
 #define LED_RED   (1 << TK1_MMIO_TK1_LED_R_BIT)
 #define LED_GREEN (1 << TK1_MMIO_TK1_LED_G_BIT)
@@ -172,8 +173,13 @@ int main()
 			break; // Not reached
 		}
 
-		// blocking; fw flashing white while waiting for cmd
-		uint8_t in = readbyte_ledflash(LED_WHITE, 800000);
+		uint8_t in;
+		if (state == FW_STATE_LOADING) {
+			*led = LED_WHITE;
+			in = readbyte();
+		} else {
+			in = readbyte_ledflash(LED_WHITE, 800000);
+		}
 
 		if (parseframe(in, &hdr) == -1) {
 			puts("Couldn't parse header\n");
