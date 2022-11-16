@@ -2,7 +2,7 @@
 <export version="E">
   <design>
     <source>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tp1\tp1.kicad_sch</source>
-    <date>11/15/2022 10:47:10 AM</date>
+    <date>11/16/2022 5:57:02 PM</date>
     <tool>Eeschema (6.0.4)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -28,16 +28,16 @@
       <value>50mA</value>
       <footprint>Fuse:Fuse_1206_3216Metric</footprint>
       <fields>
-        <field name="Manufacturer">Bel Fuse</field>
-        <field name="Manufacturer Part Number">0ZCJ0005FF2E</field>
+        <field name="Manufacturer">Littelfuse</field>
+        <field name="Manufacturer Part Number">1206L005/60WR</field>
         <field name="Supplier">Digikey</field>
-        <field name="Supplier Part Number">507-1793-2-ND</field>
+        <field name="Supplier Part Number">F8129TR-ND</field>
       </fields>
       <libsource lib="Device" part="Polyfuse_Small" description="Resettable fuse, polymeric positive temperature coefficient, small symbol"/>
-      <property name="Manufacturer" value="Bel Fuse"/>
-      <property name="Manufacturer Part Number" value="0ZCJ0005FF2E"/>
+      <property name="Manufacturer" value="Littelfuse"/>
+      <property name="Manufacturer Part Number" value="1206L005/60WR"/>
       <property name="Supplier" value="Digikey"/>
-      <property name="Supplier Part Number" value="507-1793-2-ND"/>
+      <property name="Supplier Part Number" value="F8129TR-ND"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="tp1.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
