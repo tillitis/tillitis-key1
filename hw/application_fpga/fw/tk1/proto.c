@@ -96,6 +96,11 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 		nbytes = 128;
 		break;
 
+	case FW_RSP_GET_UDI:
+		len = LEN_32;
+		nbytes = 32;
+		break;
+
 	default:
 		puts("fwreply(): Unknown response code: 0x");
 		puthex(rspcode);

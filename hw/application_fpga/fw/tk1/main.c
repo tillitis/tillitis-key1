@@ -15,10 +15,11 @@ static volatile uint32_t *switch_app = (volatile uint32_t *)TK1_MMIO_TK1_SWITCH_
 static volatile uint32_t *name0 =      (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
 static volatile uint32_t *name1 =      (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
 static volatile uint32_t *ver =        (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
+static volatile uint32_t *udi =        (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
 static volatile uint32_t *cdi =        (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 static volatile uint32_t *app_addr =   (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
 static volatile uint32_t *app_size =   (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
-static volatile uint8_t *fw_ram =      (volatile uint8_t *)TK1_MMIO_FW_RAM_BASE;
+static volatile uint8_t  *fw_ram =     (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
 
 #define LED_RED   (1 << TK1_MMIO_TK1_LED_R_BIT)
 #define LED_GREEN (1 << TK1_MMIO_TK1_LED_G_BIT)
@@ -136,6 +137,21 @@ int main()
 			memcpy(rsp + 8, (uint8_t *)&local_ver, 4);
 
 			fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
+			break;
+
+		case FW_CMD_GET_UDI:
+			puts("FW_CMD_GET_UDI\n");
+			if (hdr.len != 1) {
+				// Bad cmd length
+				rsp[0] = STATUS_BAD;
+				fwreply(hdr, FW_RSP_GET_UDI, rsp);
+				break;
+			}
+			rsp[0] = STATUS_OK;
+			uint32_t udi_words[2];
+			wordcpy(udi_words, (void *)udi, 2);
+			memcpy(rsp + 1, udi_words, 2 * 4);
+			fwreply(hdr, FW_RSP_GET_UDI, rsp);
 			break;
 
 		case FW_CMD_LOAD_USS:
