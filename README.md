@@ -4,13 +4,13 @@
 
 Tillitis Key 1 (TK1) is a new kind of USB security token. What makes
 the TK1 unique is that it allows a user to load and run applications on
-the device, while still providing security. This allow for open ended,
+the device, while still providing security. This allow for open-ended,
 flexible usage. Given the right application, the TK1 can support use
 cases such as SSH login, Ed25519 signing, Root of Trust, FIDO2, TOTP,
-Passkey and more.
+Passkey, and more.
 
 During the load operation, the device measures the application
-(calculates a cryptographic hash digest over the) before running
+(calculates a cryptographic hash digest over it) before running
 it on the open hardware security processor. This measurement
 is similar to [TCG DICE](https://trustedcomputinggroup.org/work-groups/dice-architectures/).
 
@@ -21,7 +21,7 @@ application. This guarantees that if the integrity of the application
 loaded onto the device has been tampered with, the correct keys
 needed for an authentication will not be generated.
 
-The key derivation with user provided seed allows users to build and
+Key derivation with a user-provided seed allows users to build and
 load their own apps, while ensuring that each app loaded will have
 its own cryptographic identity, and can also be used for authentication
 towards different services.
@@ -32,7 +32,7 @@ up to 100 KB in size, and gives it a stack of 28 KB. A smaller app may
 move itself in memory to get larger continuous memory.
 
 All of the TK1 software, FPGA logic, schematics, and PCB layout are
-open source, as all security software and hardware should be. This in
+open source. Like all security software and hardware should be. This in
 itself makes it different, as other security tokens utilize closed source
 hardware for its security-critical operations.
 
