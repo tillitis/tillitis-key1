@@ -41,15 +41,18 @@ hardware for its security-critical operations.
 
 ## Documentation
 
+### Getting started
+* [Quickstart](doc/quickstart.md) to program the Tillitis Key 1
+* [Toolchain setup](doc/toolchain_setup.md)
+* [Release Notes](doc/release_notes.md)
+
+### In-depth technical information
 * [System Description](doc/system_description/system_description.md)
 * [Threat Model](doc/threat_model/threat_model.md)
 * [Framing Protocol](doc/framing_protocol/framing_protocol.md)
 * [Boards](hw/boards/README.md)
-* [Software](doc/system_description/software.md)
 * [Firmware](hw/application_fpga/fw/tk1/README.md)
-* [Toolchain setup](doc/toolchain_setup.md)
-* [Quickstart](doc/quickstart.md) to program the Tillitis Key 1
-* [Release Notes](doc/release_notes.md)
+* [Software](doc/system_description/software.md)
 
 Note that development is ongoing. For example, changes might be made
 to the measuring and derivation of key material, causing the
