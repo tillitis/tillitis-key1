@@ -3,7 +3,7 @@
 ## Introduction
 
 Tillitis Key 1 (TK1) is a new kind of USB security token. What makes
-the TK1unique is that it allows a user to load and run applications on
+the TK1 unique is that it allows a user to load and run applications on
 the device, while still providing security. This allow for open ended,
 flexible usage. Given the right application, the TK1 can support use
 cases such as SSH login, Ed25519 signing, Root of Trust, FIDO2, TOTP,
