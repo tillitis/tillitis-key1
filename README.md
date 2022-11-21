@@ -50,8 +50,8 @@ hardware for its security-critical operations.
 * [System Description](doc/system_description/system_description.md)
 * [Threat Model](doc/threat_model/threat_model.md)
 * [Framing Protocol](doc/framing_protocol/framing_protocol.md)
-* [Boards](hw/boards/README.md)
-* [Firmware](hw/application_fpga/fw/tk1/README.md)
+* [Boards](doc/system_description/boards.md)
+* [Firmware](doc/system_description/firmware.md)
 * [Software](doc/system_description/software.md)
 
 Note that development is ongoing. For example, changes might be made
