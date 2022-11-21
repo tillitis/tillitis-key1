@@ -62,3 +62,5 @@ layout](https://docs.opentitan.org/doc/ug/directory_structure/).
 
 See [LICENSES](./LICENSES/README.md) for more information about
 the projects' licenses.
+
+All contributors must adhere to the [Developer Certificate of Origin](doc/dco.md).
