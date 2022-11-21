@@ -37,6 +37,8 @@ enum fwcmd {
 	FW_CMD_GET_APP_DIGEST	= 0x09,
 	FW_CMD_LOAD_USS		= 0x0a,
 	FW_RSP_LOAD_USS		= 0x0b,
+	FW_CMD_GET_UDI		= 0x0c,
+	FW_RSP_GET_UDI		= 0x0d,
 	/* ... */
 	FW_RSP_GET_APP_DIGEST	= 0x10, // encoded as 0x10 for backwards compatibility
 };
