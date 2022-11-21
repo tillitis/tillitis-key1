@@ -2,26 +2,39 @@
 
 ## Introduction
 
-Tillitis Key 1 is a new kind of USB security token. All of its
-software, FPGA logic, schematics, and PCB layout are open source, as
-all security software and hardware should be. This in itself makes it
-different, as other security tokens utilize closed source hardware for
-its security-critical operations.
+Tillitis Key 1 (TK1) is a new kind of USB security token. What makes
+the TK1unique is that it allows a user to load and run applications on
+the device, while still providing security. This allow for open ended,
+flexible usage. Given the right application, the TK1 can support use
+cases such as SSH login, Ed25519 signing, Root of Trust, FIDO2, TOTP,
+Passkey and more.
 
-What makes the Tillitis Key 1 security token unique is that it doesn’t
-verify applications, it measures them (hashes a digest over the
-binary), before running them on its open hardware security processor.
+During the load operation, the device measures the application
+(calculates a cryptographic hash digest over the) before running
+it on the open hardware security processor. This measurement
+is similar to [TCG DICE](https://trustedcomputinggroup.org/work-groups/dice-architectures/).
 
-Each security token contains a Unique Device Secret (UDS), which
-together with an application measurement, and an optional
+Each TK1 device contains a Unique Device Secret (UDS), which
+together with the application measurement, and an optional
 user-provided seed, is used to derive key material unique to each
-application. This allows users to build and load their own apps, while
-ensuring that each app loaded will have its own cryptographic
-identity. The design is similar to TCG DICE. The Tillitis Key 1
-platform has 128 KB of RAM. The current firmware is designed to load
-an app that is up to 100 KB in size, and gives it a stack of 28 KB. A
-smaller app may want to move itself in memory to get larger continuous
-memory.
+application. This guarantees that if the integrity of the application
+loaded onto the device has been tampered with, the correct keys
+needed for an authentication will not be generated.
+
+The key derivation with user provided seed allows users to build and
+load their own apps, while ensuring that each app loaded will have
+its own cryptographic identity, and can also be used for authentication
+towards different services.
+
+The TK1 platform is based around a 32-bit RISC-V processor and has
+128 KB of RAM. The current firmware is designed to load an app that is
+up to 100 KB in size, and gives it a stack of 28 KB. A smaller app may
+move itself in memory to get larger continuous memory.
+
+All of the TK1 software, FPGA logic, schematics, and PCB layout are
+open source, as all security software and hardware should be. This in
+itself makes it different, as other security tokens utilize closed source
+hardware for its security-critical operations.
 
 ![Tillitis Key 1 PCB, first implementation](doc/images/mta1-usb-v1.jpg)
 *Tillitis Key 1 PCB, first implementation*
