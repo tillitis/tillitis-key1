@@ -71,9 +71,6 @@ part of the Tillitis Key 1 project. It is structured as monolithic
 repository, or "monorepo", where all components live in one
 repository.
 
-The repository follows the [OpenTitan
-layout](https://docs.opentitan.org/doc/ug/directory_structure/).
-
 ## Licensing
 
 See [LICENSES](./LICENSES/README.md) for more information about
