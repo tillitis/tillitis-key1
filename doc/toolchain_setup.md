@@ -9,15 +9,15 @@ These steps are used to build and install the
 [icestorm](http://bygone.clairexen.net/icestorm/) toolchain (in
 `/usr/local`). Note that nextpnr replaces Arachne-PNR.
 
-    sudo apt install build-essential clang lld bison flex libreadline-dev \
-                         gawk tcl-dev libffi-dev git mercurial graphviz   \
-                         xdot pkg-config python3 libftdi-dev \
-                         python3-dev libboost-dev libeigen3-dev \
-                         libboost-dev libboost-filesystem-dev \
-                         libboost-thread-dev libboost-program-options-dev \
-                         libboost-iostreams-dev cmake libhidapi-dev \
-                         ninja-build libglib2.0-dev libpixman-1-dev \
-                         golang
+    sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
+                     gawk tcl-dev libffi-dev git mercurial graphviz \
+                     xdot pkg-config python3 libftdi-dev \
+                     python3-dev libeigen3-dev \
+                     libboost-dev libboost-filesystem-dev \
+                     libboost-thread-dev libboost-program-options-dev \
+                     libboost-iostreams-dev cmake libhidapi-dev \
+                     ninja-build libglib2.0-dev libpixman-1-dev \
+                     golang
 
     git clone https://github.com/YosysHQ/icestorm
     cd icestorm
