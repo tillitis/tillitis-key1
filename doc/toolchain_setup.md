@@ -1,7 +1,7 @@
 # Toolchain setup
 
 Here are instructions for setting up the tools required to build the project.
-Tested on Ubuntu 22.04 LTS.
+Tested on Ubuntu 22.10.
 
 ## Gateware: icestorm toolchain
 
