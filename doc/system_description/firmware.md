@@ -15,8 +15,8 @@ Build the FPGA bitstream with the firmware using `make` in the
 `hw/application_fpga` directory.
 
 If your available `objcopy` and `size` commands is anything other than
-the default `llvm-objcopy-14` and `llvm-size-14` define `OBJCOPY` and
-`SIZE` to whatever they're called on your system.
+the default `llvm-objcopy` and `llvm-size` define `OBJCOPY` and `SIZE`
+to whatever they're called on your system.
 
 ## Using QEMU
 

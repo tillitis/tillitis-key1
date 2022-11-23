@@ -28,16 +28,16 @@ BRAM_FW_SIZE ?= 1536
 
 PIN_FILE ?= application_fpga_mta1_usb_v1.pcf
 
-SIZE ?= llvm-size-14
-OBJCOPY ?= llvm-objcopy-14
+SIZE ?= llvm-size
+OBJCOPY ?= llvm-objcopy
 
-CC = clang-14
+CC = clang
 
 CFLAGS = -target riscv32-unknown-none-elf -march=rv32imc -mabi=ilp32 \
    -static -std=gnu99 -Os -ffast-math -fno-common -fno-builtin-printf \
    -fno-builtin-putchar -nostdlib -mno-relax -Wall -flto -DNOCONSOLE
 
-AS = clang-14
+AS = clang
 ASFLAGS = -target riscv32-unknown-none-elf -march=rv32imc -mabi=ilp32 -mno-relax
 
 ICE40_SIM_CELLS = $(shell yosys-config --datdir/ice40/cells_sim.v)
