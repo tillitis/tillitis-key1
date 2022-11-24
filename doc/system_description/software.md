@@ -13,8 +13,9 @@ Learn more about the concepts in the
 
 ## CPU
 
-We use a PicoRV32, a 32-bit RISC-V system, as the CPU for running the
-firmware and the loaded app. All types are little-endian.
+We use a PicoRV32, a 32-bit RISC-V system (RV32IMC), as the CPU for
+running the firmware and the loaded app. The firmware and device app
+both run in machine mode. All types are little-endian.
 
 ## Constraints
 
@@ -34,7 +35,7 @@ specifications:
 
 The Tillitis Key has two modes of operation; firmware/loader mode and
 application mode. The firmware mode has the responsibility of
-receiving, measuring, and loading the application.
+receiving, measuring, loading, and starting the application.
 
 The firmware and application uses a memory mapped IO for SoC
 communication. This MMIO resides at `0xc000_0000`. *Nota bene*: Almost
@@ -44,21 +45,19 @@ The application has a constrained variant of the firmware memory map,
 which is outlined below. E.g. UDS isn't readable, and the `APP_{ADDR,
 SIZE}` are not writable for the application.
 
-The software on the Tillitis Key communicates to the host via the
-`UART_{RX,TX}_{STATUS,DATA}` registers, using the framing protocol
-described in [Framing
+The firmware (and optionally all software) on the Tillitis Key
+communicates to the host via the `UART_{RX,TX}_{STATUS,DATA}`
+registers, using the framing protocol described in [Framing
 Protocol](../framing_protocol/framing_protocol.md).
 
 The firmware defines a protocol (command/response interface) on top of
-the framing layer, which is used to bootstrap the application onto the
-device.
+this framing layer which is used to bootstrap the application onto the
+device. All commands are initiated by the host. All commands receive a
+reply.
 
-On the framing layer, it's required that each frame the device
-receives, a responding frame must be sent back to the host, in a
-ping-pong manner.
-
-Applications define a per-application protocol, which is the contract
-between the host and the device.
+Applications define their own per-application protocol used for
+communication with their host part. They may or may not be based on
+the Framing Protocol.
 
 ## Firmware
 
@@ -86,40 +85,48 @@ The purpose of the firmware is to bootstrap an application. The host
 will send a raw binary targeted to be loaded at `0x4000_7000` in the
 device.
 
-  1. The host sends the User Supplied Secret (USS) by using the
-     `FW_CMD_LOAD_USS` command and gets a `FW_RSP_LOAD_USS` back.
-  2. The host sends the size of the app by using the
-     `FW_CMD_LOAD_APP_SIZE` command.
-  3. The firmware executes `FW_CMD_LOAD_APP_SIZE` command, which
-     stores the application size into `APP_SIZE`, and sets `APP_ADDR`
-     to zero. A `FW_RSP_LOAD_APP_SIZE` reponse is sent back to the
-     host, with the status of the action (ok/fail).
-  4. If the the host receive a sucessful response, it will send
+  1. The host sends the `FW_CMD_LOAD_APP` command with the size of the
+     device app and the user-supplied secret as arguments and and gets
+     a `FW_RSP_LOAD_APP` back.
+  2. If the the host receive a sucessful response, it will send
      multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
      full application.
-  5. For each received `FW_CMD_LOAD_APP_DATA` command the firmware
-     places the data into `0x4000_7000` and upwards. The firmware
-     replies with a `FW_RSP_LOAD_APP_DATA` response to the host for
-     each received block.
-  6. When the final block of the application image is received, we
-     measure the application by computing a BLAKE2s digest over the
-     entire application,
+  3. On receiving`FW_CMD_LOAD_APP_DATA` commands the firmware places
+     the data into `0x4000_7000` and upwards. The firmware replies
+     with a `FW_RSP_LOAD_APP_DATA` response to the host for each
+     received block except the last data block.
+  4. When the final block of the application image is received with a
+     `FW_CMD_LOAD_APP_DATA`, the firmware measure the application by
+     computing a BLAKE2s digest over the entire application. Then
+     firmware send back the `FW_RSP_LOAD_APP_DATA_READY` response
+     containing the measurement.
+  5. The Compound Device Identifier (CDI) is then computed by using
+     the `UDS`, the measurement of the application, and the `USS`, and
+     placed in the `CDI` register. Then the start address of the
+     device app, `0x4000_7000`, is written to `APP_ADDR` and the size
+     to `APP_SIZE` to let the device application know where it is
+     loaded and how large it is, if it wants to relocate in RAM.
+  6. The firmware now starts the application by switching to
+     application mode by writing to the `SWITCH_APP` register. In this
+     mode the MMIO region is restricted; e.g. some registers are
+     removed (`UDS`), and some are switched from read/write to
+     read-only. This is outlined in the memory map below.
 
-     The Compound Device Identifier is computed by using the `UDS`,
-     the measurement of the application, and the `USS`, and placed in
-     the `CDI` register. Then `0x4000_7000` is written to `APP_ADDR`.
-     The final `FW_RSP_LOAD_APP_DATA` response is sent to the host,
-     completing the loading.
+     The firmware now executes assembler code that writes zeros to
+     stack and data of the firmware, then jumps to what's in
+     `APP_ADDR` which starts device app execution.
 
-NOTE: The firmware uses SPRAM for data and stack. We need to make sure
-that the application image does not overwrite the firmware's running
-state. The application should probably do a similar relocation for
-stack/data at reset, as the firmware does. Further; the firmware need
-to check application image is sane. The shared firmware data area
-(e.g. `.data` and the stack must be cleared prior launching the
-application.
+     There is now no other means of getting back from application mode
+     to firmware mode than resetting/power cycling the device.
 
-### CDI computation
+### User-supplied Secret (USS)
+
+USS is a 32 bytes long secret provided by the user. Typically a host
+program gets a passphrase from the user and then does KDF of some
+sort, for instance a BLAKE2s, to get 32 bytes which it sends to the
+firmware to be part of the CDI computation.
+
+### Compound Device Identifier (CDI) computation
 
 The CDI is computed by:
 
@@ -139,62 +146,100 @@ The `blake2s()` function in the firmware is fed with a buffer in
 fed with a context used for computations that is also part of the
 `FW_RAM`.
 
-### Loading the User Supplied Secret (USS)
+After doing the computation `FW_RAM` is also cleared with zeroes.
 
-The host program may send `FW_CMD_LOAD_USS` and `FW_CMD_LOAD_APP_SIZE`
-in any order. But it *should* always send both `FW_CMD_LOAD_USS` and
-`FW_CMD_LOAD_APP_SIZE` before sending the multiple
-`FW_CMD_LOAD_APP_DATA`. If it does not, the USS will not be
-predictable because somebody could have send `FW_CMD_LOAD_USS` before,
-and the last `FW_CMD_LOAD_APP_DATA` (on whichever iteration) will
-cause the currently loaded USS to be used for calculating CDI.
+### Firmware protocol definition
 
-### Starting an application
+The firmware commands and responses are built on top of the [Framing
+Protocol](../framing_protocol/framing_protocol.md).
 
-Starting an application includes the "switch to application mode"
-step, which is done by writing to the `SWITCH_APP` register. The
-switch from firmware mode to application mode is a mode switch, and
-context switch. When entering application mode the MMIO region is
-restricted; e.g. some registers are removed (`UDS`), and some are
-switched from read/write to read-only. This is outlined in the memory
-map below.
+The commands look like this:
 
-There is no other means of getting back from application mode to
-firmware mode than resetting/power cycling the device.
+| *name*           | *size (bytes)* | *comment*                                |
+|------------------|----------------|------------------------------------------|
+| Header           | 1              | Framing protocol header including length |
+| Command/Response | 1              | Any of the below commands or responses   |
+| Data             | n              | Any additional data                      |
 
-Prerequisites: `APP_SIZE` and `APP_ADDR` has to be non-zero.
-Procedure:
+The responses might include a one byte status field where 0 is
+`STATUS_OK` and 1 is `STATUS_BAD`.
 
-  1. The host sends `FW_CMD_RUN_APP` to the device.
-  2. The firmware responds with `FW_RSP_RUN_APP`
-  3. The firmware writes to `SWITCH_APP`, and executes assembler code
-     that writes zeros to stack and data of the firmware, then jumps
-     to what's in APP_ADDR.
-  4. The device is now in application mode and is executing the
-     application.
+#### `FW_CMD_NAME_VERSION` (0x01)
 
-### Protocol definition
+Get the name and version of the stick.
 
-Available commands/reponses:
+#### `FW_RSP_NAME_VERSION` (0x02)
 
-#### `FW_{CMD,RSP}_LOAD_USS`
-#### `FW_{CMD,RSP}_LOAD_APP_SIZE`
-#### `FW_{CMD,RSP}_LOAD_APP_DATA`
-#### `FW_{CMD,RSP}_RUN_APP`
-#### `FW_{CMD,RSP}_NAME_VERSION`
-#### `FW_{CMD,RSP}_UDI`
+| *name*  | *size (bytes)* | *comment*       |
+|---------|----------------|-----------------|
+| name0   | 4              | ASCII           |
+| name1   | 4              | ASCII           |
+| version | 4              | Integer version |
 
-#### `FW_{CMD,RSP}_VERIFY_DEVICE`
+In a bad response the fields will be zeroed.
 
-Verification that the device is an authentic Tillitis
-device. Implemented using challenge/response.
+#### `FW_CMD_LOAD_APP` (0x03)
 
-#### `FW_{CMD,RSP}_GET_APP_DIGEST`
+| *name*       | *size (bytes)* | *comment*           |
+|--------------|----------------|---------------------|
+| size         | 4              |                     |
+| uss-provided | 1              | 0 = false, 1 = true |
+| uss          | 32             | Ignored if above 0  |
 
-This command returns the un-keyed hash digest for the application that
-was loaded. It allows the host to verify that the application was
-correctly loaded. This means that the CDI calculated will be correct
-given that the UDS has not been modified.
+Start an application loading session by setting the size of the
+expected device application and a user-supplied secret, if
+`uss-provided` is 1. Otherwise `USS` is ignored.
+
+#### `FW_RSP_LOAD_APP` (0x04)
+
+Response to `FW_CMD_LOAD_APP`
+
+| *name* | *size (bytes)* | *comment*                   |
+|--------|----------------|-----------------------------|
+| status | 1              | `STATUS_OK` or `STATUS_BAD` |
+
+#### `FW_CMD_LOAD_APP_DATA` (0x05)
+
+| *name* | *size (bytes)* | *comment*           |
+|--------|----------------|---------------------|
+| data   | 127            | Raw binary app data |
+
+Load 127 bytes of raw app binary into device RAM. Should be sent
+consecutively over the complete raw binary.
+
+#### `FW_RSP_LOAD_APP_DATA` (0x06)
+
+Response to all but the ultimate `FW_CMD_LOAD_APP_DATA` commands.
+
+| *name* | *size (bytes)* | *comment*                |
+|--------|----------------|--------------------------|
+| status | 1              | `STATUS_OK`/`STATUS_BAD` |
+
+#### `FW_RSP_LOAD_APP_DATA_READY` (0x07)
+
+The response to the last `FW_CMD_LOAD_APP_DATA` is an
+`FW_RSP_LOAD_APP_DATA_READY` with the un-keyed hash digest for the
+application that was loaded. It allows the host to verify that the
+application was correctly loaded. This means that the CDI calculated
+will be correct given that the UDS has not been modified.
+
+| *name* | *size (bytes)* | *comment*                |
+|--------|----------------|--------------------------|
+| status | 1              | `STATUS_OK`/`STATUS_BAD` |
+| digest | 32             | BLAKE2s(app)             |
+
+#### `FW_CMD_GET_UDI` (0x08)
+
+Ask for the Unique Device Identifier (UDI) of the device.
+
+#### `FW_RSP_GET_UDI` (0x09)
+
+Response to `FW_CMD_GET_UDI`.
+
+| *name* | *size (bytes)* | *comment*                                       |
+|--------|----------------|-------------------------------------------------|
+| status | 1              | `STATUS_OK`/`STATUS_BAD`                        |
+| udi    | 8              | Vendor (2B), Product (1B), rev(4b), serial (4B) |
 
 #### Get the name and version of the device
 
@@ -225,37 +270,19 @@ host ->
   u8 CMD[1 + 128];
 
   CMD[0].len = 128  // command frame format
-  CMD[1]     = 0x0a // FW_CMD_LOAD_USS
-
-  CMD[2..6]  = User Supplied Secret
-
-  CMD[6..]   = 0
-
-host <-
-  u8 RSP[1 + 4];
-
-  RSP[0].len = 4    // command frame format
-  RSP[1]     = 0x0b // FW_RSP_LOAD_USS
-
-  RSP[2]     = STATUS
-
-  RSP[3..]   = 0
-
-host ->
-  u8 CMD[1 + 32];
-
-  CMD[0].len = 32   // command frame format
-  CMD[1]     = 0x03 // FW_CMD_LOAD_APP_SIZE
+  CMD[1]     = 0x03 // FW_CMD_LOAD_APP
 
   CMD[2..6]  = APP_SIZE
 
-  CMD[6..]   = 0
+  CMD[6]     = USS supplied? 0 = false, 1 = true
+  CMD[7..39] = USS
+  CMD[40..]  = 0
 
 host <-
   u8 RSP[1 + 4];
 
   RSP[0].len = 4    // command frame format
-  RSP[1]     = 0x04 // FW_RSP_LOAD_APP_SIZE
+  RSP[1]     = 0x04 // FW_RSP_LOAD_APP
 
   RSP[2]     = STATUS
 
@@ -279,6 +306,21 @@ host <-
   RSP[2]     = STATUS
 
   RSP[3..]   = 0
+```
+
+Except response from last chunk of app data which is:
+
+```
+host <-
+  u8 RSP[1 + 4]
+
+  RSP[0].len = 128   // command frame format
+  RSP[1]     = 0x07 // FW_RSP_LOAD_APP_DATA_READY
+
+  RSP[2]     = STATUS
+
+  RSP[3..35]   = app digest
+  RSP[36..]    = 0
 ```
 
 ### Memory map
