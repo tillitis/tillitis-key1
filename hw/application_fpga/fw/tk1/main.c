@@ -28,24 +28,52 @@ static volatile uint32_t *led =        (volatile uint32_t *)TK1_MMIO_TK1_LED;
 #define LED_WHITE (LED_RED | LED_GREEN | LED_BLUE)
 // clang-format on
 
-static void print_hw_version(uint32_t name0, uint32_t name1, uint32_t ver)
+struct namever {
+	char name0[4];
+	char name1[4];
+	uint32_t version;
+};
+
+static void print_hw_version(struct namever namever)
 {
 	puts("Hello, I'm ");
-	putc(name0 >> 24);
-	putc(name0 >> 16);
-	putc(name0 >> 8);
-	putc(name0);
-
+	hexdump((uint8_t *)&namever.name0, 4);
+	putc(namever.name0[0]);
+	putc(namever.name0[1]);
+	putc(namever.name0[2]);
+	putc(namever.name0[3]);
 	putc('-');
-
-	putc(name1 >> 24);
-	putc(name1 >> 16);
-	putc(name1 >> 8);
-	putc(name1);
-
-	putc(' ');
-	putinthex(ver);
+	putc(namever.name1[0]);
+	putc(namever.name1[1]);
+	putc(namever.name1[2]);
+	putc(namever.name1[3]);
+	putc(':');
+	putinthex(namever.version);
 	lf();
+}
+
+static struct namever get_hw_version(uint32_t name0, uint32_t name1,
+				     uint32_t ver)
+{
+	struct namever namever;
+
+	hexdump((uint8_t *)&name0, 4);
+	putinthex(name0);
+	lf();
+
+	namever.name0[0] = name0 >> 24;
+	namever.name0[1] = name0 >> 16;
+	namever.name0[2] = name0 >> 8;
+	namever.name0[3] = name0;
+
+	namever.name1[0] = name1 >> 24;
+	namever.name1[1] = name1 >> 16;
+	namever.name1[2] = name1 >> 8;
+	namever.name1[3] = name1;
+
+	namever.version = ver;
+
+	return namever;
 }
 
 static void print_digest(uint8_t *md)
@@ -111,9 +139,7 @@ enum state {
 
 int main()
 {
-	uint32_t local_name0 = *name0;
-	uint32_t local_name1 = *name1;
-	uint32_t local_ver = *ver;
+	struct namever namever = get_hw_version(*name0, *name1, *ver);
 	struct frame_header hdr; // Used in both directions
 	uint8_t cmd[CMDLEN_MAXBYTES];
 	uint8_t rsp[CMDLEN_MAXBYTES];
@@ -124,7 +150,7 @@ int main()
 	uint8_t digest[32] = {0};
 	enum state state = FW_STATE_INITIAL;
 
-	print_hw_version(local_name0, local_name1, local_ver);
+	print_hw_version(namever);
 
 	for (;;) {
 		switch (state) {
@@ -217,9 +243,9 @@ int main()
 				break;
 			}
 
-			memcpy(rsp, (uint8_t *)&local_name0, 4);
-			memcpy(rsp + 4, (uint8_t *)&local_name1, 4);
-			memcpy(rsp + 8, (uint8_t *)&local_ver, 4);
+			memcpy(rsp, &namever.name0, 4);
+			memcpy(rsp + 4, &namever.name1, 4);
+			memcpy(rsp + 8, &namever.version, 4);
 			fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
 			// state unchanged
 			break;
