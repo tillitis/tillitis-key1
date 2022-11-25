@@ -164,17 +164,19 @@ The commands look like this:
 The responses might include a one byte status field where 0 is
 `STATUS_OK` and 1 is `STATUS_BAD`.
 
+Note that the integer types are little-endian (LE).
+
 #### `FW_CMD_NAME_VERSION` (0x01)
 
 Get the name and version of the stick.
 
 #### `FW_RSP_NAME_VERSION` (0x02)
 
-| *name*  | *size (bytes)* | *comment*       |
-|---------|----------------|-----------------|
-| name0   | 4              | ASCII           |
-| name1   | 4              | ASCII           |
-| version | 4              | Integer version |
+| *name*  | *size (bytes)* | *comment*            |
+|---------|----------------|----------------------|
+| name0   | 4              | ASCII                |
+| name1   | 4              | ASCII                |
+| version | 4              | Integer version (LE) |
 
 In a bad response the fields will be zeroed.
 
@@ -182,7 +184,7 @@ In a bad response the fields will be zeroed.
 
 | *name*       | *size (bytes)* | *comment*           |
 |--------------|----------------|---------------------|
-| size         | 4              |                     |
+| size         | 4              | Integer (LE)        |
 | uss-provided | 1              | 0 = false, 1 = true |
 | uss          | 32             | Ignored if above 0  |
 
@@ -236,10 +238,13 @@ Ask for the Unique Device Identifier (UDI) of the device.
 
 Response to `FW_CMD_GET_UDI`.
 
-| *name* | *size (bytes)* | *comment*                                       |
-|--------|----------------|-------------------------------------------------|
-| status | 1              | `STATUS_OK`/`STATUS_BAD`                        |
-| udi    | 8              | Vendor (2B), Product (1B), rev(4b), serial (4B) |
+| *name* | *size (bytes)* | *comment*                                           |
+|--------|----------------|-----------------------------------------------------|
+| status | 1              | `STATUS_OK`/`STATUS_BAD`                            |
+| udi    | 4              | Integer (LE) with Reserved (4 bit), Vendor (2 byte),|
+|        |                | Product (1 byte), Revision (4 bit)                  |
+| udi    | 4              | Integer serial number (LE)                          |
+
 
 #### Get the name and version of the device
 
