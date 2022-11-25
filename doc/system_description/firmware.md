@@ -32,14 +32,16 @@ Commands in state `initial`:
 | *command*          | *next state*   |
 |--------------------|----------------|
 | NameVersion()      | unchanged      |
+| GetUDI()           | unchanged      |
 | LoadApp(size, uss) | `init_loading` |
 |                    |                |
 
-Commands in `initial_loading`:
+Commands in `init_loading`:
 
 | *command*          | *next state*   |
 |--------------------|----------------|
 | NameVersion()      | unchanged      |
+| GetUDI()           | unchanged      |
 | LoadApp(size, uss) | `init_loading` |
 | LoadAppData(data)  | `loading`      |
 |                    |                |
@@ -49,6 +51,7 @@ Commands in `loading`:
 | *command*          | *next state*                     |
 |--------------------|----------------------------------|
 | NameVersion()      | unchanged                        |
+| GetUDI()           | unchanged                        |
 | LoadApp(size, uss) | `init_loading`                   |
 | LoadAppData(data)  | `loading` or `run` on last chunk |
 |                    |                                  |
@@ -56,11 +59,13 @@ Commands in `loading`:
 Behaviour:
 
 - NameVersion: identifies stick.
+- GetUDI: returns the Unique Device ID with vendor id, product id,
+  revision, serial number.
 - LoadApp(size, uss): Start loading an app with this size and user
   supplied secret.
 - LoadAppData(data): Load chunk of data of app. When last data chunk
   is received we compute and return the digest.
-    
+
 ## Using QEMU
 
 Checkout the `tk1` branch of [our version of the

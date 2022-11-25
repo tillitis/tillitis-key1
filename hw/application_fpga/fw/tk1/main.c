@@ -187,7 +187,7 @@ int main()
 		}
 
 		memset(cmd, 0, CMDLEN_MAXBYTES);
-		// Read firmware command: Blocks!
+		// Now we know the size of the cmd frame, read it all
 		read(cmd, hdr.len);
 
 		// Is it for us?
@@ -203,7 +203,6 @@ int main()
 		switch (cmd[0]) {
 		case FW_CMD_NAME_VERSION:
 			puts("cmd: name-version\n");
-
 			if (hdr.len != 1) {
 				// Bad length - give them an empty response
 				fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
@@ -213,29 +212,29 @@ int main()
 			memcpy(rsp, (uint8_t *)&local_name0, 4);
 			memcpy(rsp + 4, (uint8_t *)&local_name1, 4);
 			memcpy(rsp + 8, (uint8_t *)&local_ver, 4);
-
 			fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
 			// state unchanged
 			break;
 
 		case FW_CMD_GET_UDI:
-			puts("FW_CMD_GET_UDI\n");
+			puts("cmd: get-udi\n");
 			if (hdr.len != 1) {
 				// Bad cmd length
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_GET_UDI, rsp);
 				break;
 			}
+
 			rsp[0] = STATUS_OK;
 			uint32_t udi_words[2];
 			wordcpy(udi_words, (void *)udi, 2);
 			memcpy(rsp + 1, udi_words, 2 * 4);
 			fwreply(hdr, FW_RSP_GET_UDI, rsp);
+			// state unchanged
 			break;
 
 		case FW_CMD_LOAD_APP:
 			puts("cmd: load-app(size, uss)\n");
-
 			if (hdr.len != 128) {
 				// Bad length
 				rsp[0] = STATUS_BAD;
@@ -278,9 +277,9 @@ int main()
 
 		case FW_CMD_LOAD_APP_DATA:
 			puts("cmd: load-app-data\n");
-
-			if (state != FW_STATE_INIT_LOADING &&
-			    state != FW_STATE_LOADING) {
+			if (hdr.len != 128 || (state != FW_STATE_INIT_LOADING &&
+					       state != FW_STATE_LOADING)) {
+				// Bad cmd length or state
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
 				break;
@@ -301,8 +300,8 @@ int main()
 				putinthex(*app_size);
 				lf();
 
-				// Get the Blake2S digest of the app - store it
-				// for later queries
+				// Compute Blake2S digest of the app, storing
+				// it for FW_STATE_RUN
 				blake2s_ctx ctx;
 
 				blake2s(digest, 32, NULL, 0,
@@ -310,6 +309,7 @@ int main()
 					&ctx);
 				print_digest(digest);
 
+				// And return the digest in final response
 				rsp[0] = STATUS_OK;
 				memcpy(&rsp[1], &digest, 32);
 				fwreply(hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
