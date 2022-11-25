@@ -91,6 +91,17 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 	wordcpy((void *)cdi, (void *)local_cdi, 8);
 }
 
+void forever_redflash()
+{
+	int led_on = 0;
+	for (;;) {
+		*led = led_on ? LED_RED : 0;
+		for (volatile int i = 0; i < 800000; i++) {
+		}
+		led_on = !led_on;
+	}
+}
+
 enum state {
 	FW_STATE_INITIAL,
 	FW_STATE_INIT_LOADING,
@@ -163,13 +174,10 @@ int main()
 			break; // This is never reached!
 
 		default:
-			// Unknown state!?
 			puts("Unknown firmware state 0x");
 			puthex(state);
 			lf();
-
-			asm volatile("forever:;"
-				     "j forever;");
+			forever_redflash();
 			break; // Not reached
 		}
 
