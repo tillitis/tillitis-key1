@@ -167,7 +167,7 @@ module application_fpga(
 	     .CATCH_ILLINSN(1),
 	     .COMPRESSED_ISA(1),
 	     .ENABLE_FAST_MUL(1),
-	     .ENABLE_DIV(1),
+	     .ENABLE_DIV(0),
 	     .BARREL_SHIFTER(1)
 	     ) cpu(
 		   .clk(clk),
