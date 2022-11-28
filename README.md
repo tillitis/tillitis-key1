@@ -1,4 +1,4 @@
-# Tillitis Key 1
+# Tillitis Key
 
 ## Introduction
 
