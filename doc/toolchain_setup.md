@@ -61,11 +61,11 @@ You can read
 [more](https://www.sifive.com/blog/all-aboard-part-1-compiler-args)
 about it.
 
-The project uses the LLVM/Clang suite, where version 14 is the latest
-stable (as of writing). Usually the LLVM/Clang packages that are part
-of your distro will work, if not, there are installations instructions
-for "Install (stable branch)" at https://apt.llvm.org/ for Debian and
-Ubuntu.
+The project uses the LLVM/Clang suite and version 15 or later is
+required. As of writing Ubuntu 22.10 has version 15 packaged. You may
+be able to get it installed on older Ubuntu and Debian using the
+instructions on https://apt.llvm.org/ . There are also binary releases
+here: https://github.com/llvm/llvm-project/releases
 
 References:
 * https://github.com/YosysHQ/picorv32

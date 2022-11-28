@@ -33,12 +33,12 @@ OBJCOPY ?= llvm-objcopy
 
 CC = clang
 
-CFLAGS = -target riscv32-unknown-none-elf -march=rv32imc -mabi=ilp32 \
+CFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 \
    -static -std=gnu99 -Os -ffast-math -fno-common -fno-builtin-printf \
    -fno-builtin-putchar -nostdlib -mno-relax -Wall -flto -DNOCONSOLE
 
 AS = clang
-ASFLAGS = -target riscv32-unknown-none-elf -march=rv32imc -mabi=ilp32 -mno-relax
+ASFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 -mno-relax
 
 ICE40_SIM_CELLS = $(shell yosys-config --datdir/ice40/cells_sim.v)
 
