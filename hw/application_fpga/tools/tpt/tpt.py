@@ -13,6 +13,7 @@
 #
 #=======================================================================
 
+import os
 import sys
 import argparse
 from secrets import token_bytes
@@ -46,10 +47,11 @@ def gen_uds(verbose, arg_ent):
 #-------------------------------------------------------------------
 #-------------------------------------------------------------------
 def save_uds(verbose, uds):
+    outpath = os.path.abspath("uds.hex")
     if verbose:
-        print("Writing uds.hex")
+        print("Writing %s" % (outpath))
 
-    with open ("uds.hex", 'w', encoding = 'utf-8') as uds_file:
+    with open (outpath, 'w', encoding = 'utf-8') as uds_file:
         for i in range(8):
             uds_file.write(uds[(i*8) : (i*8 + 8)]+"\n")
 
@@ -89,10 +91,11 @@ def gen_udi(verbose, pid, vid, rev, serial):
 #-------------------------------------------------------------------
 #-------------------------------------------------------------------
 def save_udi(verbose, udi):
+    outpath = os.path.abspath("udi.hex")
     if verbose:
-        print("Writing udi.hex")
+        print("Writing %s" % (outpath))
 
-    with open ("udi.hex", 'w', encoding = 'utf-8') as udi_file:
+    with open (outpath, 'w', encoding = 'utf-8') as udi_file:
             udi_file.write(udi[0 : 8] + "\n")
             udi_file.write(udi[8 : 16] + "\n")
 
