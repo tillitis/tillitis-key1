@@ -16,10 +16,6 @@
 /dhrystone/timing.txt
 /dhrystone/*.d
 /dhrystone/*.o
-/riscv-gnu-toolchain-riscv32i
-/riscv-gnu-toolchain-riscv32ic
-/riscv-gnu-toolchain-riscv32im
-/riscv-gnu-toolchain-riscv32imc
 /testbench.vvp
 /testbench_wb.vvp
 /testbench_ez.vvp
