@@ -132,21 +132,3 @@ libraries etc. Roughly these can be divided into:
 More detailed information about the software running on the device
 (referred to firmware, SDK, and secure application), can be found in
 the [software document](software.md).
-
-## Work in Progress
-TODOs and random notes, questions to be worked into the document. Or be
-scratched.
-
-- Possible technical solution - Could we reuse the button as a physical
-    presence detect when injecting a bitstream from the interface_fpga
-    to the application_fpga? Alternative have a strap, which would
-    require opening the stick. The stick is the sold with nail polish to
-    reseal it.
-
-- Ideas - mitigating mechanisms for host bases threats
-  - Push button
-  - User Supplied Secret (USS)
-
-- Open Questions to be investigated, handled
-  - Terminology - naming things
-  - How to create trust in the SDKs
