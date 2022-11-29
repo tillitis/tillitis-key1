@@ -122,6 +122,16 @@ If a data word has been read from the TRNG, by default at least
 The timer is available to use by firmware and applications.
 
 
+#### Touch sensor
+
+The core provides a stable interface to the touch sensor on the
+TKey device. Using the core, the firmware and applications can
+get information about touch events and manage detection of
+events.
+
+The touch sensor is available to use by firmware and applications.
+
+
 #### TKey
 
 The TKey core contains several functions, and acts as
