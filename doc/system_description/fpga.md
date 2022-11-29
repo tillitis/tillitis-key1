@@ -21,10 +21,10 @@ cores in different ways given the current exection mode. There are two
 execution modes - firmware and application. Basically, in application mode
 the access is more restrictive.
 
-The API for all cores is described in XYZ.
+The API for all cores is described in the [Software documentation](software.md).
+
 
 ### Cores
-
 
 #### CPU
 The CPU core is an instance of the [PicoRV32 core](https://github.com/YosysHQ/picorv32).
