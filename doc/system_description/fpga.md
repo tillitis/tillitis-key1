@@ -100,15 +100,15 @@ The UART contain a 512 but Rx-FIFO with status (data available).
 The timer is available to use by firmware and applications.
 
 
-#### TRNG
+#### ROSC
 
-The TRNG is a ring oscillator based internal entropy source.
-By default the TRNG use 32 free running digital oscillators. By
-default, the oscillators are sampled after 4096 cycles. The
-states are XOR combined to create a single bit. After another
-4096 cycles a second bit is created, and the two bits are
-XOR combined to a single entropy bit. The entropy bit is
-added to a 32 bit entropy word.
+The ROSC is a ring oscillator based internal entropy source, or
+True Random Number Generator (TRNG). By default the TRNG use 32
+free running digital oscillators. By default, the oscillators are
+sampled after 4096 cycles. The states are XOR combined to create
+a single bit. After another 4096 cycles a second bit is created,
+and the two bits are XOR combined to a single entropy bit. The
+entropy bit is added to a 32 bit entropy word.
 
 After 32 bits has been collected, the data ready flag is set,
 indicating that an entropy word is ready for consumption. Note
@@ -119,7 +119,15 @@ been added.
 If a data word has been read from the TRNG, by default at least
 32 bits will collected before new data will be available.
 
-The timer is available to use by firmware and applications.
+The ROSC TRNG is available to use by firmware and applications.
+
+Note: The ROSC generates entropy with a fairly good quality.
+However for security related use cases, for example keys, the ROSC
+should not be used directly. Instead use it to create a seed
+for a Digital Random Bit Generator (DRBG), also known as a
+Cryptographically Safe Pseudo Random Number Generator (CSPRNG).
+
+Examples of such generators are Hash_DRGG, CTR_DRBG, HKDF.
 
 
 #### Touch sensor
