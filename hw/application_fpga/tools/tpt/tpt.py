@@ -105,10 +105,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", help="Verbose operation", action="store_true")
     parser.add_argument("--ent", help="User supplied entropy", type=str)
-    parser.add_argument("--vid", help="Vendor id (0 -- 65535)",  type=int, default=0)
-    parser.add_argument("--pid", help="Product id (0 -- 255", type=int, default=0)
-    parser.add_argument("--rev", help="Revision number (0 -- 15)", type=int, default=0)
-    parser.add_argument("--serial", help="Serial number (0 -- (2**31 - 1))", type=int, default=0)
+    parser.add_argument("--vid", help="Vendor id (0 -- 65535)",  type=int)
+    parser.add_argument("--pid", help="Product id (0 -- 255", type=int)
+    parser.add_argument("--rev", help="Revision number (0 -- 15)", type=int)
+    parser.add_argument("--serial", help="Serial number (0 -- (2**31 - 1))", type=int)
     args = parser.parse_args()
 
     if args.verbose:
