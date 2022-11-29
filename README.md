@@ -53,7 +53,8 @@ security-critical operations.
 * [Threat Model](doc/threat_model/threat_model.md)
 * [Framing Protocol](doc/framing_protocol/framing_protocol.md)
 * [Boards](doc/system_description/boards.md)
-* [Firmware](doc/system_description/firmware.md)
+* [Boards](doc/system_description/boards.md)
+* [FPGA](doc/system_description/fpga.md)
 * [Software](doc/system_description/software.md)
 
 Note that development is ongoing. For example, changes might be made
