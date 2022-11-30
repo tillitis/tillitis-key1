@@ -44,11 +44,16 @@ security-critical operations.
 ## Documentation
 
 ### Getting started
+
 * [Quickstart](doc/quickstart.md) to program the TKey
 * [Toolchain setup](doc/toolchain_setup.md)
 * [Release Notes](doc/release_notes.md)
 
+Applications and host programs that communicate with the apps are kept
+in this repository: https://github.com/tillitis/tillitis-key1-apps
+
 ### In-depth technical information
+
 * [System Description](doc/system_description/system_description.md)
 * [Threat Model](doc/threat_model/threat_model.md)
 * [Framing Protocol](doc/framing_protocol/framing_protocol.md)
@@ -57,23 +62,21 @@ security-critical operations.
 * [FPGA](doc/system_description/fpga.md)
 * [Software](doc/system_description/software.md)
 
-Note that development is ongoing. For example, changes might be made
+* [QEMU](https://github.com/tillitis/qemu/tree/tk1) (branch `tk1` in
+  separate repository)
+
+Note that development is ongoing. For example, changes might be made
 to the measuring and derivation of key material, causing the
 public/private keys of a signer app to change. To avoid unexpected
 changes, please use a tagged release. Read the [Release
 Notes](doc/release_notes.md) to keep up to date with changes and new
 releases.
 
-Applications and host programs that communicate with the apps are kept
-in this repository: https://github.com/tillitis/tillitis-key1-apps
-
-
 ## About this repository
 
 This repository contains hardware, software and utilities written as
 part of the TKey. It is structured as monolithic repository, or
 "monorepo", where all components live in one repository.
-
 
 ## Licensing
 
