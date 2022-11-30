@@ -14,7 +14,7 @@ During the load operation, the device measures the application
 it on the open hardware security processor. This measurement
 is similar to [TCG DICE](https://trustedcomputinggroup.org/work-groups/dice-architectures/).
 
-Each Tkey device contains a Unique Device Secret (UDS), which
+Each TKey device contains a Unique Device Secret (UDS), which
 together with the application measurement, and an optional
 user-provided seed, is used to derive key material unique to each
 application. This guarantees that if the integrity of the application
@@ -26,12 +26,12 @@ load their own apps, while ensuring that each app loaded will have
 its own cryptographic identity, and can also be used for authentication
 towards different services.
 
-The Tkey platform is based around a 32-bit RISC-V processor and has
+The TKey platform is based around a 32-bit RISC-V processor and has
 128 KB of RAM. The current firmware is designed to load an app that is
 up to 100 KB in size, and gives it a stack of 28 KB. A smaller app may
 move itself in memory to get larger continuous memory.
 
-All of the Tkey software, firmware, FPGA Verilog source code, schematics
+All of the TKey software, firmware, FPGA Verilog source code, schematics
 and PCB design files are open source. Like all trustworthy security software
 and hardware should be. This in itself makes it different, as other
 security tokens utilize at least some closed source hardware for its

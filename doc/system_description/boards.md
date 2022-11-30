@@ -17,7 +17,7 @@ The KiCad board projects all follow this directory structure:
 | /project/gerbers | PCB release files |
 | /project/test | Scripts / gateware used for production tests |
 
-### Tkey 1 (TK1)
+### TKey 1 (TK1)
 
 ![](../../doc/images/mta1-usb-v1.jpg)
 
