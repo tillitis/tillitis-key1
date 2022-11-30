@@ -65,7 +65,7 @@ in this repository: https://github.com/tillitis/tillitis-key1-apps
 * [QEMU](https://github.com/tillitis/qemu/tree/tk1) (branch `tk1` in
   separate repository)
 
-Note that development is ongoing. For example, changes might be made
+Note that development is ongoing. For example, changes might be made
 to the measuring and derivation of key material, causing the
 public/private keys of a signer app to change. To avoid unexpected
 changes, please use a tagged release. Read the [Release
