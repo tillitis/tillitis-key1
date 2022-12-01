@@ -54,10 +54,10 @@ References:
 
 ## Firmware: riscv toolchain
 
-The Tillitis Key 1 implements a
-[picorv32](https://github.com/YosysHQ/picorv32) soft core CPU, which
-is a RISC-V microcontroller with the M and C instructions (RV32IMC).
-You can read
+The TKey implements a [picorv32](https://github.com/YosysHQ/picorv32)
+soft core CPU, which is a RISC-V microcontroller with the C
+instructions and Zmmul extension, multiply without divide
+(RV32ICZmmul). You can read
 [more](https://www.sifive.com/blog/all-aboard-part-1-compiler-args)
 about it.
 
@@ -69,6 +69,10 @@ here: https://github.com/llvm/llvm-project/releases
 
 References:
 * https://github.com/YosysHQ/picorv32
+
+If your available `objcopy` and `size` commands is anything other than
+the default `llvm-objcopy` and `llvm-size` define `OBJCOPY` and `SIZE`
+to whatever they're called on your system before calling `make`.
 
 ## Optional
 

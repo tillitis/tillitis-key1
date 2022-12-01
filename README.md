@@ -61,7 +61,6 @@ in this repository: https://github.com/tillitis/tillitis-key1-apps
 * [Boards](doc/system_description/boards.md)
 * [FPGA](doc/system_description/fpga.md)
 * [Software](doc/system_description/software.md)
-
 * [QEMU](https://github.com/tillitis/qemu/tree/tk1) (branch `tk1` in
   separate repository)
 

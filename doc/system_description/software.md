@@ -1,10 +1,10 @@
-# Tillitis Key software
+# Tillitis TKey software
 
 ## Definitions
 
-  * Firmware -- software that is part of ROM, and is currently
+  * Firmware - software that is part of ROM, and is currently
     supplied via the FPGA bit stream.
-  * Application -- software supplied by the host machine, which is
+  * Application - software supplied by the host machine, which is
     received, loaded, and measured by the firmware (by hashing a
     digest over the binary).
 
@@ -13,9 +13,9 @@ Learn more about the concepts in the
 
 ## CPU
 
-We use a PicoRV32, a 32-bit RISC-V system (RV32IMC), as the CPU for
-running the firmware and the loaded app. The firmware and device app
-both run in machine mode. All types are little-endian.
+We use a PicoRV32, a 32-bit RISC-V system (RV32ICZmmul), as the CPU
+for running the firmware and the loaded app. The firmware and device
+app both run in machine mode. All types are little-endian.
 
 ## Constraints
 
@@ -23,8 +23,7 @@ The application FPGA is a Lattice ICE40 UP5K, with the following
 specifications:
 
   * 30 EBR[^1] x 4 Kbit => 120 Kbit. PicoRV32 uses ~4 EBRs internally
-    => 13 KB for Firmware. We should probably aim for less; 8 KB
-    should be the target.
+    => 13 KB for Firmware. As of this writing firmware uses 2998 bytes.
   * 4 SPRAM[^2] x 32 KB => 128 KB RAM for application/software
 
 [^1]: Embedded Block RAM (also BRAM) residing in the FPGA, can
@@ -33,7 +32,7 @@ specifications:
 
 ## Introduction
 
-The Tillitis Key has two modes of operation; firmware/loader mode and
+The TKey has two modes of operation; firmware/loader mode and
 application mode. The firmware mode has the responsibility of
 receiving, measuring, loading, and starting the application.
 
@@ -45,9 +44,9 @@ The application has a constrained variant of the firmware memory map,
 which is outlined below. E.g. UDS isn't readable, and the `APP_{ADDR,
 SIZE}` are not writable for the application.
 
-The firmware (and optionally all software) on the Tillitis Key
-communicates to the host via the `UART_{RX,TX}_{STATUS,DATA}`
-registers, using the framing protocol described in [Framing
+The firmware (and optionally all software) on the TKey communicates to
+the host via the `UART_{RX,TX}_{STATUS,DATA}` registers, using the
+framing protocol described in [Framing
 Protocol](../framing_protocol/framing_protocol.md).
 
 The firmware defines a protocol (command/response interface) on top of
@@ -61,7 +60,10 @@ the Framing Protocol.
 
 ## Firmware
 
-The device has 128 KB RAM. The current firmware loads the app at the
+The purpose of the firmware is to bootstrap and measure an
+application.
+
+The TKey has 128 KB RAM. The current firmware loads the app at the
 upper 100 KB. The lower 28 KB is set up as stack for the app. A
 smaller app that wants continuous memory may want to relocate itself
 when starting.
@@ -69,21 +71,10 @@ when starting.
 The firmware is part of FPGA bitstream (ROM), and is loaded at
 `0x0000_0000`.
 
-### Reset
+When the firmware starts it clears all RAM and then wait for commands
+coming in on `UART_RX`.
 
-The PicoRV32 starts executing at `0x0000_0000`. Our firmware starts at
-`_start` from `start.S` which initializes the `.data`, and `.bss` at
-`0x4000_0000` and upwards. A stack is also initialized, starting at
-0x4000_6ff0 and downwards. When the initialization is finished, the
-firmware waits for incoming commands from the host, by busy-polling
-the `UART_RX_{STATUS,DATA}` registers. When a complete command is
-read, the firmware executes the command.
-
-### Loading an application
-
-The purpose of the firmware is to bootstrap an application. The host
-will send a raw binary targeted to be loaded at `0x4000_7000` in the
-device.
+Typical use scenario:
 
   1. The host sends the `FW_CMD_LOAD_APP` command with the size of the
      device app and the user-supplied secret as arguments and and gets
@@ -118,6 +109,104 @@ device.
 
      There is now no other means of getting back from application mode
      to firmware mode than resetting/power cycling the device.
+
+### Developing firmware
+
+Standing in `hw/application_fpga/` you can run `make firmware.elf` to
+build just the firmware. You don't need all the FPGA development tools
+mentioned in [Toolchain setup](../toolchain_setup.md).
+
+You need Clang with 32 RISC-V support `-march=rv32iczmmul` which comes
+in Clang 15. If you don't have version 15 you might get by with
+`-march=rv32imc` but things will break if you ever cause it to emit
+`div` instructions.
+
+If your available `objcopy` and `size` commands is anything other than
+the default `llvm-objcopy` and `llvm-size` define `OBJCOPY` and `SIZE`
+to whatever they're called on your system before calling `make
+firmware.elf`.
+
+If you want to use our emulator, clone the `tk1` branch of [our
+version of qemu](https://github.com/tillitis/qemu) and build:
+
+```
+$ git clone -b tk1 https://github.com/tillitis/qemu
+$ mkdir qemu/build
+$ cd qemu/build
+$ ../configure --target-list=riscv32-softmmu --disable-werror
+$ make -j $(nproc)
+```
+
+(Built with warnings-as-errors disabled, see [this
+issue](https://github.com/tillitis/qemu/issues/3).)
+
+Run it like this:
+
+```
+$ /path/to/qemu/build/qemu-system-riscv32 -nographic -M tk1,fifo=chrid -bios firmware.elf \
+  -chardev pty,id=chrid
+```
+
+This attaches the FIFO to a tty, something like `/dev/pts/16` which
+you can use with host software to talk to the firmware.
+
+To quit QEMU you can use: `Ctrl-a x` (see `Ctrl-a ?` for other commands).
+
+Debugging? Use the HTIF console by removing `-DNOCONSOLE` from the
+`CFLAGS` and using the helper functions in `lib.c` like `puts()`
+`putinthex()` `hexdump()` and friends for printf-like debugging.
+
+You can also use the qemu monitor for debugging, e.g. `info
+registers`, or run qemu with `-d in_asm` or `-d trace:riscv_trap`.
+
+### Reset
+
+The PicoRV32 starts executing at `0x0000_0000`. Our firmware starts at
+`_start` from `start.S` which initializes the `.data`, and `.bss` at
+`0x4000_0000` and upwards. A stack is also initialized, starting at
+0x4000_6ff0 and downwards. When the initialization is finished, the
+firmware waits for incoming commands from the host, by busy-polling
+the `UART_RX_{STATUS,DATA}` registers. When a complete command is
+read, the firmware executes the command.
+
+### Firmware state machine
+
+States:
+
+- `initial` - At start.
+- `init_loading` - Reset app digest, size, `USS` and load address.
+- `loading` - Expect more app data or a reset by `LoadApp()`.
+- `run` - Computes CDI and starts the device app.
+
+Commands in state `initial`:
+
+| *command*             | *next state*   |
+|-----------------------|----------------|
+| `FW_CMD_NAME_VERSION` | unchanged      |
+| `FW_CMD_GET_UDI`      | unchanged      |
+| `FW_CMD_LOAD_APP`     | `init_loading` |
+|                       |                |
+
+Commands in state `init_loading`:
+
+| *command*              | *next state*   |
+|------------------------|----------------|
+| `FW_CMD_NAME_VERSION`  | unchanged      |
+| `FW_CMD_GET_UDI`       | unchanged      |
+| `FW_CMD_LOAD_APP`      | `init_loading` |
+| `FW_CMD_LOAD_APP_DATA` | `loading`      |
+|                        |                |
+
+Commands in state `loading`:
+
+| *command*              | *next state*                     |
+|------------------------|----------------------------------|
+| `FW_CMD_NAME_VERSION`  | unchanged                        |
+| `FW_CMD_GET_UDI`       | unchanged                        |
+| `FW_CMD_LOAD_APP`      | `init_loading`                   |
+| `FW_CMD_LOAD_APP_DATA` | `loading` or `run` on last chunk |
+
+See below for firmware protocol definition.
 
 ### User-supplied Secret (USS)
 
@@ -328,7 +417,7 @@ host <-
   RSP[36..]    = 0
 ```
 
-### Memory map
+## Memory map
 
 Assigned top level prefixes:
 
