@@ -6,7 +6,7 @@ Descriptions of the tagged TKey releases.
 ## Tag XYZ
 
 XYZ is a general release of the development kit first presented
-as a limited engineering-release. The main changes ar polishing,
+as a limited engineering-release. The main changes are polishing,
 completion and bug fixing since the engineering-release.
 
 
@@ -24,23 +24,21 @@ completion and bug fixing since the engineering-release.
 
 - (HW) The UART default bitrate has been icreased to 62500 bps.
 
+- (HW) Support for division instruction (div) was removed from
+  PicoRV32. Please compile your programs with the Zmmul extension,
+  `-march=rv32iczmmul` for `clang`.
+
 - (FW) The firmware has been restructured to be a Finite State
   Machine (FSM) with defined states for booting, loading
   applications, measure applications, calculate the CDI and
   start the loaded application.
 
+  This change also changes the firmware protocol which now accepts a
+  request to load a binary with an optional USS and automatically
+  returns its digest and start the program when the last data chunk is
+  received.
 
 ### Limititations
-
-#### User Supplied Secret - Breaking change!
-
-*Nota bene* From commit 99efb78ed8ba69799045cff6c42c4a71bffdb703 the
-computed CDI secret is also taking the User Supplied Secret into
-account *even if the USS is not supplied*! This means if you start
-using firmware from this commit and onwards your CDI and with it the
-private key of the signerapp will change even if you haven't changed
-the app in any way.
-
 
 ## engineering-release-1
 
