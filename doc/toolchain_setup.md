@@ -7,7 +7,7 @@ project. Tested on Ubuntu 22.10.
 
 The following is intended to be a complete list of the packages that
 are *required* to build the gateware icestorm toolchain, the firmware,
-and the apps.
+the apps, and as well our QEMU machine.
 
     sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
                      gawk tcl-dev libffi-dev git mercurial graphviz \
