@@ -272,13 +272,20 @@ route_sim_vcd: route_tb.vvp
 # FPGA device programming.
 #-------------------------------------------------------------------
 
-prog_flash: application_fpga.bin
-	sudo tillitis-iceprog $<
+prog_flash: check-hardware application_fpga.bin
+	sudo tillitis-iceprog application_fpga.bin
 .PHONY: prog_flash
 
-prog_flash_testfw: application_fpga_testfw.bin
-	sudo tillitis-iceprog $<
+prog_flash_testfw: check-hardware application_fpga_testfw.bin
+	sudo tillitis-iceprog application_fpga_testfw.bin
 .PHONY: prog_flash_testfw
+
+check-hardware:
+	@sudo tillitis-iceprog -t >/dev/null 2>&1 || \
+	{ echo "Programmer not plugged in or not accessible"; false; }
+	@if sudo tillitis-iceprog -t 2>&1 | grep -qi "^flash.id:\( 0x\(00\|ff\)\)\{4\}"; then \
+	echo "No USB stick in the programmer?"; false; else true; fi
+.PHONY: check-hardware
 
 #-------------------------------------------------------------------
 # Post build analysis.
