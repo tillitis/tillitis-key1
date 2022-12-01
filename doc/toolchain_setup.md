@@ -1,13 +1,13 @@
 # Toolchain setup
 
-Here are instructions for setting up the tools required to build the project.
-Tested on Ubuntu 22.10.
+Here are instructions for setting up the tools required to build the
+project. Tested on Ubuntu 22.10.
 
-## Gateware: icestorm toolchain
+## General development environment
 
-These steps are used to build and install the
-[icestorm](http://bygone.clairexen.net/icestorm/) toolchain (in
-`/usr/local`). Note that nextpnr replaces Arachne-PNR.
+The following is intended to be a complete list of the packages that
+are *required* to build the gateware icestorm toolchain, the firmware,
+and the apps.
 
     sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
                      gawk tcl-dev libffi-dev git mercurial graphviz \
@@ -18,6 +18,12 @@ These steps are used to build and install the
                      libboost-iostreams-dev cmake libhidapi-dev \
                      ninja-build libglib2.0-dev libpixman-1-dev \
                      golang
+
+## Gateware: icestorm toolchain
+
+These steps are used to build and install the
+[icestorm](http://bygone.clairexen.net/icestorm/) toolchain (in
+`/usr/local`). Note that nextpnr is replacing Arachne-PNR.
 
     git clone https://github.com/YosysHQ/icestorm
     cd icestorm
@@ -54,7 +60,7 @@ References:
 
 ## Firmware: riscv toolchain
 
-The Tillitis Key 1 implements a
+The Tillitis TKey implements a
 [picorv32](https://github.com/YosysHQ/picorv32) soft core CPU, which
 is a RISC-V microcontroller with the M and C instructions (RV32IMC).
 You can read
