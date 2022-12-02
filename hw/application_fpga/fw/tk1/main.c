@@ -36,20 +36,20 @@ struct namever {
 
 static void print_hw_version(struct namever namever)
 {
-	puts("Hello, I'm ");
-	hexdump((uint8_t *)&namever.name0, 4);
-	putc(namever.name0[0]);
-	putc(namever.name0[1]);
-	putc(namever.name0[2]);
-	putc(namever.name0[3]);
-	putc('-');
-	putc(namever.name1[0]);
-	putc(namever.name1[1]);
-	putc(namever.name1[2]);
-	putc(namever.name1[3]);
-	putc(':');
-	putinthex(namever.version);
-	lf();
+	htif_puts("Hello, I'm ");
+	htif_hexdump((uint8_t *)&namever.name0, 4);
+	htif_putc(namever.name0[0]);
+	htif_putc(namever.name0[1]);
+	htif_putc(namever.name0[2]);
+	htif_putc(namever.name0[3]);
+	htif_putc('-');
+	htif_putc(namever.name1[0]);
+	htif_putc(namever.name1[1]);
+	htif_putc(namever.name1[2]);
+	htif_putc(namever.name1[3]);
+	htif_putc(':');
+	htif_putinthex(namever.version);
+	htif_lf();
 }
 
 static struct namever get_hw_version(uint32_t name0, uint32_t name1,
@@ -57,9 +57,9 @@ static struct namever get_hw_version(uint32_t name0, uint32_t name1,
 {
 	struct namever namever;
 
-	hexdump((uint8_t *)&name0, 4);
-	putinthex(name0);
-	lf();
+	htif_hexdump((uint8_t *)&name0, 4);
+	htif_putinthex(name0);
+	htif_lf();
 
 	namever.name0[0] = name0 >> 24;
 	namever.name0[1] = name0 >> 16;
@@ -78,14 +78,14 @@ static struct namever get_hw_version(uint32_t name0, uint32_t name1,
 
 static void print_digest(uint8_t *md)
 {
-	puts("The app digest:\n");
+	htif_puts("The app digest:\n");
 	for (int j = 0; j < 4; j++) {
 		for (int i = 0; i < 8; i++) {
-			puthex(md[i + 8 * j]);
+			htif_puthex(md[i + 8 * j]);
 		}
-		lf();
+		htif_lf();
 	}
-	lf();
+	htif_lf();
 }
 
 // CDI = blake2s(uds, blake2s(app), uss)
@@ -179,9 +179,9 @@ int main()
 
 			// Jump to app - doesn't return
 			// First clears memory of firmware remains
-			puts("Jumping to ");
-			putinthex(*app_addr);
-			lf();
+			htif_puts("Jumping to ");
+			htif_putinthex(*app_addr);
+			htif_lf();
 			// clang-format off
 			asm volatile(
 				// Clear the stack
@@ -200,9 +200,9 @@ int main()
 			break; // This is never reached!
 
 		default:
-			puts("Unknown firmware state 0x");
-			puthex(state);
-			lf();
+			htif_puts("Unknown firmware state 0x");
+			htif_puthex(state);
+			htif_lf();
 			forever_redflash();
 			break; // Not reached
 		}
@@ -216,7 +216,7 @@ int main()
 		}
 
 		if (parseframe(in, &hdr) == -1) {
-			puts("Couldn't parse header\n");
+			htif_puts("Couldn't parse header\n");
 			continue;
 		}
 
@@ -226,7 +226,7 @@ int main()
 
 		// Is it for us?
 		if (hdr.endpoint != DST_FW) {
-			puts("Message not meant for us\n");
+			htif_puts("Message not meant for us\n");
 			continue;
 		}
 
@@ -236,7 +236,7 @@ int main()
 		// Min length is 1 byte so this should always be here
 		switch (cmd[0]) {
 		case FW_CMD_NAME_VERSION:
-			puts("cmd: name-version\n");
+			htif_puts("cmd: name-version\n");
 			if (hdr.len != 1) {
 				// Bad length - give them an empty response
 				fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
@@ -251,7 +251,7 @@ int main()
 			break;
 
 		case FW_CMD_GET_UDI:
-			puts("cmd: get-udi\n");
+			htif_puts("cmd: get-udi\n");
 			if (hdr.len != 1) {
 				// Bad cmd length
 				rsp[0] = STATUS_BAD;
@@ -268,7 +268,7 @@ int main()
 			break;
 
 		case FW_CMD_LOAD_APP:
-			puts("cmd: load-app(size, uss)\n");
+			htif_puts("cmd: load-app(size, uss)\n");
 			if (hdr.len != 128) {
 				// Bad length
 				rsp[0] = STATUS_BAD;
@@ -281,9 +281,9 @@ int main()
 						  (cmd[3] << 16) +
 						  (cmd[4] << 24);
 
-			puts("app size: ");
-			putinthex(local_app_size);
-			lf();
+			htif_puts("app size: ");
+			htif_putinthex(local_app_size);
+			htif_lf();
 
 			if (local_app_size == 0 ||
 			    local_app_size > TK1_APP_MAX_SIZE) {
@@ -310,7 +310,7 @@ int main()
 			break;
 
 		case FW_CMD_LOAD_APP_DATA:
-			puts("cmd: load-app-data\n");
+			htif_puts("cmd: load-app-data\n");
 			if (hdr.len != 128 || (state != FW_STATE_INIT_LOADING &&
 					       state != FW_STATE_LOADING)) {
 				// Bad cmd length or state
@@ -330,9 +330,9 @@ int main()
 			left -= nbytes;
 
 			if (left == 0) {
-				puts("Fully loaded ");
-				putinthex(*app_size);
-				lf();
+				htif_puts("Fully loaded ");
+				htif_putinthex(*app_size);
+				htif_lf();
 
 				// Compute Blake2S digest of the app, storing
 				// it for FW_STATE_RUN
@@ -359,9 +359,9 @@ int main()
 			break;
 
 		default:
-			puts("Got unknown firmware cmd: 0x");
-			puthex(cmd[0]);
-			lf();
+			htif_puts("Got unknown firmware cmd: 0x");
+			htif_puthex(cmd[0]);
+			htif_lf();
 		}
 	}
 

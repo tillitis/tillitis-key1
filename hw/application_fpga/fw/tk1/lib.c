@@ -7,28 +7,28 @@
 #include "types.h"
 
 #if NOCONSOLE
-void putc(int ch)
+void htif_putc(int ch)
 {
 }
 
-void lf()
+void htif_lf()
 {
 }
 
-void puthex(uint8_t c)
+void htif_puthex(uint8_t c)
 {
 }
 
-void putinthex(const uint32_t n)
+void htif_putinthex(const uint32_t n)
 {
 }
 
-int puts(const char *s)
+int htif_puts(const char *s)
 {
 	return 0;
 }
 
-void hexdump(uint8_t *buf, int len)
+void htif_hexdump(uint8_t *buf, int len)
 {
 }
 
@@ -67,14 +67,14 @@ static int htif_putchar(int ch)
 	return ch & 0xff;
 }
 
-int puts(const char *s)
+int htif_puts(const char *s)
 {
 	while (*s)
 		htif_putchar(*s++);
 	return 0;
 }
 
-void hexdump(uint8_t *buf, int len)
+void htif_hexdump(uint8_t *buf, int len)
 {
 	uint8_t *row;
 	uint8_t *byte;
@@ -84,24 +84,24 @@ void hexdump(uint8_t *buf, int len)
 	max = &buf[len];
 	for (byte = 0; byte != max; row = byte) {
 		for (byte = row; byte != max && byte != (row + 16); byte++) {
-			puthex(*byte);
+			htif_puthex(*byte);
 		}
 
-		lf();
+		htif_lf();
 	}
 }
 
-void putc(int ch)
+void htif_putc(int ch)
 {
 	htif_putchar(ch);
 }
 
-void lf()
+void htif_lf()
 {
 	htif_putchar('\n');
 }
 
-void puthex(uint8_t c)
+void htif_puthex(uint8_t c)
 {
 	unsigned int upper = (c >> 4) & 0xf;
 	unsigned int lower = c & 0xf;
@@ -110,14 +110,14 @@ void puthex(uint8_t c)
 	htif_putchar(lower < 10 ? '0' + lower : 'a' - 10 + lower);
 }
 
-void putinthex(const uint32_t n)
+void htif_putinthex(const uint32_t n)
 {
 	uint8_t buf[4];
 
 	memcpy(buf, &n, 4);
-	puts("0x");
+	htif_puts("0x");
 	for (int i = 3; i > -1; i--) {
-		puthex(buf[i]);
+		htif_puthex(buf[i]);
 	}
 }
 #endif

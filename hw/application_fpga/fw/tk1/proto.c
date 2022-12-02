@@ -92,9 +92,9 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 		break;
 
 	default:
-		puts("fwreply(): Unknown response code: 0x");
-		puthex(rspcode);
-		lf();
+		htif_puts("fwreply(): Unknown response code: 0x");
+		htif_puthex(rspcode);
+		htif_lf();
 		return;
 	}
 

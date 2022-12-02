@@ -153,8 +153,9 @@ you can use with host software to talk to the firmware.
 To quit QEMU you can use: `Ctrl-a x` (see `Ctrl-a ?` for other commands).
 
 Debugging? Use the HTIF console by removing `-DNOCONSOLE` from the
-`CFLAGS` and using the helper functions in `lib.c` like `puts()`
-`putinthex()` `hexdump()` and friends for printf-like debugging.
+`CFLAGS` and using the helper functions in `lib.c` like `htif_puts()`
+`htif_putinthex()` `htif_hexdump()` and friends for printf-like
+debugging.
 
 You can also use the qemu monitor for debugging, e.g. `info
 registers`, or run qemu with `-d in_asm` or `-d trace:riscv_trap`.
