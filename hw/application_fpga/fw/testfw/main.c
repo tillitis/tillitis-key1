@@ -28,21 +28,21 @@ volatile uint32_t *trng_entropy = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
 // TODO Real UDA is 4 words (16 bytes)
 #define UDA_WORDS 1
 
-void test_puts(char *reason)
+void puts(char *reason)
 {
 	for (char *c = reason; *c != '\0'; c++) {
 		writebyte(*c);
 	}
 }
 
-void test_putsn(char *p, int n)
+void putsn(char *p, int n)
 {
 	for (int i = 0; i < n; i++) {
 		writebyte(p[i]);
 	}
 }
 
-void test_puthex(uint8_t c)
+void puthex(uint8_t c)
 {
 	unsigned int upper = (c >> 4) & 0xf;
 	unsigned int lower = c & 0xf;
@@ -50,14 +50,14 @@ void test_puthex(uint8_t c)
 	writebyte(lower < 10 ? '0' + lower : 'a' - 10 + lower);
 }
 
-void test_puthexn(uint8_t *p, int n)
+void puthexn(uint8_t *p, int n)
 {
 	for (int i = 0; i < n; i++) {
-		test_puthex(p[i]);
+		puthex(p[i]);
 	}
 }
 
-void test_reverseword(uint32_t *wordp)
+void reverseword(uint32_t *wordp)
 {
 	*wordp = ((*wordp & 0xff000000) >> 24) | ((*wordp & 0x00ff0000) >> 8) |
 		 ((*wordp & 0x0000ff00) << 8) | ((*wordp & 0x000000ff) << 24);
@@ -81,17 +81,17 @@ int main()
 	// Wait for terminal program and a character to be typed
 	in = readbyte();
 
-	test_puts("I'm testfw on:");
+	puts("I'm testfw on:");
 	// Output the TK1 core's NAME0 and NAME1
 	uint32_t name;
 	wordcpy(&name, (void *)tk1name0, 1);
-	test_reverseword(&name);
-	test_putsn((char *)&name, 4);
-	test_puts(" ");
+	reverseword(&name);
+	putsn((char *)&name, 4);
+	puts(" ");
 	wordcpy(&name, (void *)tk1name1, 1);
-	test_reverseword(&name);
-	test_putsn((char *)&name, 4);
-	test_puts("\r\n");
+	reverseword(&name);
+	putsn((char *)&name, 4);
+	puts("\r\n");
 
 	int anyfailed = 0;
 
@@ -101,13 +101,13 @@ int main()
 	// Should get non-empty UDS
 	wordcpy(uds_local, (void *)uds, 8);
 	if (memeq(uds_local, uds_zeros, 8 * 4)) {
-		test_puts("FAIL: UDS empty\r\n");
+		puts("FAIL: UDS empty\r\n");
 		anyfailed = 1;
 	}
 	// Should NOT be able to read from UDS again
 	wordcpy(uds_local, (void *)uds, 8);
 	if (!memeq(uds_local, uds_zeros, 8 * 4)) {
-		test_puts("FAIL: Read UDS a second time\r\n");
+		puts("FAIL: Read UDS a second time\r\n");
 		anyfailed = 1;
 	}
 
@@ -128,7 +128,7 @@ int main()
 	// Should get non-empty UDI
 	wordcpy(udi_local, (void *)udi, 2);
 	if (memeq(udi_local, udi_zeros, 2 * 4)) {
-		test_puts("FAIL: UDI empty\r\n");
+		puts("FAIL: UDI empty\r\n");
 		anyfailed = 1;
 	}
 
@@ -140,20 +140,20 @@ int main()
 	wordcpy((void *)cdi, cdi_writetest, 8);
 	wordcpy(cdi_readback, (void *)cdi, 8);
 	if (!memeq(cdi_writetest, cdi_readback, 8 * 4)) {
-		test_puts("FAIL: Can't write CDI in fw mode\r\n");
+		puts("FAIL: Can't write CDI in fw mode\r\n");
 		anyfailed = 1;
 	}
 
 	// Test FW-RAM.
 	*fw_ram = 0x12;
 	if (*fw_ram != 0x12) {
-		test_puts("FAIL: Can't write and read FW RAM in fw mode\r\n");
+		puts("FAIL: Can't write and read FW RAM in fw mode\r\n");
 		anyfailed = 1;
 	}
 
 	uint32_t sw = *switch_app;
 	if (sw != 0) {
-		test_puts("FAIL: switch_app is not 0 in fw mode\r\n");
+		puts("FAIL: switch_app is not 0 in fw mode\r\n");
 		anyfailed = 1;
 	}
 
@@ -163,14 +163,14 @@ int main()
 
 	sw = *switch_app;
 	if (sw != 0xffffffff) {
-		test_puts("FAIL: switch_app is not 0xffffffff in app mode\r\n");
+		puts("FAIL: switch_app is not 0xffffffff in app mode\r\n");
 		anyfailed = 1;
 	}
 
 	// Should NOT be able to read from UDS in app-mode.
 	wordcpy(uds_local, (void *)uds, 8);
 	if (!memeq(uds_local, uds_zeros, 8 * 4)) {
-		test_puts("FAIL: Read from UDS in app-mode\r\n");
+		puts("FAIL: Read from UDS in app-mode\r\n");
 		anyfailed = 1;
 	}
 
@@ -191,18 +191,18 @@ int main()
 	wordcpy((void *)cdi, cdi_zeros, 8);
 	wordcpy(cdi_local2, (void *)cdi, 8);
 	if (!memeq(cdi_local, cdi_local2, 8 * 4)) {
-		test_puts("FAIL: Write to CDI in app-mode\r\n");
+		puts("FAIL: Write to CDI in app-mode\r\n");
 		anyfailed = 1;
 	}
 
 	// Test FW-RAM.
 	*fw_ram = 0x21;
 	if (*fw_ram == 0x21) {
-		test_puts("FAIL: Write and read FW RAM in app-mode\r\n");
+		puts("FAIL: Write and read FW RAM in app-mode\r\n");
 		anyfailed = 1;
 	}
 
-	test_puts("Testing timer...\r\n");
+	puts("Testing timer...\r\n");
 	// Matching clock at 18 MHz, giving us timer in seconds
 	*timer_prescaler = 18 * 1000000;
 
@@ -229,37 +229,37 @@ int main()
 	*timer_ctrl = 1;
 
 	if (!(*timer_status & (1 << TK1_MMIO_TIMER_STATUS_READY_BIT))) {
-		test_puts("FAIL: Timer didn't stop\r\n");
+		puts("FAIL: Timer didn't stop\r\n");
 		anyfailed = 1;
 	}
 
 	if (*timer != 10) {
-		test_puts("FAIL: Timer didn't reset to 10\r\n");
+		puts("FAIL: Timer didn't reset to 10\r\n");
 		anyfailed = 1;
 	}
 
 	// Check and display test results.
 	if (anyfailed) {
-		test_puts("Some test FAILED!\r\n");
+		puts("Some test FAILED!\r\n");
 	} else {
-		test_puts("All tests passed.\r\n");
+		puts("All tests passed.\r\n");
 	}
 
-	test_puts("\r\nHere are 256 bytes from the TRNG:\r\n");
+	puts("\r\nHere are 256 bytes from the TRNG:\r\n");
 	for (int j = 0; j < 8; j++) {
 		for (int i = 0; i < 8; i++) {
 			while ((*trng_status &
 				(1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
 			}
 			uint32_t rnd = *trng_entropy;
-			test_puthexn((uint8_t *)&rnd, 4);
-			test_puts(" ");
+			puthexn((uint8_t *)&rnd, 4);
+			puts(" ");
 		}
-		test_puts("\r\n");
+		puts("\r\n");
 	}
-	test_puts("\r\n");
+	puts("\r\n");
 
-	test_puts("Now echoing what you type...\r\n");
+	puts("Now echoing what you type...\r\n");
 	for (;;) {
 		in = readbyte(); // blocks
 		writebyte(in);
