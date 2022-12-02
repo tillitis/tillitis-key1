@@ -16,12 +16,12 @@ is similar to [TCG DICE](https://trustedcomputinggroup.org/work-groups/dice-arch
 
 Each TKey device contains a Unique Device Secret (UDS), which
 together with the application measurement, and an optional
-user-provided seed, is used to derive key material unique to each
+User-Supplied Secret (USS), is used to derive key material unique to each
 application. This guarantees that if the integrity of the application
 loaded onto the device has been tampered with, the correct keys
 needed for an authentication will not be generated.
 
-Key derivation with a user-provided seed allows users to build and
+Key derivation with a User-Supplied Secret allows users to build and
 load their own apps, while ensuring that each app loaded will have
 its own cryptographic identity, and can also be used for authentication
 towards different services.
