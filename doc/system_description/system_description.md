@@ -1,18 +1,19 @@
 # System Description
 
 ## Purpose and Revision
+
 The purpose of this document is to provide a description of the
-Tillitis Key (TKey). What it is, what is supposed to be used for, by
-whom, where and possible use cases. The document also provides a
-functional level description of features and components of the TKey.
+Tillitis TKey. What it is, what is supposed to be used for, by whom,
+where and possible use cases. The document also provides a functional
+level description of features and components of the TKey.
 
 Finally, the document acts as a requirement description. For the
 requirements, the document follows
 [RFC2119](https://datatracker.ietf.org/doc/html/rfc2119) to indicate
 requirement levels.
 
-The described functionality and requirements applies
-to version one of the TKey (TK1)
+The described functionality and requirements applies to version 1 of
+the TKey (TK1)
 
 The intended users of this document are:
 - Implementors of the TKkey hardware, firmware and SDKs

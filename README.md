@@ -1,9 +1,9 @@
-# Tillitis Key
+# Tillitis TKey
 
 ## Introduction
 
-Tillitis Key (TKey) is a new kind of USB security token. What makes
-the TKey unique is that it allows a user to load and run applications on
+The Tillitis TKey is a new kind of USB security token. What makes the
+TKey unique is that it allows a user to load and run applications on
 the device, while still providing security. This allow for open-ended,
 flexible usage. Given the right application, the TKey can support use
 cases such as SSH login, Ed25519 signing, Root of Trust, FIDO2, TOTP,

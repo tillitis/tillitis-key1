@@ -2,7 +2,7 @@
 Implementation of the Tillitis True Random Number Generator (TRNG).
 
 ## Introduction
-Applications running on the Tillitis Key device may have a need of random numbers.
+Applications running on the Tillitis TKey device may have a need of random numbers.
 As unpredictable initial vectors, as challnges, random tokens etc.
 
 The Tillitis TRNG supports these applications by providing a hardware based

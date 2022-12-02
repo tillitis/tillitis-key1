@@ -1,31 +1,31 @@
-# TK1 Quickstart
+# Tillitis TKey Quickstart
 
 This document describes how to build the FPGA bitstream, including the
 firmware, and get this programmed onto the flash memory of the
-Tillitis Key 1 USB device.
+Tillitis TKey USB device.
 
-*Note well*: If you have an already flashed TK1 you don't need to do
-anything unless you want to set your own Unique Device Secret (UDS).
-You can start running apps on it immediately. See
+*Note well*: If you have a TKey which already has been flashed, then
+you don't need to do anything unless you want to set your own Unique
+Device Secret (UDS). You can start running apps on it immediately. See
 [tillitis-key1-apps](https://github.com/tillitis/tillitis-key1-apps)
 for a few examples.
 
-The Tillitis Key 1 kit includes:
+The Tillitis TKey kit includes:
 
-- Tillitis Key 1 USB stick with USB-C plug, marked MTA1-USB V1
+- Tillitis TKey USB stick with USB-C plug, marked MTA1-USB V1
 - Programmer board based on Raspberry Pi Pico, with a white holder/jig
 - USB cable with micro-B plug, for connecting the programmer to
   computer
 - USB-C extension cable
 - USB-C to USB-A adapter
 
-## Programming FPGA bitstream and firmware onto Tillitis Key 1
+## Programming FPGA bitstream and firmware onto TKey
 
 Connect the programmer to the computer using the USB cable with
 micro-B plug.
 
-Place the Tillitis Key 1 (the USB stick) correctly in the programming
-jig and close the hatch.
+Place the TKey USB stick correctly in the programming jig and close
+the hatch.
 
 The USB stick can remain in the jig during repeated development,
 programming and testing cycles. The USB stick should then be connected
@@ -37,8 +37,8 @@ also that with this setup, to reset the USB stick back to firmware
 mode after loading an app, you need to unplug both the USB cable to
 the stick and the one to the programmer. Alternatively, you can try
 the script in `../hw/application_fpga/tools/reset-tk1` which pokes at
-the TK1 that's sitting in the jig, leaving it in firmware mode so that
-a new app can be loaded.
+the TKey that's sitting in the jig, leaving it in firmware mode so
+that a new app can be loaded.
 
 On Linux, `lsusb` should list the connected programmer as `cafe:4004
 Blinkinlabs ICE40 programmer`. If the USB stick is also connected it
@@ -50,7 +50,7 @@ refer to [toolchain_setup.md](toolchain_setup.md).
 You are now ready to generate the FPGA bitstream (including building
 the standard firmware) and program it onto the flash memory of the USB
 stick. Note that this will give a default Unique Device Secret. If you
-want to personalize your TK1, see under Device personalization below
+want to personalize your TKey, see under Device personalization below
 first.
 
 The following should be run as your regular non-root user, but
@@ -63,10 +63,10 @@ $ cd tillitis-key1/hw/application_fpga
 $ make prog_flash
 ```
 
-After programming, the Tillitis Key 1 USB stick can be connected to
-your computer (use the USB-C-to-A adapter if needed) and will boot the
-firmware. When boot has completed it will start flashing the LED
-white. This indicates that it is ready to receive and measure an app.
+After programming, the TKey can be connected to your computer (use the
+USB-C-to-A adapter if needed) and will boot the firmware. When boot
+has completed it will start flashing the LED white. This indicates
+that it is ready to receive and measure an app.
 
 To try out an app, continue to the README.md the apps repo:
 https://github.com/tillitis/tillitis-key1-apps#readme
@@ -77,8 +77,8 @@ and [system_description/software.md](system_description/software.md).
 
 ## Device personalization - setting Unique Device Secret (UDS)
 
-To personalize Tillitis Key 1 you need to modify the Unique Device
-Secret (UDS) and, maybe, the Unique Device Identity (UDI).
+To personalize your TKey you need to modify the Unique Device Secret
+(UDS) and, maybe, the Unique Device Identity (UDI).
 
 The simplest way to generate a new UDS is to:
 

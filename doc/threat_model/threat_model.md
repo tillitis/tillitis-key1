@@ -1,11 +1,11 @@
 # Threat model
 
 ## Introduction
-The Tillitis Key 1 is a platform for running secure applications in a
-restricted execution environment physically separate from the
-device host. The secure applications provide functionality and
-controlled access to derived secrets on the device. The purpose of the
-device is to solve typical end user authentication problems.
+The Tillitis TKey is a platform for running secure applications in a
+restricted execution environment physically separate from the device
+host. The secure applications provide functionality and controlled
+access to derived secrets on the device. The purpose of the device is
+to solve typical end user authentication problems.
 
 This document describes the threat model for device. Based on the
 system description and use cases, the threat model tries to capture and
@@ -18,7 +18,7 @@ The threat model will get updated and expanded for each release.
 
 ### engineering-release-1
 This is an early release aimed at developers interested
-in writing applications for Tillitis Key 1. The design allows easy access to
+in writing applications for Tillitis TKey. The design allows easy access to
 the board, and is even shipped with a programmer to download new FPGA bitstreams.
 
 

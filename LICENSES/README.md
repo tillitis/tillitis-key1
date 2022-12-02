@@ -1,4 +1,4 @@
-# Tillitis Key 1 Licensing
+# Tillitis TKey Licensing
 
 ## Main license
 

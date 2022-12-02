@@ -105,7 +105,7 @@ phony_explicit:
 .PHONY: phony_explicit
 
 #-------------------------------------------------------------------
-# Personalization of the TK1
+# Personalization of the TKey
 #-------------------------------------------------------------------
 
 secret:
