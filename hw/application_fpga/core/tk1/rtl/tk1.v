@@ -61,6 +61,8 @@ module tk1(
   localparam ADDR_APP_START  = 8'h0c;
   localparam ADDR_APP_SIZE   = 8'h0d;
 
+  localparam ADDR_BLAKE2S    = 8'h10;
+
   localparam ADDR_CDI_FIRST  = 8'h20;
   localparam ADDR_CDI_LAST   = 8'h27;
 
@@ -99,6 +101,9 @@ module tk1(
 
   reg [31 : 0] app_size_reg;
   reg          app_size_we;
+
+  reg [31 : 0] blake2s_addr_reg;
+  reg          blake2s_addr_we;
 
 
   //----------------------------------------------------------------
@@ -150,22 +155,23 @@ module tk1(
   always @ (posedge clk)
     begin : reg_update
       if (!reset_n) begin
-	switch_app_reg <= 1'h0;
-        led_reg        <= 3'h6;
-        gpio1_reg      <= 2'h0;
-        gpio2_reg      <= 2'h0;
-        gpio3_reg      <= 1'h0;
-        gpio4_reg      <= 1'h0;
-        app_start_reg  <= 32'h0;
-        app_size_reg   <= 32'h0;
-	cdi_mem[0]     <= 32'h0;
-	cdi_mem[1]     <= 32'h0;
-	cdi_mem[2]     <= 32'h0;
-	cdi_mem[3]     <= 32'h0;
-	cdi_mem[4]     <= 32'h0;
-	cdi_mem[5]     <= 32'h0;
-	cdi_mem[6]     <= 32'h0;
-	cdi_mem[7]     <= 32'h0;
+	switch_app_reg   <= 1'h0;
+        led_reg          <= 3'h6;
+        gpio1_reg        <= 2'h0;
+        gpio2_reg        <= 2'h0;
+        gpio3_reg        <= 1'h0;
+        gpio4_reg        <= 1'h0;
+        app_start_reg    <= 32'h0;
+        app_size_reg     <= 32'h0;
+        blake2s_addr_reg <= 32'h0;
+	cdi_mem[0]       <= 32'h0;
+	cdi_mem[1]       <= 32'h0;
+	cdi_mem[2]       <= 32'h0;
+	cdi_mem[3]       <= 32'h0;
+	cdi_mem[4]       <= 32'h0;
+	cdi_mem[5]       <= 32'h0;
+	cdi_mem[6]       <= 32'h0;
+	cdi_mem[7]       <= 32'h0;
       end
 
       else begin
@@ -199,6 +205,10 @@ module tk1(
           app_size_reg <= write_data;
         end
 
+        if (blake2s_addr_we) begin
+          blake2s_addr_reg <= write_data;
+        end
+
 	if (cdi_mem_we) begin
 	  cdi_mem[address[2 : 0]] <= write_data;
 	end
@@ -211,16 +221,17 @@ module tk1(
   //----------------------------------------------------------------
   always @*
     begin : api
-      switch_app_we = 1'h0;
-      led_we        = 1'h0;
-      gpio3_we      = 1'h0;
-      gpio4_we      = 1'h0;
-      app_start_we  = 1'h0;
-      app_size_we   = 1'h0;
-      cdi_mem_we    = 1'h0;
-      cdi_mem_we    = 1'h0;
-      tmp_read_data = 32'h00000000;
-      tmp_ready     = 1'h0;
+      switch_app_we   = 1'h0;
+      led_we          = 1'h0;
+      gpio3_we        = 1'h0;
+      gpio4_we        = 1'h0;
+      app_start_we    = 1'h0;
+      app_size_we     = 1'h0;
+      blake2s_addr_we = 1'h0;
+      cdi_mem_we      = 1'h0;
+      cdi_mem_we      = 1'h0;
+      tmp_read_data   = 32'h0;
+      tmp_ready       = 1'h0;
 
       if (cs) begin
 	tmp_ready = 1'h1;
@@ -247,6 +258,12 @@ module tk1(
           if (address == ADDR_APP_SIZE) begin
 	    if (!switch_app_reg) begin
               app_size_we = 1'h1;
+            end
+	  end
+
+          if (address == ADDR_BLAKE2S) begin
+	    if (!switch_app_reg) begin
+              blake2s_addr_we = 1'h1;
             end
 	  end
 
@@ -290,6 +307,10 @@ module tk1(
           if (address == ADDR_APP_SIZE) begin
             tmp_read_data = app_size_reg;
           end
+
+          if (address == ADDR_BLAKE2S) begin
+            tmp_read_data = blake2s_addr_reg;
+	  end
 
 	  if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
 	    tmp_read_data = cdi_mem[address[2 : 0]];
