@@ -219,7 +219,7 @@ module tk1(
       app_size_we   = 1'h0;
       cdi_mem_we    = 1'h0;
       cdi_mem_we    = 1'h0;
-      tmp_read_data = 32'h00000000;
+      tmp_read_data = 32'h0;
       tmp_ready     = 1'h0;
 
       if (cs) begin
@@ -296,7 +296,9 @@ module tk1(
 	  end
 
 	  if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
-	    tmp_read_data = udi_mem[address[0]];
+	    if (!switch_app_reg) begin
+	      tmp_read_data = udi_mem[address[0]];
+	    end
 	  end
         end
       end
