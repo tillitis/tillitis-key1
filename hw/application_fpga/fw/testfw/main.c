@@ -185,6 +185,13 @@ int main()
 	// 	anyfailed = 1;
 	// }
 
+	// Should NOT be able to read from UDI in app-mode.
+	wordcpy(udi_local, (void *)udi, UDI_WORDS);
+	if (!memeq(udi_local, zeros, UDI_WORDS * 4)) {
+		puts("FAIL: Read from UDI in app-mode\r\n");
+		anyfailed = 1;
+	}
+
 	uint32_t cdi_local[CDI_WORDS];
 	uint32_t cdi_local2[CDI_WORDS];
 	wordcpy(cdi_local, (void *)cdi, CDI_WORDS);
