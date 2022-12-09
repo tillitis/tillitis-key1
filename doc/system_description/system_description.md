@@ -65,9 +65,9 @@ The TKey store and use the following assets internally:
   the device. Tillitis will NOT store a copy of the UDS. Can be read
   by firmware once between power cycling
 
-- UDI - Unique Device ID. 64 bits. Provisioned and stored during device
-  manufacturing. Accessible by FW and applications. Never to be replaced
-  or altered during the life time of a given device. May be copied,
+- UDI - Unique Device ID. 64 bits. Provisioned and stored during
+  device manufacturing. Only accessible by FW. Never to be replaced or
+  altered during the life time of a given device. May be copied,
   extracted, read from the device.
 
 - CDI - Compound Device Identity. Dervied by the FW when an application
