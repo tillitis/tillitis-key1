@@ -10,17 +10,18 @@
 #include "types.h"
 
 // clang-format off
-static volatile uint32_t *uds =        (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
-static volatile uint32_t *switch_app = (volatile uint32_t *)TK1_MMIO_TK1_SWITCH_APP;
-static volatile uint32_t *name0 =      (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
-static volatile uint32_t *name1 =      (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
-static volatile uint32_t *ver =        (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
-static volatile uint32_t *udi =        (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
-static volatile uint32_t *cdi =        (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
-static volatile uint32_t *app_addr =   (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
-static volatile uint32_t *app_size =   (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
-static volatile uint8_t  *fw_ram =     (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
-static volatile uint32_t *led =        (volatile uint32_t *)TK1_MMIO_TK1_LED;
+static volatile uint32_t *uds             = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
+static volatile uint32_t *switch_app      = (volatile uint32_t *)TK1_MMIO_TK1_SWITCH_APP;
+static volatile uint32_t *name0           = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
+static volatile uint32_t *name1           = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
+static volatile uint32_t *ver             = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
+static volatile uint32_t *udi             = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
+static volatile uint32_t *cdi             = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
+static volatile uint32_t *app_addr        = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
+static volatile uint32_t *app_size        = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
+static volatile uint8_t  *fw_ram          = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
+static volatile uint32_t *led             = (volatile uint32_t *)TK1_MMIO_TK1_LED;
+static volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
 
 #define LED_RED   (1 << TK1_MMIO_TK1_LED_R_BIT)
 #define LED_GREEN (1 << TK1_MMIO_TK1_LED_G_BIT)
@@ -149,6 +150,8 @@ int main()
 	uint8_t uss[32] = {0};
 	uint8_t digest[32] = {0};
 	enum state state = FW_STATE_INITIAL;
+	// Let the app know the function adddress for blake2s()
+	*fw_blake2s_addr = (uint32_t)blake2s;
 
 	print_hw_version(namever);
 

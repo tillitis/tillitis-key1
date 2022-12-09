@@ -3,26 +3,31 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
+#include "../tk1/blake2s/blake2s.h"
 #include "../tk1/lib.h"
 #include "../tk1/proto.h"
 #include "../tk1/types.h"
 #include "../tk1_mem.h"
 
 // clang-format off
-volatile uint32_t *tk1name0 =   (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
-volatile uint32_t *tk1name1 =   (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
-volatile uint32_t *uds =        (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
-volatile uint32_t *uda =        (volatile uint32_t *)TK1_MMIO_QEMU_UDA; // Only in QEMU right now
-volatile uint32_t *cdi =        (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
-volatile uint32_t *udi =        (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
-volatile uint32_t *switch_app = (volatile uint32_t *)TK1_MMIO_TK1_SWITCH_APP;
-volatile uint8_t  *fw_ram =     (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
-volatile uint32_t *timer =           (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
+volatile uint32_t *tk1name0        = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
+volatile uint32_t *tk1name1        = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
+volatile uint32_t *uds             = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
+volatile uint32_t *uda             = (volatile uint32_t *)TK1_MMIO_QEMU_UDA; // Only in QEMU right now
+volatile uint32_t *cdi             = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
+volatile uint32_t *udi             = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
+volatile uint32_t *switch_app      = (volatile uint32_t *)TK1_MMIO_TK1_SWITCH_APP;
+volatile uint8_t  *fw_ram          = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
+volatile uint32_t *timer           = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
 volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
-volatile uint32_t *timer_status =    (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
-volatile uint32_t *timer_ctrl =      (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
-volatile uint32_t *trng_status =  (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
-volatile uint32_t *trng_entropy = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
+volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
+volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
+volatile uint32_t *trng_status     = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
+volatile uint32_t *trng_entropy    = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
+volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
+
+// Function pointer to blake2s()
+volatile int (*fw_blake2s)(void *, unsigned long, const void *, unsigned long, const void *, unsigned long, blake2s_ctx *);
 // clang-format on
 
 // TODO Real UDA is 4 words (16 bytes)
@@ -54,6 +59,23 @@ void puthexn(uint8_t *p, int n)
 {
 	for (int i = 0; i < n; i++) {
 		puthex(p[i]);
+	}
+}
+
+void hexdump(uint8_t *buf, int len)
+{
+	uint8_t *row;
+	uint8_t *byte;
+	uint8_t *max;
+
+	row = buf;
+	max = &buf[len];
+	for (byte = 0; byte != max; row = byte) {
+		for (byte = row; byte != max && byte != (row + 16); byte++) {
+			puthex(*byte);
+		}
+
+		puts("\r\n");
 	}
 }
 
@@ -157,6 +179,9 @@ int main()
 		anyfailed = 1;
 	}
 
+	// Store function pointer to blake2s() so it's reachable from app
+	*fw_blake2s_addr = (uint32_t)blake2s;
+
 	// Turn on application mode.
 	// -------------------------
 	*switch_app = 1;
@@ -235,6 +260,32 @@ int main()
 
 	if (*timer != 10) {
 		puts("FAIL: Timer didn't reset to 10\r\n");
+		anyfailed = 1;
+	}
+
+	// Testing the blake2s MMIO in app mode
+
+	fw_blake2s = (volatile int (*)(void *, unsigned long, const void *,
+				       unsigned long, const void *,
+				       unsigned long, blake2s_ctx *)) *
+		     fw_blake2s_addr;
+
+	char msg[17] = "dldlkjsdkljdslsdj";
+	uint32_t digest0[8];
+	uint32_t digest1[8];
+	blake2s_ctx b2s_ctx;
+
+	blake2s(&digest0[0], 32, NULL, 0, &msg, 17, &b2s_ctx);
+	fw_blake2s(&digest1[0], 32, NULL, 0, &msg, 17, &b2s_ctx);
+
+	puts("digest #0: \r\n");
+	hexdump((uint8_t *)digest0, 32);
+
+	puts("digest #1: \r\n");
+	hexdump((uint8_t *)digest1, 32);
+
+	if (!memeq(digest0, digest1, 32)) {
+		puts("FAIL: Digests not the same\r\n");
 		anyfailed = 1;
 	}
 

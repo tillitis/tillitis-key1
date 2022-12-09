@@ -84,7 +84,8 @@ TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
 	$(P)/fw/tk1/start.o \
 	$(P)/fw/tk1/proto.o \
-	$(P)/fw/tk1/lib.o
+	$(P)/fw/tk1/lib.o \
+	$(P)/fw/tk1/blake2s/blake2s.o
 
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
