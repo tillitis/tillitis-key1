@@ -485,7 +485,7 @@ Assigned core prefixes:
 |                   |       |           |        |          |           | event (reading a 1), write anything here to acknowledge it.            |
 | `FW_RAM`          | r/w   | invisible | 1 kiB  | u8[1024] |           | Firmware-only RAM.                                                     |
 | `UDA`             | r     | invisible | 16B    | u8[16]   |           | Unique Device Authentication key.                                      |
-| `UDI`             | r     | r         | 8B     | u64      |           | Unique Device ID (UDI).                                                |
+| `UDI`             | r     | invisible | 8B     | u64      |           | Unique Device ID (UDI).                                                |
 | `QEMU_DEBUG`      | w     | w         |        | u8       |           | Debug console (only in QEMU)                                           |
 | `NAME0`           | r     | r         | 4B     | char[4]  | "tk1 "    | ID of core/stick                                                       |
 | `NAME1`           | r     | r         | 4B     | char[4]  | "mkdf"    | ID of core/stick                                                       |
