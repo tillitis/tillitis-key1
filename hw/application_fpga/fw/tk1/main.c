@@ -150,6 +150,8 @@ int main()
 	uint8_t uss[32] = {0};
 	uint8_t digest[32] = {0};
 	enum state state = FW_STATE_INITIAL;
+	*fw_blake2s_addr = (uint32_t)
+		blake2s; // Let the app know the function adddress for blake2s()
 
 	print_hw_version(namever);
 
@@ -174,9 +176,6 @@ int main()
 
 			// CDI = hash(uds, hash(app), uss)
 			compute_cdi(digest, use_uss, uss);
-
-			// Let the app know the function adddress for blake2s()
-			*fw_blake2s_addr = (uint32_t) blake2s;
 
 			// Flip over to application mode
 			*switch_app = 1;
