@@ -6,17 +6,14 @@ SDCC:
 
     sudo apt install build-essential sdcc
 
-CH554 SDK:
-
-    cd ~
-    git clone https://github.com/Blinkinlabs/ch554_sdcc.git
-
 chprog (for flashing the firmware to a device):
 
     cd ~
+    sudo apt install libusb-1.0-0-dev
     git clone https://github.com/ole00/chprog.git
     cd chprog
-    ./build.linux.sh
+    ./build_linux.sh
+    sudo cp chprog /usr/local/bin
 
 ## Usage
 
