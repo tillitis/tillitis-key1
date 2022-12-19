@@ -521,7 +521,8 @@ Assigned core prefixes:
 | `VERSION`         | r     | r         | 4B     | u32      | 1         | Current version.                                                        |
 | `SWITCH_APP`      | r/w   | r         | 1B     | u8       |           | Write anything here to trigger the switch to application mode. Reading  |
 |                   |       |           |        |          |           | returns 0 if device is in firmware mode, 0xffffffff if in app mode.     |
-| `LED`             | w     | w         | 1B     | u8       |           |                                                                         |
+| `LED`             | r/w   | r/w       | 1B     | u8       |           | Control of the color LEDs in RBG LED on the board.                      |
+|                   |       |           |        |          |           | Bit 0 is Blue, bit 1 is Green, and bit 2 is Red LED.                    |
 | `GPIO`            | r/w   | r/w       | 1B     | u8       |           | Bits 0 and 1 contain the input level of GPIO 1 and 2.                   |
 |                   |       |           |        | u8       |           | Bits 3 and 4 store the output level of GPIO 3 and 4.                    |
 | `APP_ADDR`        | r/w   | r         | 4B     | u32      |           | Firmware stores app load address here, so app can read its own location |
