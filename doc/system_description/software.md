@@ -2,8 +2,8 @@
 
 ## Definitions
 
-  * Firmware - software that is part of ROM, and is currently
-    supplied via the FPGA bit stream.
+  * Firmware - software in ROM responsible for loading applications.
+	The firmware is included as part of the FPGA bit stream.
   * Application - software supplied by the host machine, which is
     received, loaded, and measured by the firmware (by hashing a
     digest over the binary).
