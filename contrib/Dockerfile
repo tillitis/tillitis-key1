@@ -38,6 +38,7 @@ RUN apt-get -qq update -y \
                verilator \
                vim \
                xdot \
+               sdcc \
     && rm -rf /var/lib/apt/lists/*
 
 
