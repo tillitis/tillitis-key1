@@ -668,7 +668,7 @@
       (reference "C7") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020"
-      (reference "C8") (unit 1) (value "10uF 16V") (footprint "Capacitor_SMD:C_1206_3216Metric")
+      (reference "C8") (unit 1) (value "10uF") (footprint "Capacitor_SMD:C_1206_3216Metric")
     )
     (path "/00000000-0000-0000-0000-00006161400b/00000000-0000-0000-0000-0000617f1504"
       (reference "C13") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
@@ -704,10 +704,10 @@
       (reference "C26") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/391c56db-bc39-4ec7-bb45-dcbe1aaf2b1a"
-      (reference "C27") (unit 1) (value "3pF") (footprint "mta1:CAPC1005X06L")
+      (reference "C27") (unit 1) (value "2.7pF") (footprint "mta1:CAPC1005X06L")
     )
     (path "/00000000-0000-0000-0000-0000611a4eb9/00000000-0000-0000-0000-0000618029cb"
-      (reference "D1") (unit 1) (value "Power LED") (footprint "LED_SMD:LED_0402_1005Metric")
+      (reference "D1") (unit 1) (value "0402 indicator LED, blue") (footprint "LED_SMD:LED_0402_1005Metric")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/00000000-0000-0000-0000-0000615e01fa"
       (reference "D3") (unit 1) (value "LED_ARGB") (footprint "mta1:0402rgb-1010")
@@ -728,13 +728,13 @@
       (reference "R3") (unit 1) (value "1k") (footprint "mta1:ERJ2G(0402)_L")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/00000000-0000-0000-0000-0000615e0200"
-      (reference "R16") (unit 1) (value "1K") (footprint "mta1:ERJ2G(0402)_L")
+      (reference "R16") (unit 1) (value "1k") (footprint "mta1:ERJ2G(0402)_L")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/00000000-0000-0000-0000-0000617f150b"
-      (reference "R17") (unit 1) (value "1K") (footprint "mta1:ERJ2G(0402)_L")
+      (reference "R17") (unit 1) (value "1k") (footprint "mta1:ERJ2G(0402)_L")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/00000000-0000-0000-0000-0000617f150c"
-      (reference "R18") (unit 1) (value "1K") (footprint "mta1:ERJ2G(0402)_L")
+      (reference "R18") (unit 1) (value "1k") (footprint "mta1:ERJ2G(0402)_L")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/00000000-0000-0000-0000-00006138f043"
       (reference "R19") (unit 1) (value "10k") (footprint "mta1:ERJ2G(0402)_L")
@@ -758,10 +758,10 @@
       (reference "R26") (unit 1) (value "10k") (footprint "mta1:ERJ2G(0402)_L")
     )
     (path "/00000000-0000-0000-0000-00006161400b/9858cd2c-db03-45a0-8bc5-55a6c8037bff"
-      (reference "R29") (unit 1) (value "5.1K") (footprint "mta1:ERJ2G(0402)_L")
+      (reference "R29") (unit 1) (value "5.1k") (footprint "mta1:ERJ2G(0402)_L")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/6bc1edc9-8890-4578-b994-f654ccefb54e"
-      (reference "R30") (unit 1) (value "2K") (footprint "mta1:ERJ2G(0402)_L")
+      (reference "R30") (unit 1) (value "2k") (footprint "mta1:ERJ2G(0402)_L")
     )
     (path "/00000000-0000-0000-0000-0000611a4eb9/00000000-0000-0000-0000-000061804e06"
       (reference "TP1") (unit 1) (value "5V") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
@@ -779,16 +779,16 @@
       (reference "TP5") (unit 1) (value "APP_GND") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-00006161400b/fb64afad-a905-4f4b-98a2-d21a64bd12f3"
-      (reference "TP6") (unit 1) (value "INT_ICE_SCK") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP6") (unit 1) (value "INT_TX") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-00006161400b/1f54ffea-0a26-464d-98d4-30979db7344f"
-      (reference "TP7") (unit 1) (value "INT_ICE_SCK") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP7") (unit 1) (value "INT_RX") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-00006161400b/74f30866-0d52-4558-88d9-da85c982a4ac"
-      (reference "TP8") (unit 1) (value "INT_ICE_SCK") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP8") (unit 1) (value "INT_RTS") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-00006161400b/d9fa1bba-ba87-4376-952a-41bb8392f957"
-      (reference "TP9") (unit 1) (value "INT_ICE_SCK") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
+      (reference "TP9") (unit 1) (value "INT_CTS") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/b84f4f68-cc10-43a0-962e-10a1890e7eaf"
       (reference "TP12") (unit 1) (value "APP_ICE_SCK") (footprint "TestPoint:TestPoint_Pad_D1.0mm")
@@ -839,7 +839,7 @@
       (reference "U6") (unit 1) (value "ICE40UP5K-SG48ITR") (footprint "Package_DFN_QFN:QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm")
     )
     (path "/00000000-0000-0000-0000-0000611cc101/fb1bfba7-59bf-4387-b0fd-53ae34c08235"
-      (reference "U8") (unit 1) (value "W25Q80DVUXIE") (footprint "mta1:W25Q80DVUXIE")
+      (reference "U8") (unit 1) (value "XT25F08BDFIGT-S") (footprint "mta1:W25Q80DVUXIE")
     )
     (path "/00000000-0000-0000-0000-0000611a4eb9/00000000-0000-0000-0000-0000616b8c22"
       (reference "U9") (unit 1) (value "NCP752BSN33T1G") (footprint "mta1:NCP752BSN33T1G")
