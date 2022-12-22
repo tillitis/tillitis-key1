@@ -70,7 +70,7 @@ def voltage_test():
     return True
 
 def flash_validate_id():
-    """Read the ID from TK-1 SPI flash, and verify that it's not all 0's or 1's"""
+    """Read the ID from TK-1 SPI flash, and verify that it matches the expected value"""
     result = run([
         file_locations['iceprog'],
         '-t'
@@ -83,8 +83,19 @@ def flash_validate_id():
             vals_b = line.split(b' 0x')[1:]
             flash_id = int(b''.join(vals_b),16)
             print(line, hex(flash_id))
-            if (flash_id == 0) or (flash_id == 0xFFFFFFFF):
+ 
+            # Note: Flash IDs reported by iceprog are slightly wrong
+            flash_types = {
+                0xb40140b40140b40140b40140b4014: 'XT25F08BDFIGT-S (MTA1-USB-V1)',
+                0xef401400: 'W25Q80DVUXIE (TP-1)'
+            }
+
+            flash_type = flash_types.get(flash_id)
+
+            if flash_type == None:
+                print('Flash ID invalid')
                 return False
+            print('Detected flash type: {:}'.format(flash_type))
             return True
             
     return (result.returncode == 0)
@@ -294,12 +305,15 @@ def program_pico():
                 file_locations['pico_bootloader_source'],
                 file_locations['pico_bootloader_target']
                 )
+
+            # TODO: Test if the pico identifies as a USB-HID device after programming
+
             return True
         except FileNotFoundError:
             time.sleep(0.1)
         except PermissionError:
             time.sleep(0.1)
-    
+
     return False
 
 
