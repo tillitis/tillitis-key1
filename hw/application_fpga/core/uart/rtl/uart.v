@@ -238,7 +238,9 @@ module uart(
             end
 
 	    ADDR_TX_DATA: begin
-	      core_txd_syn = 1'h1;
+	      if (core_txd_ready) begin
+		core_txd_syn = 1'h1;
+	      end
 	    end
 
             default: begin
