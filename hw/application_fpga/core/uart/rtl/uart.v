@@ -75,6 +75,7 @@ module uart(
 
   localparam ADDR_RX_STATUS    = 8'h20;
   localparam ADDR_RX_DATA      = 8'h21;
+  localparam ADDR_RX_BYTES     = 8'h22;
 
   localparam ADDR_TX_STATUS    = 8'h40;
   localparam ADDR_TX_DATA      = 8'h41;
@@ -117,6 +118,7 @@ module uart(
   wire          fifo_out_syn;
   wire [7 : 0]  fifo_out_data;
   reg           fifo_out_ack;
+  wire [8 : 0]  fifo_bytes;
 
   reg [31 : 0]  tmp_read_data;
   reg           tmp_ready;
@@ -164,6 +166,8 @@ module uart(
 		 .in_syn(core_rxd_syn),
 		 .in_data(core_rxd_data),
 		 .in_ack(core_rxd_ack),
+
+		 .fifo_bytes(fifo_bytes),
 
 		 .out_syn(fifo_out_syn),
 		 .out_data(fifo_out_data),
@@ -269,6 +273,10 @@ module uart(
 	    ADDR_RX_DATA: begin
 	      fifo_out_ack  = 1'h1;
               tmp_read_data = {24'h0, fifo_out_data};
+	    end
+
+	    ADDR_RX_BYTES: begin
+              tmp_read_data = {23'h0, fifo_bytes};
 	    end
 
 	    ADDR_TX_STATUS: begin
