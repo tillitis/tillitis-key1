@@ -332,7 +332,7 @@ Response to `FW_CMD_GET_UDI`.
 |--------|----------------|-----------------------------------------------------|
 | status | 1              | `STATUS_OK`/`STATUS_BAD`                            |
 | udi    | 4              | Integer (LE) with Reserved (4 bit), Vendor (2 byte),|
-|        |                | Product (1 byte), Revision (4 bit)                  |
+|        |                | Product ID (6 bit), Product Revision (6 bit)        |
 | udi    | 4              | Integer serial number (LE)                          |
 
 
