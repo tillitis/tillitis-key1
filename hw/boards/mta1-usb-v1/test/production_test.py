@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#/usr/bin/env python3
 import hid_test
 import time
 import numpy
@@ -9,6 +9,7 @@ import encode_usb_strings
 import serial
 import serial.tools.list_ports;
 import shutil
+import os
 
 # Locations for external utilities and files referenced by the test program
 file_locations = {
@@ -18,7 +19,7 @@ file_locations = {
     'ch552_firmware':'binaries/usb_device_cdc.bin',
     'ch552_firmware_injected':'/tmp/ch552_fw_injected.bin',
     'pico_bootloader_source':'binaries/main.uf2',
-    'pico_bootloader_target':'/media/lab/RPI-RP2/main.uf2'
+    'pico_bootloader_target_dir':'/media/lab/RPI-RP2/'
 }
 
 def enable_power():
@@ -87,7 +88,7 @@ def flash_validate_id():
             # Note: Flash IDs reported by iceprog are slightly wrong
             flash_types = {
                 0xb40140b40140b40140b40140b4014: 'XT25F08BDFIGT-S (MTA1-USB-V1)',
-                0xef401400: 'W25Q80DVUXIE (TP-1)'
+                0xef401400: 'W25Q80DVUXIE (TK-1)'
             }
 
             flash_type = flash_types.get(flash_id)
@@ -299,11 +300,14 @@ def test_txrx_touchpad():
 def program_pico():
     """Load the ice40 flasher firmware onto the TP-1"""
     print('Attach test rig to USB (times out in 10 seconds)')
+
+    firmware_filename = os.path.split(file_locations['pico_bootloader_source'])[1]
+
     for trys in range(0,100): # retry every 0.1s
         try:
             shutil.copyfile(
                 file_locations['pico_bootloader_source'],
-                file_locations['pico_bootloader_target']
+                file_locations['pico_bootloader_target_dir'] + firmware_filename
                 )
 
             # TODO: Test if the pico identifies as a USB-HID device after programming
@@ -414,6 +418,21 @@ def run_tests(test_list):
 
 if __name__ == '__main__':
     last_a = 0
+
+    # Allow any of the settings in the file_locations structure to be overridden
+    import argparse
+    parser = argparse.ArgumentParser()
+
+    for setting, value in file_locations.items():
+        parser.add_argument('--' + setting, help='Default setting: ' + value)
+    args = parser.parse_args()
+
+    for arg in args.__dict__:
+        if args.__dict__[arg] is not None:
+            print(arg, args.__dict__[arg])
+            file_locations[arg] = args.__dict__[arg]
+
+    print(file_locations)
 
     print('\n\nTillitis TK-1 and TP-1 Production tests')
 
