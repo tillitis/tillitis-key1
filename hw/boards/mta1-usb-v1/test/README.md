@@ -1,6 +1,6 @@
 # MTA1-USB-CH552 hardware test
 
-This is a hardware bringup test for the MTA1-USB-CH552 board. The goal is to verify that the board has been manufactured correctly. To achieve this, clock signals are fed to each GPIO output on the board, and their outputs are measured manually using a logic analyzer or oscilloscope. This is intended to lay the basis for an automated production test.
+This is a hardware bringup test for the MTA1-USB-CH552 board.
 
 ## Usage
 
