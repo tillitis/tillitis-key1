@@ -1,6 +1,6 @@
-# MTA1-USB-CH552 hardware test
+# TK-1 and TP-1 production tests
 
-This is a hardware bringup test for the MTA1-USB-CH552 board. The goal is to verify that the board has been manufactured correctly. To achieve this, clock signals are fed to each GPIO output on the board, and their outputs are measured manually using a logic analyzer or oscilloscope. This is intended to lay the basis for an automated production test.
+Production tests for the TK-1 and TP-1 PCBs
 
 ## Usage
 
@@ -55,7 +55,7 @@ These sequences are used as production tests for the TK-1 and TP-1.
 
 ### TK-1 production test (tk1_test_sequence)
 
-This test checks all major subcircuits on the TK-1
+This test checks all major subcircuits on the TK-1, and is used to verify that the PCBA was assembled correctly. It should be run on all newly assembled TK-1 boards.
 
 Requirements:
 
@@ -78,7 +78,8 @@ Note: If the CH552 has been programmed already, then the test sequence will fail
 
 ### TP-1 (tp1_test_sequence)
 
-This test programs a TP-1, then tests that it can program a TK-1.
+This test programs a TP-1, then tests that it can program a TK-1. It should be run on all newly assembled TP-1 boards.
+
 
 Requirements:
 
