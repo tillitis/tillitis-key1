@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 import tkinter as tk
 from tkinter import filedialog as fd
 from tkinter.messagebox import askyesno
