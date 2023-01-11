@@ -19,8 +19,8 @@
 #  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
-
-from pyftdi.spi import SpiController
+import hid_test
+#from pyftdi.spi import SpiController
 from binascii import unhexlify, hexlify
 import sys
 from time import sleep
@@ -51,25 +51,28 @@ def die(s):
 	exit(1)
 
 def enable(cs,reset=1):
-	gpio.write(cs << cs_pin | reset << reset_pin)
+	#gpio.write(cs << cs_pin | reset << reset_pin)
+	flasher.gpio_put(tp1_pins['ss'], cs)
+	flasher.gpio_put(tp1_pins['crst'], reset)
 
 def sendhex(s):
 	if debug and not s == "0500":
 		print("TX", s)
 	x = bytes.fromhex(s)
 
-	b = dev.exchange(x, duplex=True, readlen=len(x))
+	#b = dev.exchange(x, duplex=True, readlen=len(x))
+	b = flasher.spi_bitbang(sck_pin=tp1_pins['sck'], mosi_pin=tp1_pins['mosi'], miso_pin=tp1_pins['miso'], buf=x)
 
 	if debug and not s == "0500":
 		print("RX", b.hex())
 	return int.from_bytes(b, byteorder='big')
 
-def delay(count):
+def delay(count: int):
 	# run the clock with no CS asserted
-	dev.exchange(b'\x00', duplex=True, readlen=count)
-	#sleep(0.1)
+	#dev.exchange(b'\x00', duplex=True, readlen=count)
+	sendhex('00' * count)
 
-def tck(count,dly=0):
+def tck(count: int, dly: int = 0):
 	delay(count >> 3)
 	delay(count >> 3)
 	delay(count >> 3)
@@ -268,7 +271,7 @@ def nvcm_program(rows):
 	print ("NVCM Program main memory")
 
 	if not nvcm_pgm_enable():
-		return false
+		return False
 
 	status = True
 
@@ -454,6 +457,26 @@ def bitstream2nvcm(bitstream):
 
 	return rows
 
+def trigger_logic_analyzer():
+	from saleae import automation
+	with automation.Manager.connect(port=10430) as manager:
+		device_configuration = automation.LogicDeviceConfiguration(
+			enabled_digital_channels=[0,1,2,3,4,5,6],
+			digital_sample_rate=250_000_000,
+			#digital_threshold_volts=3.3,
+		)
+
+		# Record 5 seconds of data before stopping the capture
+		capture_configuration = automation.CaptureConfiguration(
+			capture_mode=automation.DigitalTriggerCaptureMode(
+				trigger_type=automation.DigitalTriggerType.FALLING,
+				trigger_channel_index=6,
+				after_trigger_seconds=3.0)
+		)
+
+		with manager.start_capture(device_configuration=device_configuration,
+            capture_configuration=capture_configuration):
+			pass
 
 if __name__ == "__main__":
 
@@ -516,24 +539,117 @@ if __name__ == "__main__":
 	and (args.write_file or args.set_secure):
 		print("Are you sure your design is good enough?", file=sys.stderr)
 		exit(1)
+
+	# Instantiate a SPI controller, with separately managed CS line
+	from saleae import start_capture
+	start_capture()
 	
 	# Instantiate a SPI controller, with separately managed CS line
-	spi = SpiController()
+	#spi = SpiController()
+	flasher = hid_test.ice40_flasher()
 	
 	# Configure the first interface (IF/1) of the FTDI device as a SPI controller
-	spi.configure(args.port)
+	#spi.configure(args.port)
+
 	
 	# Get a port to a SPI device w/ /CS on A*BUS3 and SPI mode 0 @ 12MHz
 	# the CS line is not used in this case
-	dev = spi.get_port(cs=0, freq=12E6, mode=0)
+	#dev = spi.get_port(cs=0, freq=12E6, mode=0)
 	
-	reset_pin = 7
-	cs_pin = 4
+	#reset_pin = 7
+	#cs_pin = 4
 	
 	# Get GPIO port to manage the CS and RESET pins
-	gpio = spi.get_gpio()
-	gpio.set_direction(1 << reset_pin | 1 << cs_pin, 1 << reset_pin | 1 << cs_pin)
+	#gpio = spi.get_gpio()
+	#gpio.set_direction(1 << reset_pin | 1 << cs_pin, 1 << reset_pin | 1 << cs_pin)
+
+	# Enable power to the FPGA, then set both reset and CS pins high
+	tp1_pins = {
+		'5v_en' : 7,
+		'sck' : 10,
+		'mosi' : 11,
+		'ss' : 12,
+		'miso' : 13,
+		'crst' : 14,
+		'cdne' : 15
+	}
+
+	# # Reset pin values
+	# for pin in tp1_pins:
+	# 	flasher.gpio_set_direction(tp1_pins[pin], False)
+
+	# Disable board power
+	flasher.gpio_put(tp1_pins['5v_en'], False)
+	flasher.gpio_set_direction(tp1_pins['5v_en'], True)
+
+	# Pull CRST low to prevent FPGA from starting
+	flasher.gpio_set_direction(tp1_pins['crst'], True)
+	flasher.gpio_put(tp1_pins['crst'], False)
+
+	sleep(1)
+	# Enable board power
+	flasher.gpio_put(tp1_pins['5v_en'], True)
+
+	# Configure pins for talking to flash
+	flasher.gpio_set_direction(tp1_pins['ss'], True)
+	flasher.gpio_set_direction(tp1_pins['mosi'], False)
+	flasher.gpio_set_direction(tp1_pins['sck'], True)
+	flasher.gpio_set_direction(tp1_pins['miso'], True)
+
+	flasher.gpio_put(tp1_pins['ss'], False)
+	flasher.spi_bitbang(sck_pin=tp1_pins['sck'], mosi_pin=tp1_pins['miso'], miso_pin=tp1_pins['mosi'], buf=[0xAB])
+	flasher.gpio_put(tp1_pins['ss'], True)
+
+	# Confirm we can talk to flash
+	flasher.gpio_put(tp1_pins['ss'], False)
+	data = flasher.spi_bitbang(sck_pin=tp1_pins['sck'], mosi_pin=tp1_pins['miso'], miso_pin=tp1_pins['mosi'], buf=[0x9f, 0,0])
+	flasher.gpio_put(tp1_pins['ss'], True)
+
+	print('flash ID while awake:', ' '.join(['{:02x}'.format(b) for b in data]))
+	assert(data == bytes([0xff, 0xef, 0x40]))
+
+	# Test that the flash will ignore a sleep command that doesn't start on the first byte
+	flasher.gpio_put(tp1_pins['ss'], False)
+	flasher.spi_bitbang(sck_pin=tp1_pins['sck'], mosi_pin=tp1_pins['miso'], miso_pin=tp1_pins['mosi'], buf=[0, 0xb9])
+	flasher.gpio_put(tp1_pins['ss'], True)
+
+	# Confirm we can talk to flash
+	flasher.gpio_put(tp1_pins['ss'], False)
+	data = flasher.spi_bitbang(sck_pin=tp1_pins['sck'], mosi_pin=tp1_pins['miso'], miso_pin=tp1_pins['mosi'], buf=[0x9f, 0,0])
+	flasher.gpio_put(tp1_pins['ss'], True)
+
+	print('flash ID while awake:', ' '.join(['{:02x}'.format(b) for b in data]))
+	assert(data == bytes([0xff, 0xef, 0x40]))
+
+	# put the flash to sleep
+	flasher.gpio_put(tp1_pins['ss'], False)
+	flasher.spi_bitbang(sck_pin=tp1_pins['sck'], mosi_pin=tp1_pins['miso'], miso_pin=tp1_pins['mosi'], buf=[0xb9])
+	flasher.gpio_put(tp1_pins['ss'], True)
+
+	# Confirm flash is asleep
+	flasher.gpio_put(tp1_pins['ss'], False)
+	data = flasher.spi_bitbang(sck_pin=tp1_pins['sck'], mosi_pin=tp1_pins['miso'], miso_pin=tp1_pins['mosi'], buf=[0x9f, 0,0])
+	flasher.gpio_put(tp1_pins['ss'], True)
+
+	print('flash ID while asleep:', ' '.join(['{:02x}'.format(b) for b in data]))
+	assert(data == bytes([0xff, 0xff, 0xff]))
+
+
+	# Configure pins for talking to ice40
+	flasher.gpio_set_direction(tp1_pins['ss'], True)
+	flasher.gpio_set_direction(tp1_pins['mosi'], True)
+	flasher.gpio_set_direction(tp1_pins['sck'], True)
+	flasher.gpio_set_direction(tp1_pins['miso'], False)
+
+	# # Turn on ICE40 in CRAM boot mode
+
+	# init()
+	# nvcm_enable()
+	# nvcm_info()
+
 	
+	# release power down: 0xAB
+	# sleep: 0xB9
 	## Request the JEDEC ID from the SPI device
 	#jedec_id = dev.exchange([0x9f], 3)
 	
