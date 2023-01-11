@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import hid_test
 
 def import_pins(pin_filename):

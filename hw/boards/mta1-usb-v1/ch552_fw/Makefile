@@ -1,7 +1,7 @@
 TARGET = usb_device_cdc
 
 CH554_SDCC=~/ch554_sdcc/
-CHPROG=~/chprog/chprog
+CHPROG=chprog
 
 
 # Adjust the XRAM location and size to leave space for the USB DMA buffers
@@ -21,7 +21,7 @@ usb_strings.h: encode_usb_strings.py
 
 C_FILES = \
 	main.c \
-	${CH554_SDCC}/include/debug.c
+	include/debug.c
 
 pre-flash:
 
@@ -31,4 +31,4 @@ flash_patched: usb_device_cdc.bin
 	${CHPROG} patched.bin
 	rm patched.bin
 
-include ${CH554_SDCC}/examples/Makefile.include
+include Makefile.include
