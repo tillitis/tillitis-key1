@@ -1,4 +1,4 @@
-FROM ubuntu:22.10 as base
+FROM docker.io/library/ubuntu:22.10 as base
 
 RUN apt-get -qq update -y \
     && DEBIAN_FRONTEND=noninteractive \

@@ -1,0 +1,835 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tp1\tp1.kicad_sch</source>
+    <date>11/16/2022 5:57:02 PM</date>
+    <tool>Eeschema (6.0.4)</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title>Tillits TK1 Programmer (TP-1)</title>
+        <company>Tillitis AB</company>
+        <rev>RevA</rev>
+        <date>2022-09-12</date>
+        <source>tp1.kicad_sch</source>
+        <comment number="1" value="2022-11-14"/>
+        <comment number="2" value="https://github.com/tillitis/tillitis-key1"/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="F1">
+      <value>50mA</value>
+      <footprint>Fuse:Fuse_1206_3216Metric</footprint>
+      <fields>
+        <field name="Manufacturer">Littelfuse</field>
+        <field name="Manufacturer Part Number">1206L005/60WR</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">F8129TR-ND</field>
+      </fields>
+      <libsource lib="Device" part="Polyfuse_Small" description="Resettable fuse, polymeric positive temperature coefficient, small symbol"/>
+      <property name="Manufacturer" value="Littelfuse"/>
+      <property name="Manufacturer Part Number" value="1206L005/60WR"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="F8129TR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d680d5fd-0440-4126-9a50-a6dd4afb33a8</tstamps>
+    </comp>
+    <comp ref="FID1">
+      <value>Fiducial</value>
+      <footprint>Fiducial:Fiducial_1mm_Mask2mm</footprint>
+      <libsource lib="Mechanical" part="Fiducial" description="Fiducial Marker"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>639ac7f7-87e9-4157-adbd-230a85352940</tstamps>
+    </comp>
+    <comp ref="FID2">
+      <value>Fiducial</value>
+      <footprint>Fiducial:Fiducial_1mm_Mask2mm</footprint>
+      <libsource lib="Mechanical" part="Fiducial" description="Fiducial Marker"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d1633098-f717-49a7-9988-21555d90237c</tstamps>
+    </comp>
+    <comp ref="FID3">
+      <value>Fiducial</value>
+      <footprint>Fiducial:Fiducial_1mm_Mask2mm</footprint>
+      <libsource lib="Mechanical" part="Fiducial" description="Fiducial Marker"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>05a82464-3190-4ee2-9948-9191f2c0bed6</tstamps>
+    </comp>
+    <comp ref="FOOT1">
+      <value>Rubber Foot</value>
+      <fields>
+        <field name="Extended Value">8mm diameter x 2.8mm height, self-adhesive foot</field>
+        <field name="Manufacturer">3M</field>
+        <field name="Manufacturer Part Number">SJ5076</field>
+        <field name="Supplier">RS</field>
+        <field name="Supplier Part Number">120-6041</field>
+      </fields>
+      <libsource lib="mta1" part="Foot" description=""/>
+      <property name="Extended Value" value="8mm diameter x 2.8mm height, self-adhesive foot"/>
+      <property name="Manufacturer" value="3M"/>
+      <property name="Manufacturer Part Number" value="SJ5076"/>
+      <property name="Supplier" value="RS"/>
+      <property name="Supplier Part Number" value="120-6041"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ae58ff93-b304-4897-a1be-e11c495fe6c7</tstamps>
+    </comp>
+    <comp ref="FOOT2">
+      <value>Rubber Foot</value>
+      <fields>
+        <field name="Extended Value">8mm diameter x 2.8mm height, self-adhesive foot</field>
+        <field name="Manufacturer">3M</field>
+        <field name="Manufacturer Part Number">SJ5076</field>
+        <field name="Supplier">RS</field>
+        <field name="Supplier Part Number">120-6041</field>
+      </fields>
+      <libsource lib="mta1" part="Foot" description=""/>
+      <property name="Extended Value" value="8mm diameter x 2.8mm height, self-adhesive foot"/>
+      <property name="Manufacturer" value="3M"/>
+      <property name="Manufacturer Part Number" value="SJ5076"/>
+      <property name="Supplier" value="RS"/>
+      <property name="Supplier Part Number" value="120-6041"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>5071d3d8-892e-443f-a709-e0be394922d4</tstamps>
+    </comp>
+    <comp ref="FOOT3">
+      <value>Rubber Foot</value>
+      <fields>
+        <field name="Extended Value">8mm diameter x 2.8mm height, self-adhesive foot</field>
+        <field name="Manufacturer">3M</field>
+        <field name="Manufacturer Part Number">SJ5076</field>
+        <field name="Supplier">RS</field>
+        <field name="Supplier Part Number">120-6041</field>
+      </fields>
+      <libsource lib="mta1" part="Foot" description=""/>
+      <property name="Extended Value" value="8mm diameter x 2.8mm height, self-adhesive foot"/>
+      <property name="Manufacturer" value="3M"/>
+      <property name="Manufacturer Part Number" value="SJ5076"/>
+      <property name="Supplier" value="RS"/>
+      <property name="Supplier Part Number" value="120-6041"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>8816c368-e361-405c-bb00-0ef1b938f6c9</tstamps>
+    </comp>
+    <comp ref="FOOT4">
+      <value>Rubber Foot</value>
+      <fields>
+        <field name="Extended Value">8mm diameter x 2.8mm height, self-adhesive foot</field>
+        <field name="Manufacturer">3M</field>
+        <field name="Manufacturer Part Number">SJ5076</field>
+        <field name="Supplier">RS</field>
+        <field name="Supplier Part Number">120-6041</field>
+      </fields>
+      <libsource lib="mta1" part="Foot" description=""/>
+      <property name="Extended Value" value="8mm diameter x 2.8mm height, self-adhesive foot"/>
+      <property name="Manufacturer" value="3M"/>
+      <property name="Manufacturer Part Number" value="SJ5076"/>
+      <property name="Supplier" value="RS"/>
+      <property name="Supplier Part Number" value="120-6041"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d8f44dfa-f013-4dd2-afa1-8d9a59040b84</tstamps>
+    </comp>
+    <comp ref="J3">
+      <value>BC-1-208</value>
+      <footprint>mta1:BC-1-208</footprint>
+      <fields>
+        <field name="Manufacturer">Disong</field>
+        <field name="Manufacturer Part Number">BC-1-208</field>
+      </fields>
+      <libsource lib="mta1" part="BC-1-208" description=""/>
+      <property name="Supplier" value=""/>
+      <property name="Supplier Part Number" value=""/>
+      <property name="Manufacturer" value="Disong"/>
+      <property name="Manufacturer Part Number" value="BC-1-208"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>31f45a5a-4b3c-4a2d-8cfe-2eaf79549754</tstamps>
+    </comp>
+    <comp ref="J4">
+      <value>BC-1-701</value>
+      <footprint>mta1:BC-1-701</footprint>
+      <fields>
+        <field name="Manufacturer">Disong</field>
+        <field name="Manufacturer Part Number">BC-1-701</field>
+      </fields>
+      <libsource lib="mta1" part="BC-1-701" description=""/>
+      <property name="Supplier" value=""/>
+      <property name="Supplier Part Number" value=""/>
+      <property name="Manufacturer" value="Disong"/>
+      <property name="Manufacturer Part Number" value="BC-1-701"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ba36c6f5-f656-461e-838a-40e9c90c8e2e</tstamps>
+    </comp>
+    <comp ref="Q1">
+      <value>AO3400A</value>
+      <footprint>Package_TO_SOT_SMD:SOT-23</footprint>
+      <datasheet>http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf</datasheet>
+      <fields>
+        <field name="Manufacturer">Alpha &amp; Omega</field>
+        <field name="Manufacturer Part Number">AO3400A</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">785-1000-2-ND</field>
+      </fields>
+      <libsource lib="Transistor_FET" part="AO3400A" description="30V Vds, 5.7A Id, N-Channel MOSFET, SOT-23"/>
+      <property name="Manufacturer" value="Alpha &amp; Omega"/>
+      <property name="Manufacturer Part Number" value="AO3400A"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="785-1000-2-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>5d1becdb-d7cb-479e-96a6-ac75b81fcd5a</tstamps>
+    </comp>
+    <comp ref="Q2">
+      <value>AO3401A</value>
+      <footprint>Package_TO_SOT_SMD:SOT-23</footprint>
+      <datasheet>http://www.aosmd.com/pdfs/datasheet/AO3401A.pdf</datasheet>
+      <fields>
+        <field name="Manufacturer">Alpha &amp; Omega</field>
+        <field name="Manufacturer Part Number">AO3401A</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">785-1001-2-ND</field>
+      </fields>
+      <libsource lib="Transistor_FET" part="AO3401A" description="-4.0A Id, -30V Vds, P-Channel MOSFET, SOT-23"/>
+      <property name="Manufacturer" value="Alpha &amp; Omega"/>
+      <property name="Manufacturer Part Number" value="AO3401A"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="785-1001-2-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d3ea1d5f-628b-402d-8c57-17558e1c90d5</tstamps>
+    </comp>
+    <comp ref="R7">
+      <value>10K</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e57ccad9-d15a-433a-9097-6058c784b461</tstamps>
+    </comp>
+    <comp ref="R8">
+      <value>10K</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e1feac4a-d44d-47a5-a436-be193f26d2c1</tstamps>
+    </comp>
+    <comp ref="R11">
+      <value>100R</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>288cfe4b-d275-4618-b8ff-070883c4973c</tstamps>
+    </comp>
+    <comp ref="R12">
+      <value>100R</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>c78cd817-19f5-4171-a237-d4474033ef43</tstamps>
+    </comp>
+    <comp ref="R13">
+      <value>100R</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>01216bc5-841a-48c8-8321-cf2570eae978</tstamps>
+    </comp>
+    <comp ref="R14">
+      <value>100R</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>9fe5526d-9d48-4dc6-b2b5-10a305db920f</tstamps>
+    </comp>
+    <comp ref="R15">
+      <value>100R</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>042c84ad-dade-411c-a96b-6ee43d5dc7ba</tstamps>
+    </comp>
+    <comp ref="R16">
+      <value>100R</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>674fd507-845b-42b5-abac-04315852109e</tstamps>
+    </comp>
+    <comp ref="R17">
+      <value>100R</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1/16W,5%</field>
+        <field name="Manufacturer">Any/not critical</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1/16W,5%"/>
+      <property name="Manufacturer" value="Any/not critical"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>778d5535-7de9-4935-9676-7a512c0646c9</tstamps>
+    </comp>
+    <comp ref="SCREW1">
+      <value>M3 Buttonhead Screw</value>
+      <fields>
+        <field name="Extended Value">M3x0.5mm buttonhead screw, stainless steel, 5mm length</field>
+        <field name="Supplier">McMaster-Carr</field>
+        <field name="Supplier Part Number">94500A263</field>
+      </fields>
+      <libsource lib="mta1" part="Screw" description=""/>
+      <property name="Supplier" value="McMaster-Carr"/>
+      <property name="Supplier Part Number" value="94500A263"/>
+      <property name="Extended Value" value="M3x0.5mm buttonhead screw, stainless steel, 5mm length"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>f28fddc9-1d95-482f-b439-d71829a059ae</tstamps>
+    </comp>
+    <comp ref="SCREW2">
+      <value>M3 Buttonhead Screw</value>
+      <fields>
+        <field name="Extended Value">M3x0.5mm buttonhead screw, stainless steel, 5mm length</field>
+        <field name="Supplier">McMaster-Carr</field>
+        <field name="Supplier Part Number">94500A263</field>
+      </fields>
+      <libsource lib="mta1" part="Screw" description=""/>
+      <property name="Supplier" value="McMaster-Carr"/>
+      <property name="Supplier Part Number" value="94500A263"/>
+      <property name="Extended Value" value="M3x0.5mm buttonhead screw, stainless steel, 5mm length"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e0fe93aa-01b7-4df1-8aae-5662e8118bb7</tstamps>
+    </comp>
+    <comp ref="SCREW3">
+      <value>M3 Buttonhead Screw</value>
+      <fields>
+        <field name="Extended Value">M3x0.5mm buttonhead screw, stainless steel, 5mm length</field>
+        <field name="Supplier">McMaster-Carr</field>
+        <field name="Supplier Part Number">94500A263</field>
+      </fields>
+      <libsource lib="mta1" part="Screw" description=""/>
+      <property name="Supplier" value="McMaster-Carr"/>
+      <property name="Supplier Part Number" value="94500A263"/>
+      <property name="Extended Value" value="M3x0.5mm buttonhead screw, stainless steel, 5mm length"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>fac227cf-a841-44ae-9685-635d62b8ec88</tstamps>
+    </comp>
+    <comp ref="U2">
+      <value>Pico</value>
+      <footprint>MCU_RaspberryPi_and_Boards:RPi_Pico_SMD_reflow</footprint>
+      <fields>
+        <field name="Manufacturer">Raspberry Pi</field>
+        <field name="Manufacturer Part Number">SC0915</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">2648-SC0915TR-ND</field>
+      </fields>
+      <libsource lib="MCU_RaspberryPi_and_Boards" part="Pico" description=""/>
+      <property name="Manufacturer" value="Raspberry Pi"/>
+      <property name="Manufacturer Part Number" value="SC0915"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="2648-SC0915TR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="tp1.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>2d0a577d-e6e5-4906-8190-a6cdcac896ad</tstamps>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Connector_Generic" part="Conn_01x20">
+      <description>Generic connector, single row, 01x20, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_1x??_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x20</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+        <pin num="3" name="Pin_3" type="passive"/>
+        <pin num="4" name="Pin_4" type="passive"/>
+        <pin num="5" name="Pin_5" type="passive"/>
+        <pin num="6" name="Pin_6" type="passive"/>
+        <pin num="7" name="Pin_7" type="passive"/>
+        <pin num="8" name="Pin_8" type="passive"/>
+        <pin num="9" name="Pin_9" type="passive"/>
+        <pin num="10" name="Pin_10" type="passive"/>
+        <pin num="11" name="Pin_11" type="passive"/>
+        <pin num="12" name="Pin_12" type="passive"/>
+        <pin num="13" name="Pin_13" type="passive"/>
+        <pin num="14" name="Pin_14" type="passive"/>
+        <pin num="15" name="Pin_15" type="passive"/>
+        <pin num="16" name="Pin_16" type="passive"/>
+        <pin num="17" name="Pin_17" type="passive"/>
+        <pin num="18" name="Pin_18" type="passive"/>
+        <pin num="19" name="Pin_19" type="passive"/>
+        <pin num="20" name="Pin_20" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="Polyfuse_Small">
+      <description>Resettable fuse, polymeric positive temperature coefficient, small symbol</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>*polyfuse*</fp>
+        <fp>*PTC*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">F</field>
+        <field name="Value">Polyfuse_Small</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="R">
+      <description>Resistor</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>R_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="MCU_RaspberryPi_and_Boards" part="Pico">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">Pico</field>
+        <field name="Footprint">RPi_Pico:RPi_Pico_SMD_TH</field>
+      </fields>
+      <pins>
+        <pin num="1" name="GPIO0" type="bidirectional"/>
+        <pin num="2" name="GPIO1" type="bidirectional"/>
+        <pin num="3" name="GND" type="power_in"/>
+        <pin num="4" name="GPIO2" type="bidirectional"/>
+        <pin num="5" name="GPIO3" type="bidirectional"/>
+        <pin num="6" name="GPIO4" type="bidirectional"/>
+        <pin num="7" name="GPIO5" type="bidirectional"/>
+        <pin num="8" name="GND" type="power_in"/>
+        <pin num="9" name="GPIO6" type="bidirectional"/>
+        <pin num="10" name="GPIO7" type="bidirectional"/>
+        <pin num="11" name="GPIO8" type="bidirectional"/>
+        <pin num="12" name="GPIO9" type="bidirectional"/>
+        <pin num="13" name="GND" type="power_in"/>
+        <pin num="14" name="GPIO10" type="bidirectional"/>
+        <pin num="15" name="GPIO11" type="bidirectional"/>
+        <pin num="16" name="GPIO12" type="bidirectional"/>
+        <pin num="17" name="GPIO13" type="bidirectional"/>
+        <pin num="18" name="GND" type="power_in"/>
+        <pin num="19" name="GPIO14" type="bidirectional"/>
+        <pin num="20" name="GPIO15" type="bidirectional"/>
+        <pin num="21" name="GPIO16" type="bidirectional"/>
+        <pin num="22" name="GPIO17" type="bidirectional"/>
+        <pin num="23" name="GND" type="power_in"/>
+        <pin num="24" name="GPIO18" type="bidirectional"/>
+        <pin num="25" name="GPIO19" type="bidirectional"/>
+        <pin num="26" name="GPIO20" type="bidirectional"/>
+        <pin num="27" name="GPIO21" type="bidirectional"/>
+        <pin num="28" name="GND" type="power_in"/>
+        <pin num="29" name="GPIO22" type="bidirectional"/>
+        <pin num="30" name="RUN" type="input"/>
+        <pin num="31" name="GPIO26_ADC0" type="bidirectional"/>
+        <pin num="32" name="GPIO27_ADC1" type="bidirectional"/>
+        <pin num="33" name="AGND" type="power_in"/>
+        <pin num="34" name="GPIO28_ADC2" type="bidirectional"/>
+        <pin num="35" name="ADC_VREF" type="power_in"/>
+        <pin num="36" name="3V3" type="power_in"/>
+        <pin num="37" name="3V3_EN" type="input"/>
+        <pin num="38" name="GND" type="bidirectional"/>
+        <pin num="39" name="VSYS" type="power_in"/>
+        <pin num="40" name="VBUS" type="power_in"/>
+        <pin num="41" name="SWCLK" type="input"/>
+        <pin num="42" name="GND" type="power_in"/>
+        <pin num="43" name="SWDIO" type="bidirectional"/>
+      </pins>
+    </libpart>
+    <libpart lib="Mechanical" part="Fiducial">
+      <description>Fiducial Marker</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Fiducial*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">FID</field>
+        <field name="Value">Fiducial</field>
+        <field name="Datasheet">~</field>
+      </fields>
+    </libpart>
+    <libpart lib="Transistor_FET" part="AO3400A">
+      <description>30V Vds, 5.7A Id, N-Channel MOSFET, SOT-23</description>
+      <docs>http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf</docs>
+      <footprints>
+        <fp>SOT?23*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">Q</field>
+        <field name="Value">AO3400A</field>
+        <field name="Footprint">Package_TO_SOT_SMD:SOT-23</field>
+        <field name="Datasheet">http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="G" type="input"/>
+        <pin num="2" name="S" type="passive"/>
+        <pin num="3" name="D" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Transistor_FET" part="AO3401A">
+      <description>-4.0A Id, -30V Vds, P-Channel MOSFET, SOT-23</description>
+      <docs>http://www.aosmd.com/pdfs/datasheet/AO3401A.pdf</docs>
+      <footprints>
+        <fp>SOT?23*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">Q</field>
+        <field name="Value">AO3401A</field>
+        <field name="Footprint">Package_TO_SOT_SMD:SOT-23</field>
+        <field name="Datasheet">http://www.aosmd.com/pdfs/datasheet/AO3401A.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="G" type="input"/>
+        <pin num="2" name="S" type="passive"/>
+        <pin num="3" name="D" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="BC-1-208">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">BC-1-208</field>
+        <field name="Footprint">mta1:BC-1-208</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="BC-1-701">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">BC-1-701</field>
+        <field name="Footprint">mta1:BC-1-701</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+        <pin num="4" name="4" type="passive"/>
+        <pin num="5" name="5" type="passive"/>
+        <pin num="6" name="6" type="passive"/>
+        <pin num="7" name="7" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="Foot">
+      <fields>
+        <field name="Reference">FOOT</field>
+        <field name="Value">Foot</field>
+      </fields>
+    </libpart>
+    <libpart lib="mta1" part="Screw">
+      <fields>
+        <field name="Reference">SCREW?</field>
+        <field name="Value">Screw</field>
+      </fields>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="Connector_Generic">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Connector_Generic.kicad_sym</uri>
+    </library>
+    <library logical="Device">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Device.kicad_sym</uri>
+    </library>
+    <library logical="MCU_RaspberryPi_and_Boards">
+      <uri>C:/Users/matt/Other-Repos/tillitis-key1/hw/boards/KiCad-RP Pico/RP-Pico-Libraries/MCU_RaspberryPi_and_Boards.kicad_sym</uri>
+    </library>
+    <library logical="Mechanical">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Mechanical.kicad_sym</uri>
+    </library>
+    <library logical="Transistor_FET">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Transistor_FET.kicad_sym</uri>
+    </library>
+    <library logical="mta1">
+      <uri>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tp1/../mta1-library/mta1.kicad_sym</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="+5V">
+      <node ref="F1" pin="1" pintype="passive"/>
+      <node ref="U2" pin="40" pinfunction="VBUS" pintype="power_in"/>
+    </net>
+    <net code="2" name="/5V_DUT">
+      <node ref="J3" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="Q2" pin="3" pinfunction="D" pintype="passive"/>
+    </net>
+    <net code="3" name="/5V_EN">
+      <node ref="R17" pin="1" pintype="passive"/>
+      <node ref="U2" pin="10" pinfunction="GPIO7" pintype="bidirectional"/>
+    </net>
+    <net code="4" name="/5V_FUSE">
+      <node ref="F1" pin="2" pintype="passive"/>
+      <node ref="Q2" pin="2" pinfunction="S" pintype="passive"/>
+      <node ref="R8" pin="2" pintype="passive"/>
+    </net>
+    <net code="5" name="/CDONE">
+      <node ref="J4" pin="6" pinfunction="6" pintype="passive"/>
+      <node ref="R16" pin="1" pintype="passive"/>
+    </net>
+    <net code="6" name="/CDONE_U">
+      <node ref="R16" pin="2" pintype="passive"/>
+      <node ref="U2" pin="20" pinfunction="GPIO15" pintype="bidirectional"/>
+    </net>
+    <net code="7" name="/CRESET">
+      <node ref="J4" pin="5" pinfunction="5" pintype="passive"/>
+      <node ref="R15" pin="1" pintype="passive"/>
+    </net>
+    <net code="8" name="/CRESET_U">
+      <node ref="R15" pin="2" pintype="passive"/>
+      <node ref="U2" pin="19" pinfunction="GPIO14" pintype="bidirectional"/>
+    </net>
+    <net code="9" name="/CTS_U">
+      <node ref="U2" pin="22" pinfunction="GPIO17" pintype="bidirectional"/>
+    </net>
+    <net code="10" name="/GPIO1_U">
+      <node ref="U2" pin="24" pinfunction="GPIO18" pintype="bidirectional"/>
+    </net>
+    <net code="11" name="/GPIO2_U">
+      <node ref="U2" pin="25" pinfunction="GPIO19" pintype="bidirectional"/>
+    </net>
+    <net code="12" name="/GPIO3_U">
+      <node ref="U2" pin="26" pinfunction="GPIO20" pintype="bidirectional"/>
+    </net>
+    <net code="13" name="/GPIO4_U">
+      <node ref="U2" pin="27" pinfunction="GPIO21" pintype="bidirectional"/>
+    </net>
+    <net code="14" name="/MISO">
+      <node ref="J4" pin="4" pinfunction="4" pintype="passive"/>
+      <node ref="R14" pin="1" pintype="passive"/>
+    </net>
+    <net code="15" name="/MISO_U">
+      <node ref="R14" pin="2" pintype="passive"/>
+      <node ref="U2" pin="17" pinfunction="GPIO13" pintype="bidirectional"/>
+    </net>
+    <net code="16" name="/MOSI">
+      <node ref="J4" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R12" pin="1" pintype="passive"/>
+    </net>
+    <net code="17" name="/MOSI_U">
+      <node ref="R12" pin="2" pintype="passive"/>
+      <node ref="U2" pin="15" pinfunction="GPIO11" pintype="bidirectional"/>
+    </net>
+    <net code="18" name="/PICO22">
+      <node ref="U2" pin="29" pinfunction="GPIO22" pintype="bidirectional"/>
+    </net>
+    <net code="19" name="/PICO26">
+      <node ref="U2" pin="31" pinfunction="GPIO26_ADC0" pintype="bidirectional"/>
+    </net>
+    <net code="20" name="/PICO27">
+      <node ref="U2" pin="32" pinfunction="GPIO27_ADC1" pintype="bidirectional"/>
+    </net>
+    <net code="21" name="/PICO28">
+      <node ref="U2" pin="34" pinfunction="GPIO28_ADC2" pintype="bidirectional"/>
+    </net>
+    <net code="22" name="/PICO_0">
+      <node ref="U2" pin="1" pinfunction="GPIO0" pintype="bidirectional"/>
+    </net>
+    <net code="23" name="/PICO_1">
+      <node ref="U2" pin="2" pinfunction="GPIO1" pintype="bidirectional"/>
+    </net>
+    <net code="24" name="/PICO_2">
+      <node ref="U2" pin="4" pinfunction="GPIO2" pintype="bidirectional"/>
+    </net>
+    <net code="25" name="/PICO_3">
+      <node ref="U2" pin="5" pinfunction="GPIO3" pintype="bidirectional"/>
+    </net>
+    <net code="26" name="/PICO_3V3">
+      <node ref="U2" pin="36" pinfunction="3V3" pintype="power_in"/>
+    </net>
+    <net code="27" name="/PICO_3V3_EN">
+      <node ref="U2" pin="37" pinfunction="3V3_EN" pintype="input"/>
+    </net>
+    <net code="28" name="/PICO_4">
+      <node ref="U2" pin="6" pinfunction="GPIO4" pintype="bidirectional"/>
+    </net>
+    <net code="29" name="/PICO_5">
+      <node ref="U2" pin="7" pinfunction="GPIO5" pintype="bidirectional"/>
+    </net>
+    <net code="30" name="/PICO_6">
+      <node ref="U2" pin="9" pinfunction="GPIO6" pintype="bidirectional"/>
+    </net>
+    <net code="31" name="/PICO_ADC_VREF">
+      <node ref="U2" pin="35" pinfunction="ADC_VREF" pintype="power_in"/>
+    </net>
+    <net code="32" name="/PICO_RUN">
+      <node ref="U2" pin="30" pinfunction="RUN" pintype="input"/>
+    </net>
+    <net code="33" name="/PICO_VSYS">
+      <node ref="U2" pin="39" pinfunction="VSYS" pintype="power_in"/>
+    </net>
+    <net code="34" name="/RTS_U">
+      <node ref="U2" pin="21" pinfunction="GPIO16" pintype="bidirectional"/>
+    </net>
+    <net code="35" name="/RX_U">
+      <node ref="U2" pin="12" pinfunction="GPIO9" pintype="bidirectional"/>
+    </net>
+    <net code="36" name="/SCK">
+      <node ref="J4" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R11" pin="1" pintype="passive"/>
+    </net>
+    <net code="37" name="/SCK_U">
+      <node ref="R11" pin="2" pintype="passive"/>
+      <node ref="U2" pin="14" pinfunction="GPIO10" pintype="bidirectional"/>
+    </net>
+    <net code="38" name="/SS">
+      <node ref="J4" pin="3" pinfunction="3" pintype="passive"/>
+      <node ref="R13" pin="1" pintype="passive"/>
+    </net>
+    <net code="39" name="/SS_U">
+      <node ref="R13" pin="2" pintype="passive"/>
+      <node ref="U2" pin="16" pinfunction="GPIO12" pintype="bidirectional"/>
+    </net>
+    <net code="40" name="/TX_U">
+      <node ref="U2" pin="11" pinfunction="GPIO8" pintype="bidirectional"/>
+    </net>
+    <net code="41" name="GND">
+      <node ref="J3" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="J4" pin="7" pinfunction="7" pintype="passive"/>
+      <node ref="Q1" pin="2" pinfunction="S" pintype="passive"/>
+      <node ref="R7" pin="1" pintype="passive"/>
+      <node ref="U2" pin="13" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="18" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="23" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="28" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="3" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="33" pinfunction="AGND" pintype="power_in"/>
+      <node ref="U2" pin="38" pinfunction="GND" pintype="bidirectional"/>
+      <node ref="U2" pin="42" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="8" pinfunction="GND" pintype="power_in"/>
+    </net>
+    <net code="42" name="Net-(Q1-Pad1)">
+      <node ref="Q1" pin="1" pinfunction="G" pintype="input"/>
+      <node ref="R17" pin="2" pintype="passive"/>
+      <node ref="R7" pin="2" pintype="passive"/>
+    </net>
+    <net code="43" name="Net-(Q1-Pad3)">
+      <node ref="Q1" pin="3" pinfunction="D" pintype="passive"/>
+      <node ref="Q2" pin="1" pinfunction="G" pintype="input"/>
+      <node ref="R8" pin="1" pintype="passive"/>
+    </net>
+    <net code="44" name="unconnected-(U2-Pad41)">
+      <node ref="U2" pin="41" pinfunction="SWCLK" pintype="input+no_connect"/>
+    </net>
+    <net code="45" name="unconnected-(U2-Pad43)">
+      <node ref="U2" pin="43" pinfunction="SWDIO" pintype="bidirectional+no_connect"/>
+    </net>
+  </nets>
+</export>

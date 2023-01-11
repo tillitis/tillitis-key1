@@ -6,24 +6,43 @@ project. Tested on Ubuntu 22.10.
 ## General development environment
 
 The following is intended to be a complete list of the packages that
-are *required* to build the gateware icestorm toolchain, the firmware,
-the apps, and as well our QEMU machine.
+are required for doing all of the following:
 
-    sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
-                     gawk tcl-dev libffi-dev git mercurial graphviz \
-                     xdot pkg-config python3 libftdi-dev \
-                     python3-dev libeigen3-dev \
-                     libboost-dev libboost-filesystem-dev \
-                     libboost-thread-dev libboost-program-options-dev \
-                     libboost-iostreams-dev cmake libhidapi-dev \
-                     ninja-build libglib2.0-dev libpixman-1-dev \
-                     golang
+ - building and developing [TKey host programs and
+   apps](https://github.com/tillitis/tillitis-key1-apps)
+ - building our [QEMU machine](https://github.com/tillitis/qemu/tree/tk1)
+   (useful for apps dev)
+ - building and developing firmware and FPGA gateware (which also
+   requires building the toolchain below)
 
-## Gateware: icestorm toolchain
+```
+sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
+                 gawk tcl-dev libffi-dev git mercurial graphviz \
+                 xdot pkg-config python3 libftdi-dev \
+                 python3-dev libeigen3-dev \
+                 libboost-dev libboost-filesystem-dev \
+                 libboost-thread-dev libboost-program-options-dev \
+                 libboost-iostreams-dev cmake libhidapi-dev \
+                 ninja-build libglib2.0-dev libpixman-1-dev \
+                 golang
+```
+
+## Gateware: Yosys/Icestorm toolchain
+
+If the LED of your TKey is flashing white when you plug it, then the
+firmware is running and it's already usable! If you want to develop
+TKey apps, then only the above general development environment is
+needed.
+
+Compiling and installing Yosys and friends is only needed if your TKey
+is not already running the required firmware and FPGA gateware, or if
+you want to do development on these components.
 
 These steps are used to build and install the
-[icestorm](http://bygone.clairexen.net/icestorm/) toolchain (in
-`/usr/local`). Note that nextpnr is replacing Arachne-PNR.
+[icestorm](http://bygone.clairexen.net/icestorm/) toolchain. The
+binaries are installed in `/usr/local`. Note that if you have or
+install other versions of these tools locally, they could conflict
+(case in point: `yosys` installed on MacOS using brew).
 
     git clone https://github.com/YosysHQ/icestorm
     cd icestorm

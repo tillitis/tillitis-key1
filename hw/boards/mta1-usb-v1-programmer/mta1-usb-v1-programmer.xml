@@ -1,0 +1,944 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\mta1-usb-v1-programmer\mta1-usb-v1-programmer.kicad_sch</source>
+    <date>11/14/2022 1:40:21 PM</date>
+    <tool>Eeschema (6.0.4)</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title>mta1-usb-v1-programmer</title>
+        <company>Tillitis AB</company>
+        <rev>V1</rev>
+        <date>2022-09-12</date>
+        <source>mta1-usb-v1-programmer.kicad_sch</source>
+        <comment number="1" value="2022"/>
+        <comment number="2" value="https://github.com/tillitis/tillitis-key1"/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="F1">
+      <value>50mA, nSMD005</value>
+      <footprint>Fuse:Fuse_1206_3216Metric</footprint>
+      <fields>
+        <field name="Manufacturer">RUILON</field>
+        <field name="Manufacturer Part Number">SMD1206P005TF</field>
+        <field name="Supplier">lcsc</field>
+        <field name="Supplier Part Number">C20797</field>
+      </fields>
+      <libsource lib="Device" part="Polyfuse_Small" description="Resettable fuse, polymeric positive temperature coefficient, small symbol"/>
+      <property name="Manufacturer" value="RUILON"/>
+      <property name="Manufacturer Part Number" value="SMD1206P005TF"/>
+      <property name="Supplier" value="lcsc"/>
+      <property name="Supplier Part Number" value="C20797"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d680d5fd-0440-4126-9a50-a6dd4afb33a8</tstamps>
+    </comp>
+    <comp ref="J1">
+      <value>Conn_01x20</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x20_P2.54mm_Vertical</footprint>
+      <libsource lib="Connector_Generic" part="Conn_01x20" description="Generic connector, single row, 01x20, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d6d9bbcf-eaf0-4951-a69b-0619ad826c2d</tstamps>
+    </comp>
+    <comp ref="J2">
+      <value>Conn_01x20</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x20_P2.54mm_Vertical</footprint>
+      <libsource lib="Connector_Generic" part="Conn_01x20" description="Generic connector, single row, 01x20, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>242a9a75-0b58-4b27-8d49-00b7b557b716</tstamps>
+    </comp>
+    <comp ref="Q1">
+      <value>WST3400A</value>
+      <footprint>Package_TO_SOT_SMD:SOT-23</footprint>
+      <fields>
+        <field name="Manufacturer">winsok</field>
+        <field name="Manufacturer Part Number">WST3400A</field>
+        <field name="Supplier">lcsc</field>
+        <field name="Supplier Part Number">C2758406</field>
+      </fields>
+      <libsource lib="Transistor_FET" part="AO3400A" description="30V Vds, 5.7A Id, N-Channel MOSFET, SOT-23"/>
+      <property name="Manufacturer" value="winsok"/>
+      <property name="Manufacturer Part Number" value="WST3400A"/>
+      <property name="Supplier" value="lcsc"/>
+      <property name="Supplier Part Number" value="C2758406"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>5d1becdb-d7cb-479e-96a6-ac75b81fcd5a</tstamps>
+    </comp>
+    <comp ref="Q2">
+      <value>JMTL3401A</value>
+      <footprint>Package_TO_SOT_SMD:SOT-23</footprint>
+      <fields>
+        <field name="Extended Value">1%,1/16W</field>
+        <field name="Manufacturer">jjm</field>
+        <field name="Manufacturer Part Number">JMTL3401A</field>
+        <field name="Supplier">lcsc</field>
+        <field name="Supplier Part Number">C394037</field>
+      </fields>
+      <libsource lib="Transistor_FET" part="AO3401A" description="-4.0A Id, -30V Vds, P-Channel MOSFET, SOT-23"/>
+      <property name="Extended Value" value="1%,1/16W"/>
+      <property name="Manufacturer" value="jjm"/>
+      <property name="Manufacturer Part Number" value="JMTL3401A"/>
+      <property name="Supplier" value="lcsc"/>
+      <property name="Supplier Part Number" value="C394037"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d3ea1d5f-628b-402d-8c57-17558e1c90d5</tstamps>
+    </comp>
+    <comp ref="R1">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>685c7b03-ce80-45e2-91c9-c88440b40532</tstamps>
+    </comp>
+    <comp ref="R2">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>4939bde4-83e9-44f5-a570-f5d438e73a06</tstamps>
+    </comp>
+    <comp ref="R3">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ba486e06-da37-470b-8c9b-7e1f52c39d20</tstamps>
+    </comp>
+    <comp ref="R4">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>49c7f509-a76b-4af7-8329-32d61e76cb2c</tstamps>
+    </comp>
+    <comp ref="R5">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>9bbd203c-da3b-4317-9a6d-756481391e73</tstamps>
+    </comp>
+    <comp ref="R6">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>30c49ad1-00cc-4346-9a78-76677d343c55</tstamps>
+    </comp>
+    <comp ref="R7">
+      <value>10K</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1%,1/16W</field>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AT0402FRE0710KL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">YAG2104TR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1%,1/16W"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AT0402FRE0710KL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="YAG2104TR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e57ccad9-d15a-433a-9097-6058c784b461</tstamps>
+    </comp>
+    <comp ref="R8">
+      <value>10K</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Extended Value">1%,1/16W</field>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AT0402FRE0710KL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">YAG2104TR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Extended Value" value="1%,1/16W"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AT0402FRE0710KL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="YAG2104TR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e1feac4a-d44d-47a5-a436-be193f26d2c1</tstamps>
+    </comp>
+    <comp ref="R9">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>cc6af947-8159-472e-a172-1aaf6c78ebab</tstamps>
+    </comp>
+    <comp ref="R10">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>2572e621-352d-4244-a575-fbf264547530</tstamps>
+    </comp>
+    <comp ref="R11">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>288cfe4b-d275-4618-b8ff-070883c4973c</tstamps>
+    </comp>
+    <comp ref="R12">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>c78cd817-19f5-4171-a237-d4474033ef43</tstamps>
+    </comp>
+    <comp ref="R13">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>01216bc5-841a-48c8-8321-cf2570eae978</tstamps>
+    </comp>
+    <comp ref="R14">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>9fe5526d-9d48-4dc6-b2b5-10a305db920f</tstamps>
+    </comp>
+    <comp ref="R15">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>042c84ad-dade-411c-a96b-6ee43d5dc7ba</tstamps>
+    </comp>
+    <comp ref="R16">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>674fd507-845b-42b5-abac-04315852109e</tstamps>
+    </comp>
+    <comp ref="R17">
+      <value>R100</value>
+      <footprint>mta1:ERJ2G(0402)_L</footprint>
+      <fields>
+        <field name="Manufacturer">yageo</field>
+        <field name="Manufacturer Part Number">AF0402FR-07100RL</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">13-AF0402FR-07100RLTR-ND</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Manufacturer" value="yageo"/>
+      <property name="Manufacturer Part Number" value="AF0402FR-07100RL"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="13-AF0402FR-07100RLTR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>778d5535-7de9-4935-9676-7a512c0646c9</tstamps>
+    </comp>
+    <comp ref="U1">
+      <value>mta1_usb_ch554_pogo</value>
+      <footprint>mta1-usb:mta1_usb_ch554_pogo</footprint>
+      <fields>
+        <field name="Manufacturer">blinkinlabs</field>
+      </fields>
+      <libsource lib="mta1" part="mta1_usb_ch554_pogo" description=""/>
+      <property name="Manufacturer" value="blinkinlabs"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>2cec7140-3ded-402a-9afb-6ebe543562a6</tstamps>
+    </comp>
+    <comp ref="U2">
+      <value>Pico</value>
+      <footprint>RPi_Pico:RPi_Pico_SMD_TH</footprint>
+      <fields>
+        <field name="Manufacturer">Raspberry Pi</field>
+        <field name="Manufacturer Part Number">SC0915</field>
+        <field name="Supplier">Digikey</field>
+        <field name="Supplier Part Number">2648-SC0915TR-ND</field>
+      </fields>
+      <libsource lib="MCU_RaspberryPi_and_Boards" part="Pico" description=""/>
+      <property name="Manufacturer" value="Raspberry Pi"/>
+      <property name="Manufacturer Part Number" value="SC0915"/>
+      <property name="Supplier" value="Digikey"/>
+      <property name="Supplier Part Number" value="2648-SC0915TR-ND"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="mta1-usb-v1-programmer.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>2d0a577d-e6e5-4906-8190-a6cdcac896ad</tstamps>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Connector_Generic" part="Conn_01x20">
+      <description>Generic connector, single row, 01x20, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_1x??_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x20</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+        <pin num="3" name="Pin_3" type="passive"/>
+        <pin num="4" name="Pin_4" type="passive"/>
+        <pin num="5" name="Pin_5" type="passive"/>
+        <pin num="6" name="Pin_6" type="passive"/>
+        <pin num="7" name="Pin_7" type="passive"/>
+        <pin num="8" name="Pin_8" type="passive"/>
+        <pin num="9" name="Pin_9" type="passive"/>
+        <pin num="10" name="Pin_10" type="passive"/>
+        <pin num="11" name="Pin_11" type="passive"/>
+        <pin num="12" name="Pin_12" type="passive"/>
+        <pin num="13" name="Pin_13" type="passive"/>
+        <pin num="14" name="Pin_14" type="passive"/>
+        <pin num="15" name="Pin_15" type="passive"/>
+        <pin num="16" name="Pin_16" type="passive"/>
+        <pin num="17" name="Pin_17" type="passive"/>
+        <pin num="18" name="Pin_18" type="passive"/>
+        <pin num="19" name="Pin_19" type="passive"/>
+        <pin num="20" name="Pin_20" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="Polyfuse_Small">
+      <description>Resettable fuse, polymeric positive temperature coefficient, small symbol</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>*polyfuse*</fp>
+        <fp>*PTC*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">F</field>
+        <field name="Value">Polyfuse_Small</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="R">
+      <description>Resistor</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>R_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="MCU_RaspberryPi_and_Boards" part="Pico">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">Pico</field>
+        <field name="Footprint">RPi_Pico:RPi_Pico_SMD_TH</field>
+      </fields>
+      <pins>
+        <pin num="1" name="GPIO0" type="bidirectional"/>
+        <pin num="2" name="GPIO1" type="bidirectional"/>
+        <pin num="3" name="GND" type="power_in"/>
+        <pin num="4" name="GPIO2" type="bidirectional"/>
+        <pin num="5" name="GPIO3" type="bidirectional"/>
+        <pin num="6" name="GPIO4" type="bidirectional"/>
+        <pin num="7" name="GPIO5" type="bidirectional"/>
+        <pin num="8" name="GND" type="power_in"/>
+        <pin num="9" name="GPIO6" type="bidirectional"/>
+        <pin num="10" name="GPIO7" type="bidirectional"/>
+        <pin num="11" name="GPIO8" type="bidirectional"/>
+        <pin num="12" name="GPIO9" type="bidirectional"/>
+        <pin num="13" name="GND" type="power_in"/>
+        <pin num="14" name="GPIO10" type="bidirectional"/>
+        <pin num="15" name="GPIO11" type="bidirectional"/>
+        <pin num="16" name="GPIO12" type="bidirectional"/>
+        <pin num="17" name="GPIO13" type="bidirectional"/>
+        <pin num="18" name="GND" type="power_in"/>
+        <pin num="19" name="GPIO14" type="bidirectional"/>
+        <pin num="20" name="GPIO15" type="bidirectional"/>
+        <pin num="21" name="GPIO16" type="bidirectional"/>
+        <pin num="22" name="GPIO17" type="bidirectional"/>
+        <pin num="23" name="GND" type="power_in"/>
+        <pin num="24" name="GPIO18" type="bidirectional"/>
+        <pin num="25" name="GPIO19" type="bidirectional"/>
+        <pin num="26" name="GPIO20" type="bidirectional"/>
+        <pin num="27" name="GPIO21" type="bidirectional"/>
+        <pin num="28" name="GND" type="power_in"/>
+        <pin num="29" name="GPIO22" type="bidirectional"/>
+        <pin num="30" name="RUN" type="input"/>
+        <pin num="31" name="GPIO26_ADC0" type="bidirectional"/>
+        <pin num="32" name="GPIO27_ADC1" type="bidirectional"/>
+        <pin num="33" name="AGND" type="power_in"/>
+        <pin num="34" name="GPIO28_ADC2" type="bidirectional"/>
+        <pin num="35" name="ADC_VREF" type="power_in"/>
+        <pin num="36" name="3V3" type="power_in"/>
+        <pin num="37" name="3V3_EN" type="input"/>
+        <pin num="38" name="GND" type="bidirectional"/>
+        <pin num="39" name="VSYS" type="power_in"/>
+        <pin num="40" name="VBUS" type="power_in"/>
+        <pin num="41" name="SWCLK" type="input"/>
+        <pin num="42" name="GND" type="power_in"/>
+        <pin num="43" name="SWDIO" type="bidirectional"/>
+      </pins>
+    </libpart>
+    <libpart lib="Transistor_FET" part="AO3400A">
+      <description>30V Vds, 5.7A Id, N-Channel MOSFET, SOT-23</description>
+      <docs>http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf</docs>
+      <footprints>
+        <fp>SOT?23*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">Q</field>
+        <field name="Value">AO3400A</field>
+        <field name="Footprint">Package_TO_SOT_SMD:SOT-23</field>
+        <field name="Datasheet">http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="G" type="input"/>
+        <pin num="2" name="S" type="passive"/>
+        <pin num="3" name="D" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Transistor_FET" part="AO3401A">
+      <description>-4.0A Id, -30V Vds, P-Channel MOSFET, SOT-23</description>
+      <docs>http://www.aosmd.com/pdfs/datasheet/AO3401A.pdf</docs>
+      <footprints>
+        <fp>SOT?23*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">Q</field>
+        <field name="Value">AO3401A</field>
+        <field name="Footprint">Package_TO_SOT_SMD:SOT-23</field>
+        <field name="Datasheet">http://www.aosmd.com/pdfs/datasheet/AO3401A.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="G" type="input"/>
+        <pin num="2" name="S" type="passive"/>
+        <pin num="3" name="D" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="mta1" part="mta1_usb_ch554_pogo">
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">mta1_usb_ch554_pogo</field>
+        <field name="Footprint">mta1-usb:mta1_usb_ch554_pogo</field>
+      </fields>
+      <pins>
+        <pin num="1" name="GND" type="power_in"/>
+        <pin num="2" name="5V" type="power_in"/>
+        <pin num="3" name="3.3V" type="power_out"/>
+        <pin num="4" name="2.5V" type="power_out"/>
+        <pin num="5" name="1.2V" type="power_out"/>
+        <pin num="6" name="TX" type="bidirectional"/>
+        <pin num="7" name="RX" type="bidirectional"/>
+        <pin num="8" name="RTS" type="bidirectional"/>
+        <pin num="9" name="CTS" type="bidirectional"/>
+        <pin num="10" name="GPIO1" type="bidirectional"/>
+        <pin num="11" name="GPIO2" type="bidirectional"/>
+        <pin num="12" name="GPIO3" type="bidirectional"/>
+        <pin num="13" name="GPIO4" type="bidirectional"/>
+        <pin num="14" name="GND" type="bidirectional"/>
+        <pin num="15" name="CDONE" type="bidirectional"/>
+        <pin num="16" name="CRESET" type="bidirectional"/>
+        <pin num="17" name="MISO" type="bidirectional"/>
+        <pin num="18" name="SS" type="bidirectional"/>
+        <pin num="19" name="MOSI" type="bidirectional"/>
+        <pin num="20" name="SCK" type="bidirectional"/>
+        <pin num="21" name="NC" type="no_connect"/>
+        <pin num="22" name="NC" type="no_connect"/>
+        <pin num="23" name="NC" type="no_connect"/>
+        <pin num="24" name="NC" type="no_connect"/>
+        <pin num="25" name="NC" type="no_connect"/>
+        <pin num="26" name="NC" type="no_connect"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="Connector_Generic">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Connector_Generic.kicad_sym</uri>
+    </library>
+    <library logical="Device">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Device.kicad_sym</uri>
+    </library>
+    <library logical="MCU_RaspberryPi_and_Boards">
+      <uri>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\mta1-usb-v1-programmer/../KiCad-RP Pico/RP-Pico-Libraries/MCU_RaspberryPi_and_Boards.kicad_sym</uri>
+    </library>
+    <library logical="Transistor_FET">
+      <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Transistor_FET.kicad_sym</uri>
+    </library>
+    <library logical="mta1">
+      <uri>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\mta1-usb-v1-programmer/../mta1-library/mta1.kicad_sym</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="+1V2">
+      <node ref="J2" pin="10" pinfunction="Pin_10" pintype="passive"/>
+      <node ref="U1" pin="5" pinfunction="1.2V" pintype="power_out"/>
+      <node ref="U2" pin="31" pinfunction="GPIO26_ADC0" pintype="bidirectional"/>
+    </net>
+    <net code="2" name="+2V5">
+      <node ref="J2" pin="9" pinfunction="Pin_9" pintype="passive"/>
+      <node ref="U1" pin="4" pinfunction="2.5V" pintype="power_out"/>
+      <node ref="U2" pin="32" pinfunction="GPIO27_ADC1" pintype="bidirectional"/>
+    </net>
+    <net code="3" name="+3V3">
+      <node ref="J2" pin="7" pinfunction="Pin_7" pintype="passive"/>
+      <node ref="U1" pin="3" pinfunction="3.3V" pintype="power_out"/>
+      <node ref="U2" pin="34" pinfunction="GPIO28_ADC2" pintype="bidirectional"/>
+    </net>
+    <net code="4" name="+5V">
+      <node ref="F1" pin="1" pintype="passive"/>
+      <node ref="J2" pin="1" pinfunction="Pin_1" pintype="passive"/>
+      <node ref="U2" pin="40" pinfunction="VBUS" pintype="power_in"/>
+    </net>
+    <net code="5" name="/5V_DUT">
+      <node ref="Q2" pin="3" pinfunction="D" pintype="passive"/>
+      <node ref="U1" pin="2" pinfunction="5V" pintype="power_in"/>
+    </net>
+    <net code="6" name="/5V_EN">
+      <node ref="J1" pin="10" pinfunction="Pin_10" pintype="passive"/>
+      <node ref="R17" pin="1" pintype="passive"/>
+      <node ref="U2" pin="10" pinfunction="GPIO7" pintype="bidirectional"/>
+    </net>
+    <net code="7" name="/5V_FUSE">
+      <node ref="F1" pin="2" pintype="passive"/>
+      <node ref="Q2" pin="2" pinfunction="S" pintype="passive"/>
+      <node ref="R8" pin="2" pintype="passive"/>
+    </net>
+    <net code="8" name="/CDONE">
+      <node ref="R16" pin="1" pintype="passive"/>
+      <node ref="U1" pin="15" pinfunction="CDONE" pintype="bidirectional"/>
+    </net>
+    <net code="9" name="/CDONE_U">
+      <node ref="J1" pin="20" pinfunction="Pin_20" pintype="passive"/>
+      <node ref="R16" pin="2" pintype="passive"/>
+      <node ref="U2" pin="20" pinfunction="GPIO15" pintype="bidirectional"/>
+    </net>
+    <net code="10" name="/CRESET">
+      <node ref="R15" pin="1" pintype="passive"/>
+      <node ref="U1" pin="16" pinfunction="CRESET" pintype="bidirectional"/>
+    </net>
+    <net code="11" name="/CRESET_U">
+      <node ref="J1" pin="19" pinfunction="Pin_19" pintype="passive"/>
+      <node ref="R15" pin="2" pintype="passive"/>
+      <node ref="U2" pin="19" pinfunction="GPIO14" pintype="bidirectional"/>
+    </net>
+    <net code="12" name="/CTS">
+      <node ref="R5" pin="2" pintype="passive"/>
+      <node ref="U1" pin="9" pinfunction="CTS" pintype="bidirectional"/>
+    </net>
+    <net code="13" name="/CTS_U">
+      <node ref="J2" pin="19" pinfunction="Pin_19" pintype="passive"/>
+      <node ref="R5" pin="1" pintype="passive"/>
+      <node ref="U2" pin="22" pinfunction="GPIO17" pintype="bidirectional"/>
+    </net>
+    <net code="14" name="/GPIO1">
+      <node ref="R4" pin="2" pintype="passive"/>
+      <node ref="U1" pin="10" pinfunction="GPIO1" pintype="bidirectional"/>
+    </net>
+    <net code="15" name="/GPIO1_U">
+      <node ref="J2" pin="17" pinfunction="Pin_17" pintype="passive"/>
+      <node ref="R4" pin="1" pintype="passive"/>
+      <node ref="U2" pin="24" pinfunction="GPIO18" pintype="bidirectional"/>
+    </net>
+    <net code="16" name="/GPIO2">
+      <node ref="R3" pin="2" pintype="passive"/>
+      <node ref="U1" pin="11" pinfunction="GPIO2" pintype="bidirectional"/>
+    </net>
+    <net code="17" name="/GPIO2_U">
+      <node ref="J2" pin="16" pinfunction="Pin_16" pintype="passive"/>
+      <node ref="R3" pin="1" pintype="passive"/>
+      <node ref="U2" pin="25" pinfunction="GPIO19" pintype="bidirectional"/>
+    </net>
+    <net code="18" name="/GPIO3">
+      <node ref="R2" pin="2" pintype="passive"/>
+      <node ref="U1" pin="12" pinfunction="GPIO3" pintype="bidirectional"/>
+    </net>
+    <net code="19" name="/GPIO3_U">
+      <node ref="J2" pin="15" pinfunction="Pin_15" pintype="passive"/>
+      <node ref="R2" pin="1" pintype="passive"/>
+      <node ref="U2" pin="26" pinfunction="GPIO20" pintype="bidirectional"/>
+    </net>
+    <net code="20" name="/GPIO4">
+      <node ref="R1" pin="2" pintype="passive"/>
+      <node ref="U1" pin="13" pinfunction="GPIO4" pintype="bidirectional"/>
+    </net>
+    <net code="21" name="/GPIO4_U">
+      <node ref="J2" pin="14" pinfunction="Pin_14" pintype="passive"/>
+      <node ref="R1" pin="1" pintype="passive"/>
+      <node ref="U2" pin="27" pinfunction="GPIO21" pintype="bidirectional"/>
+    </net>
+    <net code="22" name="/MISO">
+      <node ref="R14" pin="1" pintype="passive"/>
+      <node ref="U1" pin="17" pinfunction="MISO" pintype="bidirectional"/>
+    </net>
+    <net code="23" name="/MISO_U">
+      <node ref="J1" pin="17" pinfunction="Pin_17" pintype="passive"/>
+      <node ref="R14" pin="2" pintype="passive"/>
+      <node ref="U2" pin="17" pinfunction="GPIO13" pintype="bidirectional"/>
+    </net>
+    <net code="24" name="/MOSI">
+      <node ref="R12" pin="1" pintype="passive"/>
+      <node ref="U1" pin="19" pinfunction="MOSI" pintype="bidirectional"/>
+    </net>
+    <net code="25" name="/MOSI_U">
+      <node ref="J1" pin="15" pinfunction="Pin_15" pintype="passive"/>
+      <node ref="R12" pin="2" pintype="passive"/>
+      <node ref="U2" pin="15" pinfunction="GPIO11" pintype="bidirectional"/>
+    </net>
+    <net code="26" name="/PICO22">
+      <node ref="J2" pin="12" pinfunction="Pin_12" pintype="passive"/>
+      <node ref="U2" pin="29" pinfunction="GPIO22" pintype="bidirectional"/>
+    </net>
+    <net code="27" name="/PICO_0">
+      <node ref="J1" pin="1" pinfunction="Pin_1" pintype="passive"/>
+      <node ref="U2" pin="1" pinfunction="GPIO0" pintype="bidirectional"/>
+    </net>
+    <net code="28" name="/PICO_1">
+      <node ref="J1" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="U2" pin="2" pinfunction="GPIO1" pintype="bidirectional"/>
+    </net>
+    <net code="29" name="/PICO_2">
+      <node ref="J1" pin="4" pinfunction="Pin_4" pintype="passive"/>
+      <node ref="U2" pin="4" pinfunction="GPIO2" pintype="bidirectional"/>
+    </net>
+    <net code="30" name="/PICO_3">
+      <node ref="J1" pin="5" pinfunction="Pin_5" pintype="passive"/>
+      <node ref="U2" pin="5" pinfunction="GPIO3" pintype="bidirectional"/>
+    </net>
+    <net code="31" name="/PICO_3V3">
+      <node ref="J2" pin="5" pinfunction="Pin_5" pintype="passive"/>
+      <node ref="U2" pin="36" pinfunction="3V3" pintype="power_in"/>
+    </net>
+    <net code="32" name="/PICO_3V3_EN">
+      <node ref="J2" pin="4" pinfunction="Pin_4" pintype="passive"/>
+      <node ref="U2" pin="37" pinfunction="3V3_EN" pintype="input"/>
+    </net>
+    <net code="33" name="/PICO_4">
+      <node ref="J1" pin="6" pinfunction="Pin_6" pintype="passive"/>
+      <node ref="U2" pin="6" pinfunction="GPIO4" pintype="bidirectional"/>
+    </net>
+    <net code="34" name="/PICO_5">
+      <node ref="J1" pin="7" pinfunction="Pin_7" pintype="passive"/>
+      <node ref="U2" pin="7" pinfunction="GPIO5" pintype="bidirectional"/>
+    </net>
+    <net code="35" name="/PICO_6">
+      <node ref="J1" pin="9" pinfunction="Pin_9" pintype="passive"/>
+      <node ref="U2" pin="9" pinfunction="GPIO6" pintype="bidirectional"/>
+    </net>
+    <net code="36" name="/PICO_ADC_VREF">
+      <node ref="J2" pin="6" pinfunction="Pin_6" pintype="passive"/>
+      <node ref="U2" pin="35" pinfunction="ADC_VREF" pintype="power_in"/>
+    </net>
+    <net code="37" name="/PICO_RUN">
+      <node ref="J2" pin="11" pinfunction="Pin_11" pintype="passive"/>
+      <node ref="U2" pin="30" pinfunction="RUN" pintype="input"/>
+    </net>
+    <net code="38" name="/PICO_VSYS">
+      <node ref="J2" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="U2" pin="39" pinfunction="VSYS" pintype="power_in"/>
+    </net>
+    <net code="39" name="/RTS">
+      <node ref="R6" pin="2" pintype="passive"/>
+      <node ref="U1" pin="8" pinfunction="RTS" pintype="bidirectional"/>
+    </net>
+    <net code="40" name="/RTS_U">
+      <node ref="J2" pin="20" pinfunction="Pin_20" pintype="passive"/>
+      <node ref="R6" pin="1" pintype="passive"/>
+      <node ref="U2" pin="21" pinfunction="GPIO16" pintype="bidirectional"/>
+    </net>
+    <net code="41" name="/RX">
+      <node ref="R10" pin="1" pintype="passive"/>
+      <node ref="U1" pin="7" pinfunction="RX" pintype="bidirectional"/>
+    </net>
+    <net code="42" name="/RX_U">
+      <node ref="J1" pin="12" pinfunction="Pin_12" pintype="passive"/>
+      <node ref="R10" pin="2" pintype="passive"/>
+      <node ref="U2" pin="12" pinfunction="GPIO9" pintype="bidirectional"/>
+    </net>
+    <net code="43" name="/SCK">
+      <node ref="R11" pin="1" pintype="passive"/>
+      <node ref="U1" pin="20" pinfunction="SCK" pintype="bidirectional"/>
+    </net>
+    <net code="44" name="/SCK_U">
+      <node ref="J1" pin="14" pinfunction="Pin_14" pintype="passive"/>
+      <node ref="R11" pin="2" pintype="passive"/>
+      <node ref="U2" pin="14" pinfunction="GPIO10" pintype="bidirectional"/>
+    </net>
+    <net code="45" name="/SS">
+      <node ref="R13" pin="1" pintype="passive"/>
+      <node ref="U1" pin="18" pinfunction="SS" pintype="bidirectional"/>
+    </net>
+    <net code="46" name="/SS_U">
+      <node ref="J1" pin="16" pinfunction="Pin_16" pintype="passive"/>
+      <node ref="R13" pin="2" pintype="passive"/>
+      <node ref="U2" pin="16" pinfunction="GPIO12" pintype="bidirectional"/>
+    </net>
+    <net code="47" name="/TX">
+      <node ref="R9" pin="1" pintype="passive"/>
+      <node ref="U1" pin="6" pinfunction="TX" pintype="bidirectional"/>
+    </net>
+    <net code="48" name="/TX_U">
+      <node ref="J1" pin="11" pinfunction="Pin_11" pintype="passive"/>
+      <node ref="R9" pin="2" pintype="passive"/>
+      <node ref="U2" pin="11" pinfunction="GPIO8" pintype="bidirectional"/>
+    </net>
+    <net code="49" name="GND">
+      <node ref="J1" pin="13" pinfunction="Pin_13" pintype="passive"/>
+      <node ref="J1" pin="18" pinfunction="Pin_18" pintype="passive"/>
+      <node ref="J1" pin="3" pinfunction="Pin_3" pintype="passive"/>
+      <node ref="J1" pin="8" pinfunction="Pin_8" pintype="passive"/>
+      <node ref="J2" pin="13" pinfunction="Pin_13" pintype="passive"/>
+      <node ref="J2" pin="18" pinfunction="Pin_18" pintype="passive"/>
+      <node ref="J2" pin="3" pinfunction="Pin_3" pintype="passive"/>
+      <node ref="J2" pin="8" pinfunction="Pin_8" pintype="passive"/>
+      <node ref="Q1" pin="2" pinfunction="S" pintype="passive"/>
+      <node ref="R7" pin="1" pintype="passive"/>
+      <node ref="U1" pin="1" pinfunction="GND" pintype="power_in"/>
+      <node ref="U1" pin="14" pinfunction="GND" pintype="bidirectional"/>
+      <node ref="U2" pin="13" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="18" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="23" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="28" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="3" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="33" pinfunction="AGND" pintype="power_in"/>
+      <node ref="U2" pin="38" pinfunction="GND" pintype="bidirectional"/>
+      <node ref="U2" pin="42" pinfunction="GND" pintype="power_in"/>
+      <node ref="U2" pin="8" pinfunction="GND" pintype="power_in"/>
+    </net>
+    <net code="50" name="Net-(Q1-Pad1)">
+      <node ref="Q1" pin="1" pinfunction="G" pintype="input"/>
+      <node ref="R17" pin="2" pintype="passive"/>
+      <node ref="R7" pin="2" pintype="passive"/>
+    </net>
+    <net code="51" name="Net-(Q1-Pad3)">
+      <node ref="Q1" pin="3" pinfunction="D" pintype="passive"/>
+      <node ref="Q2" pin="1" pinfunction="G" pintype="input"/>
+      <node ref="R8" pin="1" pintype="passive"/>
+    </net>
+    <net code="52" name="unconnected-(U1-Pad21)">
+      <node ref="U1" pin="21" pinfunction="NC" pintype="no_connect"/>
+    </net>
+    <net code="53" name="unconnected-(U1-Pad22)">
+      <node ref="U1" pin="22" pinfunction="NC" pintype="no_connect"/>
+    </net>
+    <net code="54" name="unconnected-(U1-Pad23)">
+      <node ref="U1" pin="23" pinfunction="NC" pintype="no_connect"/>
+    </net>
+    <net code="55" name="unconnected-(U1-Pad24)">
+      <node ref="U1" pin="24" pinfunction="NC" pintype="no_connect"/>
+    </net>
+    <net code="56" name="unconnected-(U1-Pad25)">
+      <node ref="U1" pin="25" pinfunction="NC" pintype="no_connect"/>
+    </net>
+    <net code="57" name="unconnected-(U1-Pad26)">
+      <node ref="U1" pin="26" pinfunction="NC" pintype="no_connect"/>
+    </net>
+    <net code="58" name="unconnected-(U2-Pad41)">
+      <node ref="U2" pin="41" pinfunction="SWCLK" pintype="input+no_connect"/>
+    </net>
+    <net code="59" name="unconnected-(U2-Pad43)">
+      <node ref="U2" pin="43" pinfunction="SWDIO" pintype="bidirectional+no_connect"/>
+    </net>
+  </nets>
+</export>

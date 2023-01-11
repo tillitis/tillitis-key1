@@ -13,7 +13,6 @@
 volatile uint32_t *tk1name0        = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
 volatile uint32_t *tk1name1        = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
 volatile uint32_t *uds             = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
-volatile uint32_t *uda             = (volatile uint32_t *)TK1_MMIO_QEMU_UDA; // Only in QEMU right now
 volatile uint32_t *cdi             = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 volatile uint32_t *udi             = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
 volatile uint32_t *switch_app      = (volatile uint32_t *)TK1_MMIO_TK1_SWITCH_APP;
@@ -30,8 +29,9 @@ volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
 volatile int (*fw_blake2s)(void *, unsigned long, const void *, unsigned long, const void *, unsigned long, blake2s_ctx *);
 // clang-format on
 
-// TODO Real UDA is 4 words (16 bytes)
-#define UDA_WORDS 1
+#define UDS_WORDS 8
+#define UDI_WORDS 2
+#define CDI_WORDS 8
 
 void puts(char *reason)
 {
@@ -115,53 +115,41 @@ int main()
 	putsn((char *)&name, 4);
 	puts("\r\n");
 
+	uint32_t zeros[8];
+	memset(zeros, 0, 8 * 4);
+
 	int anyfailed = 0;
 
-	uint32_t uds_local[8];
-	uint32_t uds_zeros[8];
-	memset(uds_zeros, 0, 8 * 4);
+	uint32_t uds_local[UDS_WORDS];
 	// Should get non-empty UDS
-	wordcpy(uds_local, (void *)uds, 8);
-	if (memeq(uds_local, uds_zeros, 8 * 4)) {
+	wordcpy(uds_local, (void *)uds, UDS_WORDS);
+	if (memeq(uds_local, zeros, UDS_WORDS * 4)) {
 		puts("FAIL: UDS empty\r\n");
 		anyfailed = 1;
 	}
 	// Should NOT be able to read from UDS again
-	wordcpy(uds_local, (void *)uds, 8);
-	if (!memeq(uds_local, uds_zeros, 8 * 4)) {
+	wordcpy(uds_local, (void *)uds, UDS_WORDS);
+	if (!memeq(uds_local, zeros, UDS_WORDS * 4)) {
 		puts("FAIL: Read UDS a second time\r\n");
 		anyfailed = 1;
 	}
 
-	// TODO test UDA once we have it in real hw
-	// uint32_t uda_local[UDA_WORDS];
-	// uint32_t uda_zeros[UDA_WORDS];
-	// memset(uda_zeros, 0, UDA_WORDS*4);
-	// // Should get non-empty UDA
-	// wordcpy(uda_local, (void *)uda, UDA_WORDS);
-	// if (memeq(uda_local, uda_zeros, UDA_WORDS*4)) {
-	// 	test_puts("FAIL: UDA empty\r\n");
-	// 	anyfailed = 1;
-	// }
-
-	uint32_t udi_local[2];
-	uint32_t udi_zeros[2];
-	memset(udi_zeros, 0, 2 * 4);
+	uint32_t udi_local[UDI_WORDS];
 	// Should get non-empty UDI
-	wordcpy(udi_local, (void *)udi, 2);
-	if (memeq(udi_local, udi_zeros, 2 * 4)) {
+	wordcpy(udi_local, (void *)udi, UDI_WORDS);
+	if (memeq(udi_local, zeros, UDI_WORDS * 4)) {
 		puts("FAIL: UDI empty\r\n");
 		anyfailed = 1;
 	}
 
 	// Should be able to write to CDI in fw (non-app) mode.
-	uint32_t cdi_writetest[8] = {0xdeafbeef, 0xdeafbeef, 0xdeafbeef,
-				     0xdeafbeef, 0xdeafbeef, 0xdeafbeef,
-				     0xdeafbeef, 0xdeafbeef};
-	uint32_t cdi_readback[8];
-	wordcpy((void *)cdi, cdi_writetest, 8);
-	wordcpy(cdi_readback, (void *)cdi, 8);
-	if (!memeq(cdi_writetest, cdi_readback, 8 * 4)) {
+	uint32_t cdi_writetest[CDI_WORDS] = {0xdeafbeef, 0xdeafbeef, 0xdeafbeef,
+					     0xdeafbeef, 0xdeafbeef, 0xdeafbeef,
+					     0xdeafbeef, 0xdeafbeef};
+	uint32_t cdi_readback[CDI_WORDS];
+	wordcpy((void *)cdi, cdi_writetest, CDI_WORDS);
+	wordcpy(cdi_readback, (void *)cdi, CDI_WORDS);
+	if (!memeq(cdi_writetest, cdi_readback, CDI_WORDS * 4)) {
 		puts("FAIL: Can't write CDI in fw mode\r\n");
 		anyfailed = 1;
 	}
@@ -193,29 +181,27 @@ int main()
 	}
 
 	// Should NOT be able to read from UDS in app-mode.
-	wordcpy(uds_local, (void *)uds, 8);
-	if (!memeq(uds_local, uds_zeros, 8 * 4)) {
+	wordcpy(uds_local, (void *)uds, UDS_WORDS);
+	if (!memeq(uds_local, zeros, UDS_WORDS * 4)) {
 		puts("FAIL: Read from UDS in app-mode\r\n");
 		anyfailed = 1;
 	}
 
-	// TODO test UDA once we have in in real hw
-	// // Now we should NOT be able to read from UDA.
-	// wordcpy(uda_local, (void *)uda, UDA_WORDS);
-	// if (!memeq(uda_local, uda_zeros, UDA_WORDS*4)) {
-	// 	test_puts("FAIL: Read from UDA in app-mode\r\n");
-	// 	anyfailed = 1;
-	// }
+	// Should NOT be able to read from UDI in app-mode.
+	wordcpy(udi_local, (void *)udi, UDI_WORDS);
+	if (!memeq(udi_local, zeros, UDI_WORDS * 4)) {
+		puts("FAIL: Read from UDI in app-mode\r\n");
+		anyfailed = 1;
+	}
 
-	uint32_t cdi_local[8];
-	uint32_t cdi_local2[8];
-	uint32_t cdi_zeros[8];
-	memset(cdi_zeros, 0, 8 * 4);
-	wordcpy(cdi_local, (void *)cdi, 8);
+	uint32_t cdi_local[CDI_WORDS];
+	uint32_t cdi_local2[CDI_WORDS];
+	wordcpy(cdi_local, (void *)cdi, CDI_WORDS);
+
 	// Write to CDI should NOT have any effect in app mode.
-	wordcpy((void *)cdi, cdi_zeros, 8);
-	wordcpy(cdi_local2, (void *)cdi, 8);
-	if (!memeq(cdi_local, cdi_local2, 8 * 4)) {
+	wordcpy((void *)cdi, zeros, CDI_WORDS);
+	wordcpy(cdi_local2, (void *)cdi, CDI_WORDS);
+	if (!memeq(cdi_local, cdi_local2, CDI_WORDS * 4)) {
 		puts("FAIL: Write to CDI in app-mode\r\n");
 		anyfailed = 1;
 	}

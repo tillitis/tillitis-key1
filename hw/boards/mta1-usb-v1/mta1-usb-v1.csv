@@ -1,39 +1,26 @@
-"Id";"Designator";"Package";"Quantity";"Designation";"Supplier and ref";
-1;"C7,C13,C16,C17,C18,C19,C20,C21,C22,C23,C26";"CAPC1005X06L";11;"0.10uF";;;
-2;"D1";"LED_0402_1005Metric";1;"Power LED";;;
-3;"D3";"0402rgb-1010";1;"LED_ARGB";;;
-4;"R1,R2,R19,R22,R20,R25,R23,R26,R24";"ERJ2G(0402)_L";9;"10k";;;
-5;"R16,R17,R18";"ERJ2G(0402)_L";3;"1K";;;
-6;"U5";"SOT-23-6";1;"USBLC6-2SC6";;;
-7;"U6";"QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm";1;"ICE40UP5K-SG48ITR";;;
-8;"C6,C25,C1,C5,C4,C2,C3";"CAPC1608X09L";7;"10uF";;;
-9;"FB3";"Ferritbead_0603_1608Metric";1;"BLM18KG300TN1D";;;
-10;"R29";"ERJ2G(0402)_L";1;"5.1K";;;
-11;"U2";"SOT-23-5";1;"MIC5258-1.2YM5";;;
-12;"U1";"SOT-23-5";1;"MCP1824T-2502EOT";;;
-13;"R3";"ERJ2G(0402)_L";1;"1k";;;
-14;"U9";"NCP752BSN33T1G";1;"NCP752BSN33T1G";;;
-15;"U3";"MSOP-10_3x3mm_P0.5mm";1;"CH552E";;;
-16;"U10";"SOT-23-6";1;"PT2043AT6";;;
-17;"U8";"W25Q80DVUXIE";1;"W25Q80DVUXIE";;;
-18;"R30";"ERJ2G(0402)_L";1;"2K";;;
-19;"C27";"CAPC1005X06L";1;"10pF";;;
-20;"C8";"C_1206_3216Metric";1;"C";;;
-21;"P1";"U261-241N-4BS60";1;"USB_C_Plug";;;
-22;"TP1";"TestPoint_Pad_D1.0mm";1;"5V";;;
-23;"TP3";"TestPoint_Pad_D1.0mm";1;"2V5";;;
-24;"TP4";"TestPoint_Pad_D1.0mm";1;"1V2";;;
-25;"TP2";"TestPoint_Pad_D1.0mm";1;"3V3";;;
-26;"TP7,TP9,TP8,TP6";"TestPoint_Pad_D1.0mm";4;"INT_ICE_SCK";;;
-27;"TP5";"TestPoint_Pad_D1.0mm";1;"APP_GND";;;
-28;"TP18";"TestPoint_Pad_D1.0mm";1;"APP_GPIO1";;;
-29;"TP19";"TestPoint_Pad_D1.0mm";1;"APP_GPIO2";;;
-30;"TP14";"TestPoint_Pad_D1.0mm";1;"APP_ICE_MOSI";;;
-31;"TP28";"TestPoint_Pad_D1.0mm";1;"GND";;;
-32;"TP17";"TestPoint_Pad_D1.0mm";1;"APP_CDONE";;;
-33;"TP15";"TestPoint_Pad_D1.0mm";1;"APP_ICE_MISO";;;
-34;"TP20";"TestPoint_Pad_D1.0mm";1;"APP_GPIO3";;;
-35;"TP13";"TestPoint_Pad_D1.0mm";1;"APP_ICE_SS";;;
-36;"TP12";"TestPoint_Pad_D1.0mm";1;"APP_ICE_SCK";;;
-37;"TP21";"TestPoint_Pad_D1.0mm";1;"APP_GPIO4";;;
-38;"TP16";"TestPoint_Pad_D1.0mm";1;"APP_CRESET";;;
+"Source:","C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\mta1-usb-v1\mta1-usb-v1.kicad_sch"
+"Date:","11/9/2022 10:32:44 PM"
+"Tool:","Eeschema (6.0.4)"
+"Generator:","C:\Program Files\KiCad\6.0\bin\scripting\plugins/bom_csv_grouped_by_extended_value.py"
+"Component Count:","47"
+"Ref","Qnty","Value","Footprint","Description","Manufacturer","Manufacturer Part Number","Supplier","Supplier Part Number"
+"C1,C2,C3,C4,C5,C6,C25","7","10uF,10V,X5R,20%","mta1:CAPC1608X09L","Unpolarized capacitor","Any/not critical","","",""
+"C7,C13,C16,C17,C18,C19,C20,C21,C22,C23,C26","11","0.10uF,16V,X5R,20%","mta1:CAPC1005X06L","Unpolarized capacitor","Any/not critical","","",""
+"C8","1","10uF,16V,X5R,10%","Capacitor_SMD:C_1206_3216Metric","Unpolarized capacitor","Fenghua","1206X106K160NT","LCSC","C105478"
+"C27","1","2.7pF,16V,X5R,20%","mta1:CAPC1005X06L","Unpolarized capacitor","Any/not critical","","",""
+"D1","1","0402 indicator LED, blue","LED_SMD:LED_0402_1005Metric","Light emitting diode","Foshan NationStar","NCD0402B1","LCSC","C130724"
+"D3","1","LED_ARGB","mta1:0402rgb-1010","","Foshan NationStar","FC-B1010RGBT-HG","LCSC","C158099"
+"FB3","1","BLM18KG300TN1D","mta1:Ferritbead_0603_1608Metric","","Murata","BLM18KG300TN1D","Digikey","490-5447-1-ND"
+"P1","1","USB_C_Plug","mta1:U261-241N-4BS60","USB Type-C Plug connector","XKB","U261-241N-4BS60","LCSC","C319150"
+"R1,R2,R19,R20,R22,R23,R24,R25,R26","9","10k,1/16W,5%","mta1:ERJ2G(0402)_L","Resistor","Any/not critical","","",""
+"R3,R16,R17,R18","4","1k,1/16W,5%","mta1:ERJ2G(0402)_L","Resistor","Any/not critical","","",""
+"R29","1","5.1k,1/16W,1%","mta1:ERJ2G(0402)_L","Resistor","Any/not critical","","",""
+"R30","1","2k,1/16W,1%","mta1:ERJ2G(0402)_L","Resistor","Any/not critical","","",""
+"U1","1","MCP1824T-2502EOT","Package_TO_SOT_SMD:SOT-23-5","IC REG LINEAR 2.5V 300MA SOT23-5","Microchip","MCP1824T-2502EOT","Digikey","MCP1824T-2502E/OTCT-ND"
+"U2","1","MIC5258-1.2YM5","Package_TO_SOT_SMD:SOT-23-5","IC REG LINEAR 1.2V 150MA SOT23-5","Micrel Inc.","MIC5258-1.2YM5","Digikey","2156-MIC5258-1.2YM5-ND"
+"U3","1","CH552E","Package_SO:MSOP-10_3x3mm_P0.5mm","8-bit enhanced USB microcontroller CH552","WCH","CH552E","LCSC","C967938"
+"U5","1","USBLC6-2SC6","Package_TO_SOT_SMD:SOT-23-6","Very low capacitance ESD protection diode, 2 data-line, SOT-23-6","ST","USBLC6-2SC6","Digikey","497-5235-1-ND"
+"U6","1","ICE40UP5K-SG48ITR","Package_DFN_QFN:QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm","iCE40 UltraPlus FPGA, 5280 LUTs, 1.2V, 48-pin QFN","Lattice","ICE40UP5K-SG48ITR","Digikey","220-2145-2-ND"
+"U8","1","XT25F08BDFIGT-S","mta1:W25Q80DVUXIE","IC FLASH 8MBIT SPI 104MHZ 8USON","XTX","XT25F08BDFIGT-S","LCSC","C558860"
+"U9","1","NCP752BSN33T1G","mta1:NCP752BSN33T1G","IC REG LINEAR 3.3V 200MA 5TSOP","onsemi","NCP752BSN33T1G","Digikey","NCP752BSN33T1GOSCT-ND"
+"U10","1","PT2043AT6","Package_TO_SOT_SMD:SOT-23-6","","PinTeng","PT2043AT6","LCSC","C2914233"

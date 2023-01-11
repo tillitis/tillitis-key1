@@ -67,8 +67,6 @@ enum {
     TK1_MMIO_TOUCH_STATUS     = TK1_MMIO_TOUCH_BASE | 0x24,
     TK1_MMIO_TOUCH_STATUS_EVENT_BIT = 0,
 
-    // TODO HW core/addr is not yet defined for this:
-    TK1_MMIO_QEMU_UDA         = TK1_MMIO_QEMU_BASE | 0x20,
     // This will only ever exist in QEMU:
     TK1_MMIO_QEMU_DEBUG       = TK1_MMIO_QEMU_BASE | 0x1000,
 

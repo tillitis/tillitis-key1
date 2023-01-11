@@ -2,8 +2,8 @@
 
 ## Definitions
 
-  * Firmware - software that is part of ROM, and is currently
-    supplied via the FPGA bit stream.
+  * Firmware - software in ROM responsible for loading applications.
+	The firmware is included as part of the FPGA bit stream.
   * Application - software supplied by the host machine, which is
     received, loaded, and measured by the firmware (by hashing a
     digest over the binary).
@@ -332,7 +332,7 @@ Response to `FW_CMD_GET_UDI`.
 |--------|----------------|-----------------------------------------------------|
 | status | 1              | `STATUS_OK`/`STATUS_BAD`                            |
 | udi    | 4              | Integer (LE) with Reserved (4 bit), Vendor (2 byte),|
-|        |                | Product (1 byte), Revision (4 bit)                  |
+|        |                | Product ID (6 bit), Product Revision (6 bit)        |
 | udi    | 4              | Integer serial number (LE)                          |
 
 
@@ -513,16 +513,17 @@ Assigned core prefixes:
 | `TOUCH_STATUS`    | r/w   | r/w       |        |          |           | TOUCH_STATUS_EVENT_BIT is 1 when touched. After detecting a touch       |
 |                   |       |           |        |          |           | event (reading a 1), write anything here to acknowledge it.             |
 | `FW_RAM`          | r/w   | invisible | 1 kiB  | u8[1024] |           | Firmware-only RAM.                                                      |
-| `UDA`             | r     | invisible | 16B    | u8[16]   |           | Unique Device Authentication key.                                       |
-| `UDI`             | r     | r         | 8B     | u64      |           | Unique Device ID (UDI).                                                 |
+| `UDI`             | r     | invisible | 8B     | u64      |           | Unique Device ID (UDI).                                                 |
 | `QEMU_DEBUG`      | w     | w         |        | u8       |           | Debug console (only in QEMU)                                            |
 | `NAME0`           | r     | r         | 4B     | char[4]  | "tk1 "    | ID of core/stick                                                        |
 | `NAME1`           | r     | r         | 4B     | char[4]  | "mkdf"    | ID of core/stick                                                        |
 | `VERSION`         | r     | r         | 4B     | u32      | 1         | Current version.                                                        |
 | `SWITCH_APP`      | r/w   | r         | 1B     | u8       |           | Write anything here to trigger the switch to application mode. Reading  |
 |                   |       |           |        |          |           | returns 0 if device is in firmware mode, 0xffffffff if in app mode.     |
-| `LED`             | w     | w         | 1B     | u8       |           |                                                                         |
-| `GPIO`            |       |           |        |          |           |                                                                         |
+| `LED`             | r/w   | r/w       | 1B     | u8       |           | Control of the color LEDs in RBG LED on the board.                      |
+|                   |       |           |        |          |           | Bit 0 is Blue, bit 1 is Green, and bit 2 is Red LED.                    |
+| `GPIO`            | r/w   | r/w       | 1B     | u8       |           | Bits 0 and 1 contain the input level of GPIO 1 and 2.                   |
+|                   |       |           |        | u8       |           | Bits 3 and 4 store the output level of GPIO 3 and 4.                    |
 | `APP_ADDR`        | r/w   | r         | 4B     | u32      |           | Firmware stores app load address here, so app can read its own location |
 | `APP_SIZE`        | r/w   | r         | 4B     | u32      |           | Firmware stores app app size here, so app can read its own size         |
 | `BLAKE2S`         | r/w   | r         | 4B     | u32      |           | Function pointer to a BLAKE2S function in the firmware                  |

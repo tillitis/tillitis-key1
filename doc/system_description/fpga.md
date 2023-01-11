@@ -150,7 +150,16 @@ includes:
 - Read access to the 32 bit FPGA design version, expressed as an integer
 
 - Control and status access for the RGB LED on TKey board
-- Control ans status access for the 4 GPIOs on the TKey board
+  - Setting bit 0 high turns on the Blue LED.
+  - Setting bit 1 high turns on the Green LED.
+  - Setting bit 2 high turns on the Red LED.
+
+- Control and status access for the 4 GPIOs on the TKey board
+  - GPIO 1 and 2 are inputs and provide read access to the
+    current sampled value digital values on the pins.
+
+  - GPIO 3 and 4 are outputs. The digital value written to
+    the bits will be presented on the pins.
 
 - Application read access to information about the loaded
   application. The information is written by the firmware.

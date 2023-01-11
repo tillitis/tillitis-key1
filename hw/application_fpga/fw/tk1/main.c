@@ -22,6 +22,12 @@ static volatile uint32_t *app_size        = (volatile uint32_t *)TK1_MMIO_TK1_AP
 static volatile uint8_t  *fw_ram          = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
 static volatile uint32_t *led             = (volatile uint32_t *)TK1_MMIO_TK1_LED;
 static volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
+static volatile uint32_t *trng_status     = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
+static volatile uint32_t *trng_entropy    = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
+static volatile uint32_t *timer           = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
+static volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
+static volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
+static volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
 
 #define LED_RED   (1 << TK1_MMIO_TK1_LED_R_BIT)
 #define LED_GREEN (1 << TK1_MMIO_TK1_LED_G_BIT)
@@ -97,6 +103,19 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 
 	// To protect UDS we use a special firmware-only RAM for both
 	// the in parameter to blake2s and the blake2s context.
+
+	// Prepare to sleep a random number of cycles before reading out UDS to
+	// FW RAM
+	*timer_prescaler = 1;
+	while ((*trng_status & (1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
+	}
+	uint32_t rnd = *trng_entropy;
+	// Up to 65536 cycles
+	rnd &= 0xffff;
+	*timer = (rnd == 0 ? 1 : rnd);
+	*timer_ctrl = 1;
+	while ((*timer_status & (1 << TK1_MMIO_TIMER_STATUS_READY_BIT)) == 0) {
+	}
 
 	// Only word aligned access to UDS
 	wordcpy((void *)fw_ram, (void *)uds, 8);

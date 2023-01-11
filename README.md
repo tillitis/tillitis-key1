@@ -45,12 +45,12 @@ security-critical operations.
 
 ### Getting started
 
-* [Quickstart](doc/quickstart.md) to program the TKey
+* [tillitis-key1-apps repository](https://github.com/tillitis/tillitis-key1-apps),
+  with apps and host programs for using the TKey
+* [Quickstart](doc/quickstart.md) to initial programming of the TKey
+  (only required for the DevKit)
 * [Toolchain setup](doc/toolchain_setup.md)
 * [Release Notes](doc/release_notes.md)
-
-Applications and host programs that communicate with the apps are kept
-in this repository: https://github.com/tillitis/tillitis-key1-apps
 
 ### In-depth technical information
 
