@@ -2,7 +2,7 @@
 set -eu
 
 cd "${0%/*}"
-cd ../../boards/mta1-usb-v1/test
+cd ../../production_test
 
 if [ ! -e venv ]; then
   python3 -m venv venv
