@@ -35,10 +35,9 @@ module tb_timer_core();
 
   reg           tb_clk;
   reg           tb_reset_n;
-  reg           tb_start;
-  reg           tb_stop;
-  reg  [31 : 0] tb_prescaler;
-  reg  [31 : 0] tb_timer;
+  reg  [31 : 0] tb_prescaler_init;
+  reg  [31 : 0] tb_timer_init;
+  reg           tb_start_stop;
   wire [31 : 0] tb_curr_timer;
   wire          tb_ready;
 
@@ -49,10 +48,9 @@ module tb_timer_core();
   timer_core dut(
 		 .clk(tb_clk),
                  .reset_n(tb_reset_n),
-                 .prescaler_value(tb_prescaler),
-		 .timer_value(tb_timer),
-		 .start(tb_start),
-		 .stop(tb_stop),
+                 .prescaler_init(tb_prescaler_init),
+		 .timer_init(tb_timer_init),
+		 .start_stop(tb_start_stop),
 		 .curr_timer(tb_curr_timer),
 		 .ready(tb_ready)
                 );
@@ -99,10 +97,10 @@ module tb_timer_core();
       $display("Cycle: %08d", cycle_ctr);
       $display("");
       $display("Inputs and outputs:");
-      $display("start: 0x%1x, stop: 0x%1x, ready: 0x%1x",
-	       dut.start, dut.stop, dut.ready);
-      $display("prescaler_value: 0x%08x, timer_value: 0x%08x",
-	       dut.prescaler_value, dut.timer_value);
+      $display("prescaler_init: 0x%08x, timer_init: 0x%08x",
+	       dut.prescaler_init, dut.timer_init);
+      $display("start_stop: 0x%1x, ready: 0x%1x",
+	       dut.start_stop, dut.ready);
       $display("");
       $display("Internal state:");
       $display("prescaler_reg: 0x%08x, prescaler_new: 0x%08x",
@@ -174,28 +172,23 @@ module tb_timer_core();
   //----------------------------------------------------------------
   task init_sim;
     begin
-      cycle_ctr  = 0;
-      error_ctr  = 0;
-      tc_ctr     = 0;
-      tb_monitor = 0;
+      cycle_ctr          = 0;
+      error_ctr          = 0;
+      tc_ctr             = 0;
+      tb_monitor         = 0;
 
-      tb_clk     = 0;
-      tb_reset_n = 1;
+      tb_clk             = 0;
+      tb_reset_n         = 1;
 
-      tb_start     = 1'h0;
-      tb_stop      = 1'h0;
-      tb_prescaler = 32'h0;
-      tb_timer     = 32'h0;
+      tb_start_stop      = 1'h0;
+      tb_prescaler_init  = 32'h0;
+      tb_timer_init      = 32'h0;
     end
   endtask // init_sim
 
 
   //----------------------------------------------------------------
-  // test()
-  // Runs an encipher, decipher test with given key and plaintext
-  // The generated ciphertext is verified with the given ciphertet.
-  // The generated plaintxt is also verified against the
-  // given plaintext.
+  // test1()
   //----------------------------------------------------------------
   task test1;
     begin
@@ -204,12 +197,12 @@ module tb_timer_core();
 
       $display("--- test1 started.");
       dump_dut_state();
-      tb_prescaler = 32'h6;
-      tb_timer     = 32'h9;
+      tb_prescaler_init = 32'h6;
+      tb_timer_init     = 32'h9;
       #(CLK_PERIOD);
-      tb_start = 1'h1;
+      tb_start_stop = 1'h1;
       #(CLK_PERIOD);
-      tb_start = 1'h0;
+      tb_start_stop = 1'h0;
       wait_ready();
       #(CLK_PERIOD);
       tb_monitor = 0;
