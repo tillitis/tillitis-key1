@@ -37,9 +37,10 @@ module tb_timer_core();
   reg           tb_reset_n;
   reg  [31 : 0] tb_prescaler_init;
   reg  [31 : 0] tb_timer_init;
-  reg           tb_start_stop;
+  reg           tb_start;
+  reg           tb_stop;
   wire [31 : 0] tb_curr_timer;
-  wire          tb_ready;
+  wire          tb_running;
 
 
   //----------------------------------------------------------------
@@ -50,9 +51,10 @@ module tb_timer_core();
                  .reset_n(tb_reset_n),
                  .prescaler_init(tb_prescaler_init),
 		 .timer_init(tb_timer_init),
-		 .start_stop(tb_start_stop),
+		 .start(tb_start),
+		 .stop(tb_stop),
 		 .curr_timer(tb_curr_timer),
-		 .ready(tb_ready)
+		 .running(tb_running)
                 );
 
 
@@ -99,8 +101,8 @@ module tb_timer_core();
       $display("Inputs and outputs:");
       $display("prescaler_init: 0x%08x, timer_init: 0x%08x",
 	       dut.prescaler_init, dut.timer_init);
-      $display("start_stop: 0x%1x, ready: 0x%1x",
-	       dut.start_stop, dut.ready);
+      $display("start: 0x%1x, stop: 0x%1x, running: 0x%1x",
+	       dut.start, dut.stop, dut.running);
       $display("");
       $display("Internal state:");
       $display("prescaler_reg: 0x%08x, prescaler_new: 0x%08x",
@@ -141,18 +143,18 @@ module tb_timer_core();
 
 
   //----------------------------------------------------------------
-  // wait_ready()
+  // wait_done()
   //
-  // Wait for the ready flag in the dut to be set.
+  // Wait for the running flag in the dut to be dropped.
   //
   // Note: It is the callers responsibility to call the function
   // when the dut is actively processing and will in fact at some
   // point set the flag.
   //----------------------------------------------------------------
-  task wait_ready;
+  task wait_done;
     begin
       #(2 * CLK_PERIOD);
-      while (!tb_ready)
+      while (tb_running)
         begin
           #(CLK_PERIOD);
           if (DUMP_WAIT)
@@ -172,17 +174,18 @@ module tb_timer_core();
   //----------------------------------------------------------------
   task init_sim;
     begin
-      cycle_ctr          = 0;
-      error_ctr          = 0;
-      tc_ctr             = 0;
-      tb_monitor         = 0;
+      cycle_ctr         = 0;
+      error_ctr         = 0;
+      tc_ctr            = 0;
+      tb_monitor        = 0;
 
-      tb_clk             = 0;
-      tb_reset_n         = 1;
+      tb_clk            = 0;
+      tb_reset_n        = 1;
 
-      tb_start_stop      = 1'h0;
-      tb_prescaler_init  = 32'h0;
-      tb_timer_init      = 32'h0;
+      tb_start          = 1'h0;
+      tb_stop           = 1'h0;
+      tb_prescaler_init = 32'h0;
+      tb_timer_init     = 32'h0;
     end
   endtask // init_sim
 
@@ -200,10 +203,10 @@ module tb_timer_core();
       tb_prescaler_init = 32'h6;
       tb_timer_init     = 32'h9;
       #(CLK_PERIOD);
-      tb_start_stop = 1'h1;
+      tb_start = 1'h1;
       #(CLK_PERIOD);
-      tb_start_stop = 1'h0;
-      wait_ready();
+      tb_start = 1'h0;
+      wait_done();
       #(CLK_PERIOD);
       tb_monitor = 0;
       $display("--- test1 completed.");

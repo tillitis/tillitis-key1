@@ -19,10 +19,11 @@ module timer_core(
 
                   input wire [31 : 0]  prescaler_init,
                   input wire [31 : 0]  timer_init,
-                  input wire           start_stop,
+                  input wire           start,
+                  input wire           stop,
 
                   output wire [31 : 0] curr_timer,
-                  output wire          ready
+                  output wire          running
                   );
 
 
@@ -37,9 +38,9 @@ module timer_core(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg          ready_reg;
-  reg          ready_new;
-  reg          ready_we;
+  reg          running_reg;
+  reg          running_new;
+  reg          running_we;
 
   reg [31 : 0] prescaler_reg;
   reg [31 : 0] prescaler_new;
@@ -62,7 +63,7 @@ module timer_core(
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign curr_timer = timer_reg;
-  assign ready      = ready_reg;
+  assign running    = running_reg;
 
 
   //----------------------------------------------------------------
@@ -72,15 +73,15 @@ module timer_core(
     begin: reg_update
       if (!reset_n)
         begin
-          ready_reg     <= 1'h1;
+          running_reg   <= 1'h0;
 	  prescaler_reg <= 32'h0;
 	  timer_reg     <= 32'h0;
           core_ctrl_reg <= CTRL_IDLE;
         end
       else
         begin
-          if (ready_we) begin
-            ready_reg <= ready_new;
+          if (running_we) begin
+            running_reg <= running_new;
 	  end
 
 	  if (prescaler_we) begin
@@ -141,8 +142,8 @@ module timer_core(
   //----------------------------------------------------------------
   always @*
     begin : core_ctrl
-      ready_new     = 1'h0;
-      ready_we      = 1'h0;
+      running_new   = 1'h0;
+      running_we    = 1'h0;
       prescaler_set = 1'h0;
       prescaler_dec = 1'h0;
       timer_set     = 1'h0;
@@ -152,27 +153,29 @@ module timer_core(
 
       case (core_ctrl_reg)
         CTRL_IDLE: begin
-          if (start_stop)
-            begin
-              ready_new     = 1'h0;
-              ready_we      = 1'h1;
-	      prescaler_set = 1'h1;
-	      timer_set     = 1'h1;
-	      if (prescaler_init == 0) begin
-		core_ctrl_new = CTRL_TIMER;
-		core_ctrl_we  = 1'h1;
-		end else begin
-		  core_ctrl_new = CTRL_PRESCALER;
-		  core_ctrl_we  = 1'h1;
-		end
-            end
+          if (start) begin
+            running_new   = 1'h1;
+            running_we    = 1'h1;
+	    prescaler_set = 1'h1;
+	    timer_set     = 1'h1;
+
+	    if (prescaler_init == 0) begin
+	      core_ctrl_new = CTRL_TIMER;
+	      core_ctrl_we  = 1'h1;
+	    end
+
+	    else begin
+	      core_ctrl_new = CTRL_PRESCALER;
+	      core_ctrl_we  = 1'h1;
+	    end
+          end
         end
 
 
 	CTRL_PRESCALER: begin
-	  if (start_stop) begin
-            ready_new     = 1'h1;
-            ready_we      = 1'h1;
+	  if (stop) begin
+            running_new   = 1'h0;
+            running_we    = 1'h1;
             core_ctrl_new = CTRL_IDLE;
             core_ctrl_we  = 1'h1;
 	  end
@@ -181,7 +184,9 @@ module timer_core(
 	    if (prescaler_reg == 1) begin
               core_ctrl_new = CTRL_TIMER;
               core_ctrl_we  = 1'h1;
-	    end else begin
+	    end
+
+	    else begin
 	      prescaler_dec = 1'h1;
 	    end
 	  end
@@ -189,17 +194,17 @@ module timer_core(
 
 
 	CTRL_TIMER: begin
-	  if (start_stop) begin
-            ready_new     = 1'h1;
-            ready_we      = 1'h1;
+	  if (stop) begin
+            running_new   = 1'h0;
+            running_we    = 1'h1;
             core_ctrl_new = CTRL_IDLE;
             core_ctrl_we  = 1'h1;
 	  end
 
 	  else begin
 	    if (timer_reg == 1) begin
-              ready_new     = 1'h1;
-              ready_we      = 1'h1;
+              running_new   = 1'h0;
+              running_we    = 1'h1;
               core_ctrl_new = CTRL_IDLE;
               core_ctrl_we  = 1'h1;
 	    end
