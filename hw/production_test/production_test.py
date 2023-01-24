@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import hid_test
+import usb_test
 import time
 import numpy
 from subprocess import run
@@ -24,7 +24,7 @@ file_locations = {
 
 def enable_power():
     """Enable power to the TK-1"""
-    d = hid_test.ice40_flasher()
+    d = usb_test.ice40_flasher()
     d.gpio_set_direction(7, True)
     d.gpio_put(7, True)
     d.close()
@@ -35,7 +35,7 @@ def enable_power():
 def disable_power():
     """Disable power to the TK-1"""
     time.sleep(.1)
-    d = hid_test.ice40_flasher()
+    d = usb_test.ice40_flasher()
     d.gpio_set_direction(7, True)
     d.gpio_put(7, False)
     d.close()
@@ -54,7 +54,7 @@ def voltage_test():
     """Measure 3.3V 2.5V, and 1.2V voltage rails on the TK-1"""
     enable_power()
 
-    d = hid_test.ice40_flasher()
+    d = usb_test.ice40_flasher()
     vals = measure_voltages(d,20)
 
     d.close()
@@ -127,7 +127,7 @@ def test_extra_io():
     enable_power()
 
     time.sleep(.1)
-    d = hid_test.ice40_flasher()
+    d = usb_test.ice40_flasher()
 
     d.gpio_put(16, False)
     d.gpio_set_direction(16, True)
