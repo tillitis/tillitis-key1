@@ -10,13 +10,13 @@ build:
 	docker build -t tkey-builder .
 
 run:
-	docker run --mount type=bind,source="`pwd`/../",target=/build -w /build -it tkey-builder /usr/bin/bash
+	docker run --rm --mount type=bind,source="`pwd`/../",target=/build -w /build -it tkey-builder /usr/bin/bash
 
 podman-build:
 	podman build -t tkey-builder .
 
 podman-run:
-	podman run --mount type=bind,source="`pwd`/../",target=/build -w /build -it tkey-builder /usr/bin/bash
+	podman run --rm --mount type=bind,source="`pwd`/../",target=/build -w /build -it tkey-builder /usr/bin/bash
 
 podman-run-make:
-	podman run --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it tkey-builder make
+	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it tkey-builder make
