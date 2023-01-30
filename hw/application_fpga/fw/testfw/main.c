@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - Tillitis AB
+ * Copyright (C) 2022, 2023 - Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
@@ -213,33 +213,33 @@ int main()
 		anyfailed = 1;
 	}
 
-	puts("Testing timer...\r\n");
+	puts("Testing timer... 3");
 	// Matching clock at 18 MHz, giving us timer in seconds
 	*timer_prescaler = 18 * 1000000;
 
 	// Test timer expiration after 1s
 	*timer = 1;
-	// Write anything to start timer
-	*timer_ctrl = 1;
-	for (;;) {
-		if (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_READY_BIT)) {
-			// Timer expired (it is ready to start again)
-			break;
-		}
+	// Start the timer
+	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_START_BIT);
+	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
+	// Now timer has expired and is ready to run again
+	puts(" 2");
 
 	// Test to interrupt a timer - and reads from timer register
 	// Starting 10s timer and interrupting it in 3s...
 	*timer = 10;
-	*timer_ctrl = 1;
+	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_START_BIT);
 	uint32_t last_timer = 10;
 	for (int i = 0; i < 3; i++) {
 		last_timer = wait_timer_tick(last_timer);
 	}
-	// Write anything to stop the timer
-	*timer_ctrl = 1;
 
-	if (!(*timer_status & (1 << TK1_MMIO_TIMER_STATUS_READY_BIT))) {
+	// Stop the timer
+	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_STOP_BIT);
+	puts(" 1. done.\r\n");
+
+	if (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 		puts("FAIL: Timer didn't stop\r\n");
 		anyfailed = 1;
 	}
