@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - Tillitis AB
+ * Copyright (C) 2022, 2023 - Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
@@ -113,8 +113,8 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 	// Up to 65536 cycles
 	rnd &= 0xffff;
 	*timer = (rnd == 0 ? 1 : rnd);
-	*timer_ctrl = 1;
-	while ((*timer_status & (1 << TK1_MMIO_TIMER_STATUS_READY_BIT)) == 0) {
+	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_START_BIT);
+	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
 
 	// Only word aligned access to UDS
