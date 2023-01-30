@@ -496,9 +496,10 @@ Assigned core prefixes:
 |-------------------|-------|-----------|--------|----------|-----------|-------------------------------------------------------------------------|
 | `TRNG_STATUS`     | r     | r         |        |          |           | TRNG_STATUS_READY_BIT is 1 when an entropy word is available.           |
 | `TRNG_ENTROPY`    | r     | r         | 4B     | u32      |           | Entropy word. Reading a word will clear status.                         |
-| `TIMER_CTRL`      | r/w   | r/w       |        |          |           | If TIMER_STATUS_RUNNING_BIT in TIMER_STATUS is 0, setting bit 0 starts  |
-|                   |       |           |        |          |           | starts the timer. If the TIMER_STATUS_RUNNING_BIT is 1, setting bit 1   |
-|                   |       |           |        |          |           | stops the timer.                                                        |
+| `TIMER_CTRL`      | r/w   | r/w       |        |          |           | If TIMER_STATUS_RUNNING_BIT in TIMER_STATUS is 0, setting               |
+|                   |       |           |        |          |           | TIMER_CTRL_START_BIT here starts the timer.                             |
+|                   |       |           |        |          |           | If TIMER_STATUS_RUNNING_BIT in TIMER_STATUS is 1, setting               |
+|                   |       |           |        |          |           | TIMER_CTRL_STOP_BIT here stops the timer.                               |
 | `TIMER_STATUS`    | r     | r         |        |          |           | TIMER_STATUS_RUNNING_BIT is 1 when the timer is running.                |
 | `TIMER_PRESCALER` | r/w   | r/w       | 4B     |          |           | Prescaler init value. Write blocked when running.                       |
 | `TIMER_TIMER`     | r/w   | r/w       | 4B     |          |           | Timer init or current value while running. Write blocked when running.  |
