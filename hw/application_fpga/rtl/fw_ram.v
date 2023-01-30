@@ -2,7 +2,8 @@
 //
 // fw_ram.v
 // --------
-// A 256 x 32 RAM for use by the FW. With support for access control.
+// A 256 x 32 RAM (1024 bytes) for use by the FW. The memory has
+// support for mode based access control.
 //
 // Author: Joachim Strombergson
 // Copyright (C) 2022 - Tillitis AB
