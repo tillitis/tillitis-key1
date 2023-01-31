@@ -7,8 +7,9 @@ Descriptions of the tagged TKey releases.
 
 XYZ is a general release of the development kit first presented
 as a limited engineering-release. The main changes are polishing,
-completion and bug fixing since the engineering-release.
+completion and bug fixing since the engineering-releases.
 
+## engineering-release-2
 
 ### New and improved functionality
 
@@ -28,6 +29,13 @@ completion and bug fixing since the engineering-release.
   PicoRV32. Please compile your programs with the Zmmul extension,
   `-march=rv32iczmmul` for `clang`.
 
+- (HW) The UDI is locked down and can now only be accessed by
+  firmware, not in app-mode.
+
+- (HW) The timer MMIO API now takes separate start and stop bits for
+  triggering the respective action, mitigating a time-of-check to
+  time-of-use (TOCTOU) issue.
+
 - (FW) The firmware has been restructured to be a Finite State
   Machine (FSM) with defined states for booting, loading
   applications, measure applications, calculate the CDI and
@@ -38,7 +46,14 @@ completion and bug fixing since the engineering-release.
   returns its digest and start the program when the last data chunk is
   received.
 
-### Limititations
+- (FW) A BLAKE2s function present in firmware is now exposed for use
+  by TKey apps (through a function pointer located in MMIO `BLAKE2S`).
+  See [software.md](system_description/software.md) for more
+  information.
+
+- (FW) To protect against warm boot attacks, the firmware sleeps for a
+  random number of cycles before reading out the sensitive UDS into
+  FW RAM.
 
 ## engineering-release-1
 
