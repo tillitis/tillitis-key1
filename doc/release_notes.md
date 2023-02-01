@@ -23,14 +23,14 @@ completion and bug fixing since the engineering-releases.
 
 - (HW) The UART Rx FIFO is now able to handle 512 bytes.
 
-- (HW) The UART default bitrate has been icreased to 62500 bps.
+- (HW) The UART default bitrate has been increased to 62500 bps.
 
 - (HW) Support for division instruction (div) was removed from
   PicoRV32. Please compile your programs with the Zmmul extension,
   `-march=rv32iczmmul` for `clang`.
 
 - (HW) The UDI is locked down and can now only be accessed by
-  firmware, not in app-mode.
+  firmware, not applications.
 
 - (HW) The timer MMIO API now takes separate start and stop bits for
   triggering the respective action, mitigating a time-of-check to
@@ -46,12 +46,12 @@ completion and bug fixing since the engineering-releases.
   returns its digest and start the program when the last data chunk is
   received.
 
-- (FW) A BLAKE2s function present in firmware is now exposed for use
+- (FW) A BLAKE2s hash function present in firmware is now exposed for use
   by TKey apps (through a function pointer located in MMIO `BLAKE2S`).
   See [software.md](system_description/software.md) for more
   information.
 
-- (FW) To protect against warm boot attacks, the firmware sleeps for a
+- (FW) To make warm boot attacks harder, the firmware sleeps for a
   random number of cycles before reading out the sensitive UDS into
   FW RAM.
 
