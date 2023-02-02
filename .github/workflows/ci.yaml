@@ -1,0 +1,42 @@
+
+name: ci
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request: {}
+  # allow manual runs:
+  workflow_dispatch: {}
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/tillitis/tkey-builder:1
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          # fetch-depth: 0
+          persist-credentials: false
+
+      - name: fix
+        # https://github.com/actions/runner-images/issues/6775
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # make firmwares first to fail sooner
+      - name: make
+        working-directory: hw/application_fpga
+        run: make firmware.bin testfw.bin all
+
+      - name: check fmt of c code
+        working-directory: hw/application_fpga
+        run: |
+          make -C fw/tk1 checkfmt
+          make -C fw/testfw checkfmt
+
+      # TODO? first deal with hw/boards/ and hw/production_test/
+      # - name: check for SPDX tags
+      #   run: ./LICENSES/spdx-ensure

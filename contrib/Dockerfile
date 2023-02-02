@@ -7,6 +7,7 @@ RUN apt-get -qq update -y \
                build-essential \
                ca-certificates \
                clang \
+               clang-format \
                cmake \
                flex \
                gawk \
@@ -42,7 +43,7 @@ RUN apt-get -qq update -y \
     && rm -rf /var/lib/apt/lists/*
 
 
-FROM base as builder
+FROM base as toolsbuilder
 
 RUN git clone --depth=1 https://github.com/YosysHQ/icestorm /src
 WORKDIR /src
@@ -85,4 +86,5 @@ RUN rm -rf /src
 
 
 FROM base
-COPY --from=builder /usr/local/ /usr/local
+LABEL org.opencontainers.image.description="Toolchain for building TKey FPGA bitstream, firmware, apps"
+COPY --from=toolsbuilder /usr/local/ /usr/local

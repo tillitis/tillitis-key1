@@ -1,0 +1,97 @@
+#!/bin/bash
+set -eu
+
+tag="SPDX-License-Identifier:"
+
+dirsok=(
+.github/workflows/
+LICENSES/
+doc/
+hw/application_fpga/core/picorv32/
+hw/application_fpga/core/uart/
+hw/application_fpga/fw/tk1/blake2s/
+)
+
+filesok=(
+.editorconfig
+.gitattributes
+.gitignore
+README.md
+contrib/99-tillitis.rules
+contrib/Dockerfile
+contrib/Makefile
+dco.md
+hw/application_fpga/core/timer/README.md
+hw/application_fpga/core/tk1/README.md
+hw/application_fpga/core/touch_sense/README.md
+hw/application_fpga/core/trng/README.md
+hw/application_fpga/core/uds/README.txt
+hw/application_fpga/data/udi.hex
+hw/application_fpga/data/uds.hex
+hw/application_fpga/fw/.clang-format
+hw/application_fpga/fw/testfw/Makefile
+hw/application_fpga/fw/tk1/Makefile
+hw/application_fpga/tools/makehex/makehex.py
+hw/application_fpga/tools/reset-tk1
+hw/application_fpga/tools/tpt/README.md
+)
+
+is_missingok() {
+  item="$1"
+  # ok for empty files
+  [[ -f "$item" ]] && [[ ! -s "$item" ]] && return 0
+  for fileok in "${filesok[@]}"; do
+    [[ "$item" = "$fileok" ]] && return 0
+  done
+  for dirok in "${dirsok[@]}"; do
+    [[ "$item" =~ ^$dirok ]] && return 0
+  done
+  return 1
+}
+
+printf "* Checking for SPDX tags in %s\n" "$PWD"
+
+mapfile -t repofiles < <(git ls-files || true)
+if [[ -z "${repofiles[*]}" ]]; then
+  printf "* No files in the repo?!\n"
+  exit 1
+fi
+
+failed=0
+
+printed=0
+for fileok in "${filesok[@]}"; do
+  [[ -f "$fileok" ]] && continue
+  if (( !printed )); then
+    printf "* Some files in filesok are themselves missing:\n"
+    printed=1
+    failed=1
+  fi
+  printf "%s\n" "$fileok"
+done
+
+printed=0
+for dirok in "${dirsok[@]}"; do
+  [[ -d "$dirok" ]] && continue
+  if (( !printed )); then
+    printf "* Some dirs in dirsok are themselves missing:\n"
+    printed=1
+    failed=1
+  fi
+  printf "%s\n" "$dirok"
+done
+
+printed=0
+for file in "${repofiles[@]}"; do
+  is_missingok "$file" && continue
+  if ! grep -q "$tag" "$file"; then
+    if (( !printed )); then
+      printf "* Files missing the SPDX tag:\n"
+      printed=1
+      failed=1
+    fi
+    printf "%s\n" "$file"
+  fi
+done
+
+exit "$failed"

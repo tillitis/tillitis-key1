@@ -24,7 +24,7 @@ sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
                  libboost-thread-dev libboost-program-options-dev \
                  libboost-iostreams-dev cmake libhidapi-dev \
                  ninja-build libglib2.0-dev libpixman-1-dev \
-                 golang
+                 golang clang-format
 ```
 
 ## Gateware: Yosys/Icestorm toolchain
