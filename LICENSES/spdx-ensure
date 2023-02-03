@@ -1,9 +1,16 @@
 #!/bin/bash
 set -eu
 
+# Check for the SPDX tag in all files in the repo. Exit with a non-zero code if
+# some is missing. The missingok arrays below contain files and directories
+# with files where the the tag is not required.
+
+cd "${0%/*}"
+cd ..
+
 tag="SPDX-License-Identifier:"
 
-dirsok=(
+missingok_dirs=(
 .github/workflows/
 LICENSES/
 doc/
@@ -12,7 +19,7 @@ hw/application_fpga/core/uart/
 hw/application_fpga/fw/tk1/blake2s/
 )
 
-filesok=(
+missingok_files=(
 .editorconfig
 .gitattributes
 .gitignore
@@ -40,10 +47,10 @@ is_missingok() {
   item="$1"
   # ok for empty files
   [[ -f "$item" ]] && [[ ! -s "$item" ]] && return 0
-  for fileok in "${filesok[@]}"; do
+  for fileok in "${missingok_files[@]}"; do
     [[ "$item" = "$fileok" ]] && return 0
   done
-  for dirok in "${dirsok[@]}"; do
+  for dirok in "${missingok_dirs[@]}"; do
     [[ "$item" =~ ^$dirok ]] && return 0
   done
   return 1
@@ -60,10 +67,10 @@ fi
 failed=0
 
 printed=0
-for fileok in "${filesok[@]}"; do
+for fileok in "${missingok_files[@]}"; do
   [[ -f "$fileok" ]] && continue
   if (( !printed )); then
-    printf "* Some files in filesok are themselves missing:\n"
+    printf "* Some files in missingok_files are themselves missing:\n"
     printed=1
     failed=1
   fi
@@ -71,10 +78,10 @@ for fileok in "${filesok[@]}"; do
 done
 
 printed=0
-for dirok in "${dirsok[@]}"; do
+for dirok in "${missingok_dirs[@]}"; do
   [[ -d "$dirok" ]] && continue
   if (( !printed )); then
-    printf "* Some dirs in dirsok are themselves missing:\n"
+    printf "* Some dirs in missingok_dirs are themselves missing:\n"
     printed=1
     failed=1
   fi
