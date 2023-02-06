@@ -31,6 +31,11 @@ jobs:
         working-directory: hw/application_fpga
         run: make firmware.bin testfw.bin all
 
+      # this should to fail on errors, but not on warnings (using -Wno-fatal)
+      - name: lint using verilator
+        working-directory: hw/application_fpga
+        run: make lint
+
       - name: check fmt of c code
         working-directory: hw/application_fpga
         run: |
