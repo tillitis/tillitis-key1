@@ -417,7 +417,7 @@ def run_tests(test_list):
     return True
 
 if __name__ == '__main__':
-    last_a = 0
+    last_a = 1
 
     # Allow any of the settings in the file_locations structure to be overridden
     import argparse
@@ -454,13 +454,9 @@ if __name__ == '__main__':
             options.append([test])
             i += 1
 
-
-        if(int(last_a) == 0):
-            a = input('\n\n\nPlease type an option number and press return:')
-        else:
-            a = input('\n\n\nPress return to re-run test {:}, or type in a new option number and press return:'.format(last_a))
-            if a == '':
-                a = last_a
+        a = input('\n\n\nPress return to run test {:}, or type in a new option number and press return:'.format(last_a))
+        if a == '':
+            a = last_a
 
         try:
             test_sequence = options[int(a)-1]
