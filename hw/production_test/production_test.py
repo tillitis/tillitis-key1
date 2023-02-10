@@ -17,6 +17,7 @@ file_locations = {
     'chprog':'chprog',
     'app_gateware':'binaries/top.bin',
     'ch552_firmware':'binaries/usb_device_cdc.bin',
+    'ch552_firmware_blank':'binaries/blank.bin',
     'ch552_firmware_injected':'/tmp/ch552_fw_injected.bin',
     'pico_bootloader_source':'binaries/main.uf2',
     'pico_bootloader_target_dir':'/media/lab/RPI-RP2/'
@@ -203,6 +204,17 @@ def flash_ch552(serial):
     print(result)
     return (result.returncode == 0)
 
+def erase_ch552():
+    """Erase an attached CH552 device"""
+
+    # Program the CH552 using CHPROG
+    result = run([
+        file_locations['chprog'],
+        file_locations['ch552_firmware_blank']
+        ])
+    print(result)
+    return (result.returncode == 0)
+
 def find_serial_device(desc):
     """Look for a serial device that has the given attributes"""
 
@@ -249,6 +261,18 @@ def ch552_program():
     
     if not find_ch552(serial):
         print('Error finding flashed CH552!')
+        return False
+
+    return True
+
+def ch552_erase():
+    """Erase the firmware from a previously programmed CH552"""
+    if not test_found_bootloader():
+        print('Error finding CH552!')
+        return False
+
+    if not erase_ch552():
+        print('Error erasing CH552!')
         return False
 
     return True
@@ -334,6 +358,7 @@ manual_tests = [
         flash_check,
         test_extra_io,
         ch552_program,
+        ch552_erase,
         test_txrx_touchpad,
         enable_power,
         disable_power
@@ -481,6 +506,8 @@ if __name__ == '__main__':
             except AttributeError as e:
                 pass
             except OSError as e:
+                pass
+            except ValueError as e:
                 pass
         else:
             print(ANSI['bg_green'] + pass_msg + ANSI['reset'])
