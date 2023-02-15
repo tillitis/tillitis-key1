@@ -99,53 +99,47 @@ If your available `objcopy` and `size` commands is anything other than
 the default `llvm-objcopy` and `llvm-size` define `OBJCOPY` and `SIZE`
 to whatever they're called on your system before calling `make`.
 
-## Optional
-
-These tools are used for specific sub-components of the project, and
-are not required for general development
-
-### Kicad 6.0: Circuit board designs
+## Circuit board designs: KiCad 6.0
 
 The circuit board designs were all created in [KiCad
 6.0](https://www.kicad.org/).
 
-### mta1-usb-v1-programmer: RPi 2040 toolchain
+## MTA1-USB-V1 and TP-1 programming board firmware
 
-These tools are needed to build the programmer firmware for the
-mta1-usb-v1-programmer
+The programmer boards are running a custom firmware developed by
+Blinkinlabs. The source code for this firnware is available on
+Github: https://github.com/Blinkinlabs/ice40_flasher
 
-
-#### FW update of programmer board
-
-The programmer board is running a custom firmware developed by Blinkinlabs. The source code
-for this firnware is available on Github:
-https://github.com/Blinkinlabs/ice40_flasher
-
-There is also a pre built firmware binary available for the programmer board:
+There is also a pre built firmware binary available for the
+programmer board:
 https://github.com/Blinkinlabs/ice40_flasher/tree/main/bin
 
-To update the firmware on the programmer board, either build the file "main.uf2", or download
-the pre built file to your host computer. Then do the following:
+To update the firmware on the programmer board, either build the file
+"main.uf2", or download the pre built file to your host computer.
+Then do the following:
 
 1. Disconnect the programming board from the host computer
-2. Press and hold the "BOOTSEL" button on the RPi2040 sub board on the programming board
+2. Press and hold the "BOOTSEL" button on the RPi2040 sub board on
+   the programming board
 3. Reconnect the programming board to the host computer
-4. Release the "BOOTSEL" button after connecting the programming board to the host. The board should now appear to the host as a USB connected storage device
-5. Open the storage device and drop the firmware file ("main.uf2") into the storage device
+4. Release the "BOOTSEL" button after connecting the programming
+   board to the host. The board should now appear to the host as a
+   USB connected storage device
+5. Open the storage device and drop the firmware file ("main.uf2")
+   into the storage device
 
-The programmer will update its firmware with the file and restart itself. After reboot the storage device will automatically be disconnected.
+The programmer will update its firmware with the file and restart
+itself. After reboot the storage device will automatically be
+disconnected.
 
 
-### mta1-usb-v1: ch552 USB to Serial firmware
+## CH552 USB to Serial firmware
 
 The USB to Serial firmware runs on the CH552 microcontroller, and
 provides a USB CDC profile which should work with the default drivers
-on all major operating systems.
+on all major operating systems. MTA1-USB-V1 and TK-1 devices come
+with the CH552 microcontroller pre-programmed.
 
-TODO
-
-References:
-* source code: https://github.com/tillitis/tillitis-key1/tree/main/hw/boards/mta1-usb-v1/ch552_fw
-* Compiler: [SDCC](http://sdcc.sourceforge.net/)
-* Library: https://github.com/Blinkinlabs/ch554_sdcc
-* Flashing tool: https://github.com/ole00/chprog
+Toolchain setup and build instructions for this firmware are detailed
+in the
+[ch552_fw directory](../hw/boards/mta1-usb-v1/ch552_fw/README.md)
