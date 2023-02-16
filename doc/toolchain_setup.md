@@ -22,7 +22,7 @@ sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
                  python3-dev libeigen3-dev \
                  libboost-dev libboost-filesystem-dev \
                  libboost-thread-dev libboost-program-options-dev \
-                 libboost-iostreams-dev cmake libhidapi-dev \
+                 libboost-iostreams-dev cmake libusb-1.0-0-dev \
                  ninja-build libglib2.0-dev libpixman-1-dev \
                  golang clang-format
 ```
