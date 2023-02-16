@@ -24,7 +24,7 @@ RUN apt-get -qq update -y \
                libffi-dev \
                libftdi-dev \
                libglib2.0-dev \
-               libhidapi-dev \
+               libusb-1.0-0-dev \
                libpixman-1-dev \
                libreadline-dev \
                lld \
@@ -55,7 +55,7 @@ WORKDIR /
 RUN rm -rf /src
 
 # Custom iceprog for the RPi 2040-based programmer (will be upstreamed).
-RUN git clone -b interfaces --depth=1 https://github.com/tillitis/icestorm /src
+RUN git clone -b raw_usb --depth=1 https://github.com/tillitis/icestorm /src
 WORKDIR /src/iceprog
 RUN make -j$(nproc --ignore=2) \
     && make PROGRAM_PREFIX=tillitis- install
