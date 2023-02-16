@@ -27,6 +27,37 @@ sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
                  golang clang-format
 ```
 
+## Device permissions
+
+To allow sudo-less programming, you can install a udev rule that will
+assign the tkey programmer, and also an unprogrammed CH552, to the
+dialout group. You will also need to add your user to this group:
+
+```
+sudo cp contrib/99-tillitis.rules /etc/udev/rules.d
+sudo usermod -aG dialout ${USER}
+```
+
+To apply the new group, log out and then log back in.
+
+You can check the device permissions to determine if the group was
+successfully applied. First, use lsusb to find the location of the
+programmer:
+
+```
+lsusb -d cafe:4010
+Bus 001 Device 023: ID cafe:4010 Blinkinlabs ICE40 programmer
+```
+
+Then, you can check the permissions by using the bus and device
+number reported above. Note that this pair is ephimeral and may
+change after every device insertion:
+
+```
+ls -l /dev/bus/usb/001/023
+crw-rw---- 1 root dialout 189, 22 Feb 16 14:58 /dev/bus/usb/001/023
+```
+
 ## Gateware: Yosys/Icestorm toolchain
 
 If the LED of your TKey is steady white when you plug it, then the
