@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - Tillitis AB
+ * Copyright (C) 2022, 2023 - Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
@@ -19,10 +19,10 @@ enum cmdlen {
 	LEN_1,
 	LEN_4,
 	LEN_32,
-	LEN_128
+	LEN_512
 };
 
-#define CMDLEN_MAXBYTES 128
+#define CMDLEN_MAXBYTES 512
 
 // clang-format off
 enum fwcmd {

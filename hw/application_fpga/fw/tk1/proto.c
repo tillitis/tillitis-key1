@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - Tillitis AB
+ * Copyright (C) 2022, 2023 - Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
@@ -47,8 +47,8 @@ int parseframe(uint8_t b, struct frame_header *hdr)
 	case LEN_32:
 		hdr->len = 32;
 		break;
-	case LEN_128:
-		hdr->len = 128;
+	case LEN_512:
+		hdr->len = 512;
 		break;
 	default:
 		// Unknown length
@@ -82,8 +82,8 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 		break;
 
 	case FW_RSP_LOAD_APP_DATA_READY:
-		len = LEN_128;
-		nbytes = 128;
+		len = LEN_512;
+		nbytes = 512;
 		break;
 
 	case FW_RSP_GET_UDI:

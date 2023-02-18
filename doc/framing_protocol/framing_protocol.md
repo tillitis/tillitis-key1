@@ -125,12 +125,12 @@ The bits in the command header byte should be interpreted as:
 0. 1 byte
 1. 4 bytes
 2. 32 bytes
-3. 128 bytes
+3. 512 bytes
 
 Note that the number of bytes indicated by the command data length field
 does **not** include the command header byte. This means that a complete
-command frame, with a header indicating a data length of 128 bytes, is
-129 bytes in length.
+command frame, with a header indicating a data length of 512 bytes, is
+512+1 bytes in length.
 
 Note that the host sets the frame ID tag. The ID tag in a given command
 MUST be preserved in the corresponding response to the command.
@@ -148,7 +148,7 @@ Some examples to clarify endpoints and commands:
   data. The single byte could indicate action such as reading from the
   TRNG or resetting the application_fpga.
 
-* 0x13: A command to the FW in the application_fpga with 128 bytes of
+* 0x13: A command to the FW in the application_fpga with 512 bytes of
   data. The data could for example be parts of an application binary to
   be loaded into the program memory.
 
@@ -179,13 +179,13 @@ The bits in the response header byte should be interpreted as:
 0. 1 byte
 1. 4 bytes
 2. 32 bytes
-3. 128 bytes
+3. 512 bytes
 
 
 Note that the number of bytes indicated by the response data length field
 does **not** include the response header byte. This means that a complete
-response frame, with a header indicating a data length of 128 bytes, is
-129 bytes in length.
+response frame, with a header indicating a data length of 512 bytes, is
+512+1 bytes in length.
 
 Note that the ID in a response MUST be the same ID as was present in the
 header of the command being responded to.
@@ -205,7 +205,7 @@ less available for the "payload" of the response.
   responds with a single byte of data.
 
 * 0x1b: A successful command to the application running in the
-  application_fpga. The response contains 128 bytes of data, for example
+  application_fpga. The response contains 512 bytes of data, for example
   an EdDSA Ed25519 signature.
 
 

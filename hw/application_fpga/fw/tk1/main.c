@@ -291,7 +291,7 @@ int main()
 
 		case FW_CMD_LOAD_APP:
 			htif_puts("cmd: load-app(size, uss)\n");
-			if (hdr.len != 128) {
+			if (hdr.len != 512) {
 				// Bad length
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_LOAD_APP, rsp);
@@ -333,7 +333,7 @@ int main()
 
 		case FW_CMD_LOAD_APP_DATA:
 			htif_puts("cmd: load-app-data\n");
-			if (hdr.len != 128 || (state != FW_STATE_INIT_LOADING &&
+			if (hdr.len != 512 || (state != FW_STATE_INIT_LOADING &&
 					       state != FW_STATE_LOADING)) {
 				// Bad cmd length or state
 				rsp[0] = STATUS_BAD;
@@ -342,8 +342,8 @@ int main()
 			}
 
 			int nbytes;
-			if (left > 127) {
-				nbytes = 127;
+			if (left > (512 - 1)) {
+				nbytes = 512 - 1;
 			} else {
 				nbytes = left;
 			}
