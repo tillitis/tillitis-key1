@@ -70,6 +70,7 @@ module application_fpga(
 
   wire          cpu_trap;
   wire          cpu_valid;
+  wire          cpu_instr;
   wire [03 : 0] cpu_wstrb;
   /* verilator lint_off UNUSED */
   wire [31 : 0] cpu_addr;
@@ -150,6 +151,8 @@ module application_fpga(
   wire [31 : 0] tk1_read_data;
   wire          tk1_ready;
   wire          fw_app_mode;
+  wire          force_jump;
+  wire [31 : 0] jump_instr;
 
 
   //----------------------------------------------------------------
@@ -185,7 +188,7 @@ module application_fpga(
                    .eoi(),
                    .trace_valid(),
                    .trace_data(),
-                   .mem_instr(),
+                   .mem_instr(cpu_instr),
                    .mem_la_read(),
                    .mem_la_write(),
                    .mem_la_addr(),
@@ -204,6 +207,9 @@ module application_fpga(
 
 
   rom rom_inst(
+	       .force_jump(force_jump),
+	       .jump_instr(jump_instr),
+
                .cs(rom_cs),
                .address(rom_address),
                .read_data(rom_read_data),
@@ -308,28 +314,34 @@ module application_fpga(
 
 
   tk1 tk1_inst(
-		 .clk(clk),
-		 .reset_n(reset_n),
+	       .clk(clk),
+	       .reset_n(reset_n),
 
-	         .cpu_trap(cpu_trap),
-		 .fw_app_mode(fw_app_mode),
+	       .cpu_trap(cpu_trap),
+	       .fw_app_mode(fw_app_mode),
 
-                 .led_r(led_r),
-                 .led_g(led_g),
-                 .led_b(led_b),
+	       .cpu_addr(cpu_addr),
+	       .cpu_instr(cpu_instr),
+	       .cpu_valid(cpu_valid),
+	       .force_jump(force_jump),
+	       .jump_instr(jump_instr),
 
-                 .gpio1(app_gpio1),
-                 .gpio2(app_gpio2),
-                 .gpio3(app_gpio3),
-                 .gpio4(app_gpio4),
+               .led_r(led_r),
+               .led_g(led_g),
+               .led_b(led_b),
 
-		 .cs(tk1_cs),
-		 .we(tk1_we),
-		 .address(tk1_address),
-		 .write_data(tk1_write_data),
-		 .read_data(tk1_read_data),
-		 .ready(tk1_ready)
-		 );
+               .gpio1(app_gpio1),
+               .gpio2(app_gpio2),
+               .gpio3(app_gpio3),
+               .gpio4(app_gpio4),
+
+	       .cs(tk1_cs),
+	       .we(tk1_we),
+	       .address(tk1_address),
+	       .write_data(tk1_write_data),
+	       .read_data(tk1_read_data),
+	       .ready(tk1_ready)
+	      );
 
 
   //----------------------------------------------------------------

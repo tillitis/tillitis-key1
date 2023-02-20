@@ -20,6 +20,12 @@ module tk1(
 	   input wire           cpu_trap,
 	   output wire          fw_app_mode,
 
+	   input wire  [31 : 0] cpu_addr,
+	   input wire           cpu_instr,
+	   input wire           cpu_valid,
+	   output wire          force_jump,
+	   output wire [31 : 0] jump_instr,
+
            output wire          led_r,
            output wire          led_g,
            output wire          led_b,
@@ -70,6 +76,11 @@ module tk1(
   localparam ADDR_UDI_FIRST  = 8'h30;
   localparam ADDR_UDI_LAST   = 8'h31;
 
+  localparam ADDR_CPU_MON_CTRL  = 8'h60;
+  localparam ADDR_CPU_MON_FIRST = 8'h61;
+  localparam ADDR_CPU_MON_LAST  = 8'h62;
+  localparam ADDR_CPU_MON_INSTR = 8'h63;
+
   localparam TK1_NAME0       = 32'h746B3120; // "tk1 "
   localparam TK1_NAME1       = 32'h6d6b6466; // "mkdf"
   localparam TK1_VERSION     = 32'h00000004;
@@ -112,6 +123,15 @@ module tk1(
   reg [2 : 0]  cpu_trap_led_new;
   reg          cpu_trap_led_we;
 
+  reg          cpu_mon_en_reg;
+  reg          cpu_mon_en_we;
+  reg [31 : 0] cpu_mon_first_reg;
+  reg          cpu_mon_first_we;
+  reg [31 : 0] cpu_mon_last_reg;
+  reg          cpu_mon_last_we;
+  reg [31 : 0] cpu_mon_instr_reg;
+  reg          cpu_mon_instr_we;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -119,6 +139,7 @@ module tk1(
   /* verilator lint_off UNOPTFLAT */
   reg [31 : 0] tmp_read_data;
   reg          tmp_ready;
+  reg          tmp_force_jump;
   /* verilator lint_on UNOPTFLAT */
 
   reg [2 : 0]  muxed_led;
@@ -131,6 +152,9 @@ module tk1(
   assign ready       = tmp_ready;
 
   assign fw_app_mode = switch_app_reg;
+
+  assign force_jump = tmp_force_jump;
+  assign jump_instr = cpu_mon_instr_reg;
 
   assign gpio3 = gpio3_reg;
   assign gpio4 = gpio4_reg;
@@ -164,25 +188,29 @@ module tk1(
   always @ (posedge clk)
     begin : reg_update
       if (!reset_n) begin
-	switch_app_reg   <= 1'h0;
-        led_reg          <= 3'h0;
-        gpio1_reg        <= 2'h0;
-        gpio2_reg        <= 2'h0;
-        gpio3_reg        <= 1'h0;
-        gpio4_reg        <= 1'h0;
-        app_start_reg    <= 32'h0;
-        app_size_reg     <= 32'h0;
-        blake2s_addr_reg <= 32'h0;
-	cdi_mem[0]       <= 32'h0;
-	cdi_mem[1]       <= 32'h0;
-	cdi_mem[2]       <= 32'h0;
-	cdi_mem[3]       <= 32'h0;
-	cdi_mem[4]       <= 32'h0;
-	cdi_mem[5]       <= 32'h0;
-	cdi_mem[6]       <= 32'h0;
-	cdi_mem[7]       <= 32'h0;
-	cpu_trap_ctr_reg <= 24'h0;
-	cpu_trap_led_reg <= 3'h0;
+	switch_app_reg    <= 1'h0;
+        led_reg           <= 3'h6;
+        gpio1_reg         <= 2'h0;
+        gpio2_reg         <= 2'h0;
+        gpio3_reg         <= 1'h0;
+        gpio4_reg         <= 1'h0;
+        app_start_reg     <= 32'h0;
+        app_size_reg      <= 32'h0;
+        blake2s_addr_reg  <= 32'h0;
+	cdi_mem[0]        <= 32'h0;
+	cdi_mem[1]        <= 32'h0;
+	cdi_mem[2]        <= 32'h0;
+	cdi_mem[3]        <= 32'h0;
+	cdi_mem[4]        <= 32'h0;
+	cdi_mem[5]        <= 32'h0;
+	cdi_mem[6]        <= 32'h0;
+	cdi_mem[7]        <= 32'h0;
+	cpu_trap_ctr_reg  <= 24'h0;
+	cpu_trap_led_reg  <= 3'h0;
+        cpu_mon_en_reg    <= 1'h0;
+	cpu_mon_first_reg <= 32'h0;
+	cpu_mon_last_reg  <= 32'h0;
+	cpu_mon_instr_reg <= 32'h0;
       end
 
       else begin
@@ -229,6 +257,22 @@ module tk1(
 	if (cpu_trap_led_we) begin
 	  cpu_trap_led_reg <= cpu_trap_led_new;
 	end
+
+	if (cpu_mon_en_we) begin
+	  cpu_mon_en_reg <= write_data[0];
+	end
+
+	if (cpu_mon_first_we) begin
+	  cpu_mon_first_reg <= write_data;
+	end
+
+	if (cpu_mon_last_we) begin
+	  cpu_mon_last_reg <= write_data;
+	end
+
+	if (cpu_mon_instr_we) begin
+	  cpu_mon_instr_reg <= write_data;
+	end
       end
     end // reg_update
 
@@ -257,21 +301,44 @@ module tk1(
 
 
   //----------------------------------------------------------------
+  // cpu_monitor
+  //----------------------------------------------------------------
+  always @*
+    begin : cpu_monitor
+      tmp_force_jump = 1'h0;
+
+      if (cpu_mon_en_reg) begin
+	if (cpu_valid && cpu_instr) begin
+	  if ((cpu_addr >= cpu_mon_first_reg) &&
+	      (cpu_addr <= cpu_mon_last_reg)) begin
+	    tmp_force_jump = 1'h1;
+	  end
+	end
+      end
+    end
+
+
+  //----------------------------------------------------------------
   // api
   //----------------------------------------------------------------
   always @*
     begin : api
-      switch_app_we   = 1'h0;
-      led_we          = 1'h0;
-      gpio3_we        = 1'h0;
-      gpio4_we        = 1'h0;
-      app_start_we    = 1'h0;
-      app_size_we     = 1'h0;
-      blake2s_addr_we = 1'h0;
-      cdi_mem_we      = 1'h0;
-      cdi_mem_we      = 1'h0;
-      tmp_read_data   = 32'h0;
-      tmp_ready       = 1'h0;
+      switch_app_we    = 1'h0;
+      led_we           = 1'h0;
+      gpio3_we         = 1'h0;
+      gpio4_we         = 1'h0;
+      app_start_we     = 1'h0;
+      app_size_we      = 1'h0;
+      blake2s_addr_we  = 1'h0;
+      cdi_mem_we       = 1'h0;
+      cdi_mem_we       = 1'h0;
+      cpu_mon_en_we    = 1'h0;
+      cpu_mon_first_we = 1'h0;
+      cpu_mon_last_we  = 1'h0;
+      cpu_mon_instr_we = 1'h0;
+      cpu_mon_en_we    = 1'h0;
+      tmp_read_data    = 32'h0;
+      tmp_ready        = 1'h0;
 
       if (cs) begin
 	tmp_ready = 1'h1;
@@ -311,6 +378,22 @@ module tk1(
 	    if (!switch_app_reg) begin
 	      cdi_mem_we = 1'h1;
 	    end
+	  end
+
+	  if (address == ADDR_CPU_MON_CTRL) begin
+	    cpu_mon_en_we = 1'h1;
+	  end
+
+	  if (address == ADDR_CPU_MON_FIRST) begin
+	    cpu_mon_first_we = 1'h1;
+	  end
+
+	  if (address == ADDR_CPU_MON_LAST) begin
+	    cpu_mon_last_we = 1'h1;
+	  end
+
+	  if (address == ADDR_CPU_MON_INSTR) begin
+	    cpu_mon_instr_we = 1'h1;
 	  end
 	end
 
