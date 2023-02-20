@@ -207,9 +207,6 @@ module application_fpga(
 
 
   rom rom_inst(
-	       .force_jump(force_jump),
-	       .jump_instr(jump_instr),
-
                .cs(rom_cs),
                .address(rom_address),
                .read_data(rom_read_data),
@@ -418,80 +415,86 @@ module application_fpga(
       tk1_write_data      = cpu_wdata;
 
       if (cpu_valid && !muxed_ready_reg) begin
-        case (area_prefix)
-          ROM_PREFIX: begin
-            rom_cs          = 1'h1;
-	    muxed_rdata_new = rom_read_data;
-	    muxed_ready_new = rom_ready;
-          end
+	if (force_jump) begin
+	  muxed_rdata_new = jump_instr;
+	  muxed_ready_new = 1'h1;
+	end
+	else begin
+          case (area_prefix)
+            ROM_PREFIX: begin
+              rom_cs          = 1'h1;
+	      muxed_rdata_new = rom_read_data;
+	      muxed_ready_new = rom_ready;
+            end
 
-          RAM_PREFIX: begin
-            ram_cs          = 1'h1;
-	    muxed_rdata_new = ram_read_data;
-	    muxed_ready_new = ram_ready;
-          end
+            RAM_PREFIX: begin
+              ram_cs          = 1'h1;
+	      muxed_rdata_new = ram_read_data;
+	      muxed_ready_new = ram_ready;
+            end
 
-          RESERVED_PREFIX: begin
-	    muxed_rdata_new = 32'h0;
-	    muxed_ready_new = 1'h1;
-          end
+            RESERVED_PREFIX: begin
+	      muxed_rdata_new = 32'h0;
+	      muxed_ready_new = 1'h1;
+            end
 
-          MMIO_PREFIX: begin
-            case (core_prefix)
-              TRNG_PREFIX: begin
-                trng_cs         = 1'h1;
-	        muxed_rdata_new = trng_read_data;
-	        muxed_ready_new = trng_ready;
-              end
+            MMIO_PREFIX: begin
+              case (core_prefix)
+		TRNG_PREFIX: begin
+                  trng_cs         = 1'h1;
+	          muxed_rdata_new = trng_read_data;
+	          muxed_ready_new = trng_ready;
+		end
 
-              TIMER_PREFIX: begin
-                timer_cs        = 1'h1;
-	        muxed_rdata_new = timer_read_data;
-	        muxed_ready_new = timer_ready;
-              end
+		TIMER_PREFIX: begin
+                  timer_cs        = 1'h1;
+	          muxed_rdata_new = timer_read_data;
+	          muxed_ready_new = timer_ready;
+		end
 
-              UDS_PREFIX: begin
-                uds_cs          = 1'h1;
-	        muxed_rdata_new = uds_read_data;
-	        muxed_ready_new = uds_ready;
-              end
+		UDS_PREFIX: begin
+                  uds_cs          = 1'h1;
+	          muxed_rdata_new = uds_read_data;
+	          muxed_ready_new = uds_ready;
+		end
 
-              UART_PREFIX: begin
-                uart_cs         = 1'h1;
-	        muxed_rdata_new = uart_read_data;
-	        muxed_ready_new = uart_ready;
-              end
+		UART_PREFIX: begin
+                  uart_cs         = 1'h1;
+	          muxed_rdata_new = uart_read_data;
+	          muxed_ready_new = uart_ready;
+		end
 
-              TOUCH_SENSE_PREFIX: begin
-                touch_sense_cs  = 1'h1;
-	        muxed_rdata_new = touch_sense_read_data;
-	        muxed_ready_new = touch_sense_ready;
-              end
+		TOUCH_SENSE_PREFIX: begin
+                  touch_sense_cs  = 1'h1;
+	          muxed_rdata_new = touch_sense_read_data;
+	          muxed_ready_new = touch_sense_ready;
+		end
 
-	      FW_RAM_PREFIX: begin
-                fw_ram_cs       = 1'h1;
-	        muxed_rdata_new = fw_ram_read_data;
-	        muxed_ready_new = fw_ram_ready;
-              end
+		FW_RAM_PREFIX: begin
+                  fw_ram_cs       = 1'h1;
+	          muxed_rdata_new = fw_ram_read_data;
+	          muxed_ready_new = fw_ram_ready;
+		end
 
-	      TK1_PREFIX: begin
-                tk1_cs          = 1'h1;
-	        muxed_rdata_new = tk1_read_data;
-	        muxed_ready_new = tk1_ready;
-              end
+		TK1_PREFIX: begin
+                  tk1_cs          = 1'h1;
+	          muxed_rdata_new = tk1_read_data;
+	          muxed_ready_new = tk1_ready;
+		end
 
-              default: begin
-		muxed_rdata_new = 32'h0;
-		muxed_ready_new = 1'h1;
-              end
-            endcase // case (core_prefix)
-          end // case: MMIO_PREFIX
+		default: begin
+		  muxed_rdata_new = 32'h0;
+		  muxed_ready_new = 1'h1;
+		end
+              endcase // case (core_prefix)
+            end // case: MMIO_PREFIX
 
-          default: begin
-	    muxed_rdata_new = 32'h0;
-	    muxed_ready_new = 1'h1;
-          end
-        endcase // case (area_prefix)
+            default: begin
+	      muxed_rdata_new = 32'h0;
+	      muxed_ready_new = 1'h1;
+            end
+          endcase // case (area_prefix)
+	end
       end
     end
 endmodule // application_fpga

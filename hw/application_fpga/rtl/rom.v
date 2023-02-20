@@ -15,9 +15,6 @@
 `default_nettype none
 
 module rom(
-	   input wire           force_jump,
-	   input wire [31 : 0]  jump_instr,
-
 	   input wire           cs,
   /* verilator lint_off UNUSED */
 	   input wire  [11 : 0] address,
@@ -63,12 +60,7 @@ module rom(
     begin : rom_logic
 
       /* verilator lint_off WIDTH */
-      if (force_jump) begin
-	rom_rdata = jump_instr;
-      end
-      else begin
-	rom_rdata = memory[address];
-      end
+      rom_rdata = memory[address];
       /* verilator lint_on WIDTH */
       rom_ready = cs;
     end
