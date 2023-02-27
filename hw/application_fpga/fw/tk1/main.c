@@ -8,6 +8,7 @@
 #include "lib.h"
 #include "proto.h"
 #include "types.h"
+#include "assert.h"
 
 // clang-format off
 static volatile uint32_t *uds             = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -118,10 +119,11 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 	}
 
 	// Only word aligned access to UDS
-	wordcpy((void *)fw_ram, (void *)uds, 8);
-	memcpy((void *)fw_ram + 32, digest, 32);
+	wordcpy_s((void *)fw_ram, TK1_MMIO_FW_RAM_SIZE, (void *)uds, 8);
+	memcpy_s((void *)&fw_ram[32], TK1_MMIO_FW_RAM_SIZE - 32, digest, 32);
 	if (use_uss != 0) {
-		memcpy((void *)fw_ram + 64, uss, 32);
+		memcpy_s((void *)&fw_ram[64], TK1_MMIO_FW_RAM_SIZE - 64, uss,
+			 32);
 		len = 96;
 	} else {
 		len = 64;
@@ -136,7 +138,7 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 	memset((void *)fw_ram, 0, TK1_MMIO_FW_RAM_SIZE);
 
 	// Only word aligned access to CDI
-	wordcpy((void *)cdi, (void *)local_cdi, 8);
+	wordcpy_s((void *)cdi, 8, (void *)local_cdi, 8);
 }
 
 void forever_redflash()
@@ -180,6 +182,9 @@ int main()
 			break;
 
 		case FW_STATE_INIT_LOADING:
+			assert(*app_size != 0);
+			assert(*app_size <= TK1_APP_MAX_SIZE);
+
 			*app_addr = 0;
 			left = *app_size;
 
@@ -269,9 +274,11 @@ int main()
 				break;
 			}
 
-			memcpy(rsp, &namever.name0, 4);
-			memcpy(rsp + 4, &namever.name1, 4);
-			memcpy(rsp + 8, &namever.version, 4);
+			memcpy_s(rsp, CMDLEN_MAXBYTES, &namever.name0, 4);
+			memcpy_s(&rsp[4], CMDLEN_MAXBYTES - 4, &namever.name1,
+				 4);
+			memcpy_s(&rsp[8], CMDLEN_MAXBYTES - 8, &namever.version,
+				 4);
 			fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
 			// state unchanged
 			break;
@@ -287,8 +294,9 @@ int main()
 
 			rsp[0] = STATUS_OK;
 			uint32_t udi_words[2];
-			wordcpy(udi_words, (void *)udi, 2);
-			memcpy(rsp + 1, udi_words, 2 * 4);
+			wordcpy_s(udi_words, 2, (void *)udi, 2);
+			memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, udi_words,
+				 2 * 4);
 			fwreply(hdr, FW_RSP_GET_UDI, rsp);
 			// state unchanged
 			break;
@@ -324,7 +332,7 @@ int main()
 			if (cmd[5] != 0) {
 				// Yes
 				use_uss = TRUE;
-				memcpy(uss, cmd + 6, 32);
+				memcpy_s(uss, 32, &cmd[6], 32);
 			} else {
 				use_uss = FALSE;
 			}
@@ -351,7 +359,7 @@ int main()
 			} else {
 				nbytes = left;
 			}
-			memcpy(loadaddr, cmd + 1, nbytes);
+			memcpy_s(loadaddr, left, cmd + 1, nbytes);
 			loadaddr += nbytes;
 			left -= nbytes;
 
@@ -371,7 +379,8 @@ int main()
 
 				// And return the digest in final response
 				rsp[0] = STATUS_OK;
-				memcpy(&rsp[1], &digest, 32);
+				memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, &digest,
+					 32);
 				fwreply(hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
 
 				state = FW_STATE_RUN;

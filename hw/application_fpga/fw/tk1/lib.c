@@ -5,6 +5,7 @@
 
 #include "lib.h"
 #include "types.h"
+#include "assert.h"
 
 #if NOCONSOLE
 void htif_putc(int ch)
@@ -131,28 +132,32 @@ void *memset(void *dest, int c, unsigned n)
 	return dest;
 }
 
-__attribute__((used)) void *memcpy(void *dest, const void *src, unsigned n)
+void memcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 {
+	assert(dest != NULL);
+	assert(src != NULL);
+	assert(destsize >= n);
+
 	uint8_t *src_byte = (uint8_t *)src;
 	uint8_t *dest_byte = (uint8_t *)dest;
 
 	for (int i = 0; i < n; i++) {
 		dest_byte[i] = src_byte[i];
 	}
-
-	return dest;
 }
 
-__attribute__((used)) void *wordcpy(void *dest, const void *src, unsigned n)
+void wordcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 {
+	assert(dest != NULL);
+	assert(src != NULL);
+	assert(destsize >= n);
+
 	uint32_t *src_word = (uint32_t *)src;
 	uint32_t *dest_word = (uint32_t *)dest;
 
 	for (int i = 0; i < n; i++) {
 		dest_word[i] = src_word[i];
 	}
-
-	return dest;
 }
 
 int memeq(void *dest, const void *src, unsigned n)
