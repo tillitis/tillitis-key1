@@ -156,7 +156,7 @@ module tk1(
     begin : reg_update
       if (!reset_n) begin
 	switch_app_reg   <= 1'h0;
-        led_reg          <= 3'h6;
+        led_reg          <= 3'h0;
         gpio1_reg        <= 2'h0;
         gpio2_reg        <= 2'h0;
         gpio3_reg        <= 1'h0;
