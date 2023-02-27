@@ -183,7 +183,7 @@ module tk1(
 	cdi_mem[6]       <= 32'h0;
 	cdi_mem[7]       <= 32'h0;
 	cpu_trap_ctr_reg <= 24'h0;
-	cpu_trap_led_reg <= 3'h4;
+	cpu_trap_led_reg <= 3'h0;
       end
 
       else begin
