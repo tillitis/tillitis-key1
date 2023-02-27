@@ -68,6 +68,7 @@ module application_fpga(
   wire          clk;
   wire          reset_n;
 
+  wire          cpu_trap;
   wire          cpu_valid;
   wire [03 : 0] cpu_wstrb;
   /* verilator lint_off UNUSED */
@@ -168,6 +169,7 @@ module application_fpga(
 	     ) cpu(
 		   .clk(clk),
 		   .resetn(reset_n),
+		   .trap(cpu_trap),
 
 		   .mem_valid(cpu_valid),
 		   .mem_ready(muxed_ready_reg),
@@ -181,7 +183,6 @@ module application_fpga(
                    /* verilator lint_off PINCONNECTEMPTY */
                    .irq(32'h0),
                    .eoi(),
-                   .trap(),
                    .trace_valid(),
                    .trace_data(),
                    .mem_instr(),
@@ -310,6 +311,7 @@ module application_fpga(
 		 .clk(clk),
 		 .reset_n(reset_n),
 
+	         .cpu_trap(cpu_trap),
 		 .fw_app_mode(fw_app_mode),
 
                  .led_r(led_r),

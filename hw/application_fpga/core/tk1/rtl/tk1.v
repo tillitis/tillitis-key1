@@ -17,6 +17,7 @@ module tk1(
 	   input wire           clk,
 	   input wire           reset_n,
 
+	   input wire           cpu_trap,
 	   output wire          fw_app_mode,
 
            output wire          led_r,
@@ -103,7 +104,14 @@ module tk1(
   reg          app_size_we;
 
   reg [31 : 0] blake2s_addr_reg;
+  reg [31 : 0] blake2s_addr_new;
   reg          blake2s_addr_we;
+
+  reg [23 : 0] cpu_trap_ctr_reg;
+  reg [23 : 0] cpu_trap_ctr_new;
+  reg [2 : 0]  cpu_trap_led_reg;
+  reg [2 : 0]  cpu_trap_led_new;
+  reg          cpu_trap_led_we;
 
 
   //----------------------------------------------------------------
@@ -113,6 +121,8 @@ module tk1(
   reg [31 : 0] tmp_read_data;
   reg          tmp_ready;
   /* verilator lint_on UNOPTFLAT */
+
+  reg [2 : 0]  muxed_led;
 
 
   //----------------------------------------------------------------
@@ -141,9 +151,9 @@ module tk1(
                             .RGB1(led_g),
                             .RGB2(led_b),
                             .RGBLEDEN(1'h1),
-                            .RGB0PWM(led_reg[LED_R_BIT]),
-                            .RGB1PWM(led_reg[LED_G_BIT]),
-                            .RGB2PWM(led_reg[LED_B_BIT]),
+                            .RGB0PWM(muxed_led[LED_R_BIT]),
+                            .RGB1PWM(muxed_led[LED_G_BIT]),
+                            .RGB2PWM(muxed_led[LED_B_BIT]),
                             .CURREN(1'b1)
     );
   /* verilator lint_on PINMISSING */
@@ -172,9 +182,13 @@ module tk1(
 	cdi_mem[5]       <= 32'h0;
 	cdi_mem[6]       <= 32'h0;
 	cdi_mem[7]       <= 32'h0;
+	cpu_trap_ctr_reg <= 24'h0;
+	cpu_trap_led_reg <= 3'h4;
       end
 
       else begin
+	cpu_trap_ctr_reg <= cpu_trap_ctr_new;
+
         gpio1_reg[0] <= gpio1;
         gpio1_reg[1] <= gpio1_reg[0];
 
@@ -212,8 +226,35 @@ module tk1(
 	if (cdi_mem_we) begin
 	  cdi_mem[address[2 : 0]] <= write_data;
 	end
+
+	if (cpu_trap_led_we) begin
+	  cpu_trap_led_reg <= cpu_trap_led_new;
+	end
       end
     end // reg_update
+
+
+  //----------------------------------------------------------------
+  // trap_led_logic
+  //----------------------------------------------------------------
+  always @*
+    begin : trap_led_logic
+      cpu_trap_led_new = 3'h0;
+      cpu_trap_led_we  = 1'h0;
+
+      cpu_trap_ctr_new = cpu_trap_ctr_reg + 1'h1;
+
+      if (cpu_trap_ctr_reg == 24'h0) begin
+	cpu_trap_led_new = cpu_trap_led_reg ^ 3'h4;
+	cpu_trap_led_we  = 1'h1;
+      end
+
+      if (cpu_trap) begin
+	muxed_led = cpu_trap_led_reg;
+      end else begin
+	muxed_led = led_reg;
+      end
+    end
 
 
   //----------------------------------------------------------------
