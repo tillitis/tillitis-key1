@@ -104,7 +104,6 @@ module tk1(
   reg          app_size_we;
 
   reg [31 : 0] blake2s_addr_reg;
-  reg [31 : 0] blake2s_addr_new;
   reg          blake2s_addr_we;
 
   reg [23 : 0] cpu_trap_ctr_reg;
