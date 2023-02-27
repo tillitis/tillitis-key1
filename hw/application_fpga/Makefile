@@ -74,6 +74,7 @@ FIRMWARE_DEPS = \
 	$(P)/fw/tk1/lib.h \
 	$(P)/fw/tk1/proto.h \
 	$(P)/fw/tk1/assert.h \
+	$(P)/fw/tk1/led.h
 
 FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
@@ -81,6 +82,7 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/proto.o \
 	$(P)/fw/tk1/lib.o \
 	$(P)/fw/tk1/assert.o \
+	$(P)/fw/tk1/led.o \
 	$(P)/fw/tk1/blake2s/blake2s.o
 
 TESTFW_OBJS = \

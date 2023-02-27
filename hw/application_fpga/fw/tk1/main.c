@@ -4,11 +4,12 @@
  */
 
 #include "../tk1_mem.h"
+#include "assert.h"
 #include "blake2s/blake2s.h"
+#include "led.h"
 #include "lib.h"
 #include "proto.h"
 #include "types.h"
-#include "assert.h"
 
 // clang-format off
 static volatile uint32_t *uds             = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -21,7 +22,6 @@ static volatile uint32_t *cdi             = (volatile uint32_t *)TK1_MMIO_TK1_CD
 static volatile uint32_t *app_addr        = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
 static volatile uint32_t *app_size        = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
 static volatile uint8_t  *fw_ram          = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
-static volatile uint32_t *led             = (volatile uint32_t *)TK1_MMIO_TK1_LED;
 static volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
 static volatile uint32_t *trng_status     = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
 static volatile uint32_t *trng_entropy    = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
@@ -29,11 +29,6 @@ static volatile uint32_t *timer           = (volatile uint32_t *)TK1_MMIO_TIMER_
 static volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
 static volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
 static volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
-
-#define LED_RED   (1 << TK1_MMIO_TK1_LED_R_BIT)
-#define LED_GREEN (1 << TK1_MMIO_TK1_LED_G_BIT)
-#define LED_BLUE  (1 << TK1_MMIO_TK1_LED_B_BIT)
-#define LED_WHITE (LED_RED | LED_GREEN | LED_BLUE)
 // clang-format on
 
 struct namever {
@@ -139,17 +134,6 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 
 	// Only word aligned access to CDI
 	wordcpy_s((void *)cdi, 8, (void *)local_cdi, 8);
-}
-
-void forever_redflash()
-{
-	int led_on = 0;
-	for (;;) {
-		*led = led_on ? LED_RED : 0;
-		for (volatile int i = 0; i < 800000; i++) {
-		}
-		led_on = !led_on;
-	}
 }
 
 enum state {

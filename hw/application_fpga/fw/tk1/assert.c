@@ -20,6 +20,5 @@ void __assert_fail(const char *__assertion, const char *__file,
 	htif_lf();
 
 	for (;;);
-
 	// Not reached
 }
