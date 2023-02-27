@@ -112,9 +112,8 @@ void htif_puthex(uint8_t c)
 
 void htif_putinthex(const uint32_t n)
 {
-	uint8_t buf[4];
+	uint8_t *buf = (uint8_t *)&n;
 
-	memcpy(buf, &n, 4);
 	htif_puts("0x");
 	for (int i = 3; i > -1; i--) {
 		htif_puthex(buf[i]);
