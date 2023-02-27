@@ -244,7 +244,11 @@ int main()
 
 		memset(cmd, 0, CMDLEN_MAXBYTES);
 		// Now we know the size of the cmd frame, read it all
-		read(cmd, hdr.len);
+		if (read(cmd, CMDLEN_MAXBYTES, hdr.len) != 0) {
+			htif_puts("read: buffer overrun\n");
+			forever_redflash();
+			// Not reached
+		}
 
 		// Is it for us?
 		if (hdr.endpoint != DST_FW) {
