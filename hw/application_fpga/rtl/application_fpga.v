@@ -160,14 +160,10 @@ module application_fpga(
 
   picorv32 #(
 	     .ENABLE_COUNTERS(0),
-	     .LATCHED_MEM_RDATA(0),
 	     .TWO_STAGE_SHIFT(0),
-	     .TWO_CYCLE_ALU(0),
 	     .CATCH_MISALIGN(0),
-	     .CATCH_ILLINSN(1),
 	     .COMPRESSED_ISA(1),
 	     .ENABLE_FAST_MUL(1),
-	     .ENABLE_DIV(0),
 	     .BARREL_SHIFTER(1)
 	     ) cpu(
 		   .clk(clk),
