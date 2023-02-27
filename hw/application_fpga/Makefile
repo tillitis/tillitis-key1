@@ -35,7 +35,8 @@ CC = clang
 
 CFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 \
    -static -std=gnu99 -Os -ffast-math -fno-common -fno-builtin-printf \
-   -fno-builtin-putchar -nostdlib -mno-relax -Wall -flto -DNOCONSOLE
+   -fno-builtin-putchar -fno-builtin-memcpy -nostdlib -mno-relax -Wall \
+   -flto -DNOCONSOLE
 
 AS = clang
 ASFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 -mno-relax
@@ -71,13 +72,15 @@ FIRMWARE_DEPS = \
 	$(P)/fw/tk1_mem.h \
 	$(P)/fw/tk1/types.h \
 	$(P)/fw/tk1/lib.h \
-	$(P)/fw/tk1/proto.h
+	$(P)/fw/tk1/proto.h \
+	$(P)/fw/tk1/assert.h \
 
 FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
 	$(P)/fw/tk1/start.o \
 	$(P)/fw/tk1/proto.o \
 	$(P)/fw/tk1/lib.o \
+	$(P)/fw/tk1/assert.o \
 	$(P)/fw/tk1/blake2s/blake2s.o
 
 TESTFW_OBJS = \

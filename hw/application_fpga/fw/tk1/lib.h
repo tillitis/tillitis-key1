@@ -15,8 +15,8 @@ void htif_putinthex(const uint32_t n);
 int htif_puts(const char *s);
 void htif_hexdump(uint8_t *buf, int len);
 void *memset(void *dest, int c, unsigned n);
-void *memcpy(void *dest, const void *src, unsigned n);
-void *wordcpy(void *dest, const void *src, unsigned n);
+void memcpy_s(void *dest, size_t destsize, const void *src, size_t n);
+void wordcpy_s(void *dest, size_t destsize, const void *src, size_t n);
 int memeq(void *dest, const void *src, unsigned n);
 
 #endif
