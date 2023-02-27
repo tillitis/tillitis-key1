@@ -4,6 +4,7 @@
  */
 
 #include "assert.h"
+#include "led.h"
 #include "lib.h"
 
 void __assert_fail(const char *__assertion, const char *__file,
@@ -19,6 +20,6 @@ void __assert_fail(const char *__assertion, const char *__file,
 	htif_puts(__function);
 	htif_lf();
 
-	for (;;);
+	forever_redflash();
 	// Not reached
 }
