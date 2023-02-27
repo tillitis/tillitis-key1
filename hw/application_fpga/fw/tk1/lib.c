@@ -7,33 +7,7 @@
 #include "assert.h"
 #include "types.h"
 
-#if NOCONSOLE
-void htif_putc(int ch)
-{
-}
-
-void htif_lf()
-{
-}
-
-void htif_puthex(uint8_t c)
-{
-}
-
-void htif_putinthex(const uint32_t n)
-{
-}
-
-int htif_puts(const char *s)
-{
-	return 0;
-}
-
-void htif_hexdump(uint8_t *buf, int len)
-{
-}
-
-#else
+#ifndef NOCONSOLE
 struct {
 	uint32_t arr[2];
 } volatile tohost __attribute__((section(".htif")));
