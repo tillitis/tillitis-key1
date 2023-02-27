@@ -4,8 +4,8 @@
  */
 
 #include "lib.h"
-#include "types.h"
 #include "assert.h"
+#include "types.h"
 
 #if NOCONSOLE
 void htif_putc(int ch)
