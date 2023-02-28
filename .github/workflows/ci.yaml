@@ -44,7 +44,6 @@ jobs:
           make -C fw/tk1 checkfmt
           make -C fw/testfw checkfmt
 
-      # this should to fail on errors, but not on warnings (using -Wno-fatal)
       - name: lint verilog using verilator
         working-directory: hw/application_fpga
         run: make lint

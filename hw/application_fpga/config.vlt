@@ -1,0 +1,4 @@
+`verilator_config
+lint_off -rule UNUSED   -file "*/ice40/cells_sim.v"
+lint_off -rule UNDRIVEN -file "*/ice40/cells_sim.v"
+lint_off -rule BLKSEQ -file "*/picorv32.v"
