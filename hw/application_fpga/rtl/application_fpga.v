@@ -51,6 +51,9 @@ module application_fpga(
   localparam FW_RAM_PREFIX      = 6'h10;
   localparam TK1_PREFIX         = 6'h3f;
 
+  // Instruction used to cause a trap.
+  localparam ILLEGAL_INSTRUCTION = 32'h0;
+
 
   //----------------------------------------------------------------
   // Registers, memories with associated wires.
@@ -151,8 +154,7 @@ module application_fpga(
   wire [31 : 0] tk1_read_data;
   wire          tk1_ready;
   wire          fw_app_mode;
-  wire          force_jump;
-  wire [31 : 0] jump_instr;
+  wire          force_trap;
 
 
   //----------------------------------------------------------------
@@ -320,8 +322,7 @@ module application_fpga(
 	       .cpu_addr(cpu_addr),
 	       .cpu_instr(cpu_instr),
 	       .cpu_valid(cpu_valid),
-	       .force_jump(force_jump),
-	       .jump_instr(jump_instr),
+	       .force_trap(force_trap),
 
                .led_r(led_r),
                .led_g(led_g),
@@ -415,8 +416,8 @@ module application_fpga(
       tk1_write_data      = cpu_wdata;
 
       if (cpu_valid && !muxed_ready_reg) begin
-	if (force_jump) begin
-	  muxed_rdata_new = jump_instr;
+	if (force_trap) begin
+	  muxed_rdata_new = ILLEGAL_INSTRUCTION;
 	  muxed_ready_new = 1'h1;
 	end
 	else begin

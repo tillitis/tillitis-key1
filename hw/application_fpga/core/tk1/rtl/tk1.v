@@ -23,8 +23,7 @@ module tk1(
 	   input wire  [31 : 0] cpu_addr,
 	   input wire           cpu_instr,
 	   input wire           cpu_valid,
-	   output wire          force_jump,
-	   output wire [31 : 0] jump_instr,
+	   output wire          force_trap,
 
            output wire          led_r,
            output wire          led_g,
@@ -79,7 +78,6 @@ module tk1(
   localparam ADDR_CPU_MON_CTRL  = 8'h60;
   localparam ADDR_CPU_MON_FIRST = 8'h61;
   localparam ADDR_CPU_MON_LAST  = 8'h62;
-  localparam ADDR_CPU_MON_INSTR = 8'h63;
 
   localparam TK1_NAME0       = 32'h746B3120; // "tk1 "
   localparam TK1_NAME1       = 32'h6d6b6466; // "mkdf"
@@ -129,8 +127,6 @@ module tk1(
   reg          cpu_mon_first_we;
   reg [31 : 0] cpu_mon_last_reg;
   reg          cpu_mon_last_we;
-  reg [31 : 0] cpu_mon_instr_reg;
-  reg          cpu_mon_instr_we;
 
 
   //----------------------------------------------------------------
@@ -139,7 +135,7 @@ module tk1(
   /* verilator lint_off UNOPTFLAT */
   reg [31 : 0] tmp_read_data;
   reg          tmp_ready;
-  reg          tmp_force_jump;
+  reg          tmp_force_trap;
   /* verilator lint_on UNOPTFLAT */
 
   reg [2 : 0]  muxed_led;
@@ -153,8 +149,7 @@ module tk1(
 
   assign fw_app_mode = switch_app_reg;
 
-  assign force_jump = tmp_force_jump;
-  assign jump_instr = cpu_mon_instr_reg;
+  assign force_trap = tmp_force_trap;
 
   assign gpio3 = gpio3_reg;
   assign gpio4 = gpio4_reg;
@@ -210,7 +205,6 @@ module tk1(
         cpu_mon_en_reg    <= 1'h0;
 	cpu_mon_first_reg <= 32'h0;
 	cpu_mon_last_reg  <= 32'h0;
-	cpu_mon_instr_reg <= 32'h0;
       end
 
       else begin
@@ -269,10 +263,6 @@ module tk1(
 	if (cpu_mon_last_we) begin
 	  cpu_mon_last_reg <= write_data;
 	end
-
-	if (cpu_mon_instr_we) begin
-	  cpu_mon_instr_reg <= write_data;
-	end
       end
     end // reg_update
 
@@ -305,13 +295,13 @@ module tk1(
   //----------------------------------------------------------------
   always @*
     begin : cpu_monitor
-      tmp_force_jump = 1'h0;
+      tmp_force_trap = 1'h0;
 
       if (cpu_mon_en_reg) begin
 	if (cpu_valid && cpu_instr) begin
 	  if ((cpu_addr >= cpu_mon_first_reg) &&
 	      (cpu_addr <= cpu_mon_last_reg)) begin
-	    tmp_force_jump = 1'h1;
+	    tmp_force_trap = 1'h1;
 	  end
 	end
       end
@@ -335,7 +325,6 @@ module tk1(
       cpu_mon_en_we    = 1'h0;
       cpu_mon_first_we = 1'h0;
       cpu_mon_last_we  = 1'h0;
-      cpu_mon_instr_we = 1'h0;
       cpu_mon_en_we    = 1'h0;
       tmp_read_data    = 32'h0;
       tmp_ready        = 1'h0;
@@ -390,10 +379,6 @@ module tk1(
 
 	  if (address == ADDR_CPU_MON_LAST) begin
 	    cpu_mon_last_we = 1'h1;
-	  end
-
-	  if (address == ADDR_CPU_MON_INSTR) begin
-	    cpu_mon_instr_we = 1'h1;
 	  end
 	end
 
