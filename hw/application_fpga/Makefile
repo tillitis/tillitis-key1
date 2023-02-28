@@ -6,7 +6,7 @@
 # HW targets as well as its firmware.
 #
 #
-# Copyright (C) 2022 - Tillitis AB
+# Copyright (C) 2022, 2023 - Tillitis AB
 # SPDX-License-Identifier: GPL-2.0-only
 #
 #=======================================================================
@@ -147,7 +147,7 @@ testfw.hex: testfw.bin testfw_size_mismatch
 # Source linting.
 #-------------------------------------------------------------------
 LINT=verilator
-LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME \
+LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-DECLFILENAME \
 	--timescale 1ns/1ns -DNO_ICE40_DEFAULT_ASSIGNMENTS
 
 lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
@@ -156,7 +156,11 @@ lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
 	-DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
 	-DUDS_HEX=\"$(P)/data/uds.hex\" \
 	-DUDI_HEX=\"$(P)/data/udi.hex\" \
-	--top-module application_fpga $^ &> lint_issues.txt
+	--top-module application_fpga \
+	config.vlt $^ \
+	>lint_issues.txt 2>&1 \
+	&& { rm -f lint_issues.txt; exit 0; } \
+	|| {   cat lint_issues.txt; exit 1; }
 .PHONY: lint
 
 
