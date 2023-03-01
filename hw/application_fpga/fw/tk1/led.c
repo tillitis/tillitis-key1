@@ -13,7 +13,7 @@ void forever_redflash()
 
 	int led_on = 0;
 	for (;;) {
-		*led = led_on ? LED_RED : 0;
+		*led = led_on ? LED_RED : LED_BLACK;
 		for (volatile int i = 0; i < 800000; i++) {
 		}
 		led_on = !led_on;
