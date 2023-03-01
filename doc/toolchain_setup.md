@@ -29,7 +29,7 @@ sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
 
 ## Gateware: Yosys/Icestorm toolchain
 
-If the LED of your TKey is flashing white when you plug it, then the
+If the LED of your TKey is steady white when you plug it, then the
 firmware is running and it's already usable! If you want to develop
 TKey apps, then only the above general development environment is
 needed.

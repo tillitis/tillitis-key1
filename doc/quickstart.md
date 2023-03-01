@@ -31,14 +31,15 @@ The USB stick can remain in the jig during repeated development,
 programming and testing cycles. The USB stick should then be connected
 to the computer using the provided USB-C cable (use the USB-C-to-A
 adapter if needed). The jig also has a cutout to allow touching where
-the touch sensor is located (next to the LED). Note that connecting
-the USB stick to the computer is not required for programming it. Note
-also that with this setup, to reset the USB stick back to firmware
-mode after loading an app, you need to unplug both the USB cable to
-the stick and the one to the programmer. Alternatively, you can try
-the script in `../hw/application_fpga/tools/reset-tk1` which pokes at
-the TKey that's sitting in the jig, leaving it in firmware mode so
-that a new app can be loaded.
+the touch sensor is located (next to the LED on the outer edge). Note
+that connecting the USB stick to the computer is not required for
+programming it. Note also that with this setup, to reset the USB stick
+back to firmware mode after loading an app, you need to unplug both
+the USB cable to the stick and the one to the programmer.
+Alternatively, you can try the script in
+`../hw/application_fpga/tools/reset-tk1` which pokes at the TKey
+that's sitting in the jig, leaving it in firmware mode so that a new
+app can be loaded.
 
 On Linux, `lsusb` should list the connected programmer as `cafe:4004
 Blinkinlabs ICE40 programmer`. If the USB stick is also connected it
@@ -65,8 +66,8 @@ $ make prog_flash
 
 After programming, the TKey can be connected to your computer (use the
 USB-C-to-A adapter if needed) and will boot the firmware. When boot
-has completed it will start flashing the LED white. This indicates
-that it is ready to receive and measure an app.
+has completed the LED will be steady white. This indicates that it is
+ready to receive and measure an app.
 
 To try out an app, continue to the README.md the apps repo:
 https://github.com/tillitis/tillitis-key1-apps#readme

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - Tillitis AB
+ * Copyright (C) 2022, 2023 - Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
@@ -55,7 +55,6 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf);
 void writebyte(uint8_t b);
 void write(uint8_t *buf, size_t nbytes);
 uint8_t readbyte();
-uint8_t readbyte_ledflash(int ledvalue, int loopcount);
 int read(uint8_t *buf, size_t bufsize, size_t nbytes);
 
 #endif

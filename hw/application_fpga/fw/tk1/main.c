@@ -224,12 +224,8 @@ int main()
 		}
 
 		uint8_t in;
-		if (state == FW_STATE_LOADING) {
-			*led = LED_WHITE;
-			in = readbyte();
-		} else {
-			in = readbyte_ledflash(LED_WHITE, 800000);
-		}
+		*led = (state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE;
+		in = readbyte();
 
 		if (parseframe(in, &hdr) == -1) {
 			htif_puts("Couldn't parse header\n");
