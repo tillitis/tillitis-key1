@@ -95,13 +95,8 @@ static void print_digest(uint8_t *md)
 static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 {
 	uint32_t local_cdi[8];
-	int len;
 
-	// To protect UDS we use a special firmware-only RAM for both
-	// the in parameter to blake2s and the blake2s context.
-
-	// Prepare to sleep a random number of cycles before reading out UDS to
-	// FW RAM
+	// Prepare to sleep a random number of cycles before reading out UDS
 	*timer_prescaler = 1;
 	while ((*trng_status & (1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
 	}
@@ -113,27 +108,33 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
 
-	// Only word aligned access to UDS
-	wordcpy_s((void *)fw_ram, TK1_MMIO_FW_RAM_SIZE, (void *)uds, 8);
-	memcpy_s((void *)&fw_ram[32], TK1_MMIO_FW_RAM_SIZE - 32, digest, 32);
+	// Use firmware-only RAM for BLAKE2s context instead of
+	// ordinary RAM
+	blake2s_ctx *secure_ctx = (blake2s_ctx *)fw_ram;
+
+	int blake2err = blake2s_init(secure_ctx, 32, NULL, 0);
+	assert(blake2err == 0);
+
+	// Update hash with UDS. This means UDS will live for a short
+	// while in secure_ctx->b which is in the special fw_ram.
+	blake2s_update(secure_ctx, (const void *)uds, 32);
+
+	// Update with TKey program digest
+	blake2s_update(secure_ctx, digest, 32);
+
+	// Possibly hash in the USS as well
 	if (use_uss != 0) {
-		memcpy_s((void *)&fw_ram[64], TK1_MMIO_FW_RAM_SIZE - 64, uss,
-			 32);
-		len = 96;
-	} else {
-		len = 64;
+		blake2s_update(secure_ctx, uss, 32);
 	}
 
-	blake2s_ctx *secure_ctx = (blake2s_ctx *)(fw_ram + len);
-
-	blake2s((void *)local_cdi, 32, NULL, 0, (const void *)fw_ram, len,
-		secure_ctx);
+	// Write hashed result to Compound Device Identity (CDI)
+	blake2s_final(secure_ctx, local_cdi);
 
 	// Write over the firmware-only RAM
 	memset((void *)fw_ram, 0, TK1_MMIO_FW_RAM_SIZE);
 
-	// Only word aligned access to CDI
-	wordcpy_s((void *)cdi, 8, (void *)local_cdi, 8);
+	// CDI only word writable
+	wordcpy_s((void *)cdi, 8, local_cdi, 8);
 }
 
 enum state {
