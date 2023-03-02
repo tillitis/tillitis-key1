@@ -46,6 +46,7 @@ install other versions of these tools locally, they could conflict
 
     git clone https://github.com/YosysHQ/icestorm
     cd icestorm
+    git checkout 45f5e5f3889afb07907bab439cf071478ee5a2a5
     make -j$(nproc)
     sudo make install
     cd ..
@@ -73,6 +74,7 @@ install other versions of these tools locally, they could conflict
     cmake -DARCH=ice40 -DCMAKE_INSTALL_PREFIX=/usr/local .
     make -j$(nproc)
     sudo make install
+    cd ..
 
 References:
 * http://bygone.clairexen.net/icestorm/
