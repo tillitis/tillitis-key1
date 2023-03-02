@@ -45,9 +45,10 @@ RUN apt-get -qq update -y \
 
 FROM base as toolsbuilder
 
-RUN git clone --depth=1 https://github.com/YosysHQ/icestorm /src
+RUN git clone https://github.com/YosysHQ/icestorm /src
 WORKDIR /src
-RUN make -j$(nproc --ignore=2) \
+RUN git checkout 45f5e5f3889afb07907bab439cf071478ee5a2a5 \
+    && make -j$(nproc --ignore=2) \
     && make install
 RUN git >/usr/local/repo-commit-icestorm describe --tags --always --dirty
 WORKDIR /
