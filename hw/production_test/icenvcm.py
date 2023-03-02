@@ -6,17 +6,19 @@
 #  * Matthew Mets https://github.com/cibomahto
 #  * Peter Lawrence https://github.com/majbthrd
 #
-#  Permission to use, copy, modify, and/or distribute this software for any
-#  purpose with or without fee is hereby granted, provided that the above
-#  copyright notice and this permission notice appear in all copies.
+#  Permission to use, copy, modify, and/or distribute this software
+#  for any purpose with or without fee is hereby granted, provided
+#  that the above copyright notice and this permission notice
+#  appear in all copies.
 #
-#  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-#  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-#  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-#  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-#  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-#  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-#  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+#  WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+#  WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+#  AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR
+#  CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+#  LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+#  NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+#  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
 import usb_test
@@ -80,7 +82,7 @@ class Nvcm():
         self.flasher.gpio_put(self.pins['crst'], reset)
 
     def sendhex(self, s: str) -> int:
-        if self.debug and not s == "0500":  # supress status check messages
+        if self.debug and not s == "0500":  # suppress status_wait
             print("TX", s)
         x = bytes.fromhex(s)
 
@@ -159,7 +161,11 @@ class Nvcm():
         # SMCInstruction[1] = 0x70807E99557E;
         self.command("7eaa997e010e")
 
-    def read(self, address: int, length: int = 8, cmd: int = 0x03) -> int:
+    def read(
+            self,
+            address: int,
+            length: int = 8,
+            cmd: int = 0x03) -> int:
         """Returns a big integer"""
     #    enable(0)
     #    sendhex("%02x%06x" % (cmd, address))
@@ -182,7 +188,11 @@ class Nvcm():
 
     def read_bytes(self, address: int, length: int = 8) -> bytes:
         """Returns a byte array of the contents"""
-        return self.read(address, length).to_bytes(length, byteorder="big")
+        return self.read(
+            address,
+            length).to_bytes(
+            length,
+            byteorder="big")
 
     def write(self, address: int, data: str, cmd: int = 0x02) -> None:
         self.sendhex_cs("%02x%06x" % (cmd, address) + data)
@@ -190,8 +200,9 @@ class Nvcm():
         try:
             self.status_wait()
         except Exception as e:
-            raise Exception("WRITE FAILED: cmd=%02x address=%06x data=%s" %
-                            (cmd, address, data))
+            raise Exception(
+                "WRITE FAILED: cmd=%02x address=%06x data=%s" %
+                (cmd, address, data))
 
         self.tck(8)
 
@@ -264,7 +275,9 @@ class Nvcm():
         self.select_nvcm()
 
         if x != 0:
-            print("NVCM Trim_Parameter_OTP Block is not blank. (%02x)" % x)
+            print(
+                "NVCM Trim_Parameter_OTP Block is not blank. (%02x)" %
+                x)
             return False
         return True
 
@@ -344,7 +357,8 @@ class Nvcm():
         lock_bits_int = int(lock_bits, 16)
         if x & lock_bits_int != lock_bits_int:
             raise Exception(
-                "Failed to write trim lock bits: %016x != expected %016x" %
+                "Failed to write trim lock bits: " +
+                "%016x != expected %016x" %
                 (x, lock_bits_int))
 
         print("New state %016x" % (x))
@@ -353,7 +367,9 @@ class Nvcm():
         print("NVCM Secure")
         trim = self.read_trim()
         if (trim >> 60) & 0x3 != 0:
-            print("NVCM already secure? trim=%016x" % (trim), file=sys.stderr)
+            print(
+                "NVCM already secure? trim=%016x" %
+                (trim), file=sys.stderr)
 
         self.write_trim_pages("3000000100000000")
 
@@ -418,7 +434,9 @@ class Nvcm():
             contents += self.read_bytes(offset, 8)
 
         if filename == '-':
-            with os.fdopen(sys.stdout.fileno(), "wb", closefd=False) as f:
+            with os.fdopen(sys.stdout.fileno(),
+                           "wb",
+                           closefd=False) as f:
                 f.write(contents)
                 f.flush()
         else:
@@ -504,8 +522,8 @@ def sleep_flash(pins: dict) -> None:
         ['{:02x}'.format(b) for b in data]))
     assert (data == bytes([0xff, 0xef, 0x40]))
 
-    # Test that the flash will ignore a sleep command that doesn't start on
-    # the first byte
+    # Test that the flash will ignore a sleep command that doesn't
+    # start on the first byte
     flasher.spi_bitbang(bytes([0, 0xb9]))
 
     # Confirm we can talk to flash
@@ -537,17 +555,19 @@ if __name__ == "__main__":
                         default='ftdi://::/1',
                         help='FTDI port of the form ftdi://::/1')
 
-    parser.add_argument('-v', '--verbose',
-                        dest='verbose',
-                        action='store_true',
-                        help='Show debug information and serial read/writes')
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        dest='verbose',
+        action='store_true',
+        help='Show debug information and serial read/writes')
 
     parser.add_argument(
         '-f',
         '--sleep_flash',
         dest='sleep_flash',
         action='store_true',
-        help='Put an attached SPI flash chip in deep sleep before programming FPGA')
+        help='Put an attached SPI flash chip in deep sleep')
 
     parser.add_argument(
         '-b',
@@ -572,7 +592,8 @@ if __name__ == "__main__":
         dest='write_file',
         type=str,
         default=None,
-        help='bitstream file to write to NVCM (warning: not reversable!)')
+        help='bitstream file to write to NVCM ' +
+        '(warning: not reversable!)')
 
     parser.add_argument('--ignore-blank',
                         dest='ignore_blank',
@@ -583,7 +604,8 @@ if __name__ == "__main__":
         '--secure',
         dest='set_secure',
         action='store_true',
-        help='Set security bits to prevent modification (warning: not reversable!')
+        help='Set security bits to prevent modification ' +
+        '(warning: not reversable!)')
 
     parser.add_argument(
         '--my-design-is-good-enough',
@@ -595,31 +617,10 @@ if __name__ == "__main__":
 
     if not args.good_enough \
             and (args.write_file or args.set_secure):
-        print("Are you sure your design is good enough?", file=sys.stderr)
+        print(
+            "Are you sure your design is good enough?",
+            file=sys.stderr)
         exit(1)
-
-    # Instantiate a SPI controller, with separately managed CS line
-    # spi = SpiController()
-
-    # Configure the first interface (IF/1) of the FTDI device as a SPI controller
-    # spi.configure(args.port)
-
-    # Get a port to a SPI device w/ /CS on A*BUS3 and SPI mode 0 @ 12MHz
-    # the CS line is not used in this case
-    # dev = spi.get_port(cs=0, freq=12E6, mode=0)
-
-    # reset_pin = 7
-    # cs_pin = 4
-
-    # Get GPIO port to manage the CS and RESET pins
-    # gpio = spi.get_gpio()
-    # gpio.set_direction(1 << reset_pin | 1 << cs_pin, 1 << reset_pin | 1 << cs_pin)
-
-    # Enable power to the FPGA, then set both reset and CS pins high
-
-    # # Reset pin values
-    # for pin in tp1_pins:
-    #   flasher.gpio_set_direction(tp1_pins[pin], False)
 
     tp1_pins = {
         '5v_en': 7,

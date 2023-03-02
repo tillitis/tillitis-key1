@@ -17,7 +17,8 @@ class ice40_flasher:
     FLASHER_REQUEST_BOOTLOADRE = 0xFF
 
     def __init__(self) -> None:
-        # See: https://github.com/pyusb/pyusb/blob/master/docs/tutorial.rst
+        # See:
+        # https://github.com/pyusb/pyusb/blob/master/docs/tutorial.rst
         self.dev = usb.core.find(idVendor=0xcafe, idProduct=0x4010)
 
         if self.dev is None:
@@ -35,9 +36,11 @@ class ice40_flasher:
         self.dev.write(0x01, data)
 
     def _read(self, request_id: int, length: int) -> bytes:
-        # ctrl_transfer(self, bmRequestType, bRequest, wValue=0, wIndex=0, data_or_wLength = None, timeout = None):
+        # ctrl_transfer(self, bmRequestType, bRequest, wValue=0,
+        #   wIndex=0, data_or_wLength = None, timeout = None):
         # Request type:
-        # bit 7: direction 0:host to device (OUT), 1: device to host (IN)
+        # bit 7: direction 0:host to device (OUT),
+        #                  1: device to host (IN)
         # bits 5-6: type: 0:standard 1:class 2:vendor 3:reserved
         # bits 0-4: recipient: 0:device 1:interface 2:endpoint 3:other
         ret = self.dev.ctrl_transfer(0xC0, request_id, 0, 0, length)
@@ -58,9 +61,12 @@ class ice40_flasher:
 # self._write_bulk(self.FLASHER_REQUEST_PIN_DIRECTION_SET, msg)
         self._write(self.FLASHER_REQUEST_PIN_DIRECTION_SET, msg)
 
-    def gpio_set_pulls(self, pin: int, pullup: bool, pulldown: bool) -> None:
-        """ True: Enable pullup/pulldown, False: Disable pullup/pulldown """
-        """Configure the pullup and pulldown resistors for a single GPIO pin
+    def gpio_set_pulls(
+            self,
+            pin: int,
+            pullup: bool,
+            pulldown: bool) -> None:
+        """Configure the pullup/down resistors for a single GPIO pin
 
         Keyword arguments:
         pin -- GPIO pin number
@@ -137,7 +143,8 @@ class ice40_flasher:
         """Bitbang a SPI transfer
 
         Keyword arguments:
-        buf -- Byte buffer to send. If the bit_count is smaller than the buffer size, some data will not be sent.
+        buf -- Byte buffer to send. If the bit_count is smaller than
+               the buffer size, some data will not be sent.
         toggle_cs: (Optional) If true, toggle the CS line
         """
 
@@ -160,12 +167,12 @@ class ice40_flasher:
             toggle_cs: bool = True) -> bytes:
         """Bitbang a SPI transfer using the specificed GPIO pins
 
-        Note that this command does not handle setting a CS pin, that must be accomplished
-        separately, for instance by calling gpio_set() on the pin controlling the CS line.
-
         Keyword arguments:
-        buf -- Byte buffer to send. If the bit_count is smaller than the buffer size, some data will not be sent.
-        bit_count -- (Optional) Number of bits (not bytes) to bitbang. If left unspecificed, defaults to the size of buf.
+        buf -- Byte buffer to send. If the bit_count is smaller than
+               the buffer size, some data will not be sent.
+        bit_count -- (Optional) Number of bits (not bytes) to
+               bitbang. If left unspecificed, defaults to the size
+               of buf.
         toggle_cs: (Optional) If true, toggle the CS line
         """
         if bit_count == -1:
@@ -174,12 +181,13 @@ class ice40_flasher:
         byte_length = (bit_count + 7) // 8
 
         if byte_length > (1024 - 8):
-            print('Message too large, bit_count:{:}'.format(bit_count))
+            print(
+                'Message too large, bit_count:{:}'.format(bit_count))
             exit(1)
 
         if byte_length != len(buf):
             print(
-                'Bit count size mismatch, bit_count:{:} len(buf):{:}'.format(
+                'Size mismatch, bit_count:{:} len(buf):{:}'.format(
                     bit_count, len(buf) * 8))
             exit(1)
 
@@ -205,7 +213,8 @@ class ice40_flasher:
     def adc_read_all(self) -> tuple[float, float, float]:
         """Read the voltage values of ADC 0, 1, and 2
 
-        The firmware will read the values for each input multiple times, and return averaged values for each input.
+        The firmware will read the values for each input multiple
+        times, and return averaged values for each input.
         """
         msg_in = self._read(self.FLASHER_REQUEST_ADC_READ, 3 * 4)
         [ch0, ch1, ch2] = struct.unpack('>III', msg_in)
