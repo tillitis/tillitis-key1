@@ -51,10 +51,10 @@ FROM base as toolsbuilder
 
 RUN git clone https://github.com/YosysHQ/icestorm /src
 WORKDIR /src
-RUN git checkout 45f5e5f3889afb07907bab439cf071478ee5a2a5 \
+RUN git checkout d20a5e9001f46262bf0cef220f1a6943946e421d \
     && make -j$(nproc --ignore=2) \
     && make install
-RUN git >/usr/local/repo-commit-icestorm describe --tags --always --dirty
+RUN git >/usr/local/repo-commit-icestorm describe --all --always --long --dirty
 WORKDIR /
 RUN rm -rf /src
 
@@ -63,39 +63,34 @@ RUN git clone -b interfaces --depth=1 https://github.com/tillitis/icestorm /src
 WORKDIR /src/iceprog
 RUN make -j$(nproc --ignore=2) \
     && make PROGRAM_PREFIX=tillitis- install
-RUN git >/usr/local/repo-commit-tillitis--icestorm describe --tags --always --dirty
+RUN git >/usr/local/repo-commit-tillitis--icestorm describe --all --always --long --dirty
 WORKDIR /
 RUN rm -rf /src
 
-RUN git clone https://github.com/YosysHQ/yosys /src
+RUN git clone -b yosys-0.26 --depth=1 https://github.com/YosysHQ/yosys /src
 WORKDIR /src
-# Avoiding current issue with yosys & icebram, filed in:
-# https://github.com/YosysHQ/yosys/issues/3478
-RUN git checkout 06ef3f264afaa3eaeab45cc0404d8006c15f02b1 \
-    && make -j$(nproc --ignore=2) \
+RUN make -j$(nproc --ignore=2) \
     && make install
-RUN git >/usr/local/repo-commit-yosys describe --tags --always --dirty
+RUN git >/usr/local/repo-commit-yosys describe --all --always --long --dirty
 WORKDIR /
 RUN rm -rf /src
 
-RUN git clone https://github.com/YosysHQ/nextpnr /src
+RUN git clone -b nextpnr-0.5 --depth=1 https://github.com/YosysHQ/nextpnr /src
 WORKDIR /src
-# Use nextpnr-0.4. Aa few commits later we got issues, like on f4e6bbd383f6c43.
-RUN git checkout nextpnr-0.4 \
-    && cmake -DARCH=ice40 -DCMAKE_INSTALL_PREFIX=/usr/local . \
+RUN cmake -DARCH=ice40 -DCMAKE_INSTALL_PREFIX=/usr/local . \
     && make -j$(nproc --ignore=2) \
     && make install
-RUN git >/usr/local/repo-commit-nextpnr describe --tags --always --dirty
+RUN git >/usr/local/repo-commit-nextpnr describe --all --always --long --dirty
 WORKDIR /
 RUN rm -rf /src
 
 RUN git clone --branch 1.5.0 --depth 1 https://github.com/raspberrypi/pico-sdk.git /usr/local/pico-sdk
 WORKDIR /usr/local/pico-sdk
 RUN git submodule update --init
-RUN git >/usr/local/repo-commit-picosdk describe --tags --always --dirty
+RUN git >/usr/local/repo-commit-picosdk describe --all --always --long --dirty
 WORKDIR /
 
 
 FROM base
-LABEL org.opencontainers.image.description="Toolchain for building TKey FPGA bitstream, firmware, apps"
+LABEL org.opencontainers.image.description="Toolchain for building TKey FPGA bitstream, firmware, apps, programmer firmware"
 COPY --from=toolsbuilder /usr/local/ /usr/local

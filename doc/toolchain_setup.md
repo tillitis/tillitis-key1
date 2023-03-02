@@ -80,7 +80,7 @@ install other versions of these tools locally, they could conflict
 
     git clone https://github.com/YosysHQ/icestorm
     cd icestorm
-    git checkout 45f5e5f3889afb07907bab439cf071478ee5a2a5
+    git checkout d20a5e9001f46262bf0cef220f1a6943946e421d
     make -j$(nproc)
     sudo make install
     cd ..
@@ -96,17 +96,14 @@ install other versions of these tools locally, they could conflict
 
     git clone https://github.com/YosysHQ/yosys
     cd yosys
-    # Avoiding current issue with yosys & icebram, filed in:
-    # https://github.com/YosysHQ/yosys/issues/3478
-    git checkout 06ef3f264afaa3eaeab45cc0404d8006c15f02b1
+    git checkout yosys-0.26
     make -j$(nproc)
     sudo make install
     cd ..
 
     git clone https://github.com/YosysHQ/nextpnr
     cd nextpnr
-    # Use nextpnr-0.4. Aa few commits later we got issues, like on f4e6bbd383f6c43.
-    git checkout nextpnr-0.4
+    git checkout nextpnr-0.5
     cmake -DARCH=ice40 -DCMAKE_INSTALL_PREFIX=/usr/local .
     make -j$(nproc)
     sudo make install
