@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import usb.core
-import usb.util
+import usb.core  # type: ignore
+import usb.util  # type: ignore
 import struct
+
 
 class ice40_flasher:
     FLASHER_REQUEST_LED_SET = 0x00,
@@ -15,42 +16,31 @@ class ice40_flasher:
     FLASHER_REQUEST_ADC_READ = 0x50
     FLASHER_REQUEST_BOOTLOADRE = 0xFF
 
-    def __init__(self):
-#        self.dev = None
-#        for dict in hid.enumerate(USB_VID):
-#            self.dev = hid.Device(dict['vendor_id'], dict['product_id'])
-#        if self.dev is None:
-#            raise IOError("Couldn't find any hid device with vendor id 0x%x" % (USB_VID))
-
+    def __init__(self) -> None:
         # See: https://github.com/pyusb/pyusb/blob/master/docs/tutorial.rst
         self.dev = usb.core.find(idVendor=0xcafe, idProduct=0x4010)
-        
+
         if self.dev is None:
             raise ValueError('Device not found')
-        
+
         self.dev.set_configuration()
 
-    def close(self):
-        """Close the HID device"""
-        #self.dev.close()
-        pass
+    def _write(self, request_id: int, data: bytes) -> None:
+        self.dev.ctrl_transfer(0x40, request_id, 0, 0, data)
 
-    def _write(self, request_id: int, data: bytes):
-        self.dev.ctrl_transfer(0x40, request_id,0,0,data)
-
-    def _write_bulk(self, request_id: int, data: bytes):
+    def _write_bulk(self, request_id: int, data: bytes) -> None:
         msg = bytearray()
         msg.append(request_id)
         msg.extend(data)
         self.dev.write(0x01, data)
 
     def _read(self, request_id: int, length: int) -> bytes:
-        #ctrl_transfer(self, bmRequestType, bRequest, wValue=0, wIndex=0, data_or_wLength = None, timeout = None):
+        # ctrl_transfer(self, bmRequestType, bRequest, wValue=0, wIndex=0, data_or_wLength = None, timeout = None):
         # Request type:
         # bit 7: direction 0:host to device (OUT), 1: device to host (IN)
         # bits 5-6: type: 0:standard 1:class 2:vendor 3:reserved
         # bits 0-4: recipient: 0:device 1:interface 2:endpoint 3:other
-        ret = self.dev.ctrl_transfer(0xC0, request_id,0,0,length)
+        ret = self.dev.ctrl_transfer(0xC0, request_id, 0, 0, length)
         return ret
 
     def gpio_set_direction(self, pin: int, direction: bool) -> None:
@@ -61,11 +51,11 @@ class ice40_flasher:
         value -- True: Set pin as output, False: set pin as input
         """
         msg = struct.pack('>II',
-            (1<<pin),
-            ((1 if direction else 0)<<pin),
-            )
+                          (1 << pin),
+                          ((1 if direction else 0) << pin),
+                          )
 
-#self._write_bulk(self.FLASHER_REQUEST_PIN_DIRECTION_SET, msg)
+# self._write_bulk(self.FLASHER_REQUEST_PIN_DIRECTION_SET, msg)
         self._write(self.FLASHER_REQUEST_PIN_DIRECTION_SET, msg)
 
     def gpio_set_pulls(self, pin: int, pullup: bool, pulldown: bool) -> None:
@@ -78,10 +68,10 @@ class ice40_flasher:
         pulldown -- True: Enable pulldown, False: Disable pulldown
         """
         msg = struct.pack('>III',
-            (1<<pin),
-            ((1 if pullup else 0)<<pin),
-            ((1 if pulldown else 0)<<pin),
-            )
+                          (1 << pin),
+                          ((1 if pullup else 0) << pin),
+                          ((1 if pulldown else 0) << pin),
+                          )
 
         self._write(self.FLASHER_REQUEST_PULLUPS_SET, msg)
 
@@ -93,15 +83,15 @@ class ice40_flasher:
         val -- True: High, False: Low
         """
         msg = struct.pack('>II',
-            1 << pin,
-            (1 if val else 0) << pin,
-            )
+                          1 << pin,
+                          (1 if val else 0) << pin,
+                          )
 
         self._write(self.FLASHER_REQUEST_PIN_VALUES_SET, msg)
 
     def gpio_get_all(self) -> int:
         """Read the input levels of all GPIO pins"""
-        msg_in = self._read(self.FLASHER_REQUEST_PIN_VALUES_GET,4)
+        msg_in = self._read(self.FLASHER_REQUEST_PIN_VALUES_GET, 4)
         [gpio_states] = struct.unpack('>I', msg_in)
 
         return gpio_states
@@ -112,7 +102,7 @@ class ice40_flasher:
         Keyword arguments:
         pin -- GPIO pin number
         """
-        gpio_states = gpio_get_all()
+        gpio_states = self.gpio_get_all()
 
         return ((gpio_states >> pin) & 0x01) == 0x01
 
@@ -138,12 +128,12 @@ class ice40_flasher:
         msg = bytearray()
         msg.extend(header)
 
-        self._write(self.FLASHER_REQUEST_SPI_PINS_SET,msg)
+        self._write(self.FLASHER_REQUEST_SPI_PINS_SET, msg)
 
     def spi_bitbang(
             self,
-            buf: bytearray,
-            toggle_cs: bool = True) -> bytearray:
+            buf: bytes,
+            toggle_cs: bool = True) -> bytes:
         """Bitbang a SPI transfer
 
         Keyword arguments:
@@ -153,7 +143,7 @@ class ice40_flasher:
 
         ret = bytearray()
 
-        max_chunk_size = (1024-8)
+        max_chunk_size = (1024 - 8)
         for i in range(0, len(buf), max_chunk_size):
             chunk = buf[i:i + max_chunk_size]
             ret.extend(
@@ -161,13 +151,13 @@ class ice40_flasher:
                     buf=chunk,
                     toggle_cs=toggle_cs))
 
-        return ret
+        return bytes(ret)
 
     def spi_bitbang_inner(
             self,
-            buf: bytearray,
+            buf: bytes,
             bit_count: int = -1,
-            toggle_cs: bool = True) -> bytearray:
+            toggle_cs: bool = True) -> bytes:
         """Bitbang a SPI transfer using the specificed GPIO pins
 
         Note that this command does not handle setting a CS pin, that must be accomplished
@@ -181,16 +171,16 @@ class ice40_flasher:
         if bit_count == -1:
             bit_count = len(buf) * 8
 
-        byte_length = (bit_count+7)//8
+        byte_length = (bit_count + 7) // 8
 
-        if byte_length > (1024-8):
+        if byte_length > (1024 - 8):
             print('Message too large, bit_count:{:}'.format(bit_count))
             exit(1)
-        
+
         if byte_length != len(buf):
             print(
-                'Bit count size mismatch, bit_count:{:} len(buf):{:}'.format(bit_count),
-                len(buf) * 8)
+                'Bit count size mismatch, bit_count:{:} len(buf):{:}'.format(
+                    bit_count, len(buf) * 8))
             exit(1)
 
         header = struct.pack('>I',
@@ -200,43 +190,30 @@ class ice40_flasher:
         msg.extend(buf)
 
         if toggle_cs:
-            self._write(self.FLASHER_REQUEST_SPI_BITBANG_CS,msg)
-            msg_in = self._read(self.FLASHER_REQUEST_SPI_BITBANG_CS, byte_length)
+            self._write(self.FLASHER_REQUEST_SPI_BITBANG_CS, msg)
+            msg_in = self._read(
+                self.FLASHER_REQUEST_SPI_BITBANG_CS,
+                byte_length)
         else:
-            self._write(self.FLASHER_REQUEST_SPI_BITBANG_NO_CS,msg)
-            msg_in = self._read(self.FLASHER_REQUEST_SPI_BITBANG_NO_CS, byte_length)
+            self._write(self.FLASHER_REQUEST_SPI_BITBANG_NO_CS, msg)
+            msg_in = self._read(
+                self.FLASHER_REQUEST_SPI_BITBANG_NO_CS,
+                byte_length)
 
         return msg_in
 
-    def adc_read_all(self) -> list[float]:
+    def adc_read_all(self) -> tuple[float, float, float]:
         """Read the voltage values of ADC 0, 1, and 2
 
         The firmware will read the values for each input multiple times, and return averaged values for each input.
         """
-        msg_in = self._read(self.FLASHER_REQUEST_ADC_READ,3*4)
+        msg_in = self._read(self.FLASHER_REQUEST_ADC_READ, 3 * 4)
         [ch0, ch1, ch2] = struct.unpack('>III', msg_in)
 
-        return ch0/1000000, ch1/1000000, ch2/1000000
+        return ch0 / 1000000, ch1 / 1000000, ch2 / 1000000
+
 
 if __name__ == '__main__':
     flasher = ice40_flasher()
     print(flasher.gpio_get_all())
     print(flasher.adc_read_all())
-
-    # for pin in range(10,13):
-    #    flasher.gpio_set_direction(pin, True)
-
-    # while True:
-    #     for pin in range(10,13):
-    #         flasher.gpio_put(pin, True)
-    #         flasher.gpio_put(pin, False)
-
-    flasher.gpio_set_direction(10, True)
-    flasher.gpio_set_direction(11, True)
-    flasher.gpio_set_direction(13, False)
-
-
-    buf = [0x01,0x02,0x03, 0xFE]
-
-    while True:
-        flasher.spi_bitbang_inner(sck_pin=10, mosi_pin=11, miso_pin=13, buf=buf)
