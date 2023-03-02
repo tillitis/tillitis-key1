@@ -3,7 +3,9 @@ SHELL := /bin/bash
 PYTHON_FILES = \
     usb_test.py \
     icenvcm.py \
-    icebin2nvcm.py
+    icebin2nvcm.py \
+    encode_usb_strings.py \
+    reset.py
 
 lint:
 	autopep8 --in-place --max-line-length 70 --aggressive --aggressive  ${PYTHON_FILES}
