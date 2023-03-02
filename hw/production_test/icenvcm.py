@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 #  Copyright (C) 2021
 #
@@ -22,6 +22,7 @@
 #
 
 import usb_test
+from icebin2nvcm import icebin2nvcm
 import sys
 from time import sleep
 import os
@@ -81,25 +82,13 @@ class Nvcm():
         self.flasher.gpio_put(self.pins['ss'], cs)
         self.flasher.gpio_put(self.pins['crst'], reset)
 
-    def sendhex(self, s: str) -> int:
-        if self.debug and not s == "0500":  # suppress status_wait
-            print("TX", s)
-        x = bytes.fromhex(s)
-
-        # b = dev.exchange(x, duplex=True, readlen=len(x))
-        b = self.flasher.spi_bitbang(x, toggle_cs=False)
-
-        if self.debug and not s == "0500":
-            print("RX", b.hex())
-        return int.from_bytes(b, byteorder='big')
-
-    def sendhex_cs(self, s: str) -> bytes:
+    def sendhex_cs(self, s: str, toggle_cs: bool = True) -> bytes:
         if self.debug and not s == "0500":
             print("TX", s)
         x = bytes.fromhex(s)
 
         # b = dev.exchange(x, duplex=True, readlen=len(x))
-        b = self.flasher.spi_bitbang(x)
+        b = self.flasher.spi_bitbang(x, toggle_cs)
 
         if self.debug and not s == "0500":
             print("RX", b.hex())
@@ -108,15 +97,10 @@ class Nvcm():
     def delay(self, count: int) -> None:
         # run the clock with no CS asserted
         # dev.exchange(b'\x00', duplex=True, readlen=count)
-        self.sendhex('00' * count)
+        self.sendhex_cs('00' * count, False)
 
     def tck(self, count: int) -> None:
-        self.delay(count >> 3)
-        self.delay(count >> 3)
-        self.delay(count >> 3)
-        self.delay(count >> 3)
-        self.delay(count >> 3)
-        self.delay(count >> 3)
+        self.delay((count >> 3) * 2)
 
     def init(self) -> None:
         if self.debug:
@@ -161,38 +145,32 @@ class Nvcm():
         # SMCInstruction[1] = 0x70807E99557E;
         self.command("7eaa997e010e")
 
-    def read(
+    def read_bytes(
             self,
             address: int,
             length: int = 8,
-            cmd: int = 0x03) -> int:
-        """Returns a big integer"""
-    #    enable(0)
-    #    sendhex("%02x%06x" % (cmd, address))
-    #    sendhex("00" * 9) # dummy bytes
-    #    x = 0
-    #    for i in range(0,length):
-    #        x = x << 8 | sendhex("00")
-    #    enable(1)
-
+            cmd: int = 0x03) -> bytes:
+        """Returns a byte array of the contents"""
         msg = ''
         msg += ("%02x%06x" % (cmd, address))
         msg += ("00" * 9)  # dummy bytes
         msg += ("00" * length)  # read
         ret = self.sendhex_cs(msg)
 
+        return ret[4 + 9:]
+
+    def read(
+            self,
+            address: int,
+            length: int = 8,
+            cmd: int = 0x03) -> int:
+        """Returns a big integer"""
+
+        val = self.read_bytes(address, length, cmd)
         x = 0
         for i in range(0, length):
-            x = x << 8 | ret[i + 4 + 9]
+            x = x << 8 | val[i]
         return x
-
-    def read_bytes(self, address: int, length: int = 8) -> bytes:
-        """Returns a byte array of the contents"""
-        return self.read(
-            address,
-            length).to_bytes(
-            length,
-            byteorder="big")
 
     def write(self, address: int, data: str, cmd: int = 0x02) -> None:
         self.sendhex_cs("%02x%06x" % (cmd, address) + data)
@@ -314,6 +292,7 @@ class Nvcm():
 
         i = 0
         for row in rows:
+            # print('data for row:',i, row)
             if i % 1024 == 0:
                 print("%6d / %6d bytes" % (i, len(rows) * 8))
             i += 8
@@ -378,6 +357,7 @@ class Nvcm():
         self.write_trim_pages("0015f2f1c4000000")
 
     def info(self) -> None:
+        """ Print the contents of the configuration registers """
         self.select_sig()
         sig1 = self.read(0x000000, 8)
 
@@ -388,7 +368,7 @@ class Nvcm():
         self.select_nvcm()
         trim = self.read_trim()
 
-        self.select_nvcm()
+#        self.select_nvcm()
 
         self.select_trim()
         trim0 = self.read(0x000020, 8)
@@ -421,17 +401,41 @@ class Nvcm():
         print("Trim 2: %016x" % (trim2))
         print("Trim 3: %016x" % (trim3))
 
-    def read_file(self, filename: str) -> None:
+    def read_nvcm(self, length: int) -> bytes:
+        """ Read out the contents of the NVCM fuses
+
+        Keyword arguments:
+        length: Length of data to read
+        """
+
         self.select_nvcm()
 
-        total_fuse = 104090
+        contents = bytearray()
 
-        contents = b''
-
-        for offset in range(0, total_fuse, 8):
+        for offset in range(0, length, 8):
             if offset % 1024 == 0:
-                print("%6d / %6d bytes" % (offset, total_fuse))
-            contents += self.read_bytes(offset, 8)
+                print("%6d / %6d bytes" % (offset, length))
+
+            nvcm_addr = int(offset / 328) * 4096 + (offset % 328)
+            contents += self.read_bytes(nvcm_addr, 8)
+            self.tck(8)
+
+        return bytes(contents)
+
+    def read_file(self, filename: str, length: int) -> None:
+        """ Read the contents of the NVCM to a file
+
+        Keyword arguments:
+        filename -- File to write to, or '-' to write to stdout
+        """
+
+        contents = bytearray()
+
+        # prepend a header to the file, to identify it as an FPGA
+        # bitstream
+        contents += bytes([0xff, 0x00, 0x00, 0xff])
+
+        contents += self.read_nvcm(length)
 
         if filename == '-':
             with os.fdopen(sys.stdout.fileno(),
@@ -444,45 +448,27 @@ class Nvcm():
                 f.write(contents)
                 f.flush()
 
+    def verify(self, filename: str) -> None:
+        """ Verify that the contents of the NVCM match a file
 
-#
-# bistream to NVCM command conversion is based on majbthrd's work in
-# https://github.com/YosysHQ/icestorm/pull/272
-#
-def bitstream2nvcm(bitstream: bytes) -> list[str]:
-    # ensure that the file starts with the correct bistream preamble
-    for origin in range(0, len(bitstream)):
-        if bitstream[origin:origin + 4] == bytes.fromhex('7EAA997E'):
-            break
+        Keyword arguments:
+        filename -- File to compare
+        """
+        with open(filename, "rb") as f:
+            compare = f.read()
 
-    if origin == len(bitstream):
-        raise Exception("Preamble not found")
+        assert (len(compare) > 0)
 
-    print("Found preamable at %08x" % (origin), file=sys.stderr)
+        contents = bytearray()
+        contents += bytes([0xff, 0x00, 0x00, 0xff])
+        contents += self.read_nvcm(len(compare))
 
-    # there might be stuff in the header with vendor tools,
-    # but not usually in icepack produced output, so ignore it for now
+        # We might have read more than needed because of read
+        # boundaries
+        if len(contents) > len(compare):
+            contents = contents[:len(compare)]
 
-    # todo: what is the correct size?
-
-    rows = []
-
-    for pos in range(origin, len(bitstream), 8):
-        row = bitstream[pos:pos + 8]
-
-        # pad out to 8-bytes
-        row += b'\0' * (8 - len(row))
-
-        if row == bytes(8):
-            # skip any all-zero entries in the bistream
-            continue
-
-        # NVCM addressing is very weird
-        addr = pos - origin
-        nvcm_addr = int(addr / 328) * 4096 + (addr % 328)
-        rows += ["02 %06x %s" % (nvcm_addr, row.hex())]
-
-    return rows
+        assert (compare == contents)
 
 
 def sleep_flash(pins: dict) -> None:
@@ -587,6 +573,12 @@ if __name__ == "__main__":
                         default=None,
                         help='Read contents of NVCM')
 
+    parser.add_argument('--verify',
+                        dest='verify_file',
+                        type=str,
+                        default=None,
+                        help='Verify the contents of NVCM')
+
     parser.add_argument(
         '--write',
         dest='write_file',
@@ -649,7 +641,7 @@ if __name__ == "__main__":
         with open(args.write_file, "rb") as f:
             bitstream = f.read()
         print("read %d bytes" % (len(bitstream)))
-        cmds = bitstream2nvcm(bitstream)
+        cmds = icebin2nvcm(bitstream)
         if not cmds:
             exit(1)
 
@@ -666,7 +658,11 @@ if __name__ == "__main__":
 
     if args.read_file:
         # read back after writing to the NVCM
-        nvcm.read_file(args.read_file)
+        nvcm.read_file(args.read_file, 104090)
+
+    if args.verify_file:
+        # read back after writing to the NVCM
+        nvcm.verify(args.verify_file)
 
     if args.set_secure:
         nvcm.trim_secure()
