@@ -187,6 +187,13 @@ int main()
 
 	// Turn on application mode.
 	// -------------------------
+
+	// Set up another stack because fw_ram is not available
+	// anymore in app_mode.
+	asm volatile(
+		"li sp, 0x40006ff0"
+		);
+
 	*switch_app = 1;
 
 	sw = *switch_app;

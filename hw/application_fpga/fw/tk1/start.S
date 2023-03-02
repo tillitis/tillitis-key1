@@ -46,8 +46,10 @@ clear:
 	addi a0, a0, 4
 	blt a0, a1, clear
 
-	/* init stack below 0x40007000 (TK1_APP_ADDR) where we load app */
-	li sp, 0x40006ff0
+        /*
+         * Init stack at top of fw_ram. Leave 16 byte for entering our first function
+         */
+        li sp, 0xd00003f0 // 1 kiB - 16 byte in FW_RAM
 
 	/* copy data section */
 	la a0, _sidata
