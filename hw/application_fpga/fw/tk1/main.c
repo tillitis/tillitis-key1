@@ -21,7 +21,6 @@ static volatile uint32_t *udi             = (volatile uint32_t *)TK1_MMIO_TK1_UD
 static volatile uint32_t *cdi             = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 static volatile uint32_t *app_addr        = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
 static volatile uint32_t *app_size        = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
-static volatile uint8_t  *fw_ram          = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
 static volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
 static volatile uint32_t *trng_status     = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
 static volatile uint32_t *trng_entropy    = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
@@ -95,6 +94,7 @@ static void print_digest(uint8_t *md)
 static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 {
 	uint32_t local_cdi[8];
+	blake2s_ctx secure_ctx;
 
 	// Prepare to sleep a random number of cycles before reading out UDS
 	*timer_prescaler = 1;
@@ -108,30 +108,26 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
 
-	// Use firmware-only RAM for BLAKE2s context instead of
-	// ordinary RAM
-	blake2s_ctx *secure_ctx = (blake2s_ctx *)fw_ram;
-
-	int blake2err = blake2s_init(secure_ctx, 32, NULL, 0);
+	int blake2err = blake2s_init(&secure_ctx, 32, NULL, 0);
 	assert(blake2err == 0);
 
 	// Update hash with UDS. This means UDS will live for a short
-	// while in secure_ctx->b which is in the special fw_ram.
-	blake2s_update(secure_ctx, (const void *)uds, 32);
+	// while on the firmware stack which is in the special fw_ram.
+	blake2s_update(&secure_ctx, (const void *)uds, 32);
 
 	// Update with TKey program digest
-	blake2s_update(secure_ctx, digest, 32);
+	blake2s_update(&secure_ctx, digest, 32);
 
 	// Possibly hash in the USS as well
 	if (use_uss != 0) {
-		blake2s_update(secure_ctx, uss, 32);
+		blake2s_update(&secure_ctx, uss, 32);
 	}
 
 	// Write hashed result to Compound Device Identity (CDI)
-	blake2s_final(secure_ctx, local_cdi);
+	blake2s_final(&secure_ctx, local_cdi);
 
-	// Write over the firmware-only RAM
-	memset((void *)fw_ram, 0, TK1_MMIO_FW_RAM_SIZE);
+	// Clear secure_ctx of any residue
+	memset(&secure_ctx, 0, sizeof(secure_ctx));
 
 	// CDI only word writable
 	wordcpy_s((void *)cdi, 8, local_cdi, 8);
@@ -186,31 +182,42 @@ int main()
 			break;
 
 		case FW_STATE_RUN:
+			htif_puts("state_run\n");
 			*app_addr = TK1_APP_ADDR;
 
 			// CDI = hash(uds, hash(app), uss)
 			compute_cdi(digest, use_uss, uss);
 
-			// Flip over to application mode
-			*switch_app = 1;
-
-			// Jump to app - doesn't return
-			// First clears memory of firmware remains
+			htif_puts("Flipping to app mode!\n");
 			htif_puts("Jumping to ");
 			htif_putinthex(*app_addr);
 			htif_lf();
+
+			// Clear the firmware stack
 			// clang-format off
 			asm volatile(
-				// Clear the stack
-				"li a0, 0x40000000;" // TK1_RAM_BASE
-				"li a1, 0x40007000;" // TK1_APP_ADDR
+				"li a0, 0xd0000000;" // FW_RAM
+				"li a1, 0xd0000400;" // End of FW_RAM
 				"loop:;"
 				"sw zero, 0(a0);"
 				"addi a0, a0, 4;"
 				"blt a0, a1, loop;"
+				::: "memory");
+			// clang-format on
+
+			// Flip over to application mode
+			*switch_app = 1;
+
+			// XXX Firmware stack now no longer available
+			// Don't use any function calls!
+
+			// Jump to app - doesn't return
+			// clang-format off
+			asm volatile(
 				// Get value at TK1_MMIO_TK1_APP_ADDR
 				"lui a0,0xff000;"
 				"lw a0,0x030(a0);"
+				// Jump to it
 				"jalr x0,0(a0);"
 				::: "memory");
 			// clang-format on
