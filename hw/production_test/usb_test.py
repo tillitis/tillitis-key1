@@ -9,8 +9,11 @@ class ice40_flasher:
     FLASHER_REQUEST_PULLUPS_SET = 0x12
     FLASHER_REQUEST_PIN_VALUES_SET = 0x20
     FLASHER_REQUEST_PIN_VALUES_GET = 0x30
-    FLASHER_REQUEST_SPI_BITBANG = 0x40
+    FLASHER_REQUEST_SPI_BITBANG_CS = 0x41
+    FLASHER_REQUEST_SPI_BITBANG_NO_CS = 0x42
+    FLASHER_REQUEST_SPI_PINS_SET = 0x43
     FLASHER_REQUEST_ADC_READ = 0x50
+    FLASHER_REQUEST_BOOTLOADRE = 0xFF
 
     def __init__(self):
 #        self.dev = None
@@ -32,10 +35,16 @@ class ice40_flasher:
         #self.dev.close()
         pass
 
-    def _write(self, request_id, data):
+    def _write(self, request_id: int, data: bytes):
         self.dev.ctrl_transfer(0x40, request_id,0,0,data)
 
-    def _read(self, request_id, length):
+    def _write_bulk(self, request_id: int, data: bytes):
+        msg = bytearray()
+        msg.append(request_id)
+        msg.extend(data)
+        self.dev.write(0x01, data)
+
+    def _read(self, request_id: int, length: int) -> bytes:
         #ctrl_transfer(self, bmRequestType, bRequest, wValue=0, wIndex=0, data_or_wLength = None, timeout = None):
         # Request type:
         # bit 7: direction 0:host to device (OUT), 1: device to host (IN)
@@ -43,21 +52,6 @@ class ice40_flasher:
         # bits 0-4: recipient: 0:device 1:interface 2:endpoint 3:other
         ret = self.dev.ctrl_transfer(0xC0, request_id,0,0,length)
         return ret
-
-#    def led_set(self, value: bool) -> None:
-#         """Set the state of the onboard LED
-
-#         Keyword arguments:
-#         value -- True: On, False: Off
-#         """
-#        msg = struct.pack('>BBB',
-#            0x0,
-#            0x00,
-#            (1 if value else 0)
-#            )
-
-#        #print(['{:02x}'.format(b) for b in msg])
-#        self.dev.write(msg)
 
     def gpio_set_direction(self, pin: int, direction: bool) -> None:
         """Set the direction of a single GPIO pin
@@ -71,6 +65,7 @@ class ice40_flasher:
             ((1 if direction else 0)<<pin),
             )
 
+#self._write_bulk(self.FLASHER_REQUEST_PIN_DIRECTION_SET, msg)
         self._write(self.FLASHER_REQUEST_PIN_DIRECTION_SET, msg)
 
     def gpio_set_pulls(self, pin: int, pullup: bool, pulldown: bool) -> None:
@@ -121,23 +116,39 @@ class ice40_flasher:
 
         return ((gpio_states >> pin) & 0x01) == 0x01
 
-    def spi_bitbang(
+    def spi_pins_set(
             self,
             sck_pin: int,
+            cs_pin: int,
             mosi_pin: int,
-            miso_pin: int,
-            buf: bytearray) -> bytearray:
-        """Bitbang a SPI transfer using the specificed GPIO pins
-
-        Note that this command does not handle setting a CS pin, that must be accomplished
-        separately, for instance by calling gpio_set() on the pin controlling the CS line.
+            miso_pin: int) -> None:
+        """Set the pins to use for SPI transfers
 
         Keyword arguments:
         sck_pin -- GPIO pin number to use as the SCK signal
+        cs_pin -- GPIO pin number to use as the CS signal
         mosi_pin -- GPIO pin number to use as the MOSI signal
         miso_pin -- GPIO pin number to use as the MISO signal
+        """
+        header = struct.pack('>BBBB',
+                             sck_pin,
+                             cs_pin,
+                             mosi_pin,
+                             miso_pin)
+        msg = bytearray()
+        msg.extend(header)
+
+        self._write(self.FLASHER_REQUEST_SPI_PINS_SET,msg)
+
+    def spi_bitbang(
+            self,
+            buf: bytearray,
+            toggle_cs: bool = True) -> bytearray:
+        """Bitbang a SPI transfer
+
+        Keyword arguments:
         buf -- Byte buffer to send. If the bit_count is smaller than the buffer size, some data will not be sent.
-        bit_count -- (Optional) Number of bits (not bytes) to bitbang. If left unspecificed, defaults to the size of buf.
+        toggle_cs: (Optional) If true, toggle the CS line
         """
 
         ret = bytearray()
@@ -147,31 +158,25 @@ class ice40_flasher:
             chunk = buf[i:i + max_chunk_size]
             ret.extend(
                 self.spi_bitbang_inner(
-                    sck_pin=sck_pin,
-                    mosi_pin=mosi_pin,
-                    miso_pin=miso_pin,
-                    buf=chunk))
+                    buf=chunk,
+                    toggle_cs=toggle_cs))
 
         return ret
 
     def spi_bitbang_inner(
             self,
-            sck_pin: int,
-            mosi_pin: int,
-            miso_pin: int,
             buf: bytearray,
-            bit_count: int = -1) -> bytearray:
+            bit_count: int = -1,
+            toggle_cs: bool = True) -> bytearray:
         """Bitbang a SPI transfer using the specificed GPIO pins
 
         Note that this command does not handle setting a CS pin, that must be accomplished
         separately, for instance by calling gpio_set() on the pin controlling the CS line.
 
         Keyword arguments:
-        sck_pin -- GPIO pin number to use as the SCK signal
-        mosi_pin -- GPIO pin number to use as the MOSI signal
-        miso_pin -- GPIO pin number to use as the MISO signal
         buf -- Byte buffer to send. If the bit_count is smaller than the buffer size, some data will not be sent.
         bit_count -- (Optional) Number of bits (not bytes) to bitbang. If left unspecificed, defaults to the size of buf.
+        toggle_cs: (Optional) If true, toggle the CS line
         """
         if bit_count == -1:
             bit_count = len(buf) * 8
@@ -188,18 +193,18 @@ class ice40_flasher:
                 len(buf) * 8)
             exit(1)
 
-        header = struct.pack('>BBBI',
-                             sck_pin,
-                             mosi_pin,
-                             miso_pin,
+        header = struct.pack('>I',
                              bit_count)
         msg = bytearray()
         msg.extend(header)
         msg.extend(buf)
 
-        self._write(self.FLASHER_REQUEST_SPI_BITBANG,msg)
-
-        msg_in = self._read(self.FLASHER_REQUEST_SPI_BITBANG, byte_length)
+        if toggle_cs:
+            self._write(self.FLASHER_REQUEST_SPI_BITBANG_CS,msg)
+            msg_in = self._read(self.FLASHER_REQUEST_SPI_BITBANG_CS, byte_length)
+        else:
+            self._write(self.FLASHER_REQUEST_SPI_BITBANG_NO_CS,msg)
+            msg_in = self._read(self.FLASHER_REQUEST_SPI_BITBANG_NO_CS, byte_length)
 
         return msg_in
 
@@ -232,15 +237,6 @@ if __name__ == '__main__':
 
 
     buf = [0x01,0x02,0x03, 0xFE]
-    header = struct.pack('>BBBI',
-                            10,
-                            11,
-                            13,
-                            len(buf)*8)
-    msg = bytearray()
-    msg.extend(header)
-    msg.extend(buf)
 
     while True:
-        
         flasher.spi_bitbang_inner(sck_pin=10, mosi_pin=11, miso_pin=13, buf=buf)
