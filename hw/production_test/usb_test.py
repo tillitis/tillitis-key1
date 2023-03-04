@@ -14,7 +14,7 @@ class ice40_flasher:
     FLASHER_REQUEST_SPI_BITBANG_NO_CS = 0x42
     FLASHER_REQUEST_SPI_PINS_SET = 0x43
     FLASHER_REQUEST_ADC_READ = 0x50
-    FLASHER_REQUEST_BOOTLOADRE = 0xFF
+    FLASHER_REQUEST_BOOTLOADER = 0xFF
 
     def __init__(self) -> None:
         # See:
@@ -117,7 +117,8 @@ class ice40_flasher:
             sck_pin: int,
             cs_pin: int,
             mosi_pin: int,
-            miso_pin: int) -> None:
+            miso_pin: int,
+            clock_speed: int) -> None:
         """Set the pins to use for SPI transfers
 
         Keyword arguments:
@@ -126,11 +127,12 @@ class ice40_flasher:
         mosi_pin -- GPIO pin number to use as the MOSI signal
         miso_pin -- GPIO pin number to use as the MISO signal
         """
-        header = struct.pack('>BBBB',
+        header = struct.pack('>BBBBB',
                              sck_pin,
                              cs_pin,
                              mosi_pin,
-                             miso_pin)
+                             miso_pin,
+                             clock_speed)
         msg = bytearray()
         msg.extend(header)
 
@@ -150,7 +152,7 @@ class ice40_flasher:
 
         ret = bytearray()
 
-        max_chunk_size = (1024 - 8)
+        max_chunk_size = (2048 - 8)
         for i in range(0, len(buf), max_chunk_size):
             chunk = buf[i:i + max_chunk_size]
             ret.extend(
@@ -180,7 +182,7 @@ class ice40_flasher:
 
         byte_length = (bit_count + 7) // 8
 
-        if byte_length > (1024 - 8):
+        if byte_length > (2048 - 8):
             print(
                 'Message too large, bit_count:{:}'.format(bit_count))
             exit(1)
@@ -210,6 +212,11 @@ class ice40_flasher:
 
         return msg_in
 
+    def nvcm_command(self, cmd: bytes) -> None:
+        """NVCM fast path: Run a command on the NVCM memory, then
+        """
+        pass
+
     def adc_read_all(self) -> tuple[float, float, float]:
         """Read the voltage values of ADC 0, 1, and 2
 
@@ -221,8 +228,21 @@ class ice40_flasher:
 
         return ch0 / 1000000, ch1 / 1000000, ch2 / 1000000
 
+    def bootloader(self) -> None:
+        """Reset the programmer to bootloader mode
+
+        After the device is reset, it can be programmed using
+        picotool, or by copying a file to the uf2 drive.
+        """
+        try:
+            self._write(self.FLASHER_REQUEST_BOOTLOADER, bytes())
+        except usb.core.USBError:
+            # We expect the device to disappear immediately, so mask
+            # the resulting error
+            pass
+
 
 if __name__ == '__main__':
     flasher = ice40_flasher()
-    print(flasher.gpio_get_all())
-    print(flasher.adc_read_all())
+
+    flasher.spi_pins_set(1, 2, 3, 4, 15)
