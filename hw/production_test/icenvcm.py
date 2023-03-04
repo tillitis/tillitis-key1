@@ -46,7 +46,11 @@ class Nvcm():
         0x21: "ICE40UP3K",
     }
 
-    def __init__(self, pins: dict, debug: bool = False) -> None:
+    def __init__(
+            self,
+            pins: dict,
+            spi_speed: int = 12,
+            debug: bool = False) -> None:
         self.pins = pins
         self.debug = debug
 
@@ -68,7 +72,8 @@ class Nvcm():
             pins['sck'],
             pins['ss'],
             pins['mosi'],
-            pins['miso']
+            pins['miso'],
+            spi_speed
         )
 
     def power_on(self) -> None:
@@ -496,7 +501,8 @@ def sleep_flash(pins: dict) -> None:
         pins['sck'],
         pins['ss'],
         pins['miso'],
-        pins['mosi']
+        pins['mosi'],
+        12
     )
 
     flasher.spi_bitbang(bytes([0xAB]))
