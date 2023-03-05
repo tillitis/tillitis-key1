@@ -77,23 +77,34 @@ class Nvcm():
         )
 
     def power_on(self) -> None:
+        """Disable power to the DUT"""
         self.flasher.gpio_put(self.pins['5v_en'], True)
 
     def power_off(self) -> None:
+        """Enable power to the DUT"""
         self.flasher.gpio_put(self.pins['5v_en'], False)
 
     def enable(self, cs: bool, reset: bool = True) -> None:
+        """Set the CS and Reset pin states"""
         # gpio.write(cs << cs_pin | reset << reset_pin)
         self.flasher.gpio_put(self.pins['ss'], cs)
         self.flasher.gpio_put(self.pins['crst'], reset)
 
-    def sendhex_cs(self, s: str, toggle_cs: bool = True) -> bytes:
+    def writehex(self, s: str, toggle_cs: bool = True) -> None:
         if self.debug and not s == "0500":
             print("TX", s)
         x = bytes.fromhex(s)
 
         # b = dev.exchange(x, duplex=True, readlen=len(x))
-        b = self.flasher.spi_bitbang(x, toggle_cs)
+        self.flasher.spi_write(x, toggle_cs)
+
+    def sendhex(self, s: str, toggle_cs: bool = True) -> bytes:
+        if self.debug and not s == "0500":
+            print("TX", s)
+        x = bytes.fromhex(s)
+
+        # b = dev.exchange(x, duplex=True, readlen=len(x))
+        b = self.flasher.spi_rxtx(x, toggle_cs)
 
         if self.debug and not s == "0500":
             print("RX", b.hex())
@@ -102,7 +113,8 @@ class Nvcm():
     def delay(self, count: int) -> None:
         # run the clock with no CS asserted
         # dev.exchange(b'\x00', duplex=True, readlen=count)
-        self.sendhex_cs('00' * count, False)
+        # self.sendhex('00' * count, False)
+        self.flasher.spi_clk_out(count)
 
     def tck(self, count: int) -> None:
         self.delay((count >> 3) * 2)
@@ -110,21 +122,17 @@ class Nvcm():
     def init(self) -> None:
         if self.debug:
             print("init")
-        self.enable(True, True)
-        self.enable(True, False)  # reset high
-        sleep(0.15)
-
-        self.enable(False, False)  # enable and reset high
-        sleep(0.12)
-        self.enable(False, True)  # enable low, reset high
-        sleep(0.12)
-        self.enable(True, True)  # enable and reset low
-        sleep(0.12)
+        self.enable(cs=True, reset=True)
+        self.enable(cs=True, reset=False)
+        self.enable(cs=False, reset=False)
+        self.enable(cs=False, reset=True)
+        sleep(0.1)
+        self.enable(cs=True, reset=True)
 
     def status_wait(self, count: int = 1000) -> None:
         for i in range(0, count):
             self.tck(5000)
-            ret = self.sendhex_cs("0500")
+            ret = self.sendhex("0500")
             x = int.from_bytes(ret, byteorder='big')
 
             # print("x=%04x" %(x))
@@ -132,10 +140,11 @@ class Nvcm():
             if (x & 0x00c1) == 0:
                 return
 
+        print("x=%04x" % (x))
         raise Exception("status failed to clear")
 
     def command(self, cmd: str) -> None:
-        self.sendhex_cs(cmd)
+        self.writehex(cmd)
         self.status_wait()
         self.tck(8)
 
@@ -160,7 +169,7 @@ class Nvcm():
         msg += ("%02x%06x" % (cmd, address))
         msg += ("00" * 9)  # dummy bytes
         msg += ("00" * length)  # read
-        ret = self.sendhex_cs(msg)
+        ret = self.sendhex(msg)
 
         return ret[4 + 9:]
 
@@ -178,7 +187,7 @@ class Nvcm():
         return x
 
     def write(self, address: int, data: str, cmd: int = 0x02) -> None:
-        self.sendhex_cs("%02x%06x" % (cmd, address) + data)
+        self.writehex("%02x%06x" % (cmd, address) + data)
 
         try:
             self.status_wait()
@@ -418,7 +427,7 @@ class Nvcm():
         contents = bytearray()
 
         for offset in range(0, length, 8):
-            if offset % 1024 == 0:
+            if offset % (1024*8) == 0:
                 print("%6d / %6d bytes" % (offset, length))
 
             nvcm_addr = int(offset / 328) * 4096 + (offset % 328)
@@ -474,6 +483,7 @@ class Nvcm():
             contents = contents[:len(compare)]
 
         assert (compare == contents)
+        print('Verification complete, NVCM contents match file')
 
 
 def sleep_flash(pins: dict) -> None:
@@ -505,10 +515,10 @@ def sleep_flash(pins: dict) -> None:
         12
     )
 
-    flasher.spi_bitbang(bytes([0xAB]))
+    flasher.spi_write(bytes([0xAB]))
 
     # Confirm we can talk to flash
-    data = flasher.spi_bitbang(bytes([0x9f, 0, 0]))
+    data = flasher.spi_rxtx(bytes([0x9f, 0, 0]))
 
     print('flash ID while awake:', ' '.join(
         ['{:02x}'.format(b) for b in data]))
@@ -516,20 +526,20 @@ def sleep_flash(pins: dict) -> None:
 
     # Test that the flash will ignore a sleep command that doesn't
     # start on the first byte
-    flasher.spi_bitbang(bytes([0, 0xb9]))
+    flasher.spi_write(bytes([0, 0xb9]))
 
     # Confirm we can talk to flash
-    data = flasher.spi_bitbang(bytes([0x9f, 0, 0]))
+    data = flasher.spi_rxtx(bytes([0x9f, 0, 0]))
 
     print('flash ID while awake:', ' '.join(
         ['{:02x}'.format(b) for b in data]))
     assert (data == bytes([0xff, 0xef, 0x40]))
 
     # put the flash to sleep
-    flasher.spi_bitbang(bytes([0xb9]))
+    flasher.spi_write(bytes([0xb9]))
 
     # Confirm flash is asleep
-    data = flasher.spi_bitbang(bytes([0x9f, 0, 0]))
+    data = flasher.spi_rxtx(bytes([0x9f, 0, 0]))
 
     print('flash ID while asleep:', ' '.join(
         ['{:02x}'.format(b) for b in data]))
@@ -567,6 +577,13 @@ if __name__ == "__main__":
         dest='do_boot',
         action='store_true',
         help='Deassert the reset line to allow the FPGA to boot')
+
+    parser.add_argument(
+        '--speed',
+        dest='spi_speed',
+        type=int,
+        default=15,
+        help='SPI clock speed, in MHz')
 
     parser.add_argument('-i', '--info',
                         dest='read_info',
@@ -633,7 +650,7 @@ if __name__ == "__main__":
     if args.sleep_flash:
         sleep_flash(tp1_pins)
 
-    nvcm = Nvcm(tp1_pins, debug=args.verbose)
+    nvcm = Nvcm(tp1_pins, spi_speed=args.spi_speed, debug=args.verbose)
     nvcm.power_on()
 
     # # Turn on ICE40 in CRAM boot mode
@@ -675,6 +692,6 @@ if __name__ == "__main__":
 
     if args.do_boot:
         # hold reset low for half a second
-        nvcm.enable(True, False)
+        nvcm.enable(cs=True, reset=False)
         sleep(0.5)
-        nvcm.enable(True, True)
+        nvcm.enable(cs=True, reset=True)
