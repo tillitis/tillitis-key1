@@ -1,15 +1,11 @@
 #!/usr/bin/env python
-from time import sleep
-
-# pyusb
-import usb.core  # type: ignore
-import usb.util  # type: ignore
-
-# libusb
-import usb1  # type: ignore
+"""IceFlasher, an iCE40 programming tool based on an RPi Pico"""
 
 import struct
 from typing import List, Any
+
+import usb1  # type: ignore
+
 
 # def processReceivedData(transfer):
 #    #    print('got rx data',
@@ -28,8 +24,10 @@ from typing import List, Any
 # transfer.submit()
 
 
-class ice40_flasher:
-    FLASHER_REQUEST_LED_SET = 0x00,
+class IceFlasher:
+    """ iCE40 programming tool based on an RPi Pico """
+
+    FLASHER_REQUEST_LED_SET = 0x00
     FLASHER_REQUEST_PIN_DIRECTION_SET = 0x10
     FLASHER_REQUEST_PULLUPS_SET = 0x12
     FLASHER_REQUEST_PIN_VALUES_SET = 0x20
@@ -41,109 +39,70 @@ class ice40_flasher:
     FLASHER_REQUEST_ADC_READ = 0x50
     FLASHER_REQUEST_BOOTLOADER = 0xFF
 
-    SPI_MAX_TRANSFER_SIZE = (2048 - 8)
+    SPI_MAX_TRANSFER_SIZE = 2048 - 8
 
     def __init__(self) -> None:
-        self.backend = 'libusb'
+        self.transfer_list: List[Any] = []
 
-        if self.backend == 'pyusb':
-            # See:
-            # https://github.com/pyusb/pyusb/blob/master/docs/tutorial.rst
-            self.dev = usb.core.find(
-                idVendor=0xcafe, idProduct=0x4010)
+        # See: https://github.com/vpelletier/python-libusb1#usage
+        self.context = usb1.USBContext()
+        self.handle = self.context.openByVendorIDAndProductID(
+            0xcafe,
+            0x4010,
+            skip_on_error=True,
+        )
 
-            if self.dev is None:
-                raise ValueError('Device not found')
-
-            self.dev.set_configuration()
-
-        elif self.backend == 'libusb':
-            # See: https://github.com/vpelletier/python-libusb1#usage
-            self.context = usb1.USBContext()
-            self.handle = self.context.openByVendorIDAndProductID(
-                0xcafe,
-                0x4010,
-                skip_on_error=True,
-            )
-
-            if self.handle is None:
-                # Device not present, or user is not allowed to access
-                # device.
-                raise ValueError('Device not found')
-            self.handle.claimInterface(0)
-
-            self.transfer_list: List[Any] = []
+        if self.handle is None:
+            # Device not present, or user is not allowed to access
+            # device.
+            raise ValueError('Device not found')
+        self.handle.claimInterface(0)
 
     def _wait_async(self) -> None:
-        if self.backend == 'libusb':
-            while any(transfer.isSubmitted()
-                      for transfer in self.transfer_list):
-                try:
-                    self.context.handleEvents()
-                except usb1.USBErrorInterrupted:
-                    pass
+        while any(transfer.isSubmitted()
+                  for transfer in self.transfer_list):
+            try:
+                self.context.handleEvents()
+            except usb1.USBErrorInterrupted:
+                pass
 
-                for transfer in reversed(self.transfer_list):
-                    if transfer.getStatus() == \
-                            usb1.TRANSFER_COMPLETED:
-                        self.transfer_list.remove(transfer)
-                    else:
-                        print(
-                            transfer.getStatus(),
-                            usb1.TRANSFER_COMPLETED)
+            for transfer in reversed(self.transfer_list):
+                if transfer.getStatus() == \
+                        usb1.TRANSFER_COMPLETED:
+                    self.transfer_list.remove(transfer)
+                else:
+                    print(
+                        transfer.getStatus(),
+                        usb1.TRANSFER_COMPLETED)
 
-    def _write(self, request_id: int, data: bytes,
-               nonblocking: bool = False) -> None:
-        if self.backend == 'pyusb':
-            self.dev.ctrl_transfer(0x40, request_id, 0, 0, data)
-
-        elif self.backend == 'libusb':
-            if nonblocking:
-                transfer = self.handle.getTransfer()
-                transfer.setControl(
-                    # usb1.ENDPOINT_OUT | usb1.TYPE_VENDOR |
-                    # usb1.RECIPIENT_DEVICE,  #request type
-                    0x40,
-                    request_id,  # request
-                    0,  # index
-                    0,
-                    data,  # data
-                    callback=None,  # callback functiopn
-                    user_data=None,  # userdata
-                    timeout=1000
-                )
-                transfer.submit()
-                self.transfer_list.append(transfer)
-
-            else:
-                self.handle.controlWrite(0x40, request_id, 0, 0, data)
+    def _write(self, request_id: int, data: bytes) -> None:
+        transfer = self.handle.getTransfer()
+        transfer.setControl(
+            # usb1.ENDPOINT_OUT | usb1.TYPE_VENDOR |
+            # usb1.RECIPIENT_DEVICE,  #request type
+            0x40,
+            request_id,  # request
+            0,  # index
+            0,
+            data,  # data
+            callback=None,  # callback functiopn
+            user_data=None,  # userdata
+            timeout=1000
+        )
+        transfer.submit()
+        self.transfer_list.append(transfer)
 
     def _read(self, request_id: int, length: int) -> bytes:
-        if self.backend == 'pyusb':
-            # ctrl_transfer(self, bmRequestType, bRequest, wValue=0,
-            #  wIndex=0, data_or_wLength = None, timeout = None):
-            # Request type:
-            # bit 7: direction 0:host to device (OUT),
-            #                 1: device to host (IN)
-            # bits 5-6: type: 0:standard 1:class 2:vendor 3:reserved
-            # bits 0-4: recipient: 0:device 1:interface 2:endpoint
-            # 3:other
-            ret = self.dev.ctrl_transfer(
-                0xC0, request_id, 0, 0, length)
-
-        elif self.backend == 'libusb':
-            self._wait_async()
-            ret = self.handle.controlRead(
-                0xC0, request_id, 0, 0, length)
-
-        return ret
+        self._wait_async()
+        return self.handle.controlRead(
+            0xC0, request_id, 0, 0, length)
 
     def gpio_set_direction(self, pin: int, direction: bool) -> None:
         """Set the direction of a single GPIO pin
 
         Keyword arguments:
         pin -- GPIO pin number
-        direction -- True: Set pin as output, False: set pin as input
+        value -- True: Set pin as output, False: set pin as input
         """
         msg = struct.pack('>II',
                           (1 << pin),
@@ -217,6 +176,7 @@ class ice40_flasher:
         cs_pin -- GPIO pin number to use as the CS signal
         mosi_pin -- GPIO pin number to use as the MOSI signal
         miso_pin -- GPIO pin number to use as the MISO signal
+        clock_speed -- SPI clock speed, in MHz
         """
         header = struct.pack('>BBBBB',
                              sck_pin,
@@ -232,12 +192,12 @@ class ice40_flasher:
     def spi_write(
             self,
             buf: bytes,
-            toggle_cs: bool = True) -> bytes:
+            toggle_cs: bool = True) -> None:
         """Write data to the SPI port
 
         Keyword arguments:
         buf -- Byte buffer to send.
-        toggle_cs: (Optional) If true, toggle the CS line
+        toggle_cs -- (Optional) If true, toggle the CS line
         """
         max_chunk_size = self.SPI_MAX_TRANSFER_SIZE
         for i in range(0, len(buf), max_chunk_size):
@@ -255,7 +215,7 @@ class ice40_flasher:
 
         Keyword arguments:
         buf -- Byte buffer to send.
-        toggle_cs: (Optional) If true, toggle the CS line
+        toggle_cs -- (Optional) If true, toggle the CS line
         """
 
         ret = bytearray()
@@ -279,13 +239,13 @@ class ice40_flasher:
 
         Keyword arguments:
         buf -- Byte buffer to send.
-        toggle_cs: (Optional) If true, toggle the CS line
+        toggle_cs -- (Optional) If true, toggle the CS line
         """
 
         if len(buf) > self.SPI_MAX_TRANSFER_SIZE:
-            raise Exception(
-                'Message too large, size:{:} max:{:}'.format(
-                    len(buf), self.SPI_MAX_TRANSFER_SIZE))
+            raise ValueError(
+                'Message too large, '
+                + f'size:{len(buf)} max:{self.SPI_MAX_TRANSFER_SIZE}')
 
         header = struct.pack('>I', len(buf))
         msg = bytearray()
@@ -297,7 +257,7 @@ class ice40_flasher:
         else:
             cmd = self.FLASHER_REQUEST_SPI_BITBANG_NO_CS
 
-        self._write(cmd, msg, nonblocking=True)
+        self._write(cmd, msg)
 
         if not read_after_write:
             return bytes()
@@ -309,14 +269,22 @@ class ice40_flasher:
         return msg_in
 
     def spi_clk_out(self, byte_count: int) -> None:
+        """Run the SPI clock without transferring data
+
+        This function is useful for SPI devices that need a clock to
+        advance their state machines.
+
+        Keyword arguments:
+        byte_count -- Number of bytes worth of clocks to send
+        """
+
         header = struct.pack('>I',
                              byte_count)
         msg = bytearray()
         msg.extend(header)
         self._write(
             self.FLASHER_REQUEST_SPI_CLKOUT,
-            msg,
-            nonblocking=True)
+            msg)
 
     def adc_read_all(self) -> tuple[float, float, float]:
         """Read the voltage values of ADC 0, 1, and 2
@@ -337,13 +305,11 @@ class ice40_flasher:
         """
         try:
             self._write(self.FLASHER_REQUEST_BOOTLOADER, bytes())
-        except usb.core.USBError:
-            # We expect the device to disappear immediately, so mask
-            # the resulting error
+        except usb1.USBErrorIO:
             pass
 
 
 if __name__ == '__main__':
-    flasher = ice40_flasher()
+    flasher = IceFlasher()
 
     flasher.spi_pins_set(1, 2, 3, 4, 15)

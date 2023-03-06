@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-import hid_test  # type: ignore
-import time
+"""Automatically reset a TK-1"""
+
+from usb_test import IceFlasher
 
 
 def reset_tk1() -> None:
@@ -10,11 +11,10 @@ def reset_tk1() -> None:
     to the TK1. The result is that TK1 again will be in firmware
     mode, so a new app can be loaded.
     """
-    d = hid_test.ice40_flasher()
-    d.gpio_set_direction(14, True)
-    d.gpio_put(14, False)
-    d.gpio_set_direction(14, False)
-    d.close()
+    flasher = IceFlasher()
+    flasher.gpio_set_direction(14, True)
+    flasher.gpio_put(14, False)
+    flasher.gpio_set_direction(14, False)
 
 
 reset_tk1()
