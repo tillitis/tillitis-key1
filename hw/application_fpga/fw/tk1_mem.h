@@ -92,6 +92,9 @@ enum {
     TK1_MMIO_TK1_CDI_LAST     = TK1_MMIO_TK1_BASE | 0x9c, // Address of last 32-bit word of CDI.
     TK1_MMIO_TK1_UDI_FIRST    = TK1_MMIO_TK1_BASE | 0xc0,
     TK1_MMIO_TK1_UDI_LAST     = TK1_MMIO_TK1_BASE | 0xc4, // Address of last 32-bit word of UDI.
+    TK1_MMIO_TK1_CPU_MON_CTRL = TK1_MMIO_TK1_BASE | 0x180,
+    TK1_MMIO_TK1_CPU_MON_FIRST = TK1_MMIO_TK1_BASE | 0x184,
+    TK1_MMIO_TK1_CPU_MON_LAST = TK1_MMIO_TK1_BASE | 0x188,
 };
 
 #endif
