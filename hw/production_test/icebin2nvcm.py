@@ -1,29 +1,32 @@
 #!/usr/bin/env python
-
-import sys
-
-#
-# bistream to NVCM command conversion is based on majbthrd's work in
-# https://github.com/YosysHQ/icestorm/pull/272
-#
+""" bistream to NVCM command conversion is based on majbthrd's work
+in https://github.com/YosysHQ/icestorm/pull/272
+"""
 
 
 def icebin2nvcm(bitstream: bytes) -> list[str]:
+    """Convert an ice40 bitstream into an NVCM program
+
+    The NVCM format is a set of commands that are run against the
+    NVCM state machine, which instruct the state machine to write
+    the bitstream into the NVCM. It's somewhat convoluted!
+
+    Keyword arguments:
+    bitstream -- Bitstream to convert into NVCM format
+    """
+
     # ensure that the file starts with the correct bistream preamble
     for origin in range(0, len(bitstream)):
         if bitstream[origin:origin + 4] == bytes.fromhex('7EAA997E'):
             break
 
     if origin == len(bitstream):
-        raise Exception("Preamble not found")
+        raise ValueError('Preamble not found')
 
-    print("Found preamable at %08x" % (origin), file=sys.stderr)
+    print(f'Found preamable at {origin:08x}')
 
     # there might be stuff in the header with vendor tools,
     # but not usually in icepack produced output, so ignore it for now
-
-    # todo: what is the correct size?
-    print(len(bitstream))
 
     rows = []
 
@@ -43,7 +46,7 @@ def icebin2nvcm(bitstream: bytes) -> list[str]:
         addr = pos - origin
         nvcm_addr = int(addr / 328) * 4096 + (addr % 328)
 
-        row_str = "02%06x%s" % (nvcm_addr, row.hex())
+        row_str = f'02{nvcm_addr:06x}{row.hex()}'
         row_str = ' '.join([row_str[i:i + 2]
                             for i in range(0, len(row_str), 2)]) + ' '
 
@@ -71,11 +74,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with open(args.infile, 'rb') as f_in:
-        bitstream = f_in.read()
+        data = f_in.read()
 
-    cmds = icebin2nvcm(bitstream)
+    cmds = icebin2nvcm(data)
 
-    with open(args.outfile, 'w') as f_out:
+    with open(args.outfile, 'w', encoding='utf-8') as f_out:
         for cmd in cmds:
             f_out.write(cmd)
             f_out.write('\n')

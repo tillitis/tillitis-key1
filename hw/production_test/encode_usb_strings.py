@@ -1,8 +1,5 @@
 #!/usr/bin/env python
-
-manufacturer = 'Mullvad'
-product = 'MTA1-USB-V1'
-serial = "68de5d27-e223-4874-bc76-a54d6e84068f"
+"""Convert python strings to UTF16 USB descriptors"""
 
 
 def descriptor_to_string(descriptor: bytes) -> str:
@@ -11,17 +8,17 @@ def descriptor_to_string(descriptor: bytes) -> str:
     Keyword arguments:
     descriptor -- UTF-16 formatted USB descriptor string
     """
-    bLength = descriptor[0]
-    if bLength != len(descriptor):
-        raise Exception(
-            'Length mismatch, length_field:{:} actual_length:{:}'
-            .format(bLength, len(descriptor)))
+    b_length = descriptor[0]
+    if b_length != len(descriptor):
+        raise ValueError(
+            'Length mismatch, ' +
+            f'length_field:{b_length} length:{len(descriptor)}')
 
-    bDescriptorType = descriptor[1]
-    if bDescriptorType != 0x03:
-        raise Exception(
-            'Type mismatch, bDescriptorType:{:02x} expected:0x03'
-            .format(bDescriptorType))
+    b_descriptor_type = descriptor[1]
+    if b_descriptor_type != 0x03:
+        raise ValueError(
+            f'Type mismatch, bDescriptorType:{b_descriptor_type:02x}'
+            + 'expected:0x03')
 
     return descriptor[2:].decode('utf-16', errors='strict')
 
@@ -42,6 +39,10 @@ def string_to_descriptor(string: str) -> bytes:
 
 
 if __name__ == "__main__":
+    MANUFACTURER = 'Mullvad'
+    PRODUCT = 'MTA1-USB-V1'
+    SERIAL = "68de5d27-e223-4874-bc76-a54d6e84068f"
+
     # serial = bytes([
     #    0x14,0x03,
     #    0x32,0x00,0x30,0x00,0x31,0x00,0x37,0x00,0x2D,0x00,
@@ -73,32 +74,30 @@ if __name__ == "__main__":
     # print(['{:02x} '.format(i) for i in sample_mfr])
     # print(['{:02x} '.format(i) for i in rt])
 
-    with open('usb_strings.h', 'w') as f:
+    with open('usb_strings.h', 'w', encoding='utf-8') as f:
         f.write('#ifndef USB_STRINGS\n')
         f.write('#define USB_STRINGS\n')
 
         f.write(
-            'unsigned char __code Prod_Des[]={{  // "{}"\n'
-            .format(product))
+            f'unsigned char __code Prod_Des[]={{  // "{PRODUCT}"\n')
         f.write('    ')
-        f.write(', '.join(['0x{:02x}'.format(i)
-                for i in string_to_descriptor(product)]))
+        f.write(', '.join([f'0x{i:02x}'
+                for i in string_to_descriptor(PRODUCT)]))
         f.write('\n};\n')
 
         f.write(
-            'unsigned char __code Manuf_Des[]={{  // "{}"\n'
-            .format(manufacturer))
+            'unsigned char __code Manuf_Des[]={  ' +
+            f'// "{MANUFACTURER}"\n')
         f.write('    ')
-        f.write(', '.join(['0x{:02x}'.format(i)
-                for i in string_to_descriptor(manufacturer)]))
+        f.write(', '.join([f'0x{i:02x}'
+                for i in string_to_descriptor(MANUFACTURER)]))
         f.write('\n};\n')
 
         f.write(
-            'unsigned char __code SerDes[]={{  // "{}"\n'
-            .format(serial))
+            f'unsigned char __code SerDes[]={{  // "{SERIAL}"\n')
         f.write('    ')
-        f.write(', '.join(['0x{:02x}'.format(i)
-                for i in string_to_descriptor(serial)]))
+        f.write(', '.join([f'0x{i:02x}'
+                for i in string_to_descriptor(SERIAL)]))
         f.write('\n};\n')
 
         f.write('#endif\n')
