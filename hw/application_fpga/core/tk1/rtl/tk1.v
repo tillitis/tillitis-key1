@@ -382,11 +382,15 @@ module tk1(
 	  end
 
 	  if (address == ADDR_CPU_MON_FIRST) begin
-	    cpu_mon_first_we = 1'h1;
+	    if (!cpu_mon_en_reg) begin
+	      cpu_mon_first_we = 1'h1;
+	    end
 	  end
 
 	  if (address == ADDR_CPU_MON_LAST) begin
-	    cpu_mon_last_we = 1'h1;
+	    if (!cpu_mon_en_reg) begin
+	      cpu_mon_last_we = 1'h1;
+	    end
 	  end
 	end
 
