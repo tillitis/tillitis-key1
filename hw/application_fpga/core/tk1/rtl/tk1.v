@@ -253,7 +253,7 @@ module tk1(
 	end
 
 	if (cpu_mon_en_we) begin
-	  cpu_mon_en_reg <= write_data[0];
+	  cpu_mon_en_reg <= 1'h1;
 	end
 
 	if (cpu_mon_first_we) begin
