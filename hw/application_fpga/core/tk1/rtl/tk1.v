@@ -83,6 +83,9 @@ module tk1(
   localparam TK1_NAME1       = 32'h6d6b6466; // "mkdf"
   localparam TK1_VERSION     = 32'h00000004;
 
+  localparam FW_RAM_FIRST = 32'hd0000000;
+  localparam FW_RAM_LAST  = 32'hd00003ff;
+
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -297,14 +300,19 @@ module tk1(
     begin : cpu_monitor
       tmp_force_trap = 1'h0;
 
-      if (cpu_mon_en_reg) begin
 	if (cpu_valid && cpu_instr) begin
-	  if ((cpu_addr >= cpu_mon_first_reg) &&
-	      (cpu_addr <= cpu_mon_last_reg)) begin
+	  if ((cpu_addr >= FW_RAM_FIRST) &&
+	      (cpu_addr <= FW_RAM_LAST)) begin
 	    tmp_force_trap = 1'h1;
 	  end
+
+	  if (cpu_mon_en_reg) begin
+	    if ((cpu_addr >= cpu_mon_first_reg) &&
+		(cpu_addr <= cpu_mon_last_reg)) begin
+	      tmp_force_trap = 1'h1;
+	    end
+	  end
 	end
-      end
     end
 
 
