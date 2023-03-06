@@ -147,7 +147,7 @@ int main()
 	struct frame_header hdr; // Used in both directions
 	uint8_t cmd[CMDLEN_MAXBYTES];
 	uint8_t rsp[CMDLEN_MAXBYTES];
-	uint8_t *loadaddr = (uint8_t *)TK1_APP_ADDR;
+	uint8_t *loadaddr = (uint8_t *)TK1_RAM_BASE;
 	int left = 0; // Bytes left to receive
 	uint8_t use_uss = FALSE;
 	uint8_t uss[32] = {0};
@@ -183,7 +183,7 @@ int main()
 
 		case FW_STATE_RUN:
 			htif_puts("state_run\n");
-			*app_addr = TK1_APP_ADDR;
+			*app_addr = TK1_RAM_BASE;
 
 			// CDI = hash(uds, hash(app), uss)
 			compute_cdi(digest, use_uss, uss);
@@ -382,7 +382,7 @@ int main()
 				blake2s_ctx ctx;
 
 				blake2s(digest, 32, NULL, 0,
-					(const void *)TK1_APP_ADDR, *app_size,
+					(const void *)TK1_RAM_BASE, *app_size,
 					&ctx);
 				print_digest(digest);
 

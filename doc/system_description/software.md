@@ -63,10 +63,11 @@ the Framing Protocol.
 The purpose of the firmware is to bootstrap and measure an
 application.
 
-The TKey has 128 KB RAM. The current firmware loads the app at the
-upper 100 KB. The lower 28 KB is set up as stack for the app. A
-smaller app that wants continuous memory may want to relocate itself
-when starting.
+The TKey has 128 KB RAM. Firmware loads the app at the start of RAM.
+The current C runtime (crt0.S) of apps in our [apps
+repo](https://github.com/tillitis/tillitis-key1-apps) sets up the
+stack to start just below the end of RAM. This means that a larger app
+comes at the compromise of it having a smaller stack.
 
 The firmware is part of FPGA bitstream (ROM), and is loaded at
 `0x0000_0000`.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - Tillitis AB
+ * Copyright (C) 2022, 2023 - Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
 */
 
@@ -8,7 +8,6 @@ ENTRY(_start)
 
 MEMORY
 {
-	/* TODO ROM size should be adjusted, RAM should be ok. */
 	ROM (rx)    : ORIGIN = 0x00000000, LENGTH = 0x20000 /* 128 KB */
 	RAM (rwx)   : ORIGIN = 0x40000000, LENGTH = 0x20000 /* 128 KB */
 }

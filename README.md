@@ -30,9 +30,8 @@ its own cryptographic identity, and can also be used for authentication
 towards different services.
 
 The TKey platform is based around a 32-bit RISC-V processor and has
-128 KB of RAM. The current firmware is designed to load an app that is
-up to 100 KB in size, and gives it a stack of 28 KB. A smaller app may
-move itself in memory to get larger continuous memory.
+128 KB of RAM. Firmware can load and start an app that is as large as
+RAM.
 
 All of the TKey software, firmware, FPGA Verilog source code, schematics
 and PCB design files are open source. Like all trustworthy security software
