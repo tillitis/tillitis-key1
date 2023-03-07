@@ -6,7 +6,7 @@
 # HW targets as well as its firmware.
 #
 #
-# Copyright (C) 2022 - Tillitis AB
+# Copyright (C) 2022, 2023 - Tillitis AB
 # SPDX-License-Identifier: GPL-2.0-only
 #
 #=======================================================================
@@ -144,6 +144,8 @@ testfw.hex: testfw.bin testfw_size_mismatch
 
 %.bin: %.elf
 	$(SIZE) $<
+	@test "$$($(SIZE) $< | awk 'NR==2{print $$2, $$3}')" = "0 0" \
+	|| { printf "Non-empty data or bss section!\n"; false; }
 	$(OBJCOPY) --input-target=elf32-littleriscv --output-target=binary $< $@
 	chmod -x $@
 
