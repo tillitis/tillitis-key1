@@ -1,4 +1,6 @@
 # tk1
 
 ## Introduction
-Top level core that provides chip info, debug support and chip level control.
+The tk1 core provides design informantion as well as control of TKey specific
+functionlity such as execution mode, SW controlled stack protection, memory
+scrambling, handling of illegal instructions.
