@@ -1,0 +1,6 @@
+There are two versions of the case plastic:
+
+MTA1: Used for the OSFC sample PCBs (MTA1)
+
+TK1: Used for Acrab/Bellatrix production PCBs (TK1)
+- This version has a slightly wider opening, to accomodate the slightly wider PCBs. Existing prints were made using green plastic, to distinguish them from the MTA variant.
