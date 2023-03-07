@@ -24,9 +24,6 @@ volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
 volatile uint32_t *trng_status     = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
 volatile uint32_t *trng_entropy    = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
 volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
-
-// Function pointer to blake2s()
-volatile int (*fw_blake2s)(void *, unsigned long, const void *, unsigned long, const void *, unsigned long, blake2s_ctx *);
 // clang-format on
 
 #define UDS_WORDS 8
@@ -110,6 +107,11 @@ uint32_t wait_timer_tick(uint32_t last_timer)
 
 int main()
 {
+	// Function pointer to blake2s()
+	volatile int (*fw_blake2s)(void *, unsigned long, const void *,
+				   unsigned long, const void *, unsigned long,
+				   blake2s_ctx *);
+
 	uint8_t in;
 
 	// Wait for terminal program and a character to be typed
@@ -190,9 +192,7 @@ int main()
 
 	// Set up another stack because fw_ram is not available
 	// anymore in app_mode.
-	asm volatile(
-		"li sp, 0x40006ff0"
-		);
+	asm volatile("li sp, 0x40006ff0");
 
 	*switch_app = 1;
 
