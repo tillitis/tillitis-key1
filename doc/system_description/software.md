@@ -532,5 +532,7 @@ Assigned core prefixes:
 | `BLAKE2S`         | r/w   | r         | 4B     | u32      |           | Function pointer to a BLAKE2S function in the firmware                  |
 | `CDI_FIRST`       | r/w   | r         | 32B    | u8[32]   |           | Compound Device Identifier (CDI). UDS+measurement...                    |
 | `CDI_LAST`        |       | r         |        |          |           | Last word of CDI                                                        |
+| `RAM_ASLR`        | w     | invisible | 4B     | u32      |           | Address Space Randomization seed value for the RAM                      |
+| `RAM_SCRAMBLE`    | w     | invisible | 4B     | u32      |           | Data scrambling seed value for the RAM                                  |
 
 [^3]: The UDS can only be read *once* per power-cycle.

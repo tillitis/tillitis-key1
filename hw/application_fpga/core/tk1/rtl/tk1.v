@@ -25,6 +25,9 @@ module tk1(
 	   input wire           cpu_valid,
 	   output wire          force_trap,
 
+	   output wire [14 : 0] ram_aslr,
+	   output wire [31 : 0] ram_scramble,
+
            output wire          led_r,
            output wire          led_g,
            output wire          led_b,
@@ -36,7 +39,6 @@ module tk1(
 
 	   input wire           cs,
 	   input wire           we,
-
 	   input wire  [7 : 0]  address,
 	   input wire [31 : 0]  write_data,
 	   output wire [31 : 0] read_data,
@@ -47,41 +49,45 @@ module tk1(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_NAME0      = 8'h00;
-  localparam ADDR_NAME1      = 8'h01;
-  localparam ADDR_VERSION    = 8'h02;
+  localparam ADDR_NAME0         = 8'h00;
+  localparam ADDR_NAME1         = 8'h01;
+  localparam ADDR_VERSION       = 8'h02;
 
-  localparam ADDR_SWITCH_APP = 8'h08;
+  localparam ADDR_SWITCH_APP    = 8'h08;
 
-  localparam ADDR_LED        = 8'h09;
-  localparam LED_R_BIT       = 2;
-  localparam LED_G_BIT       = 1;
-  localparam LED_B_BIT       = 0;
+  localparam ADDR_LED           = 8'h09;
+  localparam LED_R_BIT          = 2;
+  localparam LED_G_BIT          = 1;
+  localparam LED_B_BIT          = 0;
 
-  localparam ADDR_GPIO       = 8'h0a;
-  localparam GPIO1_BIT       = 0;
-  localparam GPIO2_BIT       = 1;
-  localparam GPIO3_BIT       = 2;
-  localparam GPIO4_BIT       = 3;
+  localparam ADDR_GPIO          = 8'h0a;
+  localparam GPIO1_BIT          = 0;
+  localparam GPIO2_BIT          = 1;
+  localparam GPIO3_BIT          = 2;
+  localparam GPIO4_BIT          = 3;
 
-  localparam ADDR_APP_START  = 8'h0c;
-  localparam ADDR_APP_SIZE   = 8'h0d;
+  localparam ADDR_APP_START     = 8'h0c;
+  localparam ADDR_APP_SIZE      = 8'h0d;
 
-  localparam ADDR_BLAKE2S    = 8'h10;
+  localparam ADDR_BLAKE2S       = 8'h10;
 
-  localparam ADDR_CDI_FIRST  = 8'h20;
-  localparam ADDR_CDI_LAST   = 8'h27;
+  localparam ADDR_CDI_FIRST     = 8'h20;
+  localparam ADDR_CDI_LAST      = 8'h27;
 
-  localparam ADDR_UDI_FIRST  = 8'h30;
-  localparam ADDR_UDI_LAST   = 8'h31;
+  localparam ADDR_UDI_FIRST     = 8'h30;
+  localparam ADDR_UDI_LAST      = 8'h31;
+
+  localparam ADDR_RAM_ASLR      = 8'h40;
+  localparam ADDR_RAM_SCRAMBLE  = 8'h41;
 
   localparam ADDR_CPU_MON_CTRL  = 8'h60;
   localparam ADDR_CPU_MON_FIRST = 8'h61;
   localparam ADDR_CPU_MON_LAST  = 8'h62;
 
-  localparam TK1_NAME0       = 32'h746B3120; // "tk1 "
-  localparam TK1_NAME1       = 32'h6d6b6466; // "mkdf"
-  localparam TK1_VERSION     = 32'h00000004;
+
+  localparam TK1_NAME0    = 32'h746B3120; // "tk1 "
+  localparam TK1_NAME1    = 32'h6d6b6466; // "mkdf"
+  localparam TK1_VERSION  = 32'h00000004;
 
   localparam FW_RAM_FIRST = 32'hd0000000;
   localparam FW_RAM_LAST  = 32'hd00003ff;
@@ -124,6 +130,11 @@ module tk1(
   reg [2 : 0]  cpu_trap_led_new;
   reg          cpu_trap_led_we;
 
+  reg [14 : 0] ram_aslr_reg;
+  reg          ram_aslr_we;
+  reg [31 : 0] ram_scramble_reg;
+  reg          ram_scramble_we;
+
   reg          cpu_mon_en_reg;
   reg          cpu_mon_en_we;
   reg [31 : 0] cpu_mon_first_reg;
@@ -156,6 +167,9 @@ module tk1(
 
   assign gpio3 = gpio3_reg;
   assign gpio4 = gpio4_reg;
+
+  assign ram_aslr     = ram_aslr_reg;
+  assign ram_scramble = ram_scramble_reg;
 
 
   //----------------------------------------------------------------
@@ -208,6 +222,8 @@ module tk1(
         cpu_mon_en_reg    <= 1'h0;
 	cpu_mon_first_reg <= 32'h0;
 	cpu_mon_last_reg  <= 32'h0;
+ 	ram_aslr_reg      <= 15'h0;
+	ram_scramble_reg  <= 32'h0;
       end
 
       else begin
@@ -250,6 +266,14 @@ module tk1(
 	if (cdi_mem_we) begin
 	  cdi_mem[address[2 : 0]] <= write_data;
 	end
+
+	if (ram_aslr_we) begin
+	  ram_aslr_reg <= write_data[14 : 0];
+ 	end
+
+	if (ram_scramble_we) begin
+	  ram_scramble_reg <= write_data;
+ 	end
 
 	if (cpu_trap_led_we) begin
 	  cpu_trap_led_reg <= cpu_trap_led_new;
@@ -330,6 +354,8 @@ module tk1(
       blake2s_addr_we  = 1'h0;
       cdi_mem_we       = 1'h0;
       cdi_mem_we       = 1'h0;
+      ram_aslr_we      = 1'h0;
+      ram_scramble_we  = 1'h0;
       cpu_mon_en_we    = 1'h0;
       cpu_mon_first_we = 1'h0;
       cpu_mon_last_we  = 1'h0;
@@ -376,6 +402,18 @@ module tk1(
 	      cdi_mem_we = 1'h1;
 	    end
 	  end
+
+          if (address == ADDR_RAM_ASLR) begin
+ 	    if (!switch_app_reg) begin
+              ram_aslr_we = 1'h1;
+	    end
+	  end
+
+          if (address == ADDR_RAM_SCRAMBLE) begin
+	    if (!switch_app_reg) begin
+              ram_scramble_we = 1'h1;
+            end
+ 	  end
 
 	  if (address == ADDR_CPU_MON_CTRL) begin
 	    cpu_mon_en_we = 1'h1;
