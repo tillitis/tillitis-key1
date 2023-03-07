@@ -183,8 +183,8 @@ module application_fpga(
 		   .mem_wstrb(cpu_wstrb),
 		   .mem_rdata(muxed_rdata_reg),
 
-                   // Defined unsed ports. Makes lint happy,
-                   // but still needs to help lint with empty ports.
+                   // Defined unused ports. Makes lint happy. But
+                   // we still needs to help lint with empty ports.
                    /* verilator lint_off PINCONNECTEMPTY */
                    .irq(32'h0),
                    .eoi(),
