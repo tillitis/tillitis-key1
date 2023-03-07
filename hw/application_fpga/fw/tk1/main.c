@@ -139,9 +139,9 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 
 enum state {
 	FW_STATE_INITIAL,
-	FW_STATE_INIT_LOADING,
 	FW_STATE_LOADING,
-	FW_STATE_RUN
+	FW_STATE_RUN,
+	FW_STATE_FAIL,
 };
 
 int main()
@@ -158,26 +158,23 @@ int main()
 	enum state state = FW_STATE_INITIAL;
 	// Let the app know the function adddress for blake2s()
 	*fw_blake2s_addr = (uint32_t)blake2s;
+	uint8_t command_allowed[FW_CMD_MAX] = {0};
 
 	print_hw_version(namever);
+
+	// FW_STATE_INITIAL - but not resettable
+	command_allowed[FW_CMD_NAME_VERSION] = 1;
+	command_allowed[FW_CMD_LOAD_APP] = 1;
+	command_allowed[FW_CMD_GET_UDI] = 1;
 
 	for (;;) {
 		switch (state) {
 		case FW_STATE_INITIAL:
 			break;
 
-		case FW_STATE_INIT_LOADING:
-			assert(*app_size != 0);
-			assert(*app_size <= TK1_APP_MAX_SIZE);
-
-			*app_addr = 0;
-			left = *app_size;
-
-			// Reset where to start loading the program
-			loadaddr = (uint8_t *)TK1_APP_ADDR;
-			break;
-
 		case FW_STATE_LOADING:
+			command_allowed[FW_CMD_LOAD_APP] = 0;
+			command_allowed[FW_CMD_LOAD_APP_DATA] = 1;
 			break;
 
 		case FW_STATE_RUN:
@@ -211,8 +208,10 @@ int main()
 			// clang-format on
 			break; // This is never reached!
 
+		case FW_STATE_FAIL:
+			// fallthrough
 		default:
-			htif_puts("Unknown firmware state 0x");
+			htif_puts("firmware state 0x");
 			htif_puthex(state);
 			htif_lf();
 			forever_redflash();
@@ -229,6 +228,7 @@ int main()
 
 		if (parseframe(in, &hdr) == -1) {
 			htif_puts("Couldn't parse header\n");
+			state = FW_STATE_FAIL;
 			continue;
 		}
 
@@ -236,20 +236,24 @@ int main()
 		// Now we know the size of the cmd frame, read it all
 		if (read(cmd, CMDLEN_MAXBYTES, hdr.len) != 0) {
 			htif_puts("read: buffer overrun\n");
-			forever_redflash();
-			// Not reached
+			state = FW_STATE_FAIL;
+			continue;
 		}
 
 		// Is it for us?
 		if (hdr.endpoint != DST_FW) {
 			htif_puts("Message not meant for us\n");
+			state = FW_STATE_FAIL;
 			continue;
 		}
 
 		// Reset response buffer
 		memset(rsp, 0, CMDLEN_MAXBYTES);
 
-		// Min length is 1 byte so this should always be here
+		// Min length is 1 byte so cmd[0] should always be here
+		// Is this command allowed in current state?
+		assert(command_allowed[cmd[0]] == 1);
+
 		switch (cmd[0]) {
 		case FW_CMD_NAME_VERSION:
 			htif_puts("cmd: name-version\n");
@@ -325,14 +329,19 @@ int main()
 			rsp[0] = STATUS_OK;
 			fwreply(hdr, FW_RSP_LOAD_APP, rsp);
 
-			state = FW_STATE_INIT_LOADING;
+			assert(*app_size != 0);
+			assert(*app_size <= TK1_APP_MAX_SIZE);
+
+			*app_addr = 0;
+			left = *app_size;
+
+			state = FW_STATE_LOADING;
 			break;
 
 		case FW_CMD_LOAD_APP_DATA:
 			htif_puts("cmd: load-app-data\n");
-			if (hdr.len != 512 || (state != FW_STATE_INIT_LOADING &&
-					       state != FW_STATE_LOADING)) {
-				// Bad cmd length or state
+			if (hdr.len != 512) {
+				// Bad cmd length
 				rsp[0] = STATUS_BAD;
 				fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
 				break;
@@ -375,13 +384,13 @@ int main()
 			rsp[0] = STATUS_OK;
 			fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
 
-			state = FW_STATE_LOADING;
 			break;
 
 		default:
 			htif_puts("Got unknown firmware cmd: 0x");
 			htif_puthex(cmd[0]);
 			htif_lf();
+			state = FW_STATE_FAIL;
 		}
 	}
 

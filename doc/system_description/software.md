@@ -78,7 +78,8 @@ Typical use scenario:
 
   1. The host sends the `FW_CMD_LOAD_APP` command with the size of the
      device app and the user-supplied secret as arguments and and gets
-     a `FW_RSP_LOAD_APP` back.
+     a `FW_RSP_LOAD_APP` back. After using this it's not possible to
+     restart the loading of a device app.
   2. If the the host receive a sucessful response, it will send
      multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
      full application.
@@ -175,28 +176,18 @@ read, the firmware executes the command.
 States:
 
 - `initial` - At start.
-- `init_loading` - Reset app digest, size, `USS` and load address.
-- `loading` - Expect more app data or a reset by `LoadApp()`.
+- `loading` - Expect app data.
 - `run` - Computes CDI and starts the device app.
+- `fail` - Stops waiting for commands, flashes LED forever.
 
 Commands in state `initial`:
 
-| *command*             | *next state*   |
-|-----------------------|----------------|
-| `FW_CMD_NAME_VERSION` | unchanged      |
-| `FW_CMD_GET_UDI`      | unchanged      |
-| `FW_CMD_LOAD_APP`     | `init_loading` |
-|                       |                |
-
-Commands in state `init_loading`:
-
-| *command*              | *next state*   |
-|------------------------|----------------|
-| `FW_CMD_NAME_VERSION`  | unchanged      |
-| `FW_CMD_GET_UDI`       | unchanged      |
-| `FW_CMD_LOAD_APP`      | `init_loading` |
-| `FW_CMD_LOAD_APP_DATA` | `loading`      |
-|                        |                |
+| *command*             | *next state* |
+|-----------------------|--------------|
+| `FW_CMD_NAME_VERSION` | unchanged    |
+| `FW_CMD_GET_UDI`      | unchanged    |
+| `FW_CMD_LOAD_APP`     | `loading`    |
+|                       |              |
 
 Commands in state `loading`:
 
@@ -204,8 +195,7 @@ Commands in state `loading`:
 |------------------------|----------------------------------|
 | `FW_CMD_NAME_VERSION`  | unchanged                        |
 | `FW_CMD_GET_UDI`       | unchanged                        |
-| `FW_CMD_LOAD_APP`      | `init_loading`                   |
-| `FW_CMD_LOAD_APP_DATA` | `loading` or `run` on last chunk |
+| `FW_CMD_LOAD_APP_DATA` | unchanged or `run` on last chunk |
 
 See below for firmware protocol definition.
 
