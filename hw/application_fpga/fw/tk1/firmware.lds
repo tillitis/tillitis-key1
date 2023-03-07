@@ -40,6 +40,8 @@ SECTIONS
 		_sidata = _etext;
 	} >ROM
 
+        /* XXX We don't allow any data or BSS - but they need be defined or linking will fail */
+
 	.data : AT (_etext)
 	{
 		. = ALIGN(4);
@@ -51,7 +53,7 @@ SECTIONS
 		*(.sdata*)          /* .sdata* sections */
 		. = ALIGN(4);
 		_edata = .;
-	} >RAM
+	} >ROM
 
 	/* Uninitialized data section */
 	.bss :
@@ -66,6 +68,5 @@ SECTIONS
 
 		. = ALIGN(4);
 		_ebss = .;
-	} >RAM
-	/* Init stack to _ebss + size */
+	} >ROM
 }
