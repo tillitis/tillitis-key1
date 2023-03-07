@@ -87,7 +87,7 @@ module tk1(
 
   localparam TK1_NAME0    = 32'h746B3120; // "tk1 "
   localparam TK1_NAME1    = 32'h6d6b6466; // "mkdf"
-  localparam TK1_VERSION  = 32'h00000004;
+  localparam TK1_VERSION  = 32'h00000005;
 
   localparam FW_RAM_FIRST = 32'hd0000000;
   localparam FW_RAM_LAST  = 32'hd00003ff;
