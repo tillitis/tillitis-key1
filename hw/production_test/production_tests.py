@@ -562,8 +562,6 @@ def random_test_runner() -> None:
         disable_power
     ]
 
-    parameters['iceprog'] = '/home/matt/repos/tillitis--icestorm/iceprog/iceprog'
-
     pass_count = 0
     while True:
         i = random.randint(0, (len(tests) - 1))
