@@ -43,7 +43,7 @@ RUN apt-get -qq update -y \
                cmake \
                gcc-arm-none-eabi \
                libnewlib-arm-none-eabi \
-               libstdc++-arm-none-eabi-newlib
+               libstdc++-arm-none-eabi-newlib \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -59,7 +59,7 @@ WORKDIR /
 RUN rm -rf /src
 
 # Custom iceprog for the RPi 2040-based programmer (will be upstreamed).
-RUN git clone -b raw_usb --depth=1 https://github.com/tillitis/icestorm /src
+RUN git clone -b interfaces --depth=1 https://github.com/tillitis/icestorm /src
 WORKDIR /src/iceprog
 RUN make -j$(nproc --ignore=2) \
     && make PROGRAM_PREFIX=tillitis- install
@@ -89,10 +89,9 @@ RUN git >/usr/local/repo-commit-nextpnr describe --tags --always --dirty
 WORKDIR /
 RUN rm -rf /src
 
-RUN git clone https://github.com/raspberrypi/pico-sdk.git /usr/local/picosdk
-WORKDIR /usr/local/picosdk
-RUN git checkout 1.5.0 \
-    && git submodule-update --init
+RUN git clone --branch 1.5.0 --depth 1 https://github.com/raspberrypi/pico-sdk.git /usr/local/pico-sdk
+WORKDIR /usr/local/pico-sdk
+RUN git submodule update --init
 RUN git >/usr/local/repo-commit-picosdk describe --tags --always --dirty
 WORKDIR /
 

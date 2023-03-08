@@ -165,6 +165,17 @@ The programmer will update its firmware with the file and restart
 itself. After reboot the storage device will automatically be
 disconnected.
 
+The firmware requires the Raspberry Pi Pico SDK:
+
+    cd ~
+    git clone --branch 1.5.0 https://github.com/raspberrypi/pico-sdk.git
+    cd pico-sdk
+    git submodule update --init
+
+Note that the Docker image places the pico-sdk directory in
+/usr/local. For normal development, it is usually left in the
+users home directory.
+
 
 ## CH552 USB to Serial firmware
 
