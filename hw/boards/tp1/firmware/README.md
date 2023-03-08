@@ -3,7 +3,7 @@
 This firmware allows a Raspberry Pi Pico (or any RP2040) to work as a programmer for the lattice ice40 parts.
 
 It has been integrated into icestorm:
-https://github.com/Blinkinlabs/icestorm/commits/interfaces
+https://github.com/tillitis/icestorm/commits/interfaces
 
 Advantages:
 * Cheap: RPi Pico boards are currently EUR4, FT232H boards are closer to EUR15
@@ -150,7 +150,7 @@ Data packet format:
 
 
 
-### Read ADCs xxx
+### Read ADCs
 
 This command is used to read the analog value of analog input pins 0-2. Each value is returned as a uint32_t value representing the reading in microvolts.
 
@@ -168,23 +168,10 @@ This command is used to put the device in bootloader mode. No data is sent durin
 
 ## Building the firmware
 
-First, install the [Rasberry Pi Pico SDK](https://github.com/raspberrypi/pico-sdk.git):
+First, follow the details in the toolchain setup document to install
+the Raspberry Pi Pico SDK. Then, the firmware can be built by running
+the build script:
 
-    sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
-    cd ~
-    git clone https://github.com/raspberrypi/pico-sdk.git
-    cd pico-sdk
-    git submodule update --init
+    ./build.sh
 
-Then, clone and build this repository:
-
-    cd ~
-    git clone https://github.com/Blinkinlabs/ice40_flasher
-    cd ice40_flasher
-    export PICO_SDK_PATH=~/pico-sdk
-    mkdir build
-    cd build
-    cmake ..
-    make
-
-Finally, load the firmware onto the Pico using the instructions in the [usage](https://github.com/Blinkinlabs/ice40_flasher#usage) section.
+Once complete, the output binary is located in build/main.uf2
