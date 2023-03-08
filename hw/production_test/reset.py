@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Automatically reset a TK-1"""
 
-from usb_test import IceFlasher
+from iceflasher import IceFlasher
 
 
 def reset_tk1() -> None:
