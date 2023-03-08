@@ -37,6 +37,7 @@ dialout group. You will also need to add your user to this group:
 
 ```
 sudo cp contrib/99-tillitis.rules /etc/udev/rules.d
+sudo udevadm control --reload-rules
 sudo usermod -aG dialout ${USER}
 ```
 
@@ -47,8 +48,8 @@ successfully applied. First, use lsusb to find the location of the
 programmer:
 
 ```
-lsusb -d cafe:4010
-Bus 001 Device 023: ID cafe:4010 Blinkinlabs ICE40 programmer
+lsusb -d 1209:8886
+Bus 001 Device 023: ID 1209:8886 Generic TP-1
 ```
 
 Then, you can check the permissions by using the bus and device
