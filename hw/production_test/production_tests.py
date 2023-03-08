@@ -39,7 +39,7 @@ import serial  # type: ignore
 import serial.tools.list_ports  # type: ignore
 import usb.core  # type: ignore
 import encode_usb_strings
-from usb_test import IceFlasher
+from iceflasher import IceFlasher
 
 # Locations for external utilities and files referenced by the test
 # program

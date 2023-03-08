@@ -7,7 +7,7 @@ PYTHON_FILES = \
     pybin2nvcm.py \
     pynvcm.py \
     reset.py \
-    usb_test.py
+    iceflasher.py
 
 
 # autopep8: Fixes simple format errors automatically

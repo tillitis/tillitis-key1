@@ -26,7 +26,7 @@ import os
 import sys
 import struct
 from time import sleep
-from usb_test import IceFlasher
+from iceflasher import IceFlasher
 from pybin2nvcm import pybin2nvcm
 
 
