@@ -2,7 +2,7 @@
 //
 // fw_ram.v
 // --------
-// A 256 x 32 RAM (1024 bytes) for use by the FW. The memory has
+// A 512 x 32 RAM (2048 bytes) for use by the FW. The memory has
 // support for mode based access control.
 //
 // Author: Joachim Strombergson
