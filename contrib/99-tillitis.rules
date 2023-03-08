@@ -1,5 +1,8 @@
 # CH552 bootloader (for unprogrammed CH552 chips)
-SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="4348", ATTR{idProduct}=="55e0", MODE="0660", GROUP="dialout"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="4348", ATTR{idProduct}=="55e0", MODE="0666", GROUP="dialout"
 
-# TP-1 programmer (USB mode)
-SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="cafe", ATTR{idProduct}=="4010", MODE="0660", GROUP="dialout"
+# TP-1 programmer
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="1209", ATTR{idProduct}=="8886", MODE="0666", GROUP="dialout"
+
+# Note: A programmed TK-1 does not need a specific UDEV rule, because CDC-ACM
+# devices are automatically placed in the dialout group by Ubuntu
