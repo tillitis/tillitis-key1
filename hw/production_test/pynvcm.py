@@ -27,7 +27,18 @@ import sys
 import struct
 from time import sleep
 from usb_test import IceFlasher
-from icebin2nvcm import icebin2nvcm
+from pybin2nvcm import pybin2nvcm
+
+
+def assert_bytes_equal(
+        name: str,
+        expected: bytes,
+        val: bytes) -> None:
+    if expected != val:
+        expected_str = ' '.join([f'{x:02x}' for x in expected])
+        val_str = ' '.join([f'{x:02x}' for x in val])
+        raise AssertionError(
+            f'{name} expected:[{expected_str}] read:[{val_str}]')
 
 
 class Nvcm():
@@ -57,7 +68,7 @@ class Nvcm():
     def __init__(
             self,
             pins: dict,
-            spi_speed: int = 12,
+            spi_speed: int,
             debug: bool = False) -> None:
         self.pins = pins
         self.debug = debug
@@ -76,7 +87,7 @@ class Nvcm():
         self.flasher.gpio_set_direction(pins['crst'], True)
         self.flasher.gpio_set_direction(pins['cdne'], False)
 
-        self.flasher.spi_pins_set(
+        self.flasher.spi_configure(
             pins['sck'],
             pins['ss'],
             pins['mosi'],
@@ -85,11 +96,11 @@ class Nvcm():
         )
 
     def power_on(self) -> None:
-        """Disable power to the DUT"""
+        """Enable power to the DUT"""
         self.flasher.gpio_put(self.pins['5v_en'], True)
 
     def power_off(self) -> None:
-        """Enable power to the DUT"""
+        """Disable power to the DUT"""
         self.flasher.gpio_put(self.pins['5v_en'], False)
 
     def enable(self, cs: bool, reset: bool = True) -> None:
@@ -111,19 +122,17 @@ class Nvcm():
 
         self.flasher.spi_write(data, toggle_cs)
 
-    def sendhex(self, s: str, toggle_cs: bool = True) -> bytes:
+    def sendhex(self, s: str) -> bytes:
         """Perform a full-duplex write/read on the target device
 
         Keyword arguments:
         s -- data to send (formatted as a string of hex data)
-        toggle_cs -- If true, automatically lower the CS pin before
-                     transmit, and raise it after transmit
         """
         if self.debug and not s == "0500":
             print("TX", s)
         x = bytes.fromhex(s)
 
-        b = self.flasher.spi_rxtx(x, toggle_cs)
+        b = self.flasher.spi_rxtx(x)
 
         if self.debug and not s == "0500":
             print("RX", b.hex())
@@ -496,15 +505,16 @@ class Nvcm():
 
         contents = bytearray()
 
-        for offset in range(0, length, 8):
-            if offset % (1024 * 8) == 0:
-                print("%6d / %6d bytes" % (offset, length))
+        # for offset in range(0, length, 8):
+        #    if offset % (1024 * 8) == 0:
+        #        print("%6d / %6d bytes" % (offset, length))
 
-            nvcm_addr = int(offset / 328) * 4096 + (offset % 328)
-            contents += self.read_bytes(0x03, nvcm_addr, 8)
-            self.delay(2)
+        #    nvcm_addr = int(offset / 328) * 4096 + (offset % 328)
+        #    contents += self.read_bytes(0x03, nvcm_addr, 8)
+        #    self.delay(2)
 
-        return bytes(contents)
+        # return bytes(contents)
+        return self.read_bytes(0x03, 0x000000, length)
 
     def read_file(self, filename: str, length: int) -> None:
         """ Read the contents of the NVCM to a file
@@ -557,7 +567,7 @@ class Nvcm():
         print('Verification complete, NVCM contents match file')
 
 
-def sleep_flash(pins: dict) -> None:
+def sleep_flash(pins: dict, spi_speed: int) -> None:
     """ Put the SPI bootloader flash in deep sleep mode
 
     Keyword arguments:
@@ -582,33 +592,23 @@ def sleep_flash(pins: dict) -> None:
     flasher.gpio_set_direction(pins['sck'], True)
     flasher.gpio_set_direction(pins['miso'], True)
 
-    flasher.spi_pins_set(
+    flasher.spi_configure(
         pins['sck'],
         pins['ss'],
         pins['miso'],
         pins['mosi'],
-        12
+        spi_speed
     )
 
+    sleep(0.5)
+
+    # Wake the flash up
     flasher.spi_write(bytes([0xAB]))
 
     # Confirm we can talk to flash
     data = flasher.spi_rxtx(bytes([0x9f, 0, 0]))
 
-    print('flash ID while awake:', ' '.join(
-        [f'{b:02x}' for b in data]))
-    assert data == bytes([0xff, 0xef, 0x40])
-
-    # Test that the flash will ignore a sleep command that doesn't
-    # start on the first byte
-    flasher.spi_write(bytes([0, 0xb9]))
-
-    # Confirm we can talk to flash
-    data = flasher.spi_rxtx(bytes([0x9f, 0, 0]))
-
-    print('flash ID while awake:', ' '.join(
-        [f'{b:02x}' for b in data]))
-    assert data == bytes([0xff, 0xef, 0x40])
+    assert_bytes_equal('flash_id', bytes([0xff, 0xef, 0x40]), data)
 
     # put the flash to sleep
     flasher.spi_write(bytes([0xb9]))
@@ -616,9 +616,7 @@ def sleep_flash(pins: dict) -> None:
     # Confirm flash is asleep
     data = flasher.spi_rxtx(bytes([0x9f, 0, 0]))
 
-    print('flash ID while asleep:', ' '.join(
-        [f'{b:02x}' for b in data]))
-    assert data == bytes([0xff, 0xff, 0xff])
+    assert_bytes_equal('flash_sleep', bytes([0xff, 0xff, 0xff]), data)
 
 
 if __name__ == "__main__":
@@ -718,11 +716,11 @@ if __name__ == "__main__":
     }
 
     if args.sleep_flash:
-        sleep_flash(tp1_pins)
+        sleep_flash(tp1_pins, args.spi_speed)
 
     nvcm = Nvcm(
         tp1_pins,
-        spi_speed=args.spi_speed,
+        args.spi_speed,
         debug=args.verbose)
     nvcm.power_on()
 
@@ -737,12 +735,12 @@ if __name__ == "__main__":
         with open(args.write_file, "rb") as in_file:
             bitstream = in_file.read()
         print(f"read {len(bitstream)} bytes")
-        cmds = icebin2nvcm(bitstream)
+        cmds = pybin2nvcm(bitstream)
 
         if not args.ignore_blank:
             nvcm.trim_blank_check()
             # how much should we check?
-            nvcm.blank_check(0x100)
+            nvcm.blank_check(100000)
 
         # this is it!
         nvcm.program(cmds)

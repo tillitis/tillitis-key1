@@ -4,7 +4,7 @@ in https://github.com/YosysHQ/icestorm/pull/272
 """
 
 
-def icebin2nvcm(bitstream: bytes) -> list[str]:
+def pybin2nvcm(bitstream: bytes) -> list[str]:
     """Convert an ice40 bitstream into an NVCM program
 
     The NVCM format is a set of commands that are run against the
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     with open(args.infile, 'rb') as f_in:
         data = f_in.read()
 
-    cmds = icebin2nvcm(data)
+    cmds = pybin2nvcm(data)
 
     with open(args.outfile, 'w', encoding='utf-8') as f_out:
         for cmd in cmds:

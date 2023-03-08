@@ -1,11 +1,15 @@
 SHELL := /bin/bash
 
 PYTHON_FILES = \
-    usb_test.py \
-    icenvcm.py \
-    icebin2nvcm.py \
     encode_usb_strings.py \
-    reset.py
+    production_test_runner.py \
+    production_tests.py \
+    pybin2nvcm.py \
+    pynvcm.py \
+    random_production_test.py \
+    reset.py \
+    usb_test.py
+
 
 # autopep8: Fixes simple format errors automatically
 # mypy: static type hint analysis
@@ -16,14 +20,17 @@ lint:
 	pylint --generated-member=usb1.TRANSFER_COMPLETED,usb1.USBErrorInterrupted,usb1.USBErrorIO ${PYTHON_FILES}
 
 # Check that the NVCM generator gives a correct output for a known binary
-verify-nvcm:
-	./icebin2nvcm.py nvcm_test/application_fpga.bin verify.nvcm
+verify-pybin2nvcm:
+	./pybin2nvcm.py nvcm_test/application_fpga.bin verify.nvcm
 	cmp verify.nvcm nvcm_test/application_fpga.nvcm
 
-verify:
-	time ./icenvcm.py --verify nvcm_test/application_fpga.bin
+verify-nvcm:
+	time ./pynvcm.py --verify nvcm_test/application_fpga.bin
 
-program:
-	./icenvcm.py -i
-	time ./icenvcm.py --my-design-is-good-enough --ignore-blank --write ../application_fpga/application_fpga.bin --verify nvcm_test/application_fpga.bin
-	./icenvcm.py -b
+program-nvcm-danger:
+	./pynvcm.py -i
+	time ./pynvcm.py --my-design-is-good-enough --ignore-blank --write ../application_fpga/application_fpga.bin --verify nvcm_test/application_fpga.bin
+	./pynvcm.py -b
+
+randomize-production-test:
+	./production_tests.py

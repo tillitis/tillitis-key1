@@ -19,4 +19,4 @@ else
   . ./venv/bin/activate
 fi
 
-./production_test.py
+./production_test_runner.py
