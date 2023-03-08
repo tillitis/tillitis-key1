@@ -24,7 +24,9 @@ sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
                  libboost-thread-dev libboost-program-options-dev \
                  libboost-iostreams-dev cmake libusb-1.0-0-dev \
                  ninja-build libglib2.0-dev libpixman-1-dev \
-                 golang clang-format
+                 golang clang-format \
+		 gcc-arm-none-eabi libnewlib-arm-none-eabi \
+		 libstdc++-arm-none-eabi-newlib
 ```
 
 ## Device permissions
