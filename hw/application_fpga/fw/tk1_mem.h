@@ -1,7 +1,7 @@
 /*
  * QEMU RISC-V Board Compatible with Tillitis TK1 platform
  *
- * Copyright (c) 2022 Tillitis AB
+ * Copyright (c) 2022, 2023 Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
@@ -34,7 +34,7 @@ enum {
     TK1_MMIO_UART_BASE        = TK1_MMIO_BASE | 0x03000000,
     TK1_MMIO_TOUCH_BASE       = TK1_MMIO_BASE | 0x04000000,
     TK1_MMIO_FW_RAM_BASE      = TK1_MMIO_BASE | 0x10000000,
-    TK1_MMIO_FW_RAM_SIZE      = 1024,
+    TK1_MMIO_FW_RAM_SIZE      = 2048,
     // This "core" only exists in QEMU
     TK1_MMIO_QEMU_BASE        = TK1_MMIO_BASE | 0x3e000000,
     TK1_MMIO_TK1_BASE         = TK1_MMIO_BASE | 0x3f000000, // 0xff000000
