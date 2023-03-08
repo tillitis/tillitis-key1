@@ -34,6 +34,13 @@ def assert_bytes_equal(
         name: str,
         expected: bytes,
         val: bytes) -> None:
+    """ Check if two bytes objects are equal
+
+    Keyword arguments:
+    name -- Description to print if the assertion fails
+    expected -- Expected value
+    val -- Value to check
+    """
     if expected != val:
         expected_str = ' '.join([f'{x:02x}' for x in expected])
         val_str = ' '.join([f'{x:02x}' for x in val])
@@ -103,40 +110,40 @@ class Nvcm():
         """Disable power to the DUT"""
         self.flasher.gpio_put(self.pins['5v_en'], False)
 
-    def enable(self, cs: bool, reset: bool = True) -> None:
+    def enable(self, chip_select: bool, reset: bool = True) -> None:
         """Set the CS and Reset pin states"""
-        self.flasher.gpio_put(self.pins['ss'], cs)
+        self.flasher.gpio_put(self.pins['ss'], chip_select)
         self.flasher.gpio_put(self.pins['crst'], reset)
 
-    def writehex(self, s: str, toggle_cs: bool = True) -> None:
+    def writehex(self, hex_data: str, toggle_cs: bool = True) -> None:
         """Write SPI data to the target device
 
         Keyword arguments:
-        s -- data to send (formatted as a string of hex data)
+        hex_data -- data to send (formatted as a string of hex data)
         toggle_cs -- If true, automatically lower the CS pin before
                      transmit, and raise it after transmit
         """
-        if self.debug and not s == "0500":
-            print("TX", s)
-        data = bytes.fromhex(s)
+        if self.debug and not hex_data == "0500":
+            print("TX", hex_data)
+        data = bytes.fromhex(hex_data)
 
         self.flasher.spi_write(data, toggle_cs)
 
-    def sendhex(self, s: str) -> bytes:
+    def sendhex(self, hex_data: str) -> bytes:
         """Perform a full-duplex write/read on the target device
 
         Keyword arguments:
         s -- data to send (formatted as a string of hex data)
         """
-        if self.debug and not s == "0500":
-            print("TX", s)
-        x = bytes.fromhex(s)
+        if self.debug and not hex_data == "0500":
+            print("TX", hex_data)
+        bytes_data = bytes.fromhex(hex_data)
 
-        b = self.flasher.spi_rxtx(x)
+        ret = self.flasher.spi_rxtx(bytes_data)
 
-        if self.debug and not s == "0500":
-            print("RX", b.hex())
-        return b
+        if self.debug and not hex_data == "0500":
+            print("RX", ret.hex())
+        return ret
 
     def delay(self, count: int) -> None:
         """'Delay' by sending clocks with CS de-asserted
@@ -151,16 +158,16 @@ class Nvcm():
         """Reboot the part and enter SPI command mode"""
         if self.debug:
             print("init")
-        self.enable(cs=True, reset=True)
-        self.enable(cs=True, reset=False)
-        self.enable(cs=False, reset=False)
-        self.enable(cs=False, reset=True)
+        self.enable(True, True)
+        self.enable(True, False)
+        self.enable(False, False)
+        self.enable(False, True)
         sleep(0.1)
-        self.enable(cs=True, reset=True)
+        self.enable(True, True)
 
     def status_wait(self) -> None:
         """Wait for the status register to clear"""
-        for i in range(0, 1000):
+        for _ in range(0, 1000):
             self.delay(1250)
             ret = self.sendhex("0500")
             status = struct.unpack('>H', ret)[0]
@@ -206,7 +213,7 @@ class Nvcm():
         """
 
         msg = ''
-        msg += ("%02x%06x" % (cmd, address))
+        msg += (f"{cmd:02x}{address:06x}")
         msg += ("00" * 9)  # dummy bytes
         msg += ("00" * length)  # read
         ret = self.sendhex(msg)
@@ -237,14 +244,14 @@ class Nvcm():
         address -- NVCM memory address to write to
         length -- Number of bytes to write
         """
-        self.writehex("%02x%06x" % (cmd, address) + data)
+        self.writehex(f"{cmd:02x}{address:06x}" + data)
 
         try:
             self.status_wait()
         except Exception as exc:
-            raise Exception(
-                "WRITE FAILED: cmd=%02x address=%06x data=%s" %
-                (cmd, address, data)) from exc
+            raise IOError(
+                f"WRITE FAILED: cmd={cmd:02x} address={address:%06x} data={data}"
+            ) from exc
 
         self.delay(2)
 
@@ -371,7 +378,7 @@ class Nvcm():
             try:
                 self.command(row)
             except Exception as exc:
-                raise Exception(
+                raise IOError(
                     "programming failed, row:{row}"
                 ) from exc
 
@@ -503,8 +510,8 @@ class Nvcm():
 
         self.bank_select('nvcm')
 
-        contents = bytearray()
-
+        # contents = bytearray()
+        #
         # for offset in range(0, length, 8):
         #    if offset % (1024 * 8) == 0:
         #        print("%6d / %6d bytes" % (offset, length))
@@ -761,6 +768,6 @@ if __name__ == "__main__":
 
     if args.do_boot:
         # hold reset low for half a second
-        nvcm.enable(cs=True, reset=False)
+        nvcm.enable(True, False)
         sleep(0.5)
-        nvcm.enable(cs=True, reset=True)
+        nvcm.enable(True, True)

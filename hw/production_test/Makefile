@@ -6,7 +6,6 @@ PYTHON_FILES = \
     production_tests.py \
     pybin2nvcm.py \
     pynvcm.py \
-    random_production_test.py \
     reset.py \
     usb_test.py
 
@@ -17,7 +16,7 @@ PYTHON_FILES = \
 lint:
 	autopep8 --in-place --max-line-length 70 --aggressive --aggressive  ${PYTHON_FILES}
 	mypy --disallow-untyped-defs ${PYTHON_FILES}
-	pylint --generated-member=usb1.TRANSFER_COMPLETED,usb1.USBErrorInterrupted,usb1.USBErrorIO ${PYTHON_FILES}
+	pylint --generated-member=usb1.TRANSFER_COMPLETED,usb1.USBErrorInterrupted,usb1.USBErrorIO --max-line-length 70 ${PYTHON_FILES}
 
 # Check that the NVCM generator gives a correct output for a known binary
 verify-pybin2nvcm:
