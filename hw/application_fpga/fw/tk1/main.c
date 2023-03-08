@@ -142,6 +142,7 @@ enum state {
 	FW_STATE_LOADING,
 	FW_STATE_RUN,
 	FW_STATE_FAIL,
+	FW_STATE_MAX,
 };
 
 int main()
@@ -158,14 +159,23 @@ int main()
 	enum state state = FW_STATE_INITIAL;
 	// Let the app know the function adddress for blake2s()
 	*fw_blake2s_addr = (uint32_t)blake2s;
-	uint8_t command_allowed[FW_CMD_MAX] = {0};
+	const uint32_t command_allowed[FW_STATE_MAX] = {
+	    // FW_STATE_INITIAL
+	    1 << FW_CMD_NAME_VERSION |
+	    1 << FW_CMD_LOAD_APP |
+	    1 << FW_CMD_GET_UDI,
+	    // FW_STATE_LOADING
+	    1 << FW_CMD_NAME_VERSION |
+	    0 << FW_CMD_LOAD_APP |
+	    1 << FW_CMD_LOAD_APP_DATA |
+	    1 << FW_CMD_GET_UDI,
+	    // FW_STATE_RUN
+	    0,
+	    // FW_STATE_FAIL
+	    0,
+	};
 
 	print_hw_version(namever);
-
-	// FW_STATE_INITIAL - but not resettable
-	command_allowed[FW_CMD_NAME_VERSION] = 1;
-	command_allowed[FW_CMD_LOAD_APP] = 1;
-	command_allowed[FW_CMD_GET_UDI] = 1;
 
 	for (;;) {
 		switch (state) {
@@ -173,8 +183,6 @@ int main()
 			break;
 
 		case FW_STATE_LOADING:
-			command_allowed[FW_CMD_LOAD_APP] = 0;
-			command_allowed[FW_CMD_LOAD_APP_DATA] = 1;
 			break;
 
 		case FW_STATE_RUN:
@@ -252,7 +260,7 @@ int main()
 
 		// Min length is 1 byte so cmd[0] should always be here
 		// Is this command allowed in current state?
-		assert(command_allowed[cmd[0]] == 1);
+		assert(command_allowed[state] & (1 << cmd[0]));
 
 		switch (cmd[0]) {
 		case FW_CMD_NAME_VERSION:
