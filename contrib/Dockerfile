@@ -40,6 +40,10 @@ RUN apt-get -qq update -y \
                vim \
                xdot \
                sdcc \
+               cmake \
+               gcc-arm-none-eabi \
+               libnewlib-arm-none-eabi \
+               libstdc++-arm-none-eabi-newlib
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -84,6 +88,13 @@ RUN git checkout nextpnr-0.4 \
 RUN git >/usr/local/repo-commit-nextpnr describe --tags --always --dirty
 WORKDIR /
 RUN rm -rf /src
+
+RUN git clone https://github.com/raspberrypi/pico-sdk.git /usr/local/picosdk
+WORKDIR /usr/local/picosdk
+RUN git checkout 1.5.0 \
+    && git submodule-update --init
+RUN git >/usr/local/repo-commit-picosdk describe --tags --always --dirty
+WORKDIR /
 
 
 FROM base
