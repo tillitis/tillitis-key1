@@ -60,14 +60,17 @@ class IceFlasher:
         bcd_device = self.handle.getDevice().getbcdDevice()
         if bcd_device != 0x0200:
             raise ValueError(
-                'Pico firmware version out of date- please upgrade it!')
+                'Pico firmware version out of date- please upgrade')
 
         self.handle.claimInterface(0)
+
+        self.cs_pin = -1
 
     def __del__(self) -> None:
         self.close()
 
     def close(self) -> None:
+        """ Release the USB device handle """
         self._wait_async()
 
         if self.handle is not None:

@@ -2,7 +2,7 @@
 from typing import Any
 import production_tests
 
-pass_msg = '''
+PASS_MSG = '''
   _____                _____    _____
  |  __ \\      /\\      / ____|  / ____|
  | |__) |    /  \\    | (___   | (___
@@ -11,7 +11,7 @@ pass_msg = '''
  |_|      /_/    \\_\\ |_____/  |_____/
  '''
 
-fail_msg = '''
+FAIL_MSG = '''
   ______              _____   _
  |  ____|     /\\     |_   _| | |
  | |__       /  \\      | |   | |
@@ -44,6 +44,16 @@ ANSI = {
 
 
 def run_tests(test_list: list[Any]) -> bool:
+    """ Run a test list
+
+    This executes the tests from the given list in order. The test
+    sequence is stopped if a test raises an assertion, or returns
+    False. If all tests return True successfully, then the test
+    sequence is considered to have passed.
+
+    Keyword parameters:
+    test_list -- List of test functions to call
+    """
     try:
         for test in test_list:
             print("\n{:}Test step: {:}{:} ({:})".format(
@@ -66,12 +76,8 @@ def run_tests(test_list: list[Any]) -> bool:
     return True
 
 
-if __name__ == '__main__':
-    last_a = '1'
-
-    # Allow any of the settings in the parameters structure to be
-    # overridden
-    import argparse
+def production_test_runner() -> None:
+    """Interactive production test environment"""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-l',
@@ -100,7 +106,7 @@ if __name__ == '__main__':
                 [test.__name__ for test in test_list])))
         for test in production_tests.manual_tests:
             print('{:}: {:}'.format(test.__name__, test.__doc__))
-        exit(0)
+        sys.exit(0)
 
     if args.run_test is not None:
         result = False
@@ -118,17 +124,17 @@ if __name__ == '__main__':
                     break
 
         if not found:
-            print('Test not found:{:}'.format(args.run_test))
-            exit(1)
+            raise ValueError('Test not found:{args.run_test}')
 
         if not result:
             production_tests.reset()
-            exit(1)
+            sys.exit(1)
 
-        exit(0)
+        sys.exit(0)
 
     print('\n\nProduction test system')
 
+    last_a = '1'
     while True:
         print('\n\n')
 
@@ -161,17 +167,24 @@ if __name__ == '__main__':
 
         try:
             test_sequence = options[int(a) - 1]
-        except IndexError as e:
+        except IndexError:
             print('Invalid input')
             continue
-        except ValueError as e:
+        except ValueError:
             print('Invalid input')
             continue
 
         if not run_tests(test_sequence):
-            print(ANSI['bg_red'] + fail_msg + ANSI['reset'])
+            print(ANSI['bg_red'] + FAIL_MSG + ANSI['reset'])
             production_tests.reset()
         else:
-            print(ANSI['bg_green'] + pass_msg + ANSI['reset'])
+            print(ANSI['bg_green'] + PASS_MSG + ANSI['reset'])
 
         last_a = a
+
+
+if __name__ == '__main__':
+    import argparse
+    import sys
+
+    production_test_runner()
