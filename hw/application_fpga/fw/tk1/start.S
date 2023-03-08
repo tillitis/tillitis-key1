@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - Tillitis AB
+ * Copyright (C) 2022, 2023 - Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
 */
 
@@ -49,7 +49,7 @@ clear:
         /*
          * Init stack at top of fw_ram. Leave 16 byte for entering our first function
          */
-        li sp, 0xd00003f0 // 1 kiB - 16 byte in FW_RAM
+        li sp, 0xd00007f0 // 2 kiB (TK1_MMIO_FW_RAM_SIZE) minus 16 byte
 
 	call main
 

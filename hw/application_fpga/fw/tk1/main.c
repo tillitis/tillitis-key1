@@ -197,7 +197,7 @@ int main()
 			// clang-format off
 			asm volatile(
 				"li a0, 0xd0000000;" // FW_RAM
-				"li a1, 0xd0000400;" // End of FW_RAM
+				"li a1, 0xd0000800;" // End of 2 KB FW_RAM (just past the end)
 				"loop:;"
 				"sw zero, 0(a0);"
 				"addi a0, a0, 4;"
