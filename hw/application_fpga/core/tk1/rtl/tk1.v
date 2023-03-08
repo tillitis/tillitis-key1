@@ -90,7 +90,7 @@ module tk1(
   localparam TK1_VERSION  = 32'h00000005;
 
   localparam FW_RAM_FIRST = 32'hd0000000;
-  localparam FW_RAM_LAST  = 32'hd00003ff;
+  localparam FW_RAM_LAST  = 32'hd00007ff;
 
 
   //----------------------------------------------------------------
