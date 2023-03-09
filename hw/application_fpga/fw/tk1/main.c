@@ -28,6 +28,8 @@ static volatile uint32_t *timer           = (volatile uint32_t *)TK1_MMIO_TIMER_
 static volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
 static volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
 static volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
+static volatile uint32_t *ram_aslr        = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ASLR;
+static volatile uint32_t *ram_scramble    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_SCRAMBLE;
 // clang-format on
 
 struct namever {
@@ -90,6 +92,13 @@ static void print_digest(uint8_t *md)
 	htif_lf();
 }
 
+uint32_t rnd_word()
+{
+	while ((*trng_status & (1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
+	}
+	return *trng_entropy;
+}
+
 // CDI = blake2s(uds, blake2s(app), uss)
 static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 {
@@ -98,9 +107,7 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 
 	// Prepare to sleep a random number of cycles before reading out UDS
 	*timer_prescaler = 1;
-	while ((*trng_status & (1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
-	}
-	uint32_t rnd = *trng_entropy;
+	uint32_t rnd = rnd_word();
 	// Up to 65536 cycles
 	rnd &= 0xffff;
 	*timer = (rnd == 0 ? 1 : rnd);
@@ -143,6 +150,24 @@ enum state {
 
 int main()
 {
+	// Set RAM address and data scrambling values
+	*ram_aslr = rnd_word();
+	*ram_scramble = rnd_word();
+
+	// Fill RAM with random data (FW does not use RAM, has its stack in
+	// FW_RAM)
+	uint32_t *loadaddrw = (uint32_t *)(TK1_RAM_BASE);
+	uint32_t rnd = rnd_word();
+	uint32_t rnd_incr = rnd_word();
+	for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
+		loadaddrw[w] = rnd;
+		rnd += rnd_incr;
+	}
+
+	// Set new scrambling values, for all use of RAM by app
+	*ram_aslr = rnd_word();
+	*ram_scramble = rnd_word();
+
 	struct namever namever = get_hw_version(*name0, *name1, *ver);
 	struct frame_header hdr; // Used in both directions
 	uint8_t cmd[CMDLEN_MAXBYTES];
