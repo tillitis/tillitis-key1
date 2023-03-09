@@ -40,6 +40,8 @@ class IceFlasher:
 
     SPI_MAX_TRANSFER_SIZE = 2048 - 8
 
+    handle = None
+
     def _check_for_old_firmware(self) -> bool:
         for device in self.context.getDeviceList():
             if device.getVendorID() == 0xcafe and device.getProductID() == 0x4004:
@@ -54,25 +56,29 @@ class IceFlasher:
 
         # See: https://github.com/vpelletier/python-libusb1#usage
         self.context = usb1.USBContext()
-        self.handle = self.context.openByVendorIDAndProductID(
-            0x1209,
-            0x8886,
-            skip_on_error=True,
-        )
+
+        try:
+            self.handle = self.context.openByVendorIDAndProductID(
+                0x1209,
+                0x8886,
+                skip_on_error=False
+            )
+        except usb1.USBErrorAccess as exp:
+            raise OSError('Programmer found, but unable to open- check device permissions!') from exp
 
         if self.handle is None:
             # Device not present, or user is not allowed to access
             # device.
             if self._check_for_old_firmware():
-                raise ValueError(
+                raise OSError(
                     'Programmer with outdated firmware found- please update!')
             else:
-                raise ValueError('Programmer not found')
+                raise OSError('Programmer not found- check USB cable')
 
         # Check the device firmware version
         bcd_device = self.handle.getDevice().getbcdDevice()
         if bcd_device != 0x0200:
-            raise ValueError(
+            raise OSError(
                 'Pico firmware version out of date- please upgrade')
 
         self.handle.claimInterface(0)
@@ -84,9 +90,9 @@ class IceFlasher:
 
     def close(self) -> None:
         """ Release the USB device handle """
-        self._wait_async()
-
         if self.handle is not None:
+            self._wait_async()
+
             self.handle.close()
             self.handle = None
             self.context.close()

@@ -67,10 +67,13 @@ def run_tests(test_list: list[Any]) -> bool:
                     'Failure at test step "{:}"'.format(
                         test.__name__))
                 return False
-    except Exception as e:
+    except OSError as exp:
+        print(exp)
+        sys.exit(1)
+    except Exception as exp:
         print(
             'Error while running test step "{:}", exception:{:}'.format(
-                test.__name__, str(e)))
+                test.__name__, str(exp)))
         return False
 
     return True
