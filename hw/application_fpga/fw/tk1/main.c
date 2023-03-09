@@ -42,52 +42,16 @@ struct context {
 	uint8_t uss[32];    // User Supplied Secret, if any
 };
 
-struct namever {
-	char name0[4];
-	char name1[4];
-	uint32_t version;
-};
-
-static void print_hw_version(struct namever namever)
+static void print_hw_version()
 {
-	htif_puts("Hello, I'm ");
-	htif_hexdump((uint8_t *)&namever.name0, 4);
-	htif_putc(namever.name0[0]);
-	htif_putc(namever.name0[1]);
-	htif_putc(namever.name0[2]);
-	htif_putc(namever.name0[3]);
-	htif_putc('-');
-	htif_putc(namever.name1[0]);
-	htif_putc(namever.name1[1]);
-	htif_putc(namever.name1[2]);
-	htif_putc(namever.name1[3]);
-	htif_putc(':');
-	htif_putinthex(namever.version);
+	htif_puts("Hello, I'm firmware with");
+	htif_puts(" tk1_name0:");
+	htif_putinthex(*name0);
+	htif_puts(" tk1_name1:");
+	htif_putinthex(*name1);
+	htif_puts(" tk1_version:");
+	htif_putinthex(*ver);
 	htif_lf();
-}
-
-static struct namever get_hw_version(uint32_t name0, uint32_t name1,
-				     uint32_t ver)
-{
-	struct namever namever;
-
-	htif_hexdump((uint8_t *)&name0, 4);
-	htif_putinthex(name0);
-	htif_lf();
-
-	namever.name0[0] = name0 >> 24;
-	namever.name0[1] = name0 >> 16;
-	namever.name0[2] = name0 >> 8;
-	namever.name0[3] = name0;
-
-	namever.name1[0] = name1 >> 24;
-	namever.name1[1] = name1 >> 16;
-	namever.name1[2] = name1 >> 8;
-	namever.name1[3] = name1;
-
-	namever.version = ver;
-
-	return namever;
 }
 
 static void print_digest(uint8_t *md)
@@ -153,29 +117,39 @@ static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
 	wordcpy_s((void *)cdi, 8, local_cdi, 8);
 }
 
+static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word)
+{
+	assert(bufsiz >= 4);
+
+	buf[0] = word >> 24;
+	buf[1] = word >> 16;
+	buf[2] = word >> 8;
+	buf[3] = word;
+}
+
 static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 			    enum state state, struct context *ctx)
 {
 	uint8_t rsp[CMDLEN_MAXBYTES] = {0};
 
 	switch (cmd[0]) {
-	case FW_CMD_NAME_VERSION: {
-		struct namever namever = get_hw_version(*name0, *name1, *ver);
-
+	case FW_CMD_NAME_VERSION:
 		htif_puts("cmd: name-version\n");
 		if (hdr->len != 1) {
 			// Bad length
 			return FW_STATE_FAIL;
 		}
 
-		memcpy_s(rsp, CMDLEN_MAXBYTES, &namever.name0, 4);
-		memcpy_s(&rsp[4], CMDLEN_MAXBYTES - 4, &namever.name1, 4);
-		memcpy_s(&rsp[8], CMDLEN_MAXBYTES - 8, &namever.version, 4);
+		copy_name(rsp, CMDLEN_MAXBYTES, *name0);
+		copy_name(&rsp[4], CMDLEN_MAXBYTES - 4, *name1);
+		wordcpy_s(&rsp[8], CMDLEN_MAXBYTES / 4 - 2, (void *)ver, 1);
+
 		htif_hexdump(rsp, 12);
+
 		fwreply(*hdr, FW_RSP_NAME_VERSION, rsp);
 		// state unchanged
 		return state;
-	} break;
+		break;
 
 	case FW_CMD_GET_UDI: {
 		uint32_t udi_words[2];
@@ -382,6 +356,8 @@ int main()
 	struct frame_header hdr; // Used in both directions
 	uint8_t cmd[CMDLEN_MAXBYTES];
 	enum state state = FW_STATE_INITIAL;
+
+	print_hw_version();
 
 	// Let the app know the function adddress for blake2s()
 	*fw_blake2s_addr = (uint32_t)blake2s;
