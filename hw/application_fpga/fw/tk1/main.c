@@ -9,6 +9,7 @@
 #include "led.h"
 #include "lib.h"
 #include "proto.h"
+#include "state.h"
 #include "types.h"
 
 // clang-format off
@@ -140,14 +141,6 @@ static void compute_cdi(uint8_t digest[32], uint8_t use_uss, uint8_t uss[32])
 	wordcpy_s((void *)cdi, 8, local_cdi, 8);
 }
 
-enum state {
-	FW_STATE_INITIAL,
-	FW_STATE_LOADING,
-	FW_STATE_RUN,
-	FW_STATE_FAIL,
-	FW_STATE_MAX,
-};
-
 int main()
 {
 	// Set RAM address and data scrambling values
@@ -180,30 +173,172 @@ int main()
 	enum state state = FW_STATE_INITIAL;
 	// Let the app know the function adddress for blake2s()
 	*fw_blake2s_addr = (uint32_t)blake2s;
-	const uint32_t command_allowed[FW_STATE_MAX] = {
-	    // FW_STATE_INITIAL
-	    1 << FW_CMD_NAME_VERSION |
-	    1 << FW_CMD_LOAD_APP |
-	    1 << FW_CMD_GET_UDI,
-	    // FW_STATE_LOADING
-	    1 << FW_CMD_NAME_VERSION |
-	    0 << FW_CMD_LOAD_APP |
-	    1 << FW_CMD_LOAD_APP_DATA |
-	    1 << FW_CMD_GET_UDI,
-	    // FW_STATE_RUN
-	    0,
-	    // FW_STATE_FAIL
-	    0,
-	};
-
 	print_hw_version(namever);
 
 	for (;;) {
 		switch (state) {
 		case FW_STATE_INITIAL:
+			if (readcommand(&hdr, cmd, state) == -1) {
+				state = FW_STATE_FAIL;
+				break;
+			}
+
+			// Reset response buffer
+			memset(rsp, 0, CMDLEN_MAXBYTES);
+
+			switch (cmd[0]) {
+			case FW_CMD_NAME_VERSION:
+				htif_puts("cmd: name-version\n");
+				if (hdr.len != 1) {
+					// Bad length - give them an empty
+					// response
+					fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
+					break;
+				}
+
+				memcpy_s(rsp, CMDLEN_MAXBYTES, &namever.name0,
+					 4);
+				memcpy_s(&rsp[4], CMDLEN_MAXBYTES - 4,
+					 &namever.name1, 4);
+				memcpy_s(&rsp[8], CMDLEN_MAXBYTES - 8,
+					 &namever.version, 4);
+				htif_hexdump(rsp, 12);
+				fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
+				// state unchanged
+				break;
+			case FW_CMD_GET_UDI:
+				htif_puts("cmd: get-udi\n");
+				if (hdr.len != 1) {
+					// Bad cmd length
+					rsp[0] = STATUS_BAD;
+					fwreply(hdr, FW_RSP_GET_UDI, rsp);
+					break;
+				}
+
+				rsp[0] = STATUS_OK;
+				uint32_t udi_words[2];
+				wordcpy_s(udi_words, 2, (void *)udi, 2);
+				memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1,
+					 udi_words, 2 * 4);
+				fwreply(hdr, FW_RSP_GET_UDI, rsp);
+				// state unchanged
+				break;
+			case FW_CMD_LOAD_APP:
+				htif_puts("cmd: load-app(size, uss)\n");
+				if (hdr.len != 512) {
+					// Bad length
+					rsp[0] = STATUS_BAD;
+					fwreply(hdr, FW_RSP_LOAD_APP, rsp);
+					break;
+				}
+
+				// cmd[1..4] contains the size.
+				uint32_t local_app_size =
+				    cmd[1] + (cmd[2] << 8) + (cmd[3] << 16) +
+				    (cmd[4] << 24);
+
+				htif_puts("app size: ");
+				htif_putinthex(local_app_size);
+				htif_lf();
+
+				if (local_app_size == 0 ||
+				    local_app_size > TK1_APP_MAX_SIZE) {
+					rsp[0] = STATUS_BAD;
+					fwreply(hdr, FW_RSP_LOAD_APP, rsp);
+					break;
+				}
+
+				*app_size = local_app_size;
+
+				// Do we have a USS at all?
+				if (cmd[5] != 0) {
+					// Yes
+					use_uss = TRUE;
+					memcpy_s(uss, 32, &cmd[6], 32);
+				} else {
+					use_uss = FALSE;
+				}
+
+				rsp[0] = STATUS_OK;
+				fwreply(hdr, FW_RSP_LOAD_APP, rsp);
+
+				assert(*app_size != 0);
+				assert(*app_size <= TK1_APP_MAX_SIZE);
+
+				left = *app_size;
+
+				state = FW_STATE_LOADING;
+				break;
+			}
 			break;
 
 		case FW_STATE_LOADING:
+			if (readcommand(&hdr, cmd, state) == -1) {
+				state = FW_STATE_FAIL;
+				break;
+			}
+
+			// Reset response buffer
+			memset(rsp, 0, CMDLEN_MAXBYTES);
+
+			switch (cmd[0]) {
+
+			case FW_CMD_LOAD_APP_DATA:
+				htif_puts("cmd: load-app-data\n");
+				if (hdr.len != 512) {
+					// Bad cmd length
+					rsp[0] = STATUS_BAD;
+					fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
+					break;
+				}
+
+				int nbytes;
+				if (left > (512 - 1)) {
+					nbytes = 512 - 1;
+				} else {
+					nbytes = left;
+				}
+				memcpy_s(loadaddr, left, cmd + 1, nbytes);
+				loadaddr += nbytes;
+				left -= nbytes;
+
+				if (left == 0) {
+					htif_puts("Fully loaded ");
+					htif_putinthex(*app_size);
+					htif_lf();
+
+					// Compute Blake2S digest of the app,
+					// storing it for FW_STATE_RUN
+					blake2s_ctx ctx;
+
+					blake2s(digest, 32, NULL, 0,
+						(const void *)TK1_RAM_BASE,
+						*app_size, &ctx);
+					print_digest(digest);
+
+					// And return the digest in final
+					// response
+					rsp[0] = STATUS_OK;
+					memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1,
+						 &digest, 32);
+					fwreply(hdr, FW_RSP_LOAD_APP_DATA_READY,
+						rsp);
+
+					state = FW_STATE_RUN;
+					break;
+				}
+
+				rsp[0] = STATUS_OK;
+				fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
+
+				break;
+
+			default:
+				htif_puts("Got unknown firmware cmd: 0x");
+				htif_puthex(cmd[0]);
+				htif_lf();
+				state = FW_STATE_FAIL;
+			}
 			break;
 
 		case FW_STATE_RUN:
@@ -256,177 +391,6 @@ int main()
 			htif_lf();
 			forever_redflash();
 			break; // Not reached
-		}
-
-		uint8_t in;
-		*led = (state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE;
-		in = readbyte();
-
-		if (parseframe(in, &hdr) == -1) {
-			htif_puts("Couldn't parse header\n");
-			state = FW_STATE_FAIL;
-			continue;
-		}
-
-		memset(cmd, 0, CMDLEN_MAXBYTES);
-		// Now we know the size of the cmd frame, read it all
-		if (read(cmd, CMDLEN_MAXBYTES, hdr.len) != 0) {
-			htif_puts("read: buffer overrun\n");
-			state = FW_STATE_FAIL;
-			continue;
-		}
-
-		// Is it for us?
-		if (hdr.endpoint != DST_FW) {
-			htif_puts("Message not meant for us\n");
-			state = FW_STATE_FAIL;
-			continue;
-		}
-
-		// Reset response buffer
-		memset(rsp, 0, CMDLEN_MAXBYTES);
-
-		// Min length is 1 byte so cmd[0] should always be here
-		// Is this command allowed in current state?
-		assert(command_allowed[state] & (1 << cmd[0]));
-
-		switch (cmd[0]) {
-		case FW_CMD_NAME_VERSION:
-			htif_puts("cmd: name-version\n");
-			if (hdr.len != 1) {
-				// Bad length - give them an empty response
-				fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
-				break;
-			}
-
-			memcpy_s(rsp, CMDLEN_MAXBYTES, &namever.name0, 4);
-			memcpy_s(&rsp[4], CMDLEN_MAXBYTES - 4, &namever.name1,
-				 4);
-			memcpy_s(&rsp[8], CMDLEN_MAXBYTES - 8, &namever.version,
-				 4);
-			fwreply(hdr, FW_RSP_NAME_VERSION, rsp);
-			// state unchanged
-			break;
-
-		case FW_CMD_GET_UDI:
-			htif_puts("cmd: get-udi\n");
-			if (hdr.len != 1) {
-				// Bad cmd length
-				rsp[0] = STATUS_BAD;
-				fwreply(hdr, FW_RSP_GET_UDI, rsp);
-				break;
-			}
-
-			rsp[0] = STATUS_OK;
-			uint32_t udi_words[2];
-			wordcpy_s(udi_words, 2, (void *)udi, 2);
-			memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, udi_words,
-				 2 * 4);
-			fwreply(hdr, FW_RSP_GET_UDI, rsp);
-			// state unchanged
-			break;
-
-		case FW_CMD_LOAD_APP:
-			htif_puts("cmd: load-app(size, uss)\n");
-			if (hdr.len != 512) {
-				// Bad length
-				rsp[0] = STATUS_BAD;
-				fwreply(hdr, FW_RSP_LOAD_APP, rsp);
-				break;
-			}
-
-			// cmd[1..4] contains the size.
-			uint32_t local_app_size = cmd[1] + (cmd[2] << 8) +
-						  (cmd[3] << 16) +
-						  (cmd[4] << 24);
-
-			htif_puts("app size: ");
-			htif_putinthex(local_app_size);
-			htif_lf();
-
-			if (local_app_size == 0 ||
-			    local_app_size > TK1_APP_MAX_SIZE) {
-				rsp[0] = STATUS_BAD;
-				fwreply(hdr, FW_RSP_LOAD_APP, rsp);
-				break;
-			}
-
-			*app_size = local_app_size;
-
-			// Do we have a USS at all?
-			if (cmd[5] != 0) {
-				// Yes
-				use_uss = TRUE;
-				memcpy_s(uss, 32, &cmd[6], 32);
-			} else {
-				use_uss = FALSE;
-			}
-
-			rsp[0] = STATUS_OK;
-			fwreply(hdr, FW_RSP_LOAD_APP, rsp);
-
-			assert(*app_size != 0);
-			assert(*app_size <= TK1_APP_MAX_SIZE);
-
-			*app_addr = 0;
-			left = *app_size;
-
-			state = FW_STATE_LOADING;
-			break;
-
-		case FW_CMD_LOAD_APP_DATA:
-			htif_puts("cmd: load-app-data\n");
-			if (hdr.len != 512) {
-				// Bad cmd length
-				rsp[0] = STATUS_BAD;
-				fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
-				break;
-			}
-
-			int nbytes;
-			if (left > (512 - 1)) {
-				nbytes = 512 - 1;
-			} else {
-				nbytes = left;
-			}
-			memcpy_s(loadaddr, left, cmd + 1, nbytes);
-			loadaddr += nbytes;
-			left -= nbytes;
-
-			if (left == 0) {
-				htif_puts("Fully loaded ");
-				htif_putinthex(*app_size);
-				htif_lf();
-
-				// Compute Blake2S digest of the app, storing
-				// it for FW_STATE_RUN
-				blake2s_ctx ctx;
-
-				blake2s(digest, 32, NULL, 0,
-					(const void *)TK1_RAM_BASE, *app_size,
-					&ctx);
-				print_digest(digest);
-
-				// And return the digest in final response
-				rsp[0] = STATUS_OK;
-				memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, &digest,
-					 32);
-				fwreply(hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
-
-				state = FW_STATE_RUN;
-				break;
-			}
-
-			rsp[0] = STATUS_OK;
-			fwreply(hdr, FW_RSP_LOAD_APP_DATA, rsp);
-
-			break;
-
-		default:
-			htif_puts("Got unknown firmware cmd: 0x");
-			htif_puthex(cmd[0]);
-			htif_lf();
-			state = FW_STATE_FAIL;
 		}
 	}
 

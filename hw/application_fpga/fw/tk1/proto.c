@@ -5,7 +5,9 @@
 
 #include "proto.h"
 #include "../tk1_mem.h"
+#include "led.h"
 #include "lib.h"
+#include "state.h"
 #include "types.h"
 
 // clang-format off
@@ -18,6 +20,34 @@ static volatile uint32_t *tx =     (volatile uint32_t *)TK1_MMIO_UART_TX_DATA;
 uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status, enum cmdlen len)
 {
 	return (id << 5) | (endpoint << 3) | (status << 2) | len;
+}
+
+int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
+{
+	uint8_t in;
+
+	*led = (state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE;
+	in = readbyte();
+
+	if (parseframe(in, hdr) == -1) {
+		htif_puts("Couldn't parse header\n");
+		return -1;
+	}
+
+	memset(cmd, 0, CMDLEN_MAXBYTES);
+	// Now we know the size of the cmd frame, read it all
+	if (read(cmd, CMDLEN_MAXBYTES, hdr->len) != 0) {
+		htif_puts("read: buffer overrun\n");
+		return -1;
+	}
+
+	// Is it for us?
+	if (hdr->endpoint != DST_FW) {
+		htif_puts("Message not meant for us\n");
+		return -1;
+	}
+
+	return 0;
 }
 
 int parseframe(uint8_t b, struct frame_header *hdr)

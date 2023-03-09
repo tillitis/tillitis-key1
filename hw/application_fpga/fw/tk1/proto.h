@@ -57,5 +57,5 @@ void writebyte(uint8_t b);
 void write(uint8_t *buf, size_t nbytes);
 uint8_t readbyte();
 int read(uint8_t *buf, size_t bufsize, size_t nbytes);
-
+int readcommand(struct frame_header *hdr, uint8_t *cmd, int state);
 #endif
