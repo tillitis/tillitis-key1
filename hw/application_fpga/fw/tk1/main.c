@@ -115,10 +115,12 @@ static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
 {
 	uint32_t local_cdi[8];
 	blake2s_ctx secure_ctx;
+	uint32_t rnd;
+	int blake2err;
 
 	// Prepare to sleep a random number of cycles before reading out UDS
 	*timer_prescaler = 1;
-	uint32_t rnd = rnd_word();
+	rnd = rnd_word();
 	// Up to 65536 cycles
 	rnd &= 0xffff;
 	*timer = (rnd == 0 ? 1 : rnd);
@@ -126,7 +128,7 @@ static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
 	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
 
-	int blake2err = blake2s_init(&secure_ctx, 32, NULL, 0);
+	blake2err = blake2s_init(&secure_ctx, 32, NULL, 0);
 	assert(blake2err == 0);
 
 	// Update hash with UDS. This means UDS will live for a short
@@ -177,7 +179,9 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		return state;
 	} break;
 
-	case FW_CMD_GET_UDI:
+	case FW_CMD_GET_UDI: {
+		uint32_t udi_words[2];
+
 		htif_puts("cmd: get-udi\n");
 		if (hdr->len != 1) {
 			// Bad cmd length
@@ -187,15 +191,17 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		}
 
 		rsp[0] = STATUS_OK;
-		uint32_t udi_words[2];
+
 		wordcpy_s(udi_words, 2, (void *)udi, 2);
 		memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, udi_words, 2 * 4);
 		fwreply(*hdr, FW_RSP_GET_UDI, rsp);
 		// state unchanged
 		return state;
-		break;
+	} break;
 
-	case FW_CMD_LOAD_APP:
+	case FW_CMD_LOAD_APP: {
+		uint32_t local_app_size;
+
 		htif_puts("cmd: load-app(size, uss)\n");
 		if (hdr->len != 512) {
 			// Bad length
@@ -205,7 +211,7 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		}
 
 		// cmd[1..4] contains the size.
-		uint32_t local_app_size =
+		local_app_size =
 		    cmd[1] + (cmd[2] << 8) + (cmd[3] << 16) + (cmd[4] << 24);
 
 		htif_puts("app size: ");
@@ -238,7 +244,7 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		ctx->left = *app_size;
 
 		return FW_STATE_LOADING;
-		break;
+	} break;
 
 	default:
 		htif_puts("Got unknown firmware cmd: 0x");
@@ -253,6 +259,7 @@ static int loading_commands(const struct frame_header *hdr, const uint8_t *cmd,
 			    enum state state, struct context *ctx)
 {
 	uint8_t rsp[CMDLEN_MAXBYTES] = {0};
+	int nbytes;
 
 	switch (cmd[0]) {
 	case FW_CMD_LOAD_APP_DATA:
@@ -264,7 +271,6 @@ static int loading_commands(const struct frame_header *hdr, const uint8_t *cmd,
 			return state;
 		}
 
-		int nbytes;
 		if (ctx->left > (512 - 1)) {
 			nbytes = 512 - 1;
 		} else {

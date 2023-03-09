@@ -10,8 +10,8 @@
 void forever_redflash()
 {
 	static volatile uint32_t *led = (volatile uint32_t *)TK1_MMIO_TK1_LED;
-
 	int led_on = 0;
+
 	for (;;) {
 		*led = led_on ? LED_RED : LED_BLACK;
 		for (volatile int i = 0; i < 800000; i++) {
