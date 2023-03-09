@@ -164,10 +164,8 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 
 		htif_puts("cmd: name-version\n");
 		if (hdr->len != 1) {
-			// Bad length - give them an empty
-			// response
-			fwreply(*hdr, FW_RSP_NAME_VERSION, rsp);
-			return state;
+			// Bad length
+			return FW_STATE_FAIL;
 		}
 
 		memcpy_s(rsp, CMDLEN_MAXBYTES, &namever.name0, 4);
@@ -184,14 +182,11 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 
 		htif_puts("cmd: get-udi\n");
 		if (hdr->len != 1) {
-			// Bad cmd length
-			rsp[0] = STATUS_BAD;
-			fwreply(*hdr, FW_RSP_GET_UDI, rsp);
-			return state;
+			// Bad length
+			return FW_STATE_FAIL;
 		}
 
 		rsp[0] = STATUS_OK;
-
 		wordcpy_s(udi_words, 2, (void *)udi, 2);
 		memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, udi_words, 2 * 4);
 		fwreply(*hdr, FW_RSP_GET_UDI, rsp);
@@ -205,9 +200,7 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		htif_puts("cmd: load-app(size, uss)\n");
 		if (hdr->len != 512) {
 			// Bad length
-			rsp[0] = STATUS_BAD;
-			fwreply(*hdr, FW_RSP_LOAD_APP, rsp);
-			return state;
+			return FW_STATE_FAIL;
 		}
 
 		// cmd[1..4] contains the size.
@@ -221,6 +214,7 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		if (local_app_size == 0 || local_app_size > TK1_APP_MAX_SIZE) {
 			rsp[0] = STATUS_BAD;
 			fwreply(*hdr, FW_RSP_LOAD_APP, rsp);
+
 			return state;
 		}
 
@@ -265,10 +259,8 @@ static int loading_commands(const struct frame_header *hdr, const uint8_t *cmd,
 	case FW_CMD_LOAD_APP_DATA:
 		htif_puts("cmd: load-app-data\n");
 		if (hdr->len != 512) {
-			// Bad cmd length
-			rsp[0] = STATUS_BAD;
-			fwreply(*hdr, FW_RSP_LOAD_APP_DATA, rsp);
-			return state;
+			// Bad length
+			return FW_STATE_FAIL;
 		}
 
 		if (ctx->left > (512 - 1)) {
