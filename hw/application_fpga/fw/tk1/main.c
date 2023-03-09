@@ -356,36 +356,42 @@ static void run(const struct context *ctx)
 	__builtin_unreachable();
 }
 
-int main()
+void scramble_ram()
 {
+	uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
+	uint32_t rnd = rnd_word();
+	uint32_t rnd_incr = rnd_word();
+
 	// Set RAM address and data scrambling values
 	*ram_aslr = rnd_word();
 	*ram_scramble = rnd_word();
 
 	// Fill RAM with random data (FW does not use RAM, has its stack in
 	// FW_RAM)
-	uint32_t *loadaddrw = (uint32_t *)(TK1_RAM_BASE);
-	uint32_t rnd = rnd_word();
-	uint32_t rnd_incr = rnd_word();
 	for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
-		loadaddrw[w] = rnd;
+		ram[w] = rnd;
 		rnd += rnd_incr;
 	}
 
 	// Set new scrambling values, for all use of RAM by app
 	*ram_aslr = rnd_word();
 	*ram_scramble = rnd_word();
+}
 
+int main()
+{
 	struct context ctx = {0};
 	struct frame_header hdr; // Used in both directions
 	uint8_t cmd[CMDLEN_MAXBYTES];
 	enum state state = FW_STATE_INITIAL;
+
 	// Let the app know the function adddress for blake2s()
 	*fw_blake2s_addr = (uint32_t)blake2s;
-	// print_hw_version(namever);
 
 	ctx.loadaddr = (uint8_t *)TK1_RAM_BASE;
 	ctx.use_uss = FALSE;
+
+	scramble_ram();
 
 	for (;;) {
 		switch (state) {
