@@ -47,9 +47,9 @@ clear:
 	blt a0, a1, clear
 
         /*
-         * Init stack at top of fw_ram. Leave 16 byte for entering our first function
+         * Init stack at top of fw_ram.
          */
-        li sp, 0xd00007f0 // 2 kiB (TK1_MMIO_FW_RAM_SIZE) minus 16 byte
+        li sp, 0xd0000800 // 2 kiB (TK1_MMIO_FW_RAM_SIZE)
 
 	call main
 
