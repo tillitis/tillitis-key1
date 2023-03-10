@@ -127,8 +127,9 @@ static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word)
 	buf[3] = word;
 }
 
-static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
-			    enum state state, struct context *ctx)
+static enum state initial_commands(const struct frame_header *hdr,
+				   const uint8_t *cmd, enum state state,
+				   struct context *ctx)
 {
 	uint8_t rsp[CMDLEN_MAXBYTES] = {0};
 
@@ -137,7 +138,8 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		htif_puts("cmd: name-version\n");
 		if (hdr->len != 1) {
 			// Bad length
-			return FW_STATE_FAIL;
+			state = FW_STATE_FAIL;
+			break;
 		}
 
 		copy_name(rsp, CMDLEN_MAXBYTES, *name0);
@@ -147,8 +149,7 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		htif_hexdump(rsp, 12);
 
 		fwreply(*hdr, FW_RSP_NAME_VERSION, rsp);
-		// state unchanged
-		return state;
+		// still initial state
 		break;
 
 	case FW_CMD_GET_UDI: {
@@ -157,16 +158,17 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		htif_puts("cmd: get-udi\n");
 		if (hdr->len != 1) {
 			// Bad length
-			return FW_STATE_FAIL;
+			state = FW_STATE_FAIL;
+			break;
 		}
 
 		rsp[0] = STATUS_OK;
 		wordcpy_s(udi_words, 2, (void *)udi, 2);
 		memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, udi_words, 2 * 4);
 		fwreply(*hdr, FW_RSP_GET_UDI, rsp);
-		// state unchanged
-		return state;
-	} break;
+		// still initial state
+		break;
+	}
 
 	case FW_CMD_LOAD_APP: {
 		uint32_t local_app_size;
@@ -174,7 +176,8 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		htif_puts("cmd: load-app(size, uss)\n");
 		if (hdr->len != 512) {
 			// Bad length
-			return FW_STATE_FAIL;
+			state = FW_STATE_FAIL;
+			break;
 		}
 
 		// cmd[1..4] contains the size.
@@ -188,8 +191,8 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		if (local_app_size == 0 || local_app_size > TK1_APP_MAX_SIZE) {
 			rsp[0] = STATUS_BAD;
 			fwreply(*hdr, FW_RSP_LOAD_APP, rsp);
-
-			return state;
+			// still initial state
+			break;
 		}
 
 		*app_size = local_app_size;
@@ -211,20 +214,24 @@ static int initial_commands(const struct frame_header *hdr, const uint8_t *cmd,
 
 		ctx->left = *app_size;
 
-		return FW_STATE_LOADING;
-	} break;
+		state = FW_STATE_LOADING;
+		break;
+	}
 
 	default:
 		htif_puts("Got unknown firmware cmd: 0x");
 		htif_puthex(cmd[0]);
 		htif_lf();
+		state = FW_STATE_FAIL;
+		break;
 	}
 
-	return FW_STATE_FAIL;
+	return state;
 }
 
-static int loading_commands(const struct frame_header *hdr, const uint8_t *cmd,
-			    enum state state, struct context *ctx)
+static enum state loading_commands(const struct frame_header *hdr,
+				   const uint8_t *cmd, enum state state,
+				   struct context *ctx)
 {
 	uint8_t rsp[CMDLEN_MAXBYTES] = {0};
 	int nbytes;
@@ -234,7 +241,8 @@ static int loading_commands(const struct frame_header *hdr, const uint8_t *cmd,
 		htif_puts("cmd: load-app-data\n");
 		if (hdr->len != 512) {
 			// Bad length
-			return FW_STATE_FAIL;
+			state = FW_STATE_FAIL;
+			break;
 		}
 
 		if (ctx->left > (512 - 1)) {
@@ -267,18 +275,21 @@ static int loading_commands(const struct frame_header *hdr, const uint8_t *cmd,
 				 32);
 			fwreply(*hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
 
-			return FW_STATE_RUN;
+			state = FW_STATE_RUN;
+			break;
 		}
 
 		rsp[0] = STATUS_OK;
 		fwreply(*hdr, FW_RSP_LOAD_APP_DATA, rsp);
+		// still loading state
 		break;
 
 	default:
 		htif_puts("Got unknown firmware cmd: 0x");
 		htif_puthex(cmd[0]);
 		htif_lf();
-		return FW_STATE_FAIL;
+		state = FW_STATE_FAIL;
+		break;
 	}
 
 	return state;
