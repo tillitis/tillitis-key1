@@ -42,6 +42,21 @@ struct context {
 	uint8_t uss[32];    // User Supplied Secret, if any
 };
 
+static void print_hw_version();
+static void print_digest(uint8_t *md);
+static uint32_t rnd_word();
+static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
+			const uint8_t uss[32]);
+static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word);
+static enum state initial_commands(const struct frame_header *hdr,
+				   const uint8_t *cmd, enum state state,
+				   struct context *ctx);
+static enum state loading_commands(const struct frame_header *hdr,
+				   const uint8_t *cmd, enum state state,
+				   struct context *ctx);
+static void run(const struct context *ctx);
+static void scramble_ram();
+
 static void print_hw_version()
 {
 	htif_puts("Hello, I'm firmware with");
@@ -66,7 +81,7 @@ static void print_digest(uint8_t *md)
 	htif_lf();
 }
 
-uint32_t rnd_word()
+static uint32_t rnd_word()
 {
 	while ((*trng_status & (1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
 	}
@@ -339,7 +354,7 @@ static void run(const struct context *ctx)
 	__builtin_unreachable();
 }
 
-void scramble_ram()
+static void scramble_ram()
 {
 	uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
 	uint32_t rnd = rnd_word();
