@@ -128,7 +128,7 @@ module fw_ram(
   always @*
     begin : rw_mux;
       bank0         = 1'h0;
-      bank1         = 1'h1;
+      bank1         = 1'h0;
       tmp_read_data = 32'h0;
 
       if (fw_app_cs) begin
