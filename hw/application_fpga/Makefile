@@ -87,7 +87,7 @@ FIRMWARE_OBJS = \
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
-	$(P)/fw/tk1/start.o \
+	$(P)/fw/testfw/start.o \
 	$(P)/fw/tk1/proto.o \
 	$(P)/fw/tk1/lib.o \
 	$(P)/fw/tk1/blake2s/blake2s.o
@@ -103,8 +103,10 @@ all: application_fpga.bin
 # incorrect BRAM_FW_SIZE
 # -------------------------------------------------------------------
 %_size_mismatch: %.elf phony_explicit
-	@test $$($(SIZE) $< | awk 'NR==2{print $$4}') -le $$(( 32 / 8 * $(BRAM_FW_SIZE) )) || \
-	(echo "The 'BRAM_FW_SIZE' variable needs to be increased" && false)
+	@test $$($(SIZE) $< | awk 'NR==2{print $$4}') -le $$(( 32 / 8 * $(BRAM_FW_SIZE) )) \
+	|| { printf "The 'BRAM_FW_SIZE' variable needs to be increased\n"; \
+	[[ $< =~ testfw ]] && printf "Note that testfw fits if built with -Os\n"; \
+	false; }
 
 # can't make implicit rule .PHONY
 phony_explicit:

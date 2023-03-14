@@ -105,6 +105,42 @@ uint32_t wait_timer_tick(uint32_t last_timer)
 	}
 }
 
+void zero_fwram()
+{
+	for (int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
+		fw_ram[i] = 0x00;
+	}
+}
+
+int check_fwram_zero_except(unsigned int offset, uint8_t expected_val)
+{
+	int failed = 0;
+	for (unsigned int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
+		uint32_t addr = TK1_MMIO_FW_RAM_BASE + i;
+		uint8_t *p = (uint8_t *)addr;
+		uint8_t val = *(volatile uint8_t *)p;
+		int failed_now = 0;
+		if (i == offset) {
+			if (val != expected_val) {
+				failed_now = 1;
+				puts("  wrong value at: ");
+			}
+		} else {
+			if (val != 0) {
+				failed_now = 1;
+				puts("  not zero at: ");
+			}
+		}
+		if (failed_now) {
+			failed = 1;
+			reverseword(&addr);
+			puthexn((uint8_t *)&addr, 4);
+			puts("\r\n");
+		}
+	}
+	return failed;
+}
+
 int main()
 {
 	// Function pointer to blake2s()
@@ -171,12 +207,14 @@ int main()
 		anyfailed = 1;
 	}
 
-	// Test FW-RAM.
-	*fw_ram = 0x12;
-	if (*fw_ram != 0x12) {
-		puts("FAIL: Can't write and read FW RAM in fw mode\r\n");
-		anyfailed = 1;
+	// Test FW_RAM.
+	puts("Testing FW_RAM (takes 15s on hw)...\r\n");
+	for (unsigned int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
+		zero_fwram();
+		*(volatile uint8_t *)(TK1_MMIO_FW_RAM_BASE + i) = 0x42;
+		anyfailed = check_fwram_zero_except(i, 0x42);
 	}
+	puts("\r\n");
 
 	uint32_t sw = *switch_app;
 	if (sw != 0) {
@@ -189,10 +227,6 @@ int main()
 
 	// Turn on application mode.
 	// -------------------------
-
-	// Set up another stack because fw_ram is not available
-	// anymore in app_mode.
-	asm volatile("li sp, 0x40006ff0");
 
 	*switch_app = 1;
 
@@ -228,7 +262,7 @@ int main()
 		anyfailed = 1;
 	}
 
-	// Test FW-RAM.
+	// Test FW_RAM.
 	*fw_ram = 0x21;
 	if (*fw_ram == 0x21) {
 		puts("FAIL: Write and read FW RAM in app-mode\r\n");
