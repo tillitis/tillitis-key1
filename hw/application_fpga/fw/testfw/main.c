@@ -75,7 +75,7 @@ void hexdump(void *buf, int len)
 {
 	uint8_t *byte_buf = (uint8_t *)buf;
 
-	for (int i = 0; i < len; i ++) {
+	for (int i = 0; i < len; i++) {
 		puthex(byte_buf[i]);
 		if (i % 2 == 1) {
 			writebyte(' ');
