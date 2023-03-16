@@ -30,8 +30,10 @@ static void htif_set_tohost(uint8_t dev, uint8_t cmd, int64_t data)
 {
 	/* send data with specified device and command */
 	while (tohost.arr[0]) {
+#ifndef S_SPLINT_S
 		asm volatile("" : : "r"(fromhost.arr[0]));
 		asm volatile("" : : "r"(fromhost.arr[1]));
+#endif
 	}
 	htif_send(dev, cmd, data);
 }
@@ -49,21 +51,22 @@ int htif_puts(const char *s)
 	return 0;
 }
 
-void htif_hexdump(uint8_t *buf, int len)
+void htif_hexdump(void *buf, int len)
 {
-	uint8_t *row;
-	uint8_t *byte;
-	uint8_t *max;
+	uint8_t *byte_buf = (uint8_t *)buf;
 
-	row = buf;
-	max = &buf[len];
-	for (byte = 0; byte != max; row = byte) {
-		for (byte = row; byte != max && byte != (row + 16); byte++) {
-			htif_puthex(*byte);
+	for (int i = 0; i < len; i++) {
+		htif_puthex(byte_buf[i]);
+		if (i % 2 == 1) {
+			(void)htif_putchar(' ');
 		}
 
-		htif_lf();
+		if (i != 1 && i % 16 == 1) {
+			htif_lf();
+		}
 	}
+
+	htif_lf();
 }
 
 void htif_putc(int ch)

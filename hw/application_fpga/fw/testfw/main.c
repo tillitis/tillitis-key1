@@ -71,21 +71,22 @@ void puthexn(uint8_t *p, int n)
 	}
 }
 
-void hexdump(uint8_t *buf, int len)
+void hexdump(void *buf, int len)
 {
-	uint8_t *row;
-	uint8_t *byte;
-	uint8_t *max;
+	uint8_t *byte_buf = (uint8_t *)buf;
 
-	row = buf;
-	max = &buf[len];
-	for (byte = 0; byte != max; row = byte) {
-		for (byte = row; byte != max && byte != (row + 16); byte++) {
-			puthex(*byte);
+	for (int i = 0; i < len; i ++) {
+		puthex(byte_buf[i]);
+		if (i % 2 == 1) {
+			writebyte(' ');
 		}
 
-		puts("\r\n");
+		if (i != 1 && i % 16 == 1) {
+			puts("\r\n");
+		}
 	}
+
+	puts("\r\n");
 }
 
 void reverseword(uint32_t *wordp)
