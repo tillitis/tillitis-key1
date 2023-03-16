@@ -125,7 +125,8 @@ static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
 	// Write hashed result to Compound Device Identity (CDI)
 	blake2s_final(&secure_ctx, local_cdi);
 
-	// Clear secure_ctx of any residue
+	// Clear secure_ctx of any residue of UDS. Don't want to keep
+	// that for long even though fw_ram is cleared later.
 	memset(&secure_ctx, 0, sizeof(secure_ctx));
 
 	// CDI only word writable
@@ -379,7 +380,7 @@ static void scramble_ram()
 int main()
 {
 	struct context ctx = {0};
-	struct frame_header hdr; // Used in both directions
+	struct frame_header hdr;
 	uint8_t cmd[CMDLEN_MAXBYTES];
 	enum state state = FW_STATE_INITIAL;
 
@@ -414,7 +415,6 @@ int main()
 			break;
 
 		case FW_STATE_RUN:
-			htif_puts("state_run\n");
 			run(&ctx);
 			break; // This is never reached!
 
