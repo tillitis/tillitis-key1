@@ -26,7 +26,7 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 {
 	uint8_t in = 0;
 
-	*led = (state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE;
+	set_led((state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE);
 	in = readbyte();
 
 	if (parseframe(in, hdr) == -1) {

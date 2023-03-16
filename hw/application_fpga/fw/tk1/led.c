@@ -7,9 +7,15 @@
 #include "../tk1_mem.h"
 #include "types.h"
 
+static volatile uint32_t *led = (volatile uint32_t *)TK1_MMIO_TK1_LED;
+
+void set_led(uint32_t led_value)
+{
+	*led = led_value;
+}
+
 void forever_redflash()
 {
-	static volatile uint32_t *led = (volatile uint32_t *)TK1_MMIO_TK1_LED;
 	int led_on = 0;
 
 	for (;;) {

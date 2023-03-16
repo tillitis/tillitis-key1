@@ -10,8 +10,6 @@
 #include "types.h"
 
 // clang-format off
-static volatile uint32_t *led = (volatile uint32_t *)TK1_MMIO_TK1_LED;
-
 #define LED_BLACK 0
 #define LED_RED   (1 << TK1_MMIO_TK1_LED_R_BIT)
 #define LED_GREEN (1 << TK1_MMIO_TK1_LED_G_BIT)
@@ -19,5 +17,6 @@ static volatile uint32_t *led = (volatile uint32_t *)TK1_MMIO_TK1_LED;
 #define LED_WHITE (LED_RED | LED_GREEN | LED_BLUE)
 // clang-format on
 
+void set_led(uint32_t led_value);
 void forever_redflash();
 #endif
