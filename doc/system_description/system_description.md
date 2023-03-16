@@ -101,7 +101,7 @@ This means that the RAM is pre-filled with somewhat randomised data. The applica
 Future TKey devices may implement a more secure ASLR mechanism, and use real encryption (for example PRINCE) for memory content protection. From the application point of view such a change will transparent.
 
 
-### Assets
+## Assets
 The TKey store and use the following assets internally:
 
 - UDS - Unique Device Secret. 256 bits. Provisioned and stored during
@@ -128,7 +128,7 @@ Additionally the following asset could be provided from the host:
   third party.
 
 
-### Subsystems and Components
+## Subsystems and Components
 The TKey as a project, system and secure application platform
 consists of a number of subsystems and components, modules, support
 libraries etc. Roughly these can be divided into:
