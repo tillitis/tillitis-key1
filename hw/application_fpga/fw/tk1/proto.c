@@ -24,7 +24,7 @@ uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status, enum cmdlen len)
 
 int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 {
-	uint8_t in;
+	uint8_t in = 0;
 
 	*led = (state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE;
 	in = readbyte();
@@ -91,8 +91,8 @@ int parseframe(uint8_t b, struct frame_header *hdr)
 // following data in buf
 void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 {
-	size_t nbytes;
-	enum cmdlen len; // length covering (rspcode + length of buf)
+	size_t nbytes = 0;
+	enum cmdlen len = 0; // length covering (rspcode + length of buf)
 
 	switch (rspcode) {
 	case FW_RSP_NAME_VERSION:

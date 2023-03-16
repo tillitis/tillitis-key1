@@ -93,9 +93,9 @@ static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
 			const uint8_t uss[32])
 {
 	uint32_t local_cdi[8];
-	blake2s_ctx secure_ctx;
-	uint32_t rnd_sleep;
-	int blake2err;
+	blake2s_ctx secure_ctx = {0};
+	uint32_t rnd_sleep = 0;
+	int blake2err = 0;
 
 	// Prepare to sleep a random number of cycles before reading out UDS
 	*timer_prescaler = 1;
@@ -250,7 +250,7 @@ static enum state loading_commands(const struct frame_header *hdr,
 				   struct context *ctx)
 {
 	uint8_t rsp[CMDLEN_MAXBYTES] = {0};
-	int nbytes;
+	int nbytes = 0;
 
 	switch (cmd[0]) {
 	case FW_CMD_LOAD_APP_DATA:
@@ -380,8 +380,8 @@ static void scramble_ram()
 int main()
 {
 	struct context ctx = {0};
-	struct frame_header hdr;
-	uint8_t cmd[CMDLEN_MAXBYTES];
+	struct frame_header hdr = {0};
+	uint8_t cmd[CMDLEN_MAXBYTES] = {0};
 	enum state state = FW_STATE_INITIAL;
 
 	print_hw_version();
