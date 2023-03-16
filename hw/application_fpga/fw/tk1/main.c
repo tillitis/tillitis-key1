@@ -162,8 +162,6 @@ static enum state initial_commands(const struct frame_header *hdr,
 		copy_name(&rsp[4], CMDLEN_MAXBYTES - 4, *name1);
 		wordcpy_s(&rsp[8], CMDLEN_MAXBYTES / 4 - 2, (void *)ver, 1);
 
-		htif_hexdump(rsp, 12);
-
 		fwreply(*hdr, FW_RSP_NAME_VERSION, rsp);
 		// still initial state
 		break;
