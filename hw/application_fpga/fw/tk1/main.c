@@ -94,15 +94,15 @@ static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
 {
 	uint32_t local_cdi[8];
 	blake2s_ctx secure_ctx;
-	uint32_t rnd;
+	uint32_t rnd_sleep;
 	int blake2err;
 
 	// Prepare to sleep a random number of cycles before reading out UDS
 	*timer_prescaler = 1;
-	rnd = rnd_word();
+	rnd_sleep = rnd_word();
 	// Up to 65536 cycles
-	rnd &= 0xffff;
-	*timer = (rnd == 0 ? 1 : rnd);
+	rnd_sleep &= 0xffff;
+	*timer = (rnd_sleep == 0 ? 1 : rnd_sleep);
 	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_START_BIT);
 	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
