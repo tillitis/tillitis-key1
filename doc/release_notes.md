@@ -3,13 +3,6 @@
 Descriptions of the tagged TKey releases.
 
 
-## Tag XYZ
-
-XYZ is a general release of the development kit first presented
-as a limited engineering-release. The main changes are polishing,
-completion and bug fixing since the engineering-releases.
-
-
 ## TK1-23.AB
 This is the official release of the "Bellatrix" version of
 the Tillitis TKey device. This version is ready for general
