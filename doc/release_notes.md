@@ -11,8 +11,8 @@ use.
 Given the Docker config, and the generic UDS.hex and UDI.hex,
 a clean build should generate the following digest:
 ```
-shasum -a 512 application_fpga.bin
-0fcf3689213d25cb6eb0e58fd42d9bb2267dac9a9e711c4db50d387e35b0f87ae643302f400fa2b9fd60225022508b674b607b568ee1df7b05ac3cf8359ef2fc  application_fpga.bin
+shasum -a256 application_fpga.bin
+f11d6b0f57c5405598206dcfea284008413391a2c51f124a2e2ae8600cb78f0b  application_fpga.bin
 ```
 
 
