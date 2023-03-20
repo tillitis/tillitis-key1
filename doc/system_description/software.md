@@ -537,8 +537,8 @@ Assigned core prefixes:
 | `RAM_ASLR`        | w     | invisible | 4B     | u32      |           | Address Space Randomization seed value for the RAM                      |
 | `RAM_SCRAMBLE`    | w     | invisible | 4B     | u32      |           | Data scrambling seed value for the RAM                                  |
 | `CPU_MON_CTRL`    | w     | w         | 4B     | u32      |           | Bit 0 enables CPU execution monitor. Can't be unset. Lock adresses      |
-| `ADDR_CPU_MON_FIRST` | w     | w         | 4B     | u32      |           | First address of the area monitored for execution attempts |
-| `ADDR_CPU_MON_LAST` | w     | w         | 4B     | u32      |           | Last address of the area monitored for execution attempts |
+| `CPU_MON_FIRST`   | w     | w         | 4B     | u32      |           | First address of the area monitored for execution attempts |
+| `CPU_MON_LAST`    | w     | w         | 4B     | u32      |           | Last address of the area monitored for execution attempts |
 
 
 [^3]: The UDS can only be read *once* per power-cycle.
