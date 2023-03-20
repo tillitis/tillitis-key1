@@ -11,8 +11,29 @@ completion and bug fixing since the engineering-releases.
 
 
 ## TK1-23.AB
+This is the official release of the "Bellatrix" version of
+the Tillitis TKey device. This version is ready for general
+use.
+
 
 ### New and improved functionality
+
+- (ALL) The TKey HW design, FW, protocol and first applications has
+  been audited by a third party. No major issues was found, but the
+  audit have lead to several updates, changes and fixes to improve
+  the security and robustness. The third party report will be
+  published when completed.
+
+- (APPS) Applications can now use the whole 128 kByte RAM.
+
+- (CLIENT) The application loading protocol has been updated to TODO..
+
+- (FW) The firmware now use the fw_ram exclusively for all its
+  operations.
+
+- (FW) The firmware has been hardened and the state machine simplified
+  to reduce the number of commands that can be used and in which
+  order.
 
 - (HW) The memory system now has an execution monitor. The monitor
   detects attempts at reading instructions from the firmware ram.
@@ -25,7 +46,7 @@ completion and bug fixing since the engineering-releases.
   Note that the execution monitor can only be enabled, not
   disabled. The address range registers defining the region
   protected by the monitor can only be set when the monitor
-  is disabled.
+  has not yet been enabled.
 
 - (HW) The CPU trap signal is now connected to an illegal instruction
   trap indicator. When an illegal instruction is detected, the RGB LED
@@ -42,15 +63,15 @@ completion and bug fixing since the engineering-releases.
 - (HW) The UART Rx FIFO now allows applications to read out the
   number of bytes received and not yet consumed by the application.
 
-- (FW) The firmware now use the fw_ram exclusively for all its
-  operations.
-
-- (APPS) Applications can now use the whole 128 kByte RAM.
-
-- (HOST) Updated protocol.
+- (HW) The FPGA bitstream can now be stored in the non volatile
+  configuration memory (NVCM). This is done using of a new icestorm
+  tool developed partly in the projecy and sponsored by Tillitis
+  and Mullvad. The tool supports locking down NVCM access after
+  writing the FPGA bitstream to the memory.
 
 
 ### Bugs fixed
+- No known bugs have been fixed. Numerous issues has been closed.
 
 
 ### Limitations
