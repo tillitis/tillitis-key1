@@ -8,9 +8,9 @@
 
 #define assert(expr)                                                           \
 	((expr) ? (void)(0)                                                    \
-		: __assert_fail(#expr, __FILE__, __LINE__, __func__))
+		: assert_fail(#expr, __FILE__, __LINE__, __func__))
 
-void __assert_fail(const char *__assertion, const char *__file,
-		   unsigned int __line, const char *__function);
+void assert_fail(const char *assertion, const char *file,
+		   unsigned int line, const char *function);
 
 #endif
