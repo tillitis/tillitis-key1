@@ -17,7 +17,14 @@ static volatile uint32_t *can_tx = (volatile uint32_t *)TK1_MMIO_UART_TX_STATUS;
 static volatile uint32_t *tx =     (volatile uint32_t *)TK1_MMIO_UART_TX_DATA;
 // clang-format on
 
-uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status, enum cmdlen len)
+static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
+		      enum cmdlen len);
+static int parseframe(uint8_t b, struct frame_header *hdr);
+static void write(uint8_t *buf, size_t nbytes);
+static int read(uint8_t *buf, size_t bufsize, size_t nbytes);
+
+static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
+		      enum cmdlen len)
 {
 	return (id << 5) | (endpoint << 3) | (status << 2) | len;
 }
@@ -34,7 +41,7 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 		return -1;
 	}
 
-	memset(cmd, 0, CMDLEN_MAXBYTES);
+	(void)memset(cmd, 0, CMDLEN_MAXBYTES);
 	// Now we know the size of the cmd frame, read it all
 	if (read(cmd, CMDLEN_MAXBYTES, hdr->len) != 0) {
 		htif_puts("read: buffer overrun\n");
@@ -50,7 +57,7 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 	return 0;
 }
 
-int parseframe(uint8_t b, struct frame_header *hdr)
+static int parseframe(uint8_t b, struct frame_header *hdr)
 {
 	if ((b & 0x80) != 0) {
 		// Bad version
@@ -147,7 +154,7 @@ void writebyte(uint8_t b)
 	}
 }
 
-void write(uint8_t *buf, size_t nbytes)
+static void write(uint8_t *buf, size_t nbytes)
 {
 	for (int i = 0; i < nbytes; i++) {
 		writebyte(buf[i]);
@@ -163,7 +170,7 @@ uint8_t readbyte()
 	}
 }
 
-int read(uint8_t *buf, size_t bufsize, size_t nbytes)
+static int read(uint8_t *buf, size_t bufsize, size_t nbytes)
 {
 	if (nbytes > bufsize) {
 		return -1;

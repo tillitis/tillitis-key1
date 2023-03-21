@@ -35,7 +35,7 @@ static volatile uint32_t *ram_scramble    = (volatile uint32_t *)TK1_MMIO_TK1_RA
 
 // Context for the loading of a TKey program
 struct context {
-	int left;	    // Bytes left to receive
+	uint32_t left;	    // Bytes left to receive
 	uint8_t digest[32]; // Program digest
 	uint8_t *loadaddr;  // Where we are currently loading a TKey program
 	uint8_t use_uss;    // Use USS?
@@ -45,8 +45,8 @@ struct context {
 static void print_hw_version();
 static void print_digest(uint8_t *md);
 static uint32_t rnd_word();
-static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
-			const uint8_t uss[32]);
+static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
+			const uint8_t *uss);
 static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word);
 static enum state initial_commands(const struct frame_header *hdr,
 				   const uint8_t *cmd, enum state state,
@@ -89,8 +89,8 @@ static uint32_t rnd_word()
 }
 
 // CDI = blake2s(uds, blake2s(app), uss)
-static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
-			const uint8_t uss[32])
+static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
+			const uint8_t *uss)
 {
 	uint32_t local_cdi[8];
 	blake2s_ctx secure_ctx = {0};
@@ -102,7 +102,7 @@ static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
 	rnd_sleep = rnd_word();
 	// Up to 65536 cycles
 	rnd_sleep &= 0xffff;
-	*timer = (rnd_sleep == 0 ? 1 : rnd_sleep);
+	*timer = (uint32_t)(rnd_sleep == 0 ? 1 : rnd_sleep);
 	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_START_BIT);
 	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
@@ -123,14 +123,14 @@ static void compute_cdi(const uint8_t digest[32], const uint8_t use_uss,
 	}
 
 	// Write hashed result to Compound Device Identity (CDI)
-	blake2s_final(&secure_ctx, local_cdi);
+	blake2s_final(&secure_ctx, &local_cdi);
 
 	// Clear secure_ctx of any residue of UDS. Don't want to keep
 	// that for long even though fw_ram is cleared later.
-	memset(&secure_ctx, 0, sizeof(secure_ctx));
+	(void)memset(&secure_ctx, 0, sizeof(secure_ctx));
 
 	// CDI only word writable
-	wordcpy_s((void *)cdi, 8, local_cdi, 8);
+	wordcpy_s((void *)cdi, 8, &local_cdi, 8);
 }
 
 static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word)
@@ -177,8 +177,8 @@ static enum state initial_commands(const struct frame_header *hdr,
 		}
 
 		rsp[0] = STATUS_OK;
-		wordcpy_s(udi_words, 2, (void *)udi, 2);
-		memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, udi_words, 2 * 4);
+		wordcpy_s(&udi_words, 2, (void *)udi, 2);
+		memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, &udi_words, 2 * 4);
 		fwreply(*hdr, FW_RSP_GET_UDI, rsp);
 		// still initial state
 		break;
@@ -248,7 +248,7 @@ static enum state loading_commands(const struct frame_header *hdr,
 				   struct context *ctx)
 {
 	uint8_t rsp[CMDLEN_MAXBYTES] = {0};
-	int nbytes = 0;
+	uint32_t nbytes = 0;
 
 	switch (cmd[0]) {
 	case FW_CMD_LOAD_APP_DATA:
@@ -269,17 +269,19 @@ static enum state loading_commands(const struct frame_header *hdr,
 		ctx->left -= nbytes;
 
 		if (ctx->left == 0) {
+			blake2s_ctx b2s_ctx = {0};
+			int blake2err = 0;
+
 			htif_puts("Fully loaded ");
 			htif_putinthex(*app_size);
 			htif_lf();
 
 			// Compute Blake2S digest of the app,
 			// storing it for FW_STATE_RUN
-			blake2s_ctx b2s_ctx;
-
-			blake2s(&ctx->digest, 32, NULL, 0,
-				(const void *)TK1_RAM_BASE, *app_size,
-				&b2s_ctx);
+			blake2err = blake2s(&ctx->digest, 32, NULL, 0,
+					    (const void *)TK1_RAM_BASE,
+					    *app_size, &b2s_ctx);
+			assert(blake2err == 0);
 			print_digest(ctx->digest);
 
 			// And return the digest in final
@@ -323,6 +325,7 @@ static void run(const struct context *ctx)
 
 	// Clear the firmware stack
 	// clang-format off
+#ifndef S_SPLINT_S
 	asm volatile(
 		"li a0, 0xd0000000;" // FW_RAM
 		"li a1, 0xd0000800;" // End of 2 KB FW_RAM (just past the end)
@@ -331,6 +334,7 @@ static void run(const struct context *ctx)
 		"addi a0, a0, 4;"
 		"blt a0, a1, loop;"
 		::: "memory");
+#endif
 	// clang-format on
 
 	// Flip over to application mode
@@ -341,6 +345,7 @@ static void run(const struct context *ctx)
 
 	// Jump to app - doesn't return
 	// clang-format off
+#ifndef S_SPLINT_S
 	asm volatile(
 		// Get value at TK1_MMIO_TK1_APP_ADDR
 		"lui a0,0xff000;"
@@ -348,6 +353,7 @@ static void run(const struct context *ctx)
 		// Jump to it
 		"jalr x0,0(a0);"
 		::: "memory");
+#endif
 	// clang-format on
 
 	__builtin_unreachable();

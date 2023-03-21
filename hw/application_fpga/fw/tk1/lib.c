@@ -10,10 +10,10 @@
 #ifndef NOCONSOLE
 struct {
 	uint32_t arr[2];
-} volatile tohost __attribute__((section(".htif")));
+} static volatile tohost __attribute__((section(".htif")));
 struct {
 	uint32_t arr[2];
-} volatile fromhost __attribute__((section(".htif")));
+} /*@unused@*/ static volatile fromhost __attribute__((section(".htif")));
 
 static void htif_send(uint8_t dev, uint8_t cmd, int64_t data)
 {
@@ -38,17 +38,15 @@ static void htif_set_tohost(uint8_t dev, uint8_t cmd, int64_t data)
 	htif_send(dev, cmd, data);
 }
 
-static int htif_putchar(int ch)
+static void htif_putchar(char ch)
 {
-	htif_set_tohost(1, 1, ch & 0xff);
-	return ch & 0xff;
+	htif_set_tohost((uint8_t)1, (uint8_t)1, (int64_t)ch & 0xff);
 }
 
-int htif_puts(const char *s)
+void htif_puts(const char *s)
 {
-	while (*s)
+	while (*s != '\0')
 		htif_putchar(*s++);
-	return 0;
 }
 
 void htif_hexdump(void *buf, int len)
@@ -69,7 +67,7 @@ void htif_hexdump(void *buf, int len)
 	htif_lf();
 }
 
-void htif_putc(int ch)
+void htif_putc(char ch)
 {
 	htif_putchar(ch);
 }
@@ -104,7 +102,7 @@ void *memset(void *dest, int c, unsigned n)
 	uint8_t *s = dest;
 
 	for (; n; n--, s++)
-		*s = c;
+		*s = (uint8_t)c;
 
 	return dest;
 }
@@ -118,7 +116,7 @@ void memcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 	uint8_t *src_byte = (uint8_t *)src;
 	uint8_t *dest_byte = (uint8_t *)dest;
 
-	for (int i = 0; i < n; i++) {
+	for (size_t i = 0; i < n; i++) {
 		dest_byte[i] = src_byte[i];
 	}
 }
@@ -132,17 +130,17 @@ void wordcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 	uint32_t *src_word = (uint32_t *)src;
 	uint32_t *dest_word = (uint32_t *)dest;
 
-	for (int i = 0; i < n; i++) {
+	for (size_t i = 0; i < n; i++) {
 		dest_word[i] = src_word[i];
 	}
 }
 
-int memeq(void *dest, const void *src, unsigned n)
+int memeq(void *dest, const void *src, size_t n)
 {
 	uint8_t *src_byte = (uint8_t *)src;
 	uint8_t *dest_byte = (uint8_t *)dest;
 
-	for (int i = 0; i < n; i++) {
+	for (size_t i = 0; i < n; i++) {
 		if (dest_byte[i] != src_byte[i]) {
 			return 0;
 		}

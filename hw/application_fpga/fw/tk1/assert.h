@@ -7,10 +7,9 @@
 #define ASSERT_H
 
 #define assert(expr)                                                           \
-	((expr) ? (void)(0)                                                    \
-		: assert_fail(#expr, __FILE__, __LINE__, __func__))
+	((expr) ? (void)(0) : assert_fail(#expr, __FILE__, __LINE__, __func__))
 
-void assert_fail(const char *assertion, const char *file,
-		   unsigned int line, const char *function);
+void assert_fail(const char *assertion, const char *file, unsigned int line,
+		 const char *function);
 
 #endif
