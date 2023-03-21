@@ -60,7 +60,6 @@ security-critical operations.
 * [Threat Model](doc/threat_model/threat_model.md)
 * [Framing Protocol](doc/framing_protocol/framing_protocol.md)
 * [Boards](doc/system_description/boards.md)
-* [Boards](doc/system_description/boards.md)
 * [FPGA](doc/system_description/fpga.md)
 * [Software](doc/system_description/software.md)
 * [QEMU](https://github.com/tillitis/qemu/tree/tk1) (branch `tk1` in
