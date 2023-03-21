@@ -50,12 +50,8 @@ struct frame_header {
 	enum cmdlen len;
 };
 
-uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status, enum cmdlen len);
-int parseframe(uint8_t b, struct frame_header *hdr);
-void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf);
 void writebyte(uint8_t b);
-void write(uint8_t *buf, size_t nbytes);
 uint8_t readbyte();
-int read(uint8_t *buf, size_t bufsize, size_t nbytes);
+void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf);
 int readcommand(struct frame_header *hdr, uint8_t *cmd, int state);
 #endif

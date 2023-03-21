@@ -85,6 +85,14 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/led.o \
 	$(P)/fw/tk1/blake2s/blake2s.o
 
+FIRMWARE_SOURCES = \
+	$(P)/fw/tk1/main.c \
+	$(P)/fw/tk1/proto.c \
+	$(P)/fw/tk1/lib.c \
+	$(P)/fw/tk1/assert.c \
+	$(P)/fw/tk1/led.c \
+	$(P)/fw/tk1/blake2s/blake2s.c
+
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
 	$(P)/fw/testfw/start.o \
@@ -131,6 +139,11 @@ $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
 firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
+
+.PHONY: check
+check:
+	clang-tidy -header-filter=.* -checks=cert-* $(FIRMWARE_SOURCES) -- $(CFLAGS)
+	splint -nolib -predboolint +boolint -nullpass -unrecog -infloops -initallelements -type -unreachable -unqualifiedtrans -fullinitblock $(FIRMWARE_SOURCES)
 
 testfw.elf: $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@

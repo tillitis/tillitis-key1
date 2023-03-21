@@ -7,8 +7,8 @@
 #include "led.h"
 #include "lib.h"
 
-void assert_fail(const char *assertion, const char *file,
-		   unsigned int line, const char *function)
+void assert_fail(const char *assertion, const char *file, unsigned int line,
+		 const char *function)
 {
 	htif_puts("assert: ");
 	htif_puts(assertion);
