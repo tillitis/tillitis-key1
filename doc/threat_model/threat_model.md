@@ -1,7 +1,7 @@
 # Threat model
 
 ## Introduction
-The Tillitis TKey device is a platform for running device apps in a
+Tillitis' TKey device is a platform for running device apps in a
 secure, restricted execution environment physically separate from
 the device client. The device provides the device app access to
 secrets derived through measurement of the loaded device app. The
