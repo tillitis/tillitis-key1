@@ -177,7 +177,7 @@ maid attacks harder to successfully perform. I.e. take longer time.
 
 The FPGA design as well as the FW has been audited, and hardening of these
 has been performed to some degree. For more information, see the
-[Release Notes](doc/release_notes.md)
+[Release Notes](/doc/release_notes.md)
 
 
 #### Known possible weakneses
