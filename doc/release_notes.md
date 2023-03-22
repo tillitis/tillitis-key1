@@ -3,7 +3,7 @@
 Descriptions of the tagged TKey releases.
 
 
-## TK1-23.AB
+## TK1-23.03
 This is the official release of the "Bellatrix" version of
 the Tillitis TKey device. This version is ready for general
 use.
@@ -25,8 +25,6 @@ f11d6b0f57c5405598206dcfea284008413391a2c51f124a2e2ae8600cb78f0b  application_fp
   published when completed.
 
 - (APPS) Applications can now use the whole 128 kByte RAM.
-
-- (CLIENT) The application loading protocol has been updated to TODO..
 
 - (FW) The firmware now use the fw_ram exclusively for all its
   operations.
@@ -68,6 +66,11 @@ f11d6b0f57c5405598206dcfea284008413391a2c51f124a2e2ae8600cb78f0b  application_fp
   tool developed partly in the projecy and sponsored by Tillitis
   and Mullvad. The tool supports locking down NVCM access after
   writing the FPGA bitstream to the memory.
+
+- (TOOLS) There is now a Docker config setting up all tools as needed
+
+- (TOOLS) There is now a version of iceprog able to write to the FPGA
+  bitstream to the NVCM and lock the NVCM from external access
 
 
 ### Bugs fixed
