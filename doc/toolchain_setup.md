@@ -86,7 +86,9 @@ install other versions of these tools locally, they could conflict
     cd ..
 
     # Custom iceprog for the RPi 2040-based programmer (will be upstreamed).
-    git clone -b interfaces https://github.com/tillitis/icestorm tillitis--icestorm
+	# Note: tillitis-iceprog depends on libusb-1.0.0.
+	# On Ubuntu install with 'sudo apt install libusb-1.0.0'
+	git clone -b interfaces https://github.com/tillitis/icestorm tillitis--icestorm
     cd tillitis--icestorm/iceprog
     make
     sudo make PROGRAM_PREFIX=tillitis- install
