@@ -55,6 +55,11 @@ trustworthy manner.
   during loading of the device app. May possibly be replaced many times.
   Should not be revealed to a third party.
 
+* CDI - Compound Device Identity. Dervied by the FW when an
+  application is loaded using the UDS, the USS and the TKey device app
+  binary. Used by the application to derive secrets, keys etc. as
+  needed. The CDI should never be exposed outside of the FPGA.
+
 
 ## Threats and threat vectors
 There are two major type of attacks
