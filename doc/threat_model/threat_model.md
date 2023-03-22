@@ -1,14 +1,13 @@
 # Threat model
 
 ## Introduction
-The Tillitis TKey is a platform for running secure applications in a
-restricted execution environment physically separate from the device
-host. The secure applications provide functionality and controlled
-access to derived secrets on the device. The purpose of the device is
-to solve typical end user authentication problems.
+The Tillitis TKey device is a platform for running programs in a
+secure, restricted execution environment physically separate from
+the device client. The programs provide functionality and controlled
+access to derived secrets for the client.
 
-This document describes the threat model for device. Based on the
-system description and use cases, the threat model tries to capture and
+This document describes the threat model for Tillitis TKey device. Based on
+the system description and use cases, the threat model tries to capture and
 describe the threats that needs to be mitigated in order for the
 device to meet its purpose and objectives.
 
