@@ -1,34 +1,24 @@
 # Tillitis TKey software
 
-## Definitions
+## Introduction
+
+This text is both an introduction to and a requirement specification
+of the TKey firmware, its protocol, and an overview of how TKey
+applications are supposed to work. For an overview of the TKey
+concepts, see [System Description](system_description.md).
+
+First, some definitions:
 
 - Firmware - software in ROM responsible for loading applications. The
   firmware is included as part of the FPGA bit stream.
-- Application or app - software supplied by the host machine, which is
-  received, loaded, and measured by the firmware.
+- Application or app - software supplied by the host machine which is
+  received, loaded, measured, and started by the firmware.
 
-Learn more about the concepts in the [System
-Description](system_description.md).
-
-## CPU
-
-We use PicoRV32, a 32-bit RISC-V system (RV32ICZmmul), as the CPU for
-running the firmware and the loaded application. The firmware and
-device application both run in machine mode. All types are
-little-endian.
-
-## Constraints
-
-- ROM: 6 kByte.
-- RAM: 128 kByte.
-
-## Introduction
-
-The TKey has two modes of operation: firmware mode and application
-mode. The firmware mode has the responsibility of receiving,
-measuring, loading, and starting the application. When the firmware
-starts the application it switches to a more constrained environment,
-the application mode.
+The TKey has two modes of software operation: firmware mode and
+application mode. The firmware mode has the responsibility of
+receiving, measuring, loading, and starting the application. When the
+firmware is about to start the application it switches to a more
+constrained environment, the application mode.
 
 The firmware and application uses a memory mapped input/output (MMIO)
 for communication with the hardware. The memory map is constrained
@@ -51,6 +41,18 @@ protocol](#firmware-protocol) for specific details.
 
 Applications define their own protocol used for communication with
 their host part. They may or may not be based on the Framing Protocol.
+
+## CPU
+
+The CPU is a PicoRV32, a 32-bit RISC-V processor (arch: RV32IC\_Zmmul)
+which runs the firmware and the application. The firmware and
+application both run in RISC-V machine mode. All types are
+little-endian.
+
+## Constraints
+
+- ROM: 6 kByte.
+- RAM: 128 kByte.
 
 ## Firmware
 
@@ -434,8 +436,9 @@ host <-
 ### Firmware services
 
 The firmware exposes a BLAKE2s function through a function pointer
-located in MMIO `BLAKE2S` (see memory map below) with the with
-function signature:
+located in MMIO `BLAKE2S` (see [memory
+map](system_description.md#memory-mapped-hardware-functions)) with the
+with function signature:
 
 ```c
 int blake2s(void *out, unsigned long outlen, const void *key,
@@ -458,4 +461,10 @@ typedef struct {
 
 The `libcommon` library in
 [tillitis-key1-apps](https://github.com/tillitis/tillitis-key1-apps/)
-has a wrapper for using this function.
+has a wrapper for using this function called `blake2s()`.
+
+## Applications
+
+See [our apps repo](https://github.com/tillitis/tillitis-key1-apps)
+for examples of client and TKey apps as well as libraries for writing
+both.
