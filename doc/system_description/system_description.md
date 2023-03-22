@@ -24,9 +24,10 @@ The intended users of this document are:
 
 ## Introduction
 The TKey is a USB-connected, RISC-V based application platform. The
-purpose of the TKey is to provide a secure environment
-for applications that provides some security functionality needed by the
-device user. Some examples of such security functionality are:
+purpose of the TKey is to provide a secure environment for TKey device
+apps that provides some security functionality to the client as needed
+by the use case and device user. Some examples of such security
+functionality are:
 
 - TOTP token generators
 - Signing oracles
@@ -88,9 +89,9 @@ The TKey as a project, system and secure application platform
 consists of a number of subsystems and components, modules, support
 libraries etc. Roughly these can be divided into:
 
-- TKey boards. PCB designs including schematics, Bill of Material (BOM)
-  and layout, as needed for development, production and and general usage
-  of the TKey devices
+- TKey boards. PCB designs including schematics, Bill of Material
+  (BOM) and layout, as needed for development, production and and
+  general usage of the TKey devices
 
 - TKey programmer. SW, PCB designs including schematics, Bill of
   Material (BOM) and layout, as needed for development, production
@@ -99,14 +100,16 @@ libraries etc. Roughly these can be divided into:
 - USB to UART controller. FW for the MCU implementing the USB host
   interface on the TKey
 
-- application_fpga. FPGA design with cores including CPU and memory that
-  implements the secure application platform
+- application_fpga. FPGA design with cores including CPU, TRNG, UART
+  FW ROM and RAM that together form the the secure application
+  platform
 
-- application_fpga FW. The base software running on the CPU as needed to
-  boot, load applications, measure applications, dderive base secret etc
+- application_fpga FW. The base software running on the CPU as needed
+  to boot the device, load applications, measure applications, derive
+  the CDI base secret etc
 
-- One or more applications loaded onto the application_fpga to provide
-  some functionality to the user of the host
+- One or more TKey device apps loaded onto the application_fpga to
+  provide some functionality to the user of the host
 
 - host side application loader. Software that talks to the FW in the
   application_fpga to load a secure application
@@ -115,11 +118,11 @@ libraries etc. Roughly these can be divided into:
   the TKey device connected to a host
 
 - host side secure application. Software that communicates with the
-  secure application running in the application_fpga as needed to solve
-  a security objective
+  secure application running in the application_fpga as needed to
+  solve a security objective
 
-- application_fpga FW SDK. Tools, libraries, documentation and examples
-  to support development of the application_fpga firmware
+- application_fpga FW SDK. Tools, libraries, documentation and
+  examples to support development of the application_fpga firmware
 
 - secure application SDK. Tools, libraries, documentation and examples
   to support development of the secure applications to be loaded onto
