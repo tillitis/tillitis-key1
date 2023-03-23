@@ -8,8 +8,10 @@ This is the official release of the "Bellatrix" version of
 the Tillitis TKey device. This version is ready for general
 use.
 
-Given the Docker config, and the generic UDS.hex and UDI.hex,
-a clean build should generate the following digest:
+Given the OCI image `ghcr.io/tillitis/tkey-builder:1` built from
+`contrib/Dockerfile` and the generic UDS.hex and UDI.hex, a clean
+build should generate the following digest:
+
 ```
 shasum -a256 application_fpga.bin
 f11d6b0f57c5405598206dcfea284008413391a2c51f124a2e2ae8600cb78f0b  application_fpga.bin
@@ -20,7 +22,7 @@ f11d6b0f57c5405598206dcfea284008413391a2c51f124a2e2ae8600cb78f0b  application_fp
 
 - (ALL) The TKey HW design, FW, protocol and first applications has
   been audited by a third party. No major issues was found, but the
-  audit have lead to several updates, changes and fixes to improve
+  audit has lead to several updates, changes and fixes to improve
   the security and robustness. The third party report will be
   published when completed.
 
@@ -32,14 +34,15 @@ f11d6b0f57c5405598206dcfea284008413391a2c51f124a2e2ae8600cb78f0b  application_fp
 
 - (FW) The firmware has been hardened and the state machine simplified
   to reduce the number of commands that can be used and in which
-  order.
+  order. It exits early on failure to a fail state indicated by the
+  RGB LED blinking red on error in an eternal loop.
 
 - (FW) Steady white LED while waiting for initial commands. LED off
   while loading app.
 
 - (HW) The memory system now has an execution monitor. The monitor
   detects attempts at reading instructions from the firmware ram.
-  The execution monitor can alwo, when enabled by an application,
+  The execution monitor can also, when enabled by an application,
   detect attempts at reading instructions from the application
   stack. If any such attempt is detected, the memory system will
   force the CPU to read an illegal instruction, triggering the
@@ -67,11 +70,13 @@ f11d6b0f57c5405598206dcfea284008413391a2c51f124a2e2ae8600cb78f0b  application_fp
 
 - (HW) The FPGA bitstream can now be stored in the non volatile
   configuration memory (NVCM). This is done using of a new icestorm
-  tool developed partly in the projecy and sponsored by Tillitis
+  tool developed partly in the project and sponsored by Tillitis
   and Mullvad. The tool supports locking down NVCM access after
   writing the FPGA bitstream to the memory.
 
-- (TOOLS) There is now a Docker config setting up all tools as needed
+- (TOOLS) There is now an OCI image
+  (`ghcr.io/tillitis/tkey-builder:1`) and Dockerfile setting up all
+  tools as needed to build the bitstream.
 
 - (TOOLS) There is now a version of iceprog able to write to the FPGA
   bitstream to the NVCM and lock the NVCM from external access
@@ -164,6 +169,3 @@ f11d6b0f57c5405598206dcfea284008413391a2c51f124a2e2ae8600cb78f0b  application_fp
 - The timer currently does not provide a set of typical settings.
   Applications using the timer must set timer and prescaler as
   needed to get the desired time given the current clock speed.
-
-
----
