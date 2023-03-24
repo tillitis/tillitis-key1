@@ -5,6 +5,7 @@
 
 #include "proto.h"
 #include "../tk1_mem.h"
+#include "assert.h"
 #include "led.h"
 #include "lib.h"
 #include "state.h"
@@ -22,6 +23,7 @@ static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 static int parseframe(uint8_t b, struct frame_header *hdr);
 static void write(uint8_t *buf, size_t nbytes);
 static int read(uint8_t *buf, size_t bufsize, size_t nbytes);
+static int bytelen(enum cmdlen cmdlen);
 
 static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 		      enum cmdlen len)
@@ -71,25 +73,7 @@ static int parseframe(uint8_t b, struct frame_header *hdr)
 
 	hdr->id = (b & 0x60) >> 5;
 	hdr->endpoint = (b & 0x18) >> 3;
-
-	// Length
-	switch (b & 0x3) {
-	case LEN_1:
-		hdr->len = 1;
-		break;
-	case LEN_4:
-		hdr->len = 4;
-		break;
-	case LEN_32:
-		hdr->len = 32;
-		break;
-	case LEN_512:
-		hdr->len = 512;
-		break;
-	default:
-		// Unknown length
-		return -1;
-	}
+	hdr->len = bytelen(b & 0x3);
 
 	return 0;
 }
@@ -104,27 +88,22 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 	switch (rspcode) {
 	case FW_RSP_NAME_VERSION:
 		len = LEN_32;
-		nbytes = 32;
 		break;
 
 	case FW_RSP_LOAD_APP:
 		len = LEN_4;
-		nbytes = 4;
 		break;
 
 	case FW_RSP_LOAD_APP_DATA:
 		len = LEN_4;
-		nbytes = 4;
 		break;
 
 	case FW_RSP_LOAD_APP_DATA_READY:
-		len = LEN_512;
-		nbytes = 512;
+		len = LEN_128;
 		break;
 
 	case FW_RSP_GET_UDI:
 		len = LEN_32;
-		nbytes = 32;
 		break;
 
 	default:
@@ -133,6 +112,8 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 		htif_lf();
 		return;
 	}
+
+	nbytes = bytelen(len);
 
 	// Frame Protocol Header
 	writebyte(genhdr(hdr.id, hdr.endpoint, 0x0, len));
@@ -181,4 +162,34 @@ static int read(uint8_t *buf, size_t bufsize, size_t nbytes)
 	}
 
 	return 0;
+}
+
+// bytelen returns the number of bytes a cmdlen takes
+static int bytelen(enum cmdlen cmdlen)
+{
+	int len;
+
+	switch (cmdlen) {
+	case LEN_1:
+		len = 1;
+		break;
+
+	case LEN_4:
+		len = 4;
+		break;
+
+	case LEN_32:
+		len = 32;
+		break;
+
+	case LEN_128:
+		len = 128;
+		break;
+
+	default:
+		// Shouldn't happen
+		assert(1 == 2);
+	}
+
+	return len;
 }
