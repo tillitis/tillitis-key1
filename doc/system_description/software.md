@@ -308,10 +308,10 @@ Response to `FW_CMD_LOAD_APP`
 
 | *name* | *size (bytes)* | *comment*           |
 |--------|----------------|---------------------|
-| data   | 511            | Raw binary app data |
+| data   | 127            | Raw binary app data |
 
-Load 511 bytes of raw app binary into device RAM. Should be sent
-consecutively over the complete raw binary. (512 == largest frame
+Load 127 bytes of raw app binary into device RAM. Should be sent
+consecutively over the complete raw binary. (128 == largest frame
 length minus the command byte).
 
 #### `FW_RSP_LOAD_APP_DATA` (0x06)
@@ -377,9 +377,9 @@ host <-
 
 ```
 host ->
-  u8 CMD[1 + 512];
+  u8 CMD[1 + 128];
 
-  CMD[0].len = 512  // command frame format
+  CMD[0].len = 128  // command frame format
   CMD[1]     = 0x03 // FW_CMD_LOAD_APP
 
   CMD[2..6]  = APP_SIZE
@@ -398,11 +398,11 @@ host <-
 
   RSP[3..]   = 0
 
-repeat ceil(APP_SIZE / 511) times:
+repeat ceil(APP_SIZE / 127) times:
 host ->
-  u8 CMD[1 + 512];
+  u8 CMD[1 + 128];
 
-  CMD[0].len = 512  // command frame format
+  CMD[0].len = 128  // command frame format
   CMD[1]     = 0x05 // FW_CMD_LOAD_APP_DATA
 
   CMD[2..]   = APP_DATA (511 bytes of app data, pad with zeros)
@@ -422,9 +422,9 @@ Except response from last chunk of app data which is:
 
 ```
 host <-
-  u8 RSP[1 + 512]
+  u8 RSP[1 + 128]
 
-  RSP[0].len = 512  // command frame format
+  RSP[0].len = 128  // command frame format
   RSP[1]     = 0x07 // FW_RSP_LOAD_APP_DATA_READY
 
   RSP[2]     = STATUS

@@ -188,7 +188,7 @@ static enum state initial_commands(const struct frame_header *hdr,
 		uint32_t local_app_size;
 
 		htif_puts("cmd: load-app(size, uss)\n");
-		if (hdr->len != 512) {
+		if (hdr->len != 128) {
 			// Bad length
 			state = FW_STATE_FAIL;
 			break;
@@ -253,14 +253,14 @@ static enum state loading_commands(const struct frame_header *hdr,
 	switch (cmd[0]) {
 	case FW_CMD_LOAD_APP_DATA:
 		htif_puts("cmd: load-app-data\n");
-		if (hdr->len != 512) {
+		if (hdr->len != 128) {
 			// Bad length
 			state = FW_STATE_FAIL;
 			break;
 		}
 
-		if (ctx->left > (512 - 1)) {
-			nbytes = 512 - 1;
+		if (ctx->left > (128 - 1)) {
+			nbytes = 128 - 1;
 		} else {
 			nbytes = ctx->left;
 		}
