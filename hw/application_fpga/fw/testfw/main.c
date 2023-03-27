@@ -150,6 +150,9 @@ int main()
 				   blake2s_ctx *);
 
 	uint8_t in;
+	// Hard coded test UDS in ../../data/uds.hex
+	uint32_t uds_test[8] = {0x80808080, 0x91919191, 0xa2a2a2a2, 0xb3b3b3b3,
+				0xc4c4c4c4, 0xd5d5d5d5, 0xe6e6e6e6, 0xf7f7f7f7};
 
 	// Wait for terminal program and a character to be typed
 	in = readbyte();
@@ -177,6 +180,18 @@ int main()
 	wordcpy_s(uds_local, UDS_WORDS, (void *)uds, UDS_WORDS);
 	if (memeq(uds_local, zeros, UDS_WORDS * 4)) {
 		puts("FAIL: UDS empty\r\n");
+		anyfailed = 1;
+	}
+
+	if (memeq(uds_local, uds_test, UDS_WORDS * 4)) {
+		puts("FAIL: UDS not equal to test UDS\r\n");
+
+		puts("uds: ");
+		for (int i = 0; i < UDS_WORDS * 4; i++) {
+			puthex(uds_local[i]);
+		}
+		puts("\r\n");
+
 		anyfailed = 1;
 	}
 
