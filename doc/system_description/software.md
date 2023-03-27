@@ -405,7 +405,7 @@ host ->
   CMD[0].len = 128  // command frame format
   CMD[1]     = 0x05 // FW_CMD_LOAD_APP_DATA
 
-  CMD[2..]   = APP_DATA (511 bytes of app data, pad with zeros)
+  CMD[2..]   = APP_DATA (127 bytes of app data, pad with zeros)
 
 host <-
   u8 RSP[1 + 4]
