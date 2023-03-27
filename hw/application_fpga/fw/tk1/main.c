@@ -92,6 +92,7 @@ static uint32_t rnd_word()
 static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 			const uint8_t *uss)
 {
+	uint32_t local_uds[8];
 	uint32_t local_cdi[8];
 	blake2s_ctx secure_ctx = {0};
 	uint32_t rnd_sleep = 0;
@@ -112,7 +113,9 @@ static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 
 	// Update hash with UDS. This means UDS will live for a short
 	// while on the firmware stack which is in the special fw_ram.
-	blake2s_update(&secure_ctx, (const void *)uds, 32);
+	wordcpy_s(local_uds, 8, (void *)uds, 8);
+	blake2s_update(&secure_ctx, (const void *)local_uds, 32);
+	memset(local_uds, 0, 32);
 
 	// Update with TKey program digest
 	blake2s_update(&secure_ctx, digest, 32);
