@@ -238,6 +238,14 @@ int main()
 		anyfailed = 1;
 	}
 
+	// Should be able to read bytes from CDI.
+	uint8_t cdi_readback_bytes[CDI_WORDS * 4];
+	memcpy(cdi_readback_bytes, (void *)cdi, CDI_WORDS * 4);
+	if (!memeq(cdi_writetest, cdi_readback_bytes, CDI_WORDS * 4)) {
+		failmsg("Can't read bytes from CDI");
+		anyfailed = 1;
+	}
+
 	// Test FW_RAM.
 	puts("\r\nTesting FW_RAM (takes 15s on hw)...\r\n");
 	for (unsigned int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
