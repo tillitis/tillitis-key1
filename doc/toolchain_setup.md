@@ -25,8 +25,8 @@ sudo apt install build-essential clang lld llvm bison flex libreadline-dev \
                  libboost-iostreams-dev cmake libusb-1.0-0-dev \
                  ninja-build libglib2.0-dev libpixman-1-dev \
                  golang clang-format \
-		 gcc-arm-none-eabi libnewlib-arm-none-eabi \
-		 libstdc++-arm-none-eabi-newlib
+                 gcc-arm-none-eabi libnewlib-arm-none-eabi \
+                 libstdc++-arm-none-eabi-newlib
 ```
 
 ## Device permissions
@@ -86,9 +86,9 @@ install other versions of these tools locally, they could conflict
     cd ..
 
     # Custom iceprog for the RPi 2040-based programmer (will be upstreamed).
-	# Note: tillitis-iceprog depends on libusb-1.0.0.
-	# On Ubuntu install with 'sudo apt install libusb-1.0.0'
-	git clone -b interfaces https://github.com/tillitis/icestorm tillitis--icestorm
+    # Note: install dependencies for building tillitis-iceprog on Ubuntu:
+    # sudo apt install libftdi-dev libusb-1.0-0-dev
+    git clone -b interfaces https://github.com/tillitis/icestorm tillitis--icestorm
     cd tillitis--icestorm/iceprog
     make
     sudo make PROGRAM_PREFIX=tillitis- install
