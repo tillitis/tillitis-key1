@@ -174,7 +174,7 @@ int main()
 	// Wait for terminal program and a character to be typed
 	in = readbyte();
 
-	puts("I'm testfw on:");
+	puts("\r\nI'm testfw on:");
 	// Output the TK1 core's NAME0 and NAME1
 	uint32_t name;
 	wordcpy_s(&name, 1, (void *)tk1name0, 1);
@@ -200,7 +200,7 @@ int main()
 		anyfailed = 1;
 	}
 
-	puts("UDS: ");
+	puts("\r\nUDS: ");
 	for (int i = 0; i < UDS_WORDS * 4; i++) {
 		puthex(((uint8_t *)uds_local)[i]);
 	}
@@ -239,7 +239,7 @@ int main()
 	}
 
 	// Test FW_RAM.
-	puts("Testing FW_RAM (takes 15s on hw)...\r\n");
+	puts("\r\nTesting FW_RAM (takes 15s on hw)...\r\n");
 	for (unsigned int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
 		zero_fwram();
 		*(volatile uint8_t *)(TK1_MMIO_FW_RAM_BASE + i) = 0x42;
@@ -248,7 +248,6 @@ int main()
 			anyfailed = 1;
 		}
 	}
-	puts("\r\n");
 
 	uint32_t sw = *switch_app;
 	if (sw != 0) {
@@ -303,7 +302,7 @@ int main()
 		anyfailed = 1;
 	}
 
-	puts("Testing timer... 3");
+	puts("\r\nTesting timer... 3");
 	// Matching clock at 18 MHz, giving us timer in seconds
 	*timer_prescaler = 18 * 1000000;
 
@@ -354,7 +353,7 @@ int main()
 	blake2s(&digest0[0], 32, NULL, 0, &msg, 17, &b2s_ctx);
 	fw_blake2s(&digest1[0], 32, NULL, 0, &msg, 17, &b2s_ctx);
 
-	puts("digest #0: \r\n");
+	puts("\r\ndigest #0: \r\n");
 	hexdump((uint8_t *)digest0, 32);
 
 	puts("digest #1: \r\n");
@@ -366,6 +365,7 @@ int main()
 	}
 
 	// Check and display test results.
+	puts("\r\n--> ");
 	if (anyfailed) {
 		puts("Some test FAILED!\r\n");
 	} else {
