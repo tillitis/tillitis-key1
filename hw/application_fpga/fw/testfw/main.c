@@ -157,17 +157,17 @@ int main()
 				   blake2s_ctx *);
 
 	uint8_t in;
-	// Hard coded test UDS in ../../data/uds.hex -- but reverse byte-order!
+	// Hard coded test UDS in ../../data/uds.hex
 	// clang-format off
 	uint32_t uds_test[8] = {
-		0x83828180,
-		0x97969594,
-		0xa3a2a1a0,
-		0xb7b6b5b4,
-		0xc3c2c1c0,
-		0xd7d6d5d4,
-		0xe3e2e1e0,
-		0xf7f6f5f4,
+		0x80818283,
+		0x94959697,
+		0xa0a1a2a3,
+		0xb4b5b6b7,
+		0xc0c1c2c3,
+		0xd4d5d6d7,
+		0xe0e1e2e3,
+		0xf4f5f6f7,
 	};
 	// clang-format on
 
@@ -205,7 +205,7 @@ int main()
 		puthex(((uint8_t *)uds_local)[i]);
 	}
 	puts("\r\n");
-	if (memeq(uds_local, uds_test, UDS_WORDS * 4)) {
+	if (!memeq(uds_local, uds_test, UDS_WORDS * 4)) {
 		failmsg("UDS not equal to test UDS");
 		anyfailed = 1;
 	}
@@ -243,7 +243,10 @@ int main()
 	for (unsigned int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
 		zero_fwram();
 		*(volatile uint8_t *)(TK1_MMIO_FW_RAM_BASE + i) = 0x42;
-		anyfailed = check_fwram_zero_except(i, 0x42);
+		int fwram_fail = check_fwram_zero_except(i, 0x42);
+		if (fwram_fail) {
+			anyfailed = 1;
+		}
 	}
 	puts("\r\n");
 
