@@ -150,9 +150,19 @@ int main()
 				   blake2s_ctx *);
 
 	uint8_t in;
-	// Hard coded test UDS in ../../data/uds.hex
-	uint32_t uds_test[8] = {0x80808080, 0x91919191, 0xa2a2a2a2, 0xb3b3b3b3,
-				0xc4c4c4c4, 0xd5d5d5d5, 0xe6e6e6e6, 0xf7f7f7f7};
+	// Hard coded test UDS in ../../data/uds.hex -- but reverse byte-order!
+	// clang-format off
+	uint32_t uds_test[8] = {
+		0x83828180,
+		0x97969594,
+		0xa3a2a1a0,
+		0xb7b6b5b4,
+		0xc3c2c1c0,
+		0xd7d6d5d4,
+		0xe3e2e1e0,
+		0xf7f6f5f4,
+	};
+	// clang-format on
 
 	// Wait for terminal program and a character to be typed
 	in = readbyte();
@@ -183,15 +193,13 @@ int main()
 		anyfailed = 1;
 	}
 
+	puts("UDS: ");
+	for (int i = 0; i < UDS_WORDS * 4; i++) {
+		puthex(((uint8_t *)uds_local)[i]);
+	}
+	puts("\r\n");
 	if (memeq(uds_local, uds_test, UDS_WORDS * 4)) {
 		puts("FAIL: UDS not equal to test UDS\r\n");
-
-		puts("uds: ");
-		for (int i = 0; i < UDS_WORDS * 4; i++) {
-			puthex(uds_local[i]);
-		}
-		puts("\r\n");
-
 		anyfailed = 1;
 	}
 
