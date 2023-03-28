@@ -22,12 +22,13 @@ constrained environment, the application mode.
 
 The firmware and application uses a memory mapped input/output (MMIO)
 for communication with the hardware. The memory map is constrained
-when running in application mode, e.g. UDS isn't readable, and the
-`APP_{ADDR, SIZE}` are not writable for the application.
+when running in application mode, e.g. FW-RAM and UDS isn't readable,
+and several MMIO addresses are either not readable or not writable for
+the application.
 
 See table in the [System
 Description](system_description.md#memory-mapped-hardware-functions)
-for details about the memory system and MMIO.
+for details about access rules control in the memory system and MMIO.
 
 The firmware (and optionally all software) on the TKey can communicate
 to the host via the `UART_{RX,TX}_{STATUS,DATA}` registers, using the

@@ -242,15 +242,15 @@ Assigned core prefixes:
 | `TIMER_STATUS`    | r     | r         |        |          |           | TIMER_STATUS_RUNNING_BIT is 1 when the timer is running.                |
 | `TIMER_PRESCALER` | r/w   | r/w       | 4B     |          |           | Prescaler init value. Write blocked when running.                       |
 | `TIMER_TIMER`     | r/w   | r/w       | 4B     |          |           | Timer init or current value while running. Write blocked when running.  |
-| `UDS_FIRST`       | r[^3] | invisible | 4B     | u8[32]   |           | First word of Unique Device Secret key.                                 |
-| `UDS_LAST`        |       | invisible |        |          |           | The last word of the UDS                                                |
+| `UDS_FIRST`       | r[^3] | invisible | 4B     | u8[32]   |           | First word of Unique Device Secret key. Note: Read once per power up.   |
+| `UDS_LAST`        |       | invisible |        |          |           | The last word of the UDS. Note: Read once per power up.                 |
 | `UART_BITRATE`    | r/w   |           |        |          |           | TBD                                                                     |
 | `UART_DATABITS`   | r/w   |           |        |          |           | TBD                                                                     |
 | `UART_STOPBITS`   | r/w   |           |        |          |           | TBD                                                                     |
 | `UART_RX_STATUS`  | r     | r         | 1B     | u8       |           | Non-zero when there is data to read                                     |
 | `UART_RX_DATA`    | r     | r         | 1B     | u8       |           | Data to read. Only LSB contains data                                    |
 | `UART_RX_BYTES`   | r     | r         | 4B     | u32      |           | Number of bytes received from the host and not yet read by SW, FW.      |
-| `UART_TX_STATUS`  | r     | r         | 1B     | u8       |           | Non-zero when it's OK to write data                                     |
+| `UART_TX_STATUS`  | r     | r         | 1B     | u8       |           | Non-zero when it's OK to write data to send.                            |
 | `UART_TX_DATA`    | w     | w         | 1B     | u8       |           | Data to send. Only LSB contains data                                    |
 | `TOUCH_STATUS`    | r/w   | r/w       |        |          |           | TOUCH_STATUS_EVENT_BIT is 1 when touched. After detecting a touch       |
 |                   |       |           |        |          |           | event (reading a 1), write anything here to acknowledge it.             |

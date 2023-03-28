@@ -67,9 +67,14 @@ use the RAM during loading and measurement of the application.
 
 Unique Device Secret memory.
 
-A 256 bit memory implemented using separate registers. The
-registers can only be accessed once between power cycling.
-Only the firmware can access the UDS memory core.
+A 256 bit memory implemented using eight 32-bit registers. The
+registers can only be accessed once between power cycling.  This means
+that the UDS **must** be read as u32. If read as u8, only the first
+byte from a given address will be correct, subsequent bytes will be
+zero.
+
+The UDS can only be read in FW mode. Reading from the UDS in APP mode
+will return all zeros.
 
 
 #### Application RAM
