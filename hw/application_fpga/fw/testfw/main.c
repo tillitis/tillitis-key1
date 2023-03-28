@@ -142,6 +142,13 @@ int check_fwram_zero_except(unsigned int offset, uint8_t expected_val)
 	return failed;
 }
 
+void failmsg(char *s)
+{
+	puts("FAIL: ");
+	puts(s);
+	puts("\r\n");
+}
+
 int main()
 {
 	// Function pointer to blake2s()
@@ -189,7 +196,7 @@ int main()
 	// Should get non-empty UDS
 	wordcpy_s(uds_local, UDS_WORDS, (void *)uds, UDS_WORDS);
 	if (memeq(uds_local, zeros, UDS_WORDS * 4)) {
-		puts("FAIL: UDS empty\r\n");
+		failmsg("UDS empty");
 		anyfailed = 1;
 	}
 
@@ -199,14 +206,14 @@ int main()
 	}
 	puts("\r\n");
 	if (memeq(uds_local, uds_test, UDS_WORDS * 4)) {
-		puts("FAIL: UDS not equal to test UDS\r\n");
+		failmsg("UDS not equal to test UDS");
 		anyfailed = 1;
 	}
 
 	// Should NOT be able to read from UDS again
 	wordcpy_s(uds_local, UDS_WORDS, (void *)uds, UDS_WORDS);
 	if (!memeq(uds_local, zeros, UDS_WORDS * 4)) {
-		puts("FAIL: Read UDS a second time\r\n");
+		failmsg("Read UDS a second time");
 		anyfailed = 1;
 	}
 
@@ -214,7 +221,7 @@ int main()
 	// Should get non-empty UDI
 	wordcpy_s(udi_local, UDI_WORDS, (void *)udi, UDI_WORDS);
 	if (memeq(udi_local, zeros, UDI_WORDS * 4)) {
-		puts("FAIL: UDI empty\r\n");
+		failmsg("UDI empty");
 		anyfailed = 1;
 	}
 
@@ -227,7 +234,7 @@ int main()
 	wordcpy_s((void *)cdi, CDI_WORDS, cdi_writetest, CDI_WORDS);
 	wordcpy_s(cdi_readback, CDI_WORDS, (void *)cdi, CDI_WORDS);
 	if (!memeq(cdi_writetest, cdi_readback, CDI_WORDS * 4)) {
-		puts("FAIL: Can't write CDI in fw mode\r\n");
+		failmsg("Can't write CDI in fw mode");
 		anyfailed = 1;
 	}
 
@@ -242,7 +249,7 @@ int main()
 
 	uint32_t sw = *switch_app;
 	if (sw != 0) {
-		puts("FAIL: switch_app is not 0 in fw mode\r\n");
+		failmsg("switch_app is not 0 in fw mode");
 		anyfailed = 1;
 	}
 
@@ -256,21 +263,21 @@ int main()
 
 	sw = *switch_app;
 	if (sw != 0xffffffff) {
-		puts("FAIL: switch_app is not 0xffffffff in app mode\r\n");
+		failmsg("switch_app is not 0xffffffff in app mode");
 		anyfailed = 1;
 	}
 
 	// Should NOT be able to read from UDS in app-mode.
 	wordcpy_s(uds_local, UDS_WORDS, (void *)uds, UDS_WORDS);
 	if (!memeq(uds_local, zeros, UDS_WORDS * 4)) {
-		puts("FAIL: Read from UDS in app-mode\r\n");
+		failmsg("Read from UDS in app-mode");
 		anyfailed = 1;
 	}
 
 	// Should NOT be able to read from UDI in app-mode.
 	wordcpy_s(udi_local, UDI_WORDS, (void *)udi, UDI_WORDS);
 	if (!memeq(udi_local, zeros, UDI_WORDS * 4)) {
-		puts("FAIL: Read from UDI in app-mode\r\n");
+		failmsg("Read from UDI in app-mode");
 		anyfailed = 1;
 	}
 
@@ -282,14 +289,14 @@ int main()
 	wordcpy_s((void *)cdi, CDI_WORDS, zeros, CDI_WORDS);
 	wordcpy_s(cdi_local2, CDI_WORDS, (void *)cdi, CDI_WORDS);
 	if (!memeq(cdi_local, cdi_local2, CDI_WORDS * 4)) {
-		puts("FAIL: Write to CDI in app-mode\r\n");
+		failmsg("Write to CDI in app-mode");
 		anyfailed = 1;
 	}
 
 	// Test FW_RAM.
 	*fw_ram = 0x21;
 	if (*fw_ram == 0x21) {
-		puts("FAIL: Write and read FW RAM in app-mode\r\n");
+		failmsg("Write and read FW RAM in app-mode");
 		anyfailed = 1;
 	}
 
@@ -320,12 +327,12 @@ int main()
 	puts(" 1. done.\r\n");
 
 	if (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
-		puts("FAIL: Timer didn't stop\r\n");
+		failmsg("Timer didn't stop");
 		anyfailed = 1;
 	}
 
 	if (*timer != 10) {
-		puts("FAIL: Timer didn't reset to 10\r\n");
+		failmsg("Timer didn't reset to 10");
 		anyfailed = 1;
 	}
 
@@ -351,7 +358,7 @@ int main()
 	hexdump((uint8_t *)digest1, 32);
 
 	if (!memeq(digest0, digest1, 32)) {
-		puts("FAIL: Digests not the same\r\n");
+		failmsg("Digests not the same");
 		anyfailed = 1;
 	}
 
