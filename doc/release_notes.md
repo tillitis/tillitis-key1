@@ -3,6 +3,27 @@
 Descriptions of the tagged TKey releases.
 
 
+## TK1-23.03.1
+
+This is the official release of the "Bellatrix" version of
+the Tillitis TKey device. This version is ready for general
+use.
+
+Given the OCI image `ghcr.io/tillitis/tkey-builder:2` built from
+`../contrib/Dockerfile` and the generic UDS.hex and UDI.hex, a clean
+build should generate the following digest:
+
+```
+sha256sum application_fpga.bin
+d2970828269b3ba7f09fb73b8592b08814dfe8c8087b00b0659feb516bb00f33  application_fpga.bin
+```
+
+This bug fix release contains the following changes:
+
+- Change the firmware protocol max frame size back to 128 bytes
+- Correct a bug with the reading out of UDS
+
+
 ## TK1-23.03
 This is the official release of the "Bellatrix" version of
 the Tillitis TKey device. This version is ready for general
