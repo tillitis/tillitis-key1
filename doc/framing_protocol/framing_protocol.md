@@ -114,10 +114,10 @@ The bits in the command header byte should be interpreted as:
 * Bits [6..5] (2 bits). Frame ID tag.
 
 * Bits [4..3] (2 bits). Endpoint number.
-0. HW in interface_fpga
+0. HW in interface_fpga (unused)
 1. HW in application_fpga
 2. FW in application_fpga
-3. SW (application) in application_fpga
+3. SW (device application) in application_fpga
 
 * Bit [2] (1 bit). Unused. MUST be zero.
 
@@ -166,10 +166,10 @@ The bits in the response header byte should be interpreted as:
 * Bits [6..5] (2 bits). Frame ID tag.
 
 * Bits [4..3] (2 bits). Endpoint number.
-0. HW in interface_fpga
+0. HW in interface_fpga (unused)
 1. HW in application_fpga
 2. FW in application_fpga
-3. SW (application) in application_fpga
+3. SW (device application) in application_fpga
 
 * Bit [2] (1 bit). Response status.
 0. OK
