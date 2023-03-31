@@ -13,7 +13,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/tillitis/tkey-builder:1
+      image: ghcr.io/tillitis/tkey-builder:2
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -52,6 +52,10 @@ jobs:
       - name: make application FPGA gateware
         working-directory: hw/application_fpga
         run: make all
+
+      - name: check matching hashes for firmware.bin & application_fpga.bin
+        working-directory: hw/application_fpga
+        run: make check-binary-hashes
 
       # TODO? first deal with hw/boards/ and hw/production_test/
       # - name: check for SPDX tags
