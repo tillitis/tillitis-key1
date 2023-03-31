@@ -28,6 +28,8 @@ contrib/99-tillitis.rules
 contrib/Dockerfile
 contrib/Makefile
 dco.md
+hw/application_fpga/application_fpga.bin.sha256
+hw/application_fpga/config.vlt
 hw/application_fpga/core/timer/README.md
 hw/application_fpga/core/tk1/README.md
 hw/application_fpga/core/touch_sense/README.md
@@ -35,6 +37,7 @@ hw/application_fpga/core/trng/README.md
 hw/application_fpga/core/uds/README.txt
 hw/application_fpga/data/udi.hex
 hw/application_fpga/data/uds.hex
+hw/application_fpga/firmware.bin.sha512
 hw/application_fpga/fw/.clang-format
 hw/application_fpga/fw/testfw/Makefile
 hw/application_fpga/fw/tk1/Makefile
