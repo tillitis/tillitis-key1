@@ -157,6 +157,11 @@ firmware.hex: firmware.bin firmware_size_mismatch
 testfw.hex: testfw.bin testfw_size_mismatch
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
 
+.PHONY: check-binary-hashes
+check-binary-hashes:
+	sha512sum -c firmware.bin.sha512
+	sha256sum -c application_fpga.bin.sha256
+
 %.bin: %.elf
 	$(SIZE) $<
 	@test "$$($(SIZE) $< | awk 'NR==2{print $$2, $$3}')" = "0 0" \
