@@ -144,6 +144,10 @@ TKey device. Using the core, the firmware and applications can
 get information about touch events and manage detection of
 events.
 
+It is recommended that SW start by acknowledge any stray events prior
+to signal the user that a touch event is expected and then start
+waiting for an event.
+
 The touch sensor is available to use by firmware and applications.
 
 
