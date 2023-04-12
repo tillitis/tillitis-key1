@@ -29,7 +29,7 @@ manner.
   fabric besides the configuration circuit.
 
 * There exist a possible warm boot attack against the Lattice iCE40
-  UltraPlus FPGAs which allows an attacker with physical access to
+  UltraPlus FPGAs, which allows an attacker with physical access to
   load a FPGA configuration even though the NVCM has been programmed
   and locked.
 
@@ -174,14 +174,18 @@ This threat model will be updated for each release of the TKey device.
 For each version we description what threats are in scope, what threats
 are out of scope and what mitigations are in place.
 
-### TK1-23.03
+### TK1-23.03.1-Bellatrix
 
 This is the first general release of the TKey TK1 device. In this
 device the FPGA bitstream is stored and locked into the NVCM. The UDS
-and UDI assets are stored as part of the FPGA bitstream. The FPGA
-design contain some mechanisms for execution protection, execution
-monitoring as well as functionality designed to make evil maid attacks
-harder to successfully perform, i.e. take longer time.
+and UDI assets are stored as part of the FPGA bitstream.
+
+The FPGA design contain some mechanisms for execution protection,
+execution monitoring as well as functionality designed to make warm
+boot based evil maid attacks harder to successfully perform, i.e. take
+longer time. Moreover the transparent TKey casing is glued together
+which makes it harder to open up without leaving physical marks
+indicating tamper attempts.
 
 The FPGA design as well as the firmware has been audited, and
 hardening of these has been performed to some degree. For more
@@ -201,10 +205,10 @@ modification of the firmware CH552.
 
 #### In scope
 
-- SW attacks from the host against the firmware in the FPGA, and the
-  FPGA design itself via the USB host interface.
+- SW attacks from the host against the firmware in the FPGA as well as
+  the FPGA design itself via the USB host interface.
 
-- Timing attacks on the firmware in the FPGA.
+- Timing attacks on the firmware and the FPGA design.
 
 #### Out of scope
 
@@ -212,7 +216,11 @@ modification of the firmware CH552.
   - Faulting of the execution by the CPU in the FPGA and the CH552 MCU
   - EM leakage
 
-- Attacks on the TKey device apps
+- Warm boot attacks. It should be hard to successfully perform against
+  the TKey, but the attack is not yet fully mitigated.
+
+- Attacks on the TKey device apps.
+
 
 ### engineering-release-1
 
