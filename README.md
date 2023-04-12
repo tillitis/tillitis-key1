@@ -48,7 +48,7 @@ security-critical operations.
 ### Getting started
 
 * [tillitis-key1-apps repository](https://github.com/tillitis/tillitis-key1-apps),
-  with apps and host programs for using the TKey
+  with device apps and client apps for using the TKey
 * [Quickstart](doc/quickstart.md) to initial programming of the TKey
   (only required for the DevKit)
 * [Toolchain setup](doc/toolchain_setup.md)

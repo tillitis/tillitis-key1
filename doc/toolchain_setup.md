@@ -8,7 +8,7 @@ project. Tested on Ubuntu 22.10.
 The following is intended to be a complete list of the packages that
 are required for doing all of the following:
 
- - building and developing [TKey host programs and
+ - building and developing [TKey device and client
    apps](https://github.com/tillitis/tillitis-key1-apps)
  - building our [QEMU machine](https://github.com/tillitis/qemu/tree/tk1)
    (useful for apps dev)
