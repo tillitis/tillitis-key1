@@ -139,12 +139,13 @@ int memeq(void *dest, const void *src, size_t n)
 {
 	uint8_t *src_byte = (uint8_t *)src;
 	uint8_t *dest_byte = (uint8_t *)dest;
+	int res = -1;
 
 	for (size_t i = 0; i < n; i++) {
 		if (dest_byte[i] != src_byte[i]) {
-			return 0;
+			res = 0;
 		}
 	}
 
-	return -1;
+	return res;
 }
