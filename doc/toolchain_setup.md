@@ -141,31 +141,31 @@ The circuit board designs were all created in [KiCad
 
 ## MTA1-USB-V1 and TP-1 programming board firmware
 
-The programmer boards are running a custom firmware developed by
-Blinkinlabs. The source code for this firnware is available on
-Github: https://github.com/Blinkinlabs/ice40_flasher
-
-There is also a pre built firmware binary available for the
-programmer board:
-https://github.com/Blinkinlabs/ice40_flasher/tree/main/bin
+The TP-1 programming boards runs a custom firmware developed by
+Blinkinlabs. Source code for this firmware can be found at
+[hw/boards/tp1/firmware/](../hw/boards/tp1/firmware/). There is also a
+pre-built firmware binary at
+[hw/boards/tp1/firmware/bin/main.uf2](../hw/boards/tp1/firmware/bin/main.uf2).
 
 To update the firmware on the programmer board, either build the file
-"main.uf2", or download the pre built file to your host computer.
-Then do the following:
+`main.uf2` (more instructions below), or get the pre-built file to
+your host computer. Then do the following:
 
 1. Disconnect the programming board from the host computer
-2. Press and hold the "BOOTSEL" button on the RPi2040 sub board on
-   the programming board
+2. Press and hold the "BOOTSEL" button on the RPi2040 sub-board on the
+   programming board
 3. Reconnect the programming board to the host computer
-4. Release the "BOOTSEL" button after connecting the programming
-   board to the host. The board should now appear to the host as a
-   USB connected storage device
-5. Open the storage device and drop the firmware file ("main.uf2")
-   into the storage device
+4. Release the "BOOTSEL" button after connecting the programming board
+   to the host. The board should now appear to the host as a USB
+   connected storage device
+5. Open the storage device and drop the firmware file `main.uf2` into
+   the storage device
 
 The programmer will update its firmware with the file and restart
 itself. After reboot the storage device will automatically be
 disconnected.
+
+### Building the TP-1 firmware
 
 The firmware requires the Raspberry Pi Pico SDK:
 
@@ -174,10 +174,13 @@ The firmware requires the Raspberry Pi Pico SDK:
     cd pico-sdk
     git submodule update --init
 
-Note that the Docker image places the pico-sdk directory in
+Note that our container image places the pico-sdk directory in
 /usr/local. For normal development, it is usually left in the
 users home directory.
 
+See
+[hw/boards/tp1/firmware/README.md](../hw/boards/tp1/firmware/README.md)
+for further instructions.
 
 ## CH552 USB to Serial firmware
 
