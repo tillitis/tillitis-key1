@@ -222,7 +222,7 @@ module tb_timer_core();
   //----------------------------------------------------------------
   initial
     begin : timer_core_test
-      $display("--- Simulation of TIMER core started.");
+      $display("--- Simulation of timer core started.");
       $display("");
 
       init_sim();
