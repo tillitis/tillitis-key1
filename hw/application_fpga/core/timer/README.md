@@ -1,5 +1,13 @@
 # timer
-A simple timer with prescaler written in Verilog.
+A simple timer with prescaler.
 
 ## Introduction
-This core implements a simple timer with a prescaler. The purpose of the prescaler is to more easily time durations rather than cycles. If for example setting the timer to the clock frequency, the timer can cound seconds.
+This core implements a simple timer with a prescaler. The prescaler
+allows measurement of time durations rather than cycles. If for
+example setting the prescaler to the clock frequency in Hertz, the
+timer will count seconds.
+
+
+## Details
+The timer counter and the prescaler counter are both 32 bits.
+When enabled the counter counts down one integer value per cycle.

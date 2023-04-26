@@ -57,7 +57,7 @@ clean:
 
 
 help:
-	@echo "Build system for simulation of Prince core"
+	@echo "Build system for simulation of timer core"
 	@echo ""
 	@echo "Supported targets:"
 	@echo "------------------"
