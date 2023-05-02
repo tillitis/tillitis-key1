@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <export version="E">
   <design>
-    <source>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tk1\tk1.kicad_sch</source>
-    <date>11/15/2022 2:04:00 PM</date>
+    <source>C:\Users\72417946\Documents\GitHub\tillitis-key1\hw\boards\tk1\tk1.kicad_sch</source>
+    <date>2023-03-17 11:49:31</date>
     <tool>Eeschema (6.0.4)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -78,27 +78,6 @@
     </sheet>
   </design>
   <components>
-    <comp ref="C8">
-      <value>1uF</value>
-      <footprint>Capacitor_SMD:C_1206_3216Metric</footprint>
-      <fields>
-        <field name="Extended Value">50V,X7R,10%,1.6mm thickness</field>
-        <field name="Manufacturer">TDK Corporation</field>
-        <field name="Manufacturer Part Number">C3216X7R1H105K160AE</field>
-        <field name="Supplier">Digikey</field>
-        <field name="Supplier Part Number">445-8904-2-ND</field>
-      </fields>
-      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
-      <property name="Extended Value" value="50V,X7R,10%,1.6mm thickness"/>
-      <property name="Manufacturer" value="TDK Corporation"/>
-      <property name="Manufacturer Part Number" value="C3216X7R1H105K160AE"/>
-      <property name="Supplier" value="Digikey"/>
-      <property name="Supplier Part Number" value="445-8904-2-ND"/>
-      <property name="Sheetname" value="Application FPGA"/>
-      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
-      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
-      <tstamps>0f8bd06f-60b1-4be8-90d9-1a7f1cd60020</tstamps>
-    </comp>
     <comp ref="C16">
       <value>0.10uF</value>
       <footprint>mta1:CAPC1005X06L</footprint>
@@ -510,6 +489,29 @@
       <property name="Sheetfile" value="application_fpga.kicad_sch"/>
       <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
       <tstamps>206cf77e-9615-45a1-84e2-dd89660f9255</tstamps>
+    </comp>
+    <comp ref="U11">
+      <value>~</value>
+      <datasheet>https://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&amp;DocNm=6-1773460-8_Spring_Fingers&amp;DocType=Data+Sheet&amp;DocLang=English&amp;PartCntxt=1674954-1&amp;DocFormat=pdf</datasheet>
+      <fields>
+        <field name="Description">AMP - TE CONNECTIVITY - 1674954-1 - SPRING FINGER, MOBILE PHONES</field>
+        <field name="Manufacturer_Name">TE Connectivity</field>
+        <field name="Manufacturer_Part_Number">1674954-1</field>
+        <field name="Mouser Part Number">571-1674954-1</field>
+        <field name="Mouser Price/Stock">https://www.mouser.co.uk/ProductDetail/TE-Connectivity/1674954-1?qs=o4qE4s2E%252BcyEbD%252ByxeI18A%3D%3D</field>
+      </fields>
+      <libsource lib="mta1" part="1674954-1" description="AMP - TE CONNECTIVITY - 1674954-1 - SPRING FINGER, MOBILE PHONES"/>
+      <property name="Description" value="AMP - TE CONNECTIVITY - 1674954-1 - SPRING FINGER, MOBILE PHONES"/>
+      <property name="Height" value=""/>
+      <property name="Mouser Part Number" value="571-1674954-1"/>
+      <property name="Mouser Price/Stock" value="https://www.mouser.co.uk/ProductDetail/TE-Connectivity/1674954-1?qs=o4qE4s2E%252BcyEbD%252ByxeI18A%3D%3D"/>
+      <property name="Manufacturer_Name" value="TE Connectivity"/>
+      <property name="Manufacturer_Part_Number" value="1674954-1"/>
+      <property name="Sheetname" value="Application FPGA"/>
+      <property name="Sheetfile" value="application_fpga.kicad_sch"/>
+      <property name="exclude_from_board"/>
+      <sheetpath names="/Application FPGA/" tstamps="/00000000-0000-0000-0000-0000611cc101/"/>
+      <tstamps>81172fbc-f24e-4173-965f-d88ed2c48035</tstamps>
     </comp>
     <comp ref="C7">
       <value>0.10uF</value>
@@ -981,6 +983,24 @@
         <pin num="6" name="I/O1" type="passive"/>
       </pins>
     </libpart>
+    <libpart lib="mta1" part="1674954-1">
+      <description>AMP - TE CONNECTIVITY - 1674954-1 - SPRING FINGER, MOBILE PHONES</description>
+      <docs>https://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&amp;DocNm=6-1773460-8_Spring_Fingers&amp;DocType=Data+Sheet&amp;DocLang=English&amp;PartCntxt=1674954-1&amp;DocFormat=pdf</docs>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">1674954-1</field>
+        <field name="Footprint">1674954-1</field>
+        <field name="Datasheet">https://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&amp;DocNm=6-1773460-8_Spring_Fingers&amp;DocType=Data+Sheet&amp;DocLang=English&amp;PartCntxt=1674954-1&amp;DocFormat=pdf</field>
+        <field name="Description">AMP - TE CONNECTIVITY - 1674954-1 - SPRING FINGER, MOBILE PHONES</field>
+        <field name="Mouser Part Number">571-1674954-1</field>
+        <field name="Mouser Price/Stock">https://www.mouser.co.uk/ProductDetail/TE-Connectivity/1674954-1?qs=o4qE4s2E%252BcyEbD%252ByxeI18A%3D%3D</field>
+        <field name="Manufacturer_Name">TE Connectivity</field>
+        <field name="Manufacturer_Part_Number">1674954-1</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+      </pins>
+    </libpart>
     <libpart lib="mta1" part="CH552E">
       <description>8-bit enhanced USB microcontroller CH552</description>
       <fields>
@@ -1193,7 +1213,7 @@
       <uri>C:\Program Files\KiCad\6.0\share\kicad\symbols\/Power_Protection.kicad_sym</uri>
     </library>
     <library logical="mta1">
-      <uri>C:\Users\matt\Other-Repos\tillitis-key1\hw\boards\tk1/../mta1-library/mta1.kicad_sym</uri>
+      <uri>C:\Users\72417946\Documents\GitHub\tillitis-key1\hw\boards\tk1/../mta1-library/mta1.kicad_sym</uri>
     </library>
   </libraries>
   <nets>
@@ -1269,9 +1289,8 @@
       <node ref="U8" pin="3" pinfunction="IO2" pintype="bidirectional"/>
     </net>
     <net code="8" name="/Application FPGA/TOUCH_PAD">
-      <node ref="C8" pin="1" pintype="passive"/>
-      <node ref="C8" pin="2" pintype="passive"/>
       <node ref="R30" pin="2" pintype="passive"/>
+      <node ref="U11" pin="1" pinfunction="1" pintype="passive"/>
     </net>
     <net code="9" name="/USB to Serial converter/INT_USB_IN_D+">
       <node ref="P1" pin="A6" pinfunction="D+" pintype="bidirectional"/>
