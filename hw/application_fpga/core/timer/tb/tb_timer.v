@@ -24,29 +24,16 @@ module tb_timer();
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
 
-  localparam ADDR_NAME0        = 8'h00;
-  localparam ADDR_NAME1        = 8'h01;
-  localparam ADDR_VERSION      = 8'h02;
+  localparam ADDR_CTRL          = 8'h08;
+  localparam CTRL_START_BIT     = 0;
+  localparam CTRL_STOP_BIT      = 1;
 
-  localparam ADDR_CTRL         = 8'h08;
-  localparam CTRL_NEXT_BIT     = 0;
+  localparam ADDR_STATUS        = 8'h09;
+  localparam STATUS_RUNNING_BIT = 0;
 
-  localparam ADDR_STATUS       = 8'h09;
-  localparam STATUS_READY_BIT  = 0;
+  localparam ADDR_PRESCALER     = 8'h0a;
+  localparam ADDR_TIMER         = 8'h0b;
 
-  localparam ADDR_CONFIG       = 8'h0a;
-  localparam CONFIG_ENCDEC_BIT = 0;
-
-  localparam ADDR_KEY0         = 8'h10;
-  localparam ADDR_KEY1         = 8'h11;
-  localparam ADDR_KEY2         = 8'h12;
-  localparam ADDR_KEY3         = 8'h13;
-
-  localparam ADDR_BLOCK0       = 8'h20;
-  localparam ADDR_BLOCK1       = 8'h21;
-
-  localparam ADDR_RESULT0      = 8'h30;
-  localparam ADDR_RESULT1      = 8'h31;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -63,6 +50,7 @@ module tb_timer();
   reg [7 : 0]   tb_address;
   reg [31 : 0]  tb_write_data;
   wire [31 : 0] tb_read_data;
+  wire          tb_ready;
 
   reg [31 : 0] read_data;
 
@@ -79,7 +67,8 @@ module tb_timer();
 
            .address(tb_address),
            .write_data(tb_write_data),
-           .read_data(tb_read_data)
+           .read_data(tb_read_data),
+	   .ready(tb_ready)
            );
 
 
@@ -122,6 +111,16 @@ module tb_timer();
       $display("State of DUT");
       $display("------------");
       $display("Cycle: %08d", cycle_ctr);
+      $display("");
+      $display("Inputs and outputs:");
+      $display("cs: 0x%1x, we: 0x%1x, address: 0x%02x, write_data: 0x%08x, read_data: 0x%08x, ready: 0x%1x",
+	       tb_cs, tb_we, tb_address, tb_write_data, tb_read_data, tb_ready);
+      $display("");
+      $display("Internal state:");
+      $display("prescaler_reg: 0x%08x, timer_reg: 0x%08x", dut.prescaler_reg, dut.timer_reg);
+      $display("start_reg: 0x%1x, stop_reg: 0x%1x", dut.start_reg, dut.stop_reg);
+      $display("core_running: 0x%1x, core_curr_timer: 0x%08x", dut.core_running, dut.core_curr_timer);
+      $display("");
       $display("");
     end
   endtask // dump_dut_state
@@ -251,13 +250,38 @@ module tb_timer();
 
   //----------------------------------------------------------------
   // test1()
+  // Set timer and scaler and then start the timer. Wait
+  // for the ready flag to be asserted again.
   //----------------------------------------------------------------
   task test1;
-    begin
+    begin : test1
+      reg [31 : 0] time_start;
+      reg [31 : 0] time_stop;
+
       tc_ctr = tc_ctr + 1;
+      tb_monitor = 0;
 
       $display("");
       $display("--- test1: started.");
+
+      write_word(ADDR_PRESCALER, 8'h02);
+      write_word(ADDR_TIMER, 8'h10);
+
+      time_start = cycle_ctr;
+      write_word(ADDR_CTRL, 8'h01);
+
+      #(2 * CLK_PERIOD);
+      read_word(ADDR_STATUS);
+      while (read_data) begin
+	read_word(ADDR_STATUS);
+      end
+
+      time_stop = cycle_ctr;
+      write_word(CTRL_START_BIT, 8'h02);
+
+      $display("--- test1: Cycles between start and stop: %d", (time_stop - time_start));
+      #(CLK_PERIOD);
+      tb_monitor = 0;
 
       $display("--- test1: completed.");
       $display("");
@@ -281,8 +305,8 @@ module tb_timer();
 
       display_test_result();
       $display("");
-      $display("   -= Testbench for timer started =-");
-      $display("     =============================");
+      $display("   -= Testbench for timer completed =-");
+      $display("     ===============================");
       $display("");
       $finish;
     end // timer_test
