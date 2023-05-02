@@ -138,6 +138,60 @@
         )
       )
     )
+    (symbol "mta1:1674954-1" (pin_names (offset 0.762)) (in_bom yes) (on_board yes)
+      (property "Reference" "U" (id 0) (at 16.51 7.62 0)
+        (effects (font (size 1.27 1.27)) (justify left))
+      )
+      (property "Value" "1674954-1" (id 1) (at 16.51 5.08 0)
+        (effects (font (size 1.27 1.27)) (justify left))
+      )
+      (property "Footprint" "1674954-1" (id 2) (at 16.51 2.54 0)
+        (effects (font (size 1.27 1.27)) (justify left) hide)
+      )
+      (property "Datasheet" "https://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=6-1773460-8_Spring_Fingers&DocType=Data+Sheet&DocLang=English&PartCntxt=1674954-1&DocFormat=pdf" (id 3) (at 16.51 0 0)
+        (effects (font (size 1.27 1.27)) (justify left) hide)
+      )
+      (property "Description" "AMP - TE CONNECTIVITY - 1674954-1 - SPRING FINGER, MOBILE PHONES" (id 4) (at 16.51 -2.54 0)
+        (effects (font (size 1.27 1.27)) (justify left) hide)
+      )
+      (property "Height" "" (id 5) (at 16.51 -5.08 0)
+        (effects (font (size 1.27 1.27)) (justify left) hide)
+      )
+      (property "Mouser Part Number" "571-1674954-1" (id 6) (at 16.51 -7.62 0)
+        (effects (font (size 1.27 1.27)) (justify left) hide)
+      )
+      (property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/TE-Connectivity/1674954-1?qs=o4qE4s2E%252BcyEbD%252ByxeI18A%3D%3D" (id 7) (at 16.51 -10.16 0)
+        (effects (font (size 1.27 1.27)) (justify left) hide)
+      )
+      (property "Manufacturer_Name" "TE Connectivity" (id 8) (at 16.51 -12.7 0)
+        (effects (font (size 1.27 1.27)) (justify left) hide)
+      )
+      (property "Manufacturer_Part_Number" "1674954-1" (id 9) (at 16.51 -15.24 0)
+        (effects (font (size 1.27 1.27)) (justify left) hide)
+      )
+      (property "ki_description" "AMP - TE CONNECTIVITY - 1674954-1 - SPRING FINGER, MOBILE PHONES" (id 10) (at 0 0 0)
+        (effects (font (size 1.27 1.27)) hide)
+      )
+      (symbol "1674954-1_0_0"
+        (pin passive line (at 0 0 0) (length 5.08)
+          (name "1" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+      )
+      (symbol "1674954-1_0_1"
+        (polyline
+          (pts
+            (xy 5.08 2.54)
+            (xy 15.24 2.54)
+            (xy 15.24 -2.54)
+            (xy 5.08 -2.54)
+            (xy 5.08 2.54)
+          )
+          (stroke (width 0.1524) (type default) (color 0 0 0 0))
+          (fill (type none))
+        )
+      )
+    )
     (symbol "mta1:FC-B1010RGBT-HG" (pin_names (offset 0) hide) (in_bom yes) (on_board yes)
       (property "Reference" "D" (id 0) (at 0 9.398 0)
         (effects (font (size 1.27 1.27)))
@@ -1045,9 +1099,14 @@
     )
   )
 
-
+  (junction (at 179.07 95.25) (diameter 0) (color 0 0 0 0)
+    (uuid 14a5820a-1786-4c33-a203-8349279cff42)
+  )
   (junction (at 201.93 82.55) (diameter 0) (color 0 0 0 0)
     (uuid 1bdf2b87-e380-4485-8219-3210fd09433f)
+  )
+  (junction (at 187.96 87.63) (diameter 0) (color 0 0 0 0)
+    (uuid 21e27834-a7f0-4a8c-ad5a-c60887b761fa)
   )
   (junction (at 223.52 24.13) (diameter 0) (color 0 0 0 0)
     (uuid 2f3fa841-b787-4db5-92d2-e7d5ff6fba03)
@@ -1090,6 +1149,9 @@
   )
   (junction (at 157.48 106.68) (diameter 0) (color 0 0 0 0)
     (uuid c482f4f0-b441-4301-a9f1-c7f9e511d699)
+  )
+  (junction (at 179.07 87.63) (diameter 0) (color 0 0 0 0)
+    (uuid cda99caf-0c79-4b11-8a43-7e896461f4dc)
   )
   (junction (at 55.88 45.72) (diameter 0) (color 0 0 0 0)
     (uuid d23840a6-3c61-45ca-968a-bc57332fd7a4)
@@ -1235,6 +1297,10 @@
   (wire (pts (xy 198.12 44.45) (xy 203.2 44.45))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid 38a51d01-4274-44c4-a236-8cac38840c9d)
+  )
+  (wire (pts (xy 179.07 87.63) (xy 187.96 87.63))
+    (stroke (width 0) (type default) (color 0 0 0 0))
+    (uuid 3979143c-9aaf-4fbf-8ff0-d14d88a64d42)
   )
   (wire (pts (xy 68.58 91.44) (xy 81.28 91.44))
     (stroke (width 0) (type default) (color 0 0 0 0))
@@ -1452,6 +1518,10 @@
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid a09cb1c4-cc63-49c7-a35f-4b80c3ba2217)
   )
+  (wire (pts (xy 179.07 95.25) (xy 187.96 95.25))
+    (stroke (width 0) (type default) (color 0 0 0 0))
+    (uuid a4a14bf4-c394-4663-9ac3-da737c7a52a5)
+  )
   (wire (pts (xy 236.22 44.45) (xy 243.84 44.45))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid a4e390b4-ee47-4bb4-8bfe-6a8c6eea02cb)
@@ -1624,6 +1694,10 @@
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid e8312cc4-6502-4783-b578-55c01e0393af)
   )
+  (wire (pts (xy 187.96 95.25) (xy 187.96 87.63))
+    (stroke (width 0) (type default) (color 0 0 0 0))
+    (uuid e85e7b53-fc27-4677-abdf-c28b2ca07cfc)
+  )
   (wire (pts (xy 175.26 97.79) (xy 175.26 101.6))
     (stroke (width 0) (type default) (color 0 0 0 0))
     (uuid e88c3236-1eb8-4bfb-8eaf-c9970c6c1ca3)
@@ -1704,6 +1778,11 @@
   (text "Programming test points" (at 22.86 101.6 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid a3f137d8-c2d7-4725-bd97-c2291fcda72f)
+  )
+  (text "Note: C8 Not populated. \nU11 used instead but \non C8 footprint."
+    (at 173.99 109.22 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid a64e4ded-c775-489a-9996-ddd97aa3988a)
   )
   (text "Mode setting" (at 238.76 111.76 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
@@ -2679,11 +2758,11 @@
   )
 
   (symbol (lib_id "Device:C") (at 179.07 91.44 180) (unit 1)
-    (in_bom yes) (on_board yes)
+    (in_bom no) (on_board yes)
     (uuid 0f8bd06f-60b1-4be8-90d9-1a7f1cd60020)
     (property "Reference" "C8" (id 0) (at 182.88 90.17 0))
-    (property "Value" "1uF" (id 1) (at 186.69 92.71 0))
-    (property "Footprint" "Capacitor_SMD:C_1206_3216Metric" (id 2) (at 178.1048 87.63 0)
+    (property "Value" "" (id 1) (at 184.15 92.71 0))
+    (property "Footprint" "" (id 2) (at 178.1048 87.63 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 179.07 91.44 0)
@@ -2812,8 +2891,8 @@
     (in_bom yes) (on_board yes) (fields_autoplaced)
     (uuid 206cf77e-9615-45a1-84e2-dd89660f9255)
     (property "Reference" "U10" (id 0) (at 224.79 90.17 0))
-    (property "Value" "" (id 1) (at 224.79 92.71 0))
-    (property "Footprint" "" (id 2) (at 203.2 90.17 0)
+    (property "Value" "PT2043AT6" (id 1) (at 224.79 92.71 0))
+    (property "Footprint" "Package_TO_SOT_SMD:SOT-23-6" (id 2) (at 203.2 90.17 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "" (id 3) (at 203.2 90.17 0)
@@ -3040,6 +3119,42 @@
       (effects (font (size 1.27 1.27)) hide)
     )
     (pin "1" (uuid 93ee5c31-4456-40ca-a207-06d7442b2b2d))
+  )
+
+  (symbol (lib_id "mta1:1674954-1") (at 187.96 87.63 90) (unit 1)
+    (in_bom yes) (on_board no) (fields_autoplaced)
+    (uuid 81172fbc-f24e-4173-965f-d88ed2c48035)
+    (property "Reference" "U11" (id 0) (at 191.77 76.1999 90)
+      (effects (font (size 1.27 1.27)) (justify right))
+    )
+    (property "Value" "" (id 1) (at 191.77 78.7399 90)
+      (effects (font (size 1.27 1.27)) (justify right))
+    )
+    (property "Footprint" "" (id 2) (at 185.42 71.12 0)
+      (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (property "Datasheet" "https://www.te.com/commerce/DocumentDelivery/DDEController?Action=srchrtrv&DocNm=6-1773460-8_Spring_Fingers&DocType=Data+Sheet&DocLang=English&PartCntxt=1674954-1&DocFormat=pdf" (id 3) (at 187.96 71.12 0)
+      (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (property "Description" "AMP - TE CONNECTIVITY - 1674954-1 - SPRING FINGER, MOBILE PHONES" (id 4) (at 190.5 71.12 0)
+      (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (property "Height" "" (id 5) (at 193.04 71.12 0)
+      (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (property "Mouser Part Number" "571-1674954-1" (id 6) (at 195.58 71.12 0)
+      (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (property "Mouser Price/Stock" "https://www.mouser.co.uk/ProductDetail/TE-Connectivity/1674954-1?qs=o4qE4s2E%252BcyEbD%252ByxeI18A%3D%3D" (id 7) (at 198.12 71.12 0)
+      (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (property "Manufacturer_Name" "TE Connectivity" (id 8) (at 200.66 71.12 0)
+      (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (property "Manufacturer_Part_Number" "1674954-1" (id 9) (at 203.2 71.12 0)
+      (effects (font (size 1.27 1.27)) (justify left) hide)
+    )
+    (pin "1" (uuid 65d5c78a-4863-4a6e-8ee9-7f7694e5dd47))
   )
 
   (symbol (lib_id "Device:C") (at 201.93 87.63 0) (unit 1)
@@ -3409,5 +3524,216 @@
     )
     (pin "1" (uuid 00c18d7b-20ab-46ba-9d73-6fdb95280406))
     (pin "2" (uuid 61ed56bb-5660-4ee7-9955-20383fee3be6))
+  )
+
+  (sheet_instances
+    (path "/" (page "1"))
+  )
+
+  (symbol_instances
+    (path "/b1a11e45-92cc-431d-8cf7-703ad06727e6"
+      (reference "#GND09") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/63263417-b18d-4afb-baba-9adc94489e6d"
+      (reference "#GND019") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/b889953b-c916-4107-8112-566c6919744d"
+      (reference "#GND021") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-00006155307d"
+      (reference "#GND022") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-00006155308a"
+      (reference "#GND023") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-0000617f1502"
+      (reference "#GND024") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-000061681e90"
+      (reference "#GND025") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-0000617f1517"
+      (reference "#GND026") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-0000617f1516"
+      (reference "#GND027") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/62d3b20b-9f61-410e-af5d-e367b9b7c6a2"
+      (reference "#GND028") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/dd7d4f71-4b84-459a-a048-8d2180afb73f"
+      (reference "#GND029") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/b1b5e825-ddfe-4e1f-ada8-89efd01d7e58"
+      (reference "#GND030") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/bd9ce2d7-a742-4270-aa1d-0ad8b18d7e79"
+      (reference "#GND0103") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/49c3622e-071c-4c17-98b8-dcd7768c951d"
+      (reference "#PWR011") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/cf5d65ff-1235-4993-8f68-bb2914b1df4c"
+      (reference "#PWR021") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/6c864d85-37de-41d9-a2ed-9e7d556bb188"
+      (reference "#PWR022") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/727753b4-f966-45cc-89b3-3467a9b495c8"
+      (reference "#PWR026") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/1f9c54e3-462b-47fe-b9a3-d8744999c184"
+      (reference "#PWR027") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/108707ea-61b9-473e-b912-26cc352df875"
+      (reference "#PWR028") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/f2d3dec6-f2ba-4093-96f3-67d1f7fcb35c"
+      (reference "#PWR029") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-00006172ecd3"
+      (reference "#PWR036") (unit 1) (value "+1V2") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-0000615e021d"
+      (reference "#PWR037") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-00006138fc2a"
+      (reference "#PWR038") (unit 1) (value "+1V2") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-00006138f580"
+      (reference "#PWR040") (unit 1) (value "+2V5") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-0000615f9e61"
+      (reference "#PWR041") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-0000615f7d0f"
+      (reference "#PWR045") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-0000615f8e26"
+      (reference "#PWR046") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-00006138f04b"
+      (reference "#PWR049") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/7e3375ec-ba03-419e-91de-403da04c426c"
+      (reference "#PWR0113") (unit 1) (value "+3.3V") (footprint "")
+    )
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020"
+      (reference "C8") (unit 1) (value "1uF") (footprint "Capacitor_SMD:C_1206_3216Metric")
+    )
+    (path "/00000000-0000-0000-0000-0000617f14fe"
+      (reference "C16") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
+    )
+    (path "/00000000-0000-0000-0000-0000617f1500"
+      (reference "C17") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
+    )
+    (path "/00000000-0000-0000-0000-0000617f1503"
+      (reference "C18") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
+    )
+    (path "/00000000-0000-0000-0000-0000615530a8"
+      (reference "C19") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
+    )
+    (path "/00000000-0000-0000-0000-0000617f1506"
+      (reference "C20") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
+    )
+    (path "/00000000-0000-0000-0000-0000615530a2"
+      (reference "C21") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
+    )
+    (path "/00000000-0000-0000-0000-0000617f14fd"
+      (reference "C22") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
+    )
+    (path "/17dff2a5-14b1-4b13-b0b5-dee2988a7fcc"
+      (reference "C23") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
+    )
+    (path "/00000000-0000-0000-0000-0000617217f5"
+      (reference "C25") (unit 1) (value "10uF") (footprint "mta1:CAPC1608X09L")
+    )
+    (path "/8474ba4a-e004-4036-b038-4ff6552cee7d"
+      (reference "C26") (unit 1) (value "0.10uF") (footprint "mta1:CAPC1005X06L")
+    )
+    (path "/391c56db-bc39-4ec7-bb45-dcbe1aaf2b1a"
+      (reference "C27") (unit 1) (value "1pF") (footprint "mta1:CAPC1005X06L")
+    )
+    (path "/00000000-0000-0000-0000-0000615e01fa"
+      (reference "D3") (unit 1) (value "LED_ARGB") (footprint "mta1:0402rgb-1010")
+    )
+    (path "/00000000-0000-0000-0000-0000617217ef"
+      (reference "FB3") (unit 1) (value "BLM18KG300TN1D") (footprint "mta1:Ferritbead_0603_1608Metric")
+    )
+    (path "/00000000-0000-0000-0000-0000615e0200"
+      (reference "R16") (unit 1) (value "1k") (footprint "mta1:ERJ2G(0402)_L")
+    )
+    (path "/00000000-0000-0000-0000-0000617f150b"
+      (reference "R17") (unit 1) (value "1k") (footprint "mta1:ERJ2G(0402)_L")
+    )
+    (path "/00000000-0000-0000-0000-0000617f150c"
+      (reference "R18") (unit 1) (value "1k") (footprint "mta1:ERJ2G(0402)_L")
+    )
+    (path "/00000000-0000-0000-0000-00006138f043"
+      (reference "R19") (unit 1) (value "10k") (footprint "mta1:ERJ2G(0402)_L")
+    )
+    (path "/00000000-0000-0000-0000-00006138caff"
+      (reference "R20") (unit 1) (value "10k") (footprint "mta1:ERJ2G(0402)_L")
+    )
+    (path "/fe6cb91d-e57b-4761-a6eb-995b9ad40281"
+      (reference "R23") (unit 1) (value "10k") (footprint "mta1:ERJ2G(0402)_L")
+    )
+    (path "/d3227fe1-e3fb-433e-8be2-5ff5302bdec8"
+      (reference "R24") (unit 1) (value "10k") (footprint "mta1:ERJ2G(0402)_L")
+    )
+    (path "/1dc40799-6ae3-4c4a-b25a-16b0a8f8d3c0"
+      (reference "R25") (unit 1) (value "10k") (footprint "mta1:ERJ2G(0402)_L")
+    )
+    (path "/7732c5e0-271e-4de5-9ee2-962192432222"
+      (reference "R26") (unit 1) (value "10k") (footprint "mta1:ERJ2G(0402)_L")
+    )
+    (path "/6bc1edc9-8890-4578-b994-f654ccefb54e"
+      (reference "R30") (unit 1) (value "2k") (footprint "mta1:ERJ2G(0402)_L")
+    )
+    (path "/ab35f289-cbe7-449b-a15d-459a3b4e9240"
+      (reference "TP5") (unit 1) (value "APP_GND") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/b84f4f68-cc10-43a0-962e-10a1890e7eaf"
+      (reference "TP12") (unit 1) (value "APP_ICE_SCK") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/f77c0061-34af-41f5-8a00-bb8ae07fe922"
+      (reference "TP13") (unit 1) (value "APP_ICE_SS") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/3c9864fc-0a77-4fe0-8c96-c0260a516ba1"
+      (reference "TP14") (unit 1) (value "APP_ICE_MOSI") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/0f9d611d-221f-42fe-a161-07c0ff52c542"
+      (reference "TP15") (unit 1) (value "APP_ICE_MISO") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/d7bf813c-bb4e-4ed8-b86f-d9ec1d86656d"
+      (reference "TP16") (unit 1) (value "APP_CRESET") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/32f54cf3-1e0f-4aaa-b508-267b9568217c"
+      (reference "TP17") (unit 1) (value "APP_CDONE") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/e7d44998-7d27-4371-9f3d-0a968eddee9d"
+      (reference "TP18") (unit 1) (value "APP_GPIO1") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/855a271d-d14e-4340-88ef-5eb1d2805d77"
+      (reference "TP19") (unit 1) (value "APP_GPIO2") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/8aa5c85f-46b3-4ac4-bd48-3e3352ebb3f6"
+      (reference "TP20") (unit 1) (value "APP_GPIO3") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/a6d52094-2dbe-49fa-99c1-8b125d3ae4c6"
+      (reference "TP21") (unit 1) (value "APP_GPIO4") (footprint "mta1:TestPoint_Pad_D1.0mm")
+    )
+    (path "/00000000-0000-0000-0000-00006131a243"
+      (reference "U6") (unit 1) (value "ICE40UP5K-SG48ITR") (footprint "Package_DFN_QFN:QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm")
+    )
+    (path "/fb1bfba7-59bf-4387-b0fd-53ae34c08235"
+      (reference "U8") (unit 1) (value "W25Q80DVUXIE") (footprint "mta1:W25Q80DVUXIE")
+    )
+    (path "/206cf77e-9615-45a1-84e2-dd89660f9255"
+      (reference "U10") (unit 1) (value "~") (footprint "")
+    )
+    (path "/81172fbc-f24e-4173-965f-d88ed2c48035"
+      (reference "U11") (unit 1) (value "Spring") (footprint "1674954-1")
+    )
   )
 )
