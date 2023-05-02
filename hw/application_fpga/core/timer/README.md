@@ -11,3 +11,6 @@ timer will count seconds.
 ## Details
 The timer counter and the prescaler counter are both 32 bits.
 When enabled the counter counts down one integer value per cycle.
+
+The timer will stop when reaching final zero (given by prescaler times the initial value of the timer)
+and the running flag will be lowered.
