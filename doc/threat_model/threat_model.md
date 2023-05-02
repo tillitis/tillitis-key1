@@ -176,9 +176,13 @@ are out of scope and what mitigations are in place.
 
 ### TK1-23.03.1-Bellatrix
 
-This is the first general release of the TKey TK1 device. In this
-device the FPGA bitstream is stored and locked into the NVCM. The UDS
-and UDI assets are stored as part of the FPGA bitstream.
+This is the first general release of the TKey TK1 end user device. In this
+device the FPGA bitstream is stored and locked into the NVCM. This means
+that the bitstream can't be changed or read out from the device.
+
+The UDS and UDI assets are generated during provisioning by Tillitis, and
+are stored as part of the FPGA bitstream. The UDS is generated using
+the tpt tool and is not stored by Tillitis after generation.
 
 The FPGA design contain some mechanisms for execution protection,
 execution monitoring as well as functionality designed to make warm
