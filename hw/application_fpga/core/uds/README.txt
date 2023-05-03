@@ -3,5 +3,19 @@
 Unique Device Secret core
 
 ## Introduction
-This core store and protect the Unique Device Secret. The
-storage is implemented in discrete registers. The contents can be read once between chip reset, and only if the system is in not in application access mode.
+
+This core store and protect the Unique Device Secret (UDS) asset. The
+UDS can be accessed as eight separate 32-bit words. The words can be
+accessed in any order, but a given word can only be accessed once
+between reset cycles. The words can only be accessed as long as the
+fw_app_mode input is low, implying that the CPU is executing the FW.
+
+Each UDS words has a companion read bit that is set when the word is
+accessed. This means that the even if the chip select (cs) control
+input is forced high, the content will become all zero when the read
+bit has been set after one cycle.
+
+
+## Implementation
+
+The UDS words are implemented in discrete registers.
