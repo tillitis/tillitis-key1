@@ -178,7 +178,7 @@ module tb_uds();
   // the word read will be available in the global variable
   // read_data.
   //----------------------------------------------------------------
-  task read_word(input [11 : 0]  address);
+  task read_word(input [11 : 0]  address, input [31 : 0] expected);
     begin : read_word
       reg [31 : 0] read_data;
 
@@ -193,7 +193,13 @@ module tb_uds();
 
       if (DEBUG)
         begin
-          $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
+	  if (read_data == expected) begin
+            $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
+	  end else begin
+            $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x",
+		     read_data, address, expected);
+	    error_ctr = error_ctr + 1;
+	  end
           $display("");
         end
     end
@@ -224,33 +230,33 @@ module tb_uds();
       dump_dut_state();
 
       $display("--- test1: Reading UDS words.");
-      read_word(ADDR_UDS_FIRST + 0);
-      read_word(ADDR_UDS_FIRST + 1);
-      read_word(ADDR_UDS_FIRST + 2);
+      read_word(ADDR_UDS_FIRST + 0, 32'hf0f0f0f0);
+      read_word(ADDR_UDS_FIRST + 1, 32'he1e1e1e1);
+      read_word(ADDR_UDS_FIRST + 2, 32'hd2d2d2d2);
 
       $display("--- test1: Dumping state again to see read bits.");
       dump_dut_state();
 
       $display("--- test1: Reading rest of the words.");
-      read_word(ADDR_UDS_FIRST + 3);
-      read_word(ADDR_UDS_FIRST + 4);
-      read_word(ADDR_UDS_FIRST + 5);
-      read_word(ADDR_UDS_FIRST + 6);
-      read_word(ADDR_UDS_FIRST + 7);
+      read_word(ADDR_UDS_FIRST + 3, 32'hc3c3c3c3);
+      read_word(ADDR_UDS_FIRST + 4, 32'hb4b4b4b4);
+      read_word(ADDR_UDS_FIRST + 5, 32'ha5a5a5a5);
+      read_word(ADDR_UDS_FIRST + 6, 32'h96969696);
+      read_word(ADDR_UDS_FIRST + 7, 32'h87878787);
 
       $display("--- test1: Dumping state again to see read bits.");
       dump_dut_state();
 
       $display("--- test1: Reading UDS words again.");
       $display("--- test1: This should return all zeros.");
-      read_word(ADDR_UDS_FIRST + 0);
-      read_word(ADDR_UDS_FIRST + 1);
-      read_word(ADDR_UDS_FIRST + 2);
-      read_word(ADDR_UDS_FIRST + 3);
-      read_word(ADDR_UDS_FIRST + 4);
-      read_word(ADDR_UDS_FIRST + 5);
-      read_word(ADDR_UDS_FIRST + 6);
-      read_word(ADDR_UDS_FIRST + 7);
+      read_word(ADDR_UDS_FIRST + 0, 32'h0);
+      read_word(ADDR_UDS_FIRST + 1, 32'h0);
+      read_word(ADDR_UDS_FIRST + 2, 32'h0);
+      read_word(ADDR_UDS_FIRST + 3, 32'h0);
+      read_word(ADDR_UDS_FIRST + 4, 32'h0);
+      read_word(ADDR_UDS_FIRST + 5, 32'h0);
+      read_word(ADDR_UDS_FIRST + 6, 32'h0);
+      read_word(ADDR_UDS_FIRST + 7, 32'h0);
 
       $display("--- test1: Resetting DUT.");
       $display("--- test1: This should allow access again.");
@@ -271,25 +277,25 @@ module tb_uds();
       dump_dut_state();
 
       $display("--- test1: Reading UDS words in changed order.");
-      read_word(ADDR_UDS_FIRST + 7);
-      read_word(ADDR_UDS_FIRST + 6);
-      read_word(ADDR_UDS_FIRST + 4);
-      read_word(ADDR_UDS_FIRST + 3);
-      read_word(ADDR_UDS_FIRST + 1);
-      read_word(ADDR_UDS_FIRST + 0);
-      read_word(ADDR_UDS_FIRST + 5);
-      read_word(ADDR_UDS_FIRST + 2);
+      read_word(ADDR_UDS_FIRST + 7, 32'h78787878);
+      read_word(ADDR_UDS_FIRST + 6, 32'h69696969);
+      read_word(ADDR_UDS_FIRST + 4, 32'h4b4b4b4b);
+      read_word(ADDR_UDS_FIRST + 3, 32'h3c3c3c3c);
+      read_word(ADDR_UDS_FIRST + 1, 32'h1e1e1e1e);
+      read_word(ADDR_UDS_FIRST + 0, 32'h0f0f0f0f);
+      read_word(ADDR_UDS_FIRST + 5, 32'h5a5a5a5a);
+      read_word(ADDR_UDS_FIRST + 2, 32'h2d2d2d2d);
 
       $display("--- test1: Reading UDS words again.");
       $display("--- test1: This should return all zeros.");
-      read_word(ADDR_UDS_FIRST + 0);
-      read_word(ADDR_UDS_FIRST + 1);
-      read_word(ADDR_UDS_FIRST + 2);
-      read_word(ADDR_UDS_FIRST + 3);
-      read_word(ADDR_UDS_FIRST + 4);
-      read_word(ADDR_UDS_FIRST + 5);
-      read_word(ADDR_UDS_FIRST + 6);
-      read_word(ADDR_UDS_FIRST + 7);
+      read_word(ADDR_UDS_FIRST + 0, 32'h0);
+      read_word(ADDR_UDS_FIRST + 1, 32'h0);
+      read_word(ADDR_UDS_FIRST + 2, 32'h0);
+      read_word(ADDR_UDS_FIRST + 3, 32'h0);
+      read_word(ADDR_UDS_FIRST + 4, 32'h0);
+      read_word(ADDR_UDS_FIRST + 5, 32'h0);
+      read_word(ADDR_UDS_FIRST + 6, 32'h0);
+      read_word(ADDR_UDS_FIRST + 7, 32'h0);
 
       $display("--- test1: completed.");
       $display("");
