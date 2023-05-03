@@ -171,7 +171,7 @@ perform without the user discovering the missing device.
 ## TKey Release specific scope
 
 This threat model will be updated for each release of the TKey device.
-For each version we description what threats are in scope, what threats
+For each version we describe what threats are in scope, what threats
 are out of scope and what mitigations are in place.
 
 ### TK1-23.03.1-Bellatrix
