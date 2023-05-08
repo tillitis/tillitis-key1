@@ -15,7 +15,20 @@ accessed. This means that the even if the chip select (cs) control
 input is forced high, the content will become all zero when the read
 bit has been set after one cycle.
 
+## API
+There are eight addresses in the API. These are defined by the
+two values ADDR_UDS_FIRST and ADDR_UDS_LAST:
+
+´´´
+ADDR_UDS_FIRST: 0x10
+ADDR_UDS_LAST:  0x17
+´´´
+
+These addresses are read once.
+
+Any access to another address will be ignored by the core.
+
 
 ## Implementation
 
-The UDS words are implemented in discrete registers.
+The UDS words are implemented using discrete registers.
