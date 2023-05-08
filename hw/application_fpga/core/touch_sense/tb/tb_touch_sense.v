@@ -18,15 +18,11 @@ module tb_touch_sense();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG     = 0;
+  parameter DEBUG     = 1;
   parameter DUMP_WAIT = 0;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
-
-  localparam ADDR_NAME0        = 8'h00;
-  localparam ADDR_NAME1        = 8'h01;
-  localparam ADDR_VERSION      = 8'h02;
 
   localparam ADDR_STATUS       = 8'h09;
   localparam STATUS_READY_BIT  = 0;
@@ -174,7 +170,7 @@ module tb_touch_sense();
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_word(input [11 : 0] address,
+  task write_word(input [7 : 0] address,
                   input [31 : 0] word);
     begin
       if (DEBUG)
@@ -200,7 +196,7 @@ module tb_touch_sense();
   // the word read will be available in the global variable
   // read_data.
   //----------------------------------------------------------------
-  task read_word(input [11 : 0]  address);
+  task read_word(input [7 : 0]  address);
     begin
       tb_address = address;
       tb_cs = 1;
@@ -233,7 +229,10 @@ module tb_touch_sense();
 
 
   //----------------------------------------------------------------
-  // test1()
+  // test1.
+  // Create a touch event check that it is accessible from the
+  // API. Clear the event from the API and check that it is
+  // really cleared.
   //----------------------------------------------------------------
   task test1;
     begin
@@ -242,10 +241,45 @@ module tb_touch_sense();
       $display("");
       $display("--- test1: started.");
 
+      // Set touch event to low:
+      tb_touch_event = 1'h0;
+
+      // Clear the event handler.
+      $display("--- test1: Clearing any stray event.");
+      write_word(8'h09, 32'h0);
+
+
+      // Check status.
+      #(CLK_PERIOD);
+      read_word(8'h09);
+
+      // Set touch event input to high.
+      $display("--- test1: Creating a touch event.");
+      tb_touch_event = 1'h1;
+
+      $display("--- test1: Waiting for the event to be caught.");
+      wait_ready();
+
+      $display("--- test1: Event has been seen.");
+
+      $display("--- test1: Dropping the event input.");
+      tb_touch_event = 1'h0;
+      #(CLK_PERIOD);
+      $display("--- test1: Clearing the event.");
+      write_word(8'h09, 32'h0);
+      #(CLK_PERIOD);
+
+      // Check that the event is now removed.
+      read_word(8'h09);
+      #(CLK_PERIOD);
+      $display("--- test1: Event has been cleared.");
+      read_word(8'h09);
+      #(CLK_PERIOD);
+
       $display("--- test1: completed.");
       $display("");
     end
-  endtask // tes1
+  endtask // test1
 
 
   //----------------------------------------------------------------
@@ -260,6 +294,7 @@ module tb_touch_sense();
 
       init_sim();
       reset_dut();
+
       test1();
 
       display_test_result();
