@@ -19,12 +19,12 @@ bit has been set after one cycle.
 There are eight addresses in the API. These are defined by the
 two values ADDR_UDS_FIRST and ADDR_UDS_LAST:
 
-´´´
-ADDR_UDS_FIRST: 0x10
-ADDR_UDS_LAST:  0x17
-´´´
+```
+	ADDR_UDS_FIRST: 0x10
+	ADDR_UDS_LAST:  0x17
+```
 
-These addresses are read once.
+These addresses are read only and read once between reset.
 
 Any access to another address will be ignored by the core.
 
