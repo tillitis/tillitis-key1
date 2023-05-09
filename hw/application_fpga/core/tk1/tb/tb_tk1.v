@@ -314,6 +314,26 @@ module tb_tk1();
 
 
   //----------------------------------------------------------------
+  // test2()
+  // Read out UDI.
+  //----------------------------------------------------------------
+  task test2;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test2: Read out UDI.");
+
+      read_word(ADDR_UDI_FIRST, 32'h00010203);
+      read_word(ADDR_UDI_LAST,  32'h04050607);
+
+      $display("--- test2: completed.");
+      $display("");
+    end
+  endtask // test2
+
+
+  //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
   initial
@@ -325,7 +345,9 @@ module tb_tk1();
 
       init_sim();
       reset_dut();
+
       test1();
+      test2();
 
       display_test_result();
       $display("");
