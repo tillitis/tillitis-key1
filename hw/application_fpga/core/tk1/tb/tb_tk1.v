@@ -90,8 +90,11 @@ module tb_tk1();
   wire          tb_gpio4;
 
   reg           tb_cs;
+  reg           tb_we;
   reg [7 : 0]   tb_address;
+  reg  [31 : 0] tb_write_data;
   wire [31 : 0] tb_read_data;
+  wire          tb_ready;
 
 
   //----------------------------------------------------------------
@@ -105,9 +108,9 @@ module tb_tk1();
 	  .fw_app_mode(tb_fw_app_mode),
 
 	  .cpu_addr(tb_cpu_addr),
-	  .cpu_instr(tbcpu_addr),
-	  .cpu_valid(tbcpu_valid),
-	  .force_trap(force_trap),
+	  .cpu_instr(tb_cpu_instr),
+	  .cpu_valid(tb_cpu_valid),
+	  .force_trap(tb_force_trap),
 
 	  .ram_aslr(tb_ram_aslr),
 	  .ram_scramble(tb_ram_scramble),
@@ -122,7 +125,9 @@ module tb_tk1();
 	  .gpio4(tb_gpio4),
 
           .cs(tb_cs),
+          .we(tb_we),
           .address(tb_address),
+          .write_data(tb_write_data),
           .read_data(tb_read_data),
 	  .ready(tb_ready)
          );
@@ -230,7 +235,6 @@ module tb_tk1();
 
       tb_clk         = 1'h0;
       tb_reset_n     = 1'h1;
-      tb_fw_app_mode = 1'h0;
       tb_cs          = 1'h0;
       tb_address     = 8'h0;
     end
