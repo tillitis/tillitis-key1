@@ -526,6 +526,28 @@ module tb_tk1();
 
 
   //----------------------------------------------------------------
+  // test7()
+  // LED control.
+  //----------------------------------------------------------------
+  task test7;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test7: LED control started.");
+
+      $display("--- test7: LEDs R: 0x%1x, G: 0x%1x, B: 0x%1x", tb_led_r, tb_led_g, tb_led_g);
+      $display("--- test7: Writing to LED control address to invert LED output.");
+      write_word(ADDR_LED, 32'h0);
+      $display("--- test7: LEDs R: 0x%1x, G: 0x%1x, B: 0x%1x", tb_led_r, tb_led_g, tb_led_g);
+
+      $display("--- test7: completed.");
+      $display("");
+    end
+  endtask // test7
+
+
+  //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
   initial
@@ -544,6 +566,7 @@ module tb_tk1();
       test4();
       test5();
       test6();
+      test7();
 
       display_test_result();
       $display("");
