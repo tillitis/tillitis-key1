@@ -417,6 +417,39 @@ module tb_tk1();
 
 
   //----------------------------------------------------------------
+  // test4()
+  // Write and read blake2s entry point.
+  //----------------------------------------------------------------
+  task test4;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test4: Reset DUT to switch to fw mode.");
+      reset_dut();
+
+      $display("--- test4: Write Blake2s entry point.");
+      write_word(ADDR_BLAKE2S, 32'hcafebabe);
+
+      $display("--- test4: Read Blake2s entry point.");
+      read_word(ADDR_BLAKE2S, 32'hcafebabe);
+
+      $display("--- test4: Switch to app mode.");
+      write_word(ADDR_SWITCH_APP, 32'hf00ff00f);
+
+      $display("--- test4: Write Blake2s entry point again.");
+      write_word(ADDR_BLAKE2S, 32'hdeadbeef);
+
+      $display("--- test4: Read Blake2s entry point again");
+      read_word(ADDR_BLAKE2S, 32'hcafebabe);
+
+      $display("--- test4: completed.");
+      $display("");
+    end
+  endtask // test4
+
+
+  //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
   initial
@@ -432,6 +465,7 @@ module tb_tk1();
       test1();
       test2();
       test3();
+      test4();
 
       display_test_result();
       $display("");
