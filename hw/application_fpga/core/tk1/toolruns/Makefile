@@ -25,7 +25,7 @@ all: top.sim
 
 
 top.sim: $(TB_TOP_SRC) $(TOP_SRC)
-	$(CC) $(CC_FLAGS) -o top.sim $(TB_TOP_SRC) $(TOP_SRC)
+	$(CC) $(CC_FLAGS) -o top.sim $(TB_TOP_SRC) $(TOP_SRC) -DUDI_HEX=\"../tb/udi.hex\"
 
 
 sim-top: top.sim
