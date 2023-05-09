@@ -294,17 +294,18 @@ module tb_tk1();
 
   //----------------------------------------------------------------
   // test1()
+  // Read out name and version.
   //----------------------------------------------------------------
   task test1;
     begin
       tc_ctr = tc_ctr + 1;
-      tb_monitor = 1;
 
       $display("");
-      $display("--- test1: started.");
+      $display("--- test1: Read out name and version started.");
 
-      #(100 * CLK_PERIOD);
-      tb_monitor = 0;
+      read_word(ADDR_NAME0, 32'h746B3120);
+      read_word(ADDR_NAME1, 32'h6d6b6466);
+      read_word(ADDR_VERSION, 32'h00000005);
 
       $display("--- test1: completed.");
       $display("");
