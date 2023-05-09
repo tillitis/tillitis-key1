@@ -258,6 +258,31 @@ module tb_tk1();
 
 
   //----------------------------------------------------------------
+  // write_word()
+  //
+  // Write the given word to the DUT using the DUT interface.
+  //----------------------------------------------------------------
+  task write_word(input [11 : 0] address,
+                  input [31 : 0] word);
+    begin
+      if (DEBUG)
+        begin
+          $display("--- Writing 0x%08x to 0x%02x.", word, address);
+          $display("");
+        end
+
+      tb_address = address;
+      tb_write_data = word;
+      tb_cs = 1;
+      tb_we = 1;
+      #(2 * CLK_PERIOD);
+      tb_cs = 0;
+      tb_we = 0;
+    end
+  endtask // write_word
+
+
+  //----------------------------------------------------------------
   // read_word()
   //
   // Read a data word from the given address in the DUT.
@@ -341,19 +366,41 @@ module tb_tk1();
     begin
       tc_ctr = tc_ctr + 1;
 
-      // Force the CDI to a know value:
-      dut.cdi_mem[0] = 32'hf0f1f2f3;
-      dut.cdi_mem[1] = 32'he0e1e2e3;
-      dut.cdi_mem[2] = 32'hd0d1d2d3;
-      dut.cdi_mem[3] = 32'hc0c1c2c3;
-      dut.cdi_mem[4] = 32'ha0a1a2a3;
-      dut.cdi_mem[5] = 32'h90919293;
-      dut.cdi_mem[6] = 32'h80818283;
-      dut.cdi_mem[7] = 32'h70717273;
-
       $display("");
-      $display("--- test3: Read out CDI.");
+      $display("--- test3: Write CDI.");
+      write_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
+      write_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
+      write_word(ADDR_CDI_FIRST + 2, 32'hd0d1d2d3);
+      write_word(ADDR_CDI_FIRST + 3, 32'hc0c1c2c3);
+      write_word(ADDR_CDI_FIRST + 4, 32'ha0a1a2a3);
+      write_word(ADDR_CDI_FIRST + 5, 32'h90919293);
+      write_word(ADDR_CDI_FIRST + 6, 32'h80818283);
+      write_word(ADDR_CDI_FIRST + 7, 32'h70717273);
 
+      $display("--- test3: Read CDI.");
+      read_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
+      read_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
+      read_word(ADDR_CDI_FIRST + 2, 32'hd0d1d2d3);
+      read_word(ADDR_CDI_FIRST + 3, 32'hc0c1c2c3);
+      read_word(ADDR_CDI_FIRST + 4, 32'ha0a1a2a3);
+      read_word(ADDR_CDI_FIRST + 5, 32'h90919293);
+      read_word(ADDR_CDI_FIRST + 6, 32'h80818283);
+      read_word(ADDR_CDI_LAST  + 0, 32'h70717273);
+
+      $display("--- test3: Switch to app mode.");
+      write_word(ADDR_SWITCH_APP, 32'hdeadbeef);
+
+      $display("--- test3: Try to write CDI again.");
+      write_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
+      write_word(ADDR_CDI_FIRST + 1, 32'hefeeedec);
+      write_word(ADDR_CDI_FIRST + 2, 32'hdfdedddc);
+      write_word(ADDR_CDI_FIRST + 3, 32'hcfcecdcc);
+      write_word(ADDR_CDI_FIRST + 4, 32'hafaeadac);
+      write_word(ADDR_CDI_FIRST + 5, 32'h9f9e9d9c);
+      write_word(ADDR_CDI_FIRST + 6, 32'h8f8e8d8c);
+      write_word(ADDR_CDI_FIRST + 7, 32'h7f7e7d7c);
+
+      $display("--- test3: Read CDI again.");
       read_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
       read_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
       read_word(ADDR_CDI_FIRST + 2, 32'hd0d1d2d3);
