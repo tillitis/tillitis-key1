@@ -490,6 +490,42 @@ module tb_tk1();
 
 
   //----------------------------------------------------------------
+  // test6()
+  // Write and RAM scrambling in fw mode.
+  //----------------------------------------------------------------
+  task test6;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test6: Write RAM scrambling in fw mode.");
+      $display("--- test6: Reset DUT to switch to fw mode.");
+      reset_dut();
+
+      $display("--- test6: Write RAM ASLR and RAM SCRAMBLE.");
+      write_word(ADDR_RAM_ASLR, 32'h13371337);
+      write_word(ADDR_RAM_SCRAMBLE, 32'h47114711);
+
+      $display("--- test6: Check value in dut RAM ASLR and SCRAMBLE registers.");
+      $display("--- test6: ram_aslr_reg: 0x%04x, ram_scramble_reg: 0x%08x", dut.ram_aslr_reg, dut.ram_scramble_reg);
+
+      $display("--- test6: Switch to app mode.");
+      write_word(ADDR_SWITCH_APP, 32'hf000000);
+
+      $display("--- test6: Write RAM ASLR and SCRAMBLE again.");
+      write_word(ADDR_RAM_ASLR, 32'hdeadbeef);
+      write_word(ADDR_RAM_SCRAMBLE, 32'hf00ff00f);
+
+      $display("--- test6: Check value in dut RAM ASLR and SCRAMBLE registers.");
+      $display("--- test6: ram_aslr_reg: 0x%04x, ram_scramble_reg: 0x%08x", dut.ram_aslr_reg, dut.ram_scramble_reg);
+
+      $display("--- test6: completed.");
+      $display("");
+    end
+  endtask // test6
+
+
+  //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
   initial
@@ -507,6 +543,7 @@ module tb_tk1();
       test3();
       test4();
       test5();
+      test6();
 
       display_test_result();
       $display("");
