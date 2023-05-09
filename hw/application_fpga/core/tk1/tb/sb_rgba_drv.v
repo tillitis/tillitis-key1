@@ -1,3 +1,19 @@
+//======================================================================
+//
+// SB_RGBA_DRV.v
+// -------------
+// Dummy version of the SB_RGBA_DRV hard macro in Lattice iCE40 UP
+// devices. This is just to be able to build the testbench. The only
+// functionality we need is to be able to set the LEDs.
+//
+//
+// Author: Joachim Strombergson
+// Copyright (C) 2023 - Tillitis AB
+// SPDX-License-Identifier: GPL-2.0-only
+//
+//======================================================================
+
+`default_nettype none
 
 module SB_RGBA_DRV (
                  output wire RGB0,
@@ -20,3 +36,7 @@ module SB_RGBA_DRV (
   assign RGB2 = RGB2PWM;
 
 endmodule // SB_RGBA_DRV
+
+//======================================================================
+// EOF SB_RGBA_DRV.v
+//======================================================================
