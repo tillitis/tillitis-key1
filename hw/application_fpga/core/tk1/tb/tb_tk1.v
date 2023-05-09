@@ -172,8 +172,13 @@ module tb_tk1();
       $display("State of DUT at cycle: %08d", cycle_ctr);
       $display("------------");
       $display("Inputs and outputs:");
-      $display("fw_app_mode: 0x%1x", tb_fw_app_mode);
-      $display("cs: 0x%1x, address: 0x%02x, read_data: 0x%08x", tb_cs, tb_address, tb_read_data);
+      $display("tb_cpu_trap: 0x%1x, fw_app_mode: 0x%1x", tb_cpu_trap, tb_fw_app_mode);
+      $display("cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x, force_tap: 0x%1x",
+	       tb_cpu_addr, tb_cpu_instr, tb_cpu_valid, tb_force_trap);
+      $display("ram_aslr: 0x%08x, ram_scramble: 0x%08x", tb_ram_aslr, tb_ram_scramble);
+      $display("led_r: 0x%1x, led_g: 0x%1x, led_b: 0x%1x", tb_led_r, tb_led_g, tb_led_b);
+      $display("ready: 0x%1x, cs: 0x%1x, we: 0x%1x, address: 0x%02x", tb_ready, tb_cs, tb_we, tb_address);
+      $display("write_data: 0x%08x, read_data: 0x%08x", tb_write_data, tb_read_data);
       $display("");
 
       $display("Internal state:");
@@ -228,15 +233,26 @@ module tb_tk1();
   //----------------------------------------------------------------
   task init_sim;
     begin
-      cycle_ctr  = 0;
-      error_ctr  = 0;
-      tc_ctr     = 0;
-      tb_monitor = 0;
+      cycle_ctr     = 0;
+      error_ctr     = 0;
+      tc_ctr        = 0;
+      tb_monitor    = 0;
 
-      tb_clk         = 1'h0;
-      tb_reset_n     = 1'h1;
-      tb_cs          = 1'h0;
-      tb_address     = 8'h0;
+      tb_clk        = 1'h0;
+      tb_reset_n    = 1'h1;
+
+      tb_cpu_addr   = 32'h0;
+      tb_cpu_instr  = 1'h0;
+      tb_cpu_valid  = 1'h0;
+      tb_cpu_trap   = 1'h0;
+
+      tb_gpio1      = 1'h0;
+      tb_gpio2      = 1'h0;
+
+      tb_cs         = 1'h0;
+      tb_we         = 1'h0;
+      tb_address    = 8'h0;
+      tb_write_data = 32'h0;
     end
   endtask // init_sim
 
@@ -282,9 +298,13 @@ module tb_tk1();
   task test1;
     begin
       tc_ctr = tc_ctr + 1;
+      tb_monitor = 1;
 
       $display("");
       $display("--- test1: started.");
+
+      #(100 * CLK_PERIOD);
+      tb_monitor = 0;
 
       $display("--- test1: completed.");
       $display("");
