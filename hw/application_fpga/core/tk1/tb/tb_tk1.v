@@ -334,6 +334,42 @@ module tb_tk1();
 
 
   //----------------------------------------------------------------
+  // test3()
+  // Read out CDI.
+  //----------------------------------------------------------------
+  task test3;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      // Force the CDI to a know value:
+      dut.cdi_mem[0] = 32'hf0f1f2f3;
+      dut.cdi_mem[1] = 32'he0e1e2e3;
+      dut.cdi_mem[2] = 32'hd0d1d2d3;
+      dut.cdi_mem[3] = 32'hc0c1c2c3;
+      dut.cdi_mem[4] = 32'ha0a1a2a3;
+      dut.cdi_mem[5] = 32'h90919293;
+      dut.cdi_mem[6] = 32'h80818283;
+      dut.cdi_mem[7] = 32'h70717273;
+
+      $display("");
+      $display("--- test3: Read out CDI.");
+
+      read_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
+      read_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
+      read_word(ADDR_CDI_FIRST + 2, 32'hd0d1d2d3);
+      read_word(ADDR_CDI_FIRST + 3, 32'hc0c1c2c3);
+      read_word(ADDR_CDI_FIRST + 4, 32'ha0a1a2a3);
+      read_word(ADDR_CDI_FIRST + 5, 32'h90919293);
+      read_word(ADDR_CDI_FIRST + 6, 32'h80818283);
+      read_word(ADDR_CDI_LAST  + 0, 32'h70717273);
+
+      $display("--- test3: completed.");
+      $display("");
+    end
+  endtask // test3
+
+
+  //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
   initial
@@ -348,6 +384,7 @@ module tb_tk1();
 
       test1();
       test2();
+      test3();
 
       display_test_result();
       $display("");
