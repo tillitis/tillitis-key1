@@ -347,7 +347,7 @@ module tb_tk1();
       tc_ctr = tc_ctr + 1;
 
       $display("");
-      $display("--- test2: Read out UDI.");
+      $display("--- test2: Read out UDI started.");
 
       read_word(ADDR_UDI_FIRST, 32'h00010203);
       read_word(ADDR_UDI_LAST,  32'h04050607);
@@ -367,6 +367,7 @@ module tb_tk1();
       tc_ctr = tc_ctr + 1;
 
       $display("");
+      $display("--- test3: Write and read CDI started.");
       $display("--- test3: Write CDI.");
       write_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
       write_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
@@ -425,6 +426,7 @@ module tb_tk1();
       tc_ctr = tc_ctr + 1;
 
       $display("");
+      $display("--- test4: Write and read blake2s entry point in fw mode started.");
       $display("--- test4: Reset DUT to switch to fw mode.");
       reset_dut();
 
@@ -450,6 +452,44 @@ module tb_tk1();
 
 
   //----------------------------------------------------------------
+  // test5()
+  // Write and read APP start address end size.
+  //----------------------------------------------------------------
+  task test5;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test5: Write and read app start and size in fw mode started.");
+      $display("--- test5: Reset DUT to switch to fw mode.");
+      reset_dut();
+
+      $display("--- test5: Write app start address and size.");
+      write_word(ADDR_APP_START, 32'h13371337);
+      write_word(ADDR_APP_SIZE, 32'h47114711);
+
+      $display("--- test5: Read app start address and size.");
+      read_word(ADDR_APP_START, 32'h13371337);
+      read_word(ADDR_APP_SIZE, 32'h47114711);
+
+      $display("--- test5: Switch to app mode.");
+      write_word(ADDR_SWITCH_APP, 32'hf000000);
+
+      $display("--- test5: Write app start address and size again.");
+      write_word(ADDR_APP_START, 32'hdeadbeef);
+      write_word(ADDR_APP_SIZE, 32'hf00ff00f);
+
+      $display("--- test5: Read app start address and size.");
+      read_word(ADDR_APP_START, 32'h13371337);
+      read_word(ADDR_APP_SIZE, 32'h47114711);
+
+      $display("--- test5: completed.");
+      $display("");
+    end
+  endtask // test5
+
+
+  //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
   initial
@@ -466,6 +506,7 @@ module tb_tk1();
       test2();
       test3();
       test4();
+      test5();
 
       display_test_result();
       $display("");
