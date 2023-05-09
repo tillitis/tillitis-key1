@@ -12,7 +12,7 @@
 #===================================================================
 
 TOP_SRC=../rtl/tk1.v
-TB_TOP_SRC =../tb/tb_tk1.v
+TB_TOP_SRC =../tb/tb_tk1.v ../tb/sb_rgba_drv.v
 
 CC = iverilog
 CC_FLAGS = -Wall
