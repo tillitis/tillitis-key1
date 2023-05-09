@@ -548,6 +548,34 @@ module tb_tk1();
 
 
   //----------------------------------------------------------------
+  // test8()
+  // GPIO control.
+  //----------------------------------------------------------------
+  task test8;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test8: GPIO control started.");
+
+      $display("--- test8: Set Inputs for GPIO 1 and 2 high.");
+      tb_gpio1 = 1'h1;
+      tb_gpio2 = 1'h1;
+      #(2 * CLK_PERIOD);
+      $display("--- test8: Check that we can read GPIO 1 and 2 as high.");
+      read_word(ADDR_GPIO, 32'h3);
+
+      $display("--- test8: Set GPIO 3 and 4 high by writing to the registers.");
+      write_word(ADDR_GPIO, 32'hf);
+      $display("--- test8: gpio3: 0x%1x, gpio4: 0x%1x", tb_gpio3, tb_gpio4);
+
+      $display("--- test8: completed.");
+      $display("");
+    end
+  endtask // test8
+
+
+  //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
   initial
@@ -567,6 +595,7 @@ module tb_tk1();
       test5();
       test6();
       test7();
+      test8();
 
       display_test_result();
       $display("");
