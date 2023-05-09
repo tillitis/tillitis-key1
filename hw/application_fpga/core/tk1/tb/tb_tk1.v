@@ -576,6 +576,48 @@ module tb_tk1();
 
 
   //----------------------------------------------------------------
+  // test9()
+  // EXE monitor control and detection.
+  //----------------------------------------------------------------
+  task test9;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test9: EXE monitor control and detection started.");
+
+      $display("--- test9: Define and enable a memory area.");
+      write_word(ADDR_CPU_MON_FIRST, 32'h10000000);
+      write_word(ADDR_CPU_MON_LAST, 32'h20000000);
+      write_word(ADDR_CPU_MON_CTRL, 32'h1);
+
+      $display("--- test9: cpu_mon_first_reg: 0x%08x, cpu_mon_last_reg: 0x%08x",
+	       dut.cpu_mon_first_reg, dut.cpu_mon_last_reg);
+
+      $display("--- test9: Try to redefine memory area after enabling monitor.");
+      write_word(ADDR_CPU_MON_FIRST, 32'hdeadbabe);
+      write_word(ADDR_CPU_MON_LAST, 32'hdeadcafe);
+      $display("--- test9: cpu_mon_first_reg: 0x%08x, cpu_mon_last_reg: 0x%08x",
+	       dut.cpu_mon_first_reg, dut.cpu_mon_last_reg);
+
+      $display("--- test9: force_trap before illegal access: 0x%1x", tb_force_trap);
+      $display("--- test9: Creating an illegal access.");
+
+      tb_cpu_addr   = 32'h13371337;
+      tb_cpu_instr  = 1'h1;
+      tb_cpu_valid  = 1'h1;
+      #(2 * CLK_PERIOD);
+      $display("--- test9: cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x",
+	       tb_cpu_addr, tb_cpu_instr, tb_cpu_valid);
+      $display("--- test9: force_trap: 0x%1x", tb_force_trap);
+
+      $display("--- test9: completed.");
+      $display("");
+    end
+  endtask // test8
+
+
+  //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
   initial
@@ -596,6 +638,7 @@ module tb_tk1();
       test6();
       test7();
       test8();
+      test9();
 
       display_test_result();
       $display("");
