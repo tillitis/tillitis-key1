@@ -20,7 +20,8 @@ algorithm.
 ## Status
 
 First version of TKey completed. The TRNG has been tested and provides
-good entropy suitable as seed for a CSPRNG.
+good entropy suitable as seed for a CSPRNG (also known as a Digital
+Random Bit Generator - DRBG).
 
 
 ## API
@@ -43,8 +44,8 @@ waiting for the ready bit to be set will lead to reading out (at least
 parts of) the same entropy data more than once.
 
 Applications that need cryptographically safe random number should use
-the output from the TRNG as seed to a Digital Random Bit Generator
-(DRBG), for example a Hash_DRBG.
+the output from the TRNG as seed to a CSPRNG, , for example a
+Hash_DRBG.
 
 
 ## Implementation details
