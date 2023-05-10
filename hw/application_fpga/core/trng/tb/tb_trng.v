@@ -23,6 +23,11 @@ module tb_trng();
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
 
+  // API
+  localparam ADDR_STATUS       = 8'h09;
+  localparam STATUS_READY_BIT  = 0;
+  localparam ADDR_ENTROPY      = 8'h20;
+
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -103,7 +108,9 @@ module tb_trng();
 
       $display("Internal state:");
       $display("tmp_read_ready: 0x%1x, tmp_read_data: 0x%08x", dut.tmp_ready, dut.tmp_read_data);
-
+      $display("cycle_ctr_done: 0x%1x, cycle_ctr_rst: 0x%1x, cycle_ctr: 0x%04x",
+	       dut.cycle_ctr_done, dut.cycle_ctr_rst, dut.cycle_ctr_reg);
+      $display("bit_ctr: 0x%02x", dut.bit_ctr_reg);
       $display("");
       $display("");
     end
@@ -209,10 +216,11 @@ module tb_trng();
   task test1;
     begin
       tc_ctr = tc_ctr + 1;
+      tb_monitor = 1;
 
       $display("");
       $display("--- test1: started.");
-
+      read_word(ADDR_STATUS, 32'h0);
       $display("--- test1: completed.");
       $display("");
     end
