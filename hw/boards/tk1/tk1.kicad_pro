@@ -490,32 +490,7 @@
     },
     "net_colors": null,
     "netclass_assignments": null,
-    "netclass_patterns": [
-      {
-        "netclass": "power",
-        "pattern": "+1V2"
-      },
-      {
-        "netclass": "power",
-        "pattern": "+2V5"
-      },
-      {
-        "netclass": "power",
-        "pattern": "+3V3"
-      },
-      {
-        "netclass": "power",
-        "pattern": "+5V"
-      },
-      {
-        "netclass": "power",
-        "pattern": "/Application FPGA/APP_+1.2_PLL"
-      },
-      {
-        "netclass": "power",
-        "pattern": "GND"
-      }
-    ]
+    "netclass_patterns": []
   },
   "pcbnew": {
     "last_paths": {
