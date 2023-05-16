@@ -26,7 +26,7 @@ ICESTORM_PATH ?=
 # bits wide; an EBR is 128 32-bits words)
 BRAM_FW_SIZE ?= 1536
 
-PIN_FILE ?= application_fpga_mta1_usb_v1.pcf
+PIN_FILE ?= application_fpga_tk1.pcf
 
 SIZE ?= llvm-size
 OBJCOPY ?= llvm-objcopy
