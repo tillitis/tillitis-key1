@@ -20,6 +20,11 @@ module application_fpga(
                         output wire interface_rx,
                         input wire  interface_tx,
 
+			output wire spi_ss,
+			output wire spi_sck,
+			output wire spi_mosi,
+			input wire  spi_miso,
+
 			input wire  touch_event,
 
 			input wire  app_gpio1,
@@ -157,6 +162,15 @@ module application_fpga(
   wire          force_trap;
   wire [14 : 0] ram_aslr;
   wire [31 : 0] ram_scramble;
+
+
+  //----------------------------------------------------------------
+  // Assignments.
+  //----------------------------------------------------------------
+  // Temporary asignments for the SPI.
+  assign spi_ss   = 1'h1;
+  assign spi_sck  = 1'h0;
+  assign spi_mosi = 1'h0;
 
 
   //----------------------------------------------------------------
