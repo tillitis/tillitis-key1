@@ -1,9 +1,9 @@
 #=======================================================================
 #
-# application_fpga_usb_v1.pcf
-# ---------------------------
+# application_fpga_tk1.pcf
+# ------------------------
 # Pin constraints file for the Application FPGA design to be used
-# on the MTA1-USB-V1 board with the CH552 MCU used as a USB-serial chip.
+# on the tk1 board with the CH552 MCU used as a USB-serial chip.
 #
 #
 # Copyright (C) 2022 - Tillitis AB
@@ -35,5 +35,5 @@ set_io led_g 40
 set_io led_b 41
 
 #=======================================================================
-# EOF application_fpga_ch552.pcf
+# EOF application_fpga_tk1.pcf
 #=======================================================================
