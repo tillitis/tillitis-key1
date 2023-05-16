@@ -190,6 +190,60 @@ core will detect that and start flashing the status LED with a red
 light indicating that the CPU is in a trapped state and no further
 execution is possible.
 
+## SPI-master
+
+The TK1 includes a minimal SPI-master that provides access to the
+Winbond Flash memory mounted on the board. The SPI-master is byte
+oriented and very minimalistic.
+
+In order to transfer more than a single byte, SW must read status and
+write commands needed to send a sequence of bytes. In order to read
+out a sequence of bytes from the memory, SW must send as many dummy
+bytes as the data being read from the memory.
+
+The SPI-master is controlled using a few API
+addresses:
+
+```
+localparam ADDR_SPI_EN		= 8'h80;
+localparam ADDR_SPI_XFER	= 8'h81;
+localparam ADDR_SPI_DATA	= 8'h82;
+```
+
+**ADDR_SPI_EN** enables and disabled the SPI-master. Writing a 0x01 will
+lower the SPI chip select to the memory. Writing a 0x00 will raise the
+chip select.
+
+Writing to the **ADDR_SPI_XFER** starts a byte transfer. Reading from
+the address returns the status for the SPI-master. If the return value
+is not zero, the SPI-master is ready to send a byte.
+
+**ADDR_SPI_DATA** is the address used to send and receive a byte.
+data. The least significant byte will be sent to the memory during a
+transfer. The byte returned from the memory will be presented to SW if
+the address is read after a transfer has completed.
+
+The sequence of operations needed to perform is thus:
+
+1. Activate the SPI-master by writing a 0x00000001 to ADDR_SPI_EN
+2. Write a byte to ADDR_SPI_DATA
+3. Read ADDR_SPI_XFER to check status. Repeat until the read
+   operation returns non-zero value
+4. Write to ADDR_SPI_XFER
+5. Read ADDR_SPI_XFER to check status. Repeat until the read operation
+   returns a non-zero value
+6. Read out the received byte from ADDR_SPI_DATA
+7. Repeat 2..6 as many times as needed to send a command and data to
+   the memory and getting the expected status, data back.
+8. Deactivate the SPI-master by writing 0x00000000 to ADDR_SPI_EN
+
+The SPI connected memory on the board is the Winbond W25Q80. For
+information about the memory including support commands and protocol,
+see the datasheet:
+
+https://www.mouser.se/datasheet/2/949/w25q80dv_dl_revh_10022015-1489677.pdf
+
+
 ## Implementation
 
 The core is implemented as a single module. Future versions will

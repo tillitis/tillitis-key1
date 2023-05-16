@@ -37,6 +37,10 @@ lint-top:  $(LINT_SRC)
 	$(LINT) $(LINT_FLAGS) $(LINT_SRC)
 
 
+lint-spi:  $(SPI_SRC)
+	$(LINT) $(LINT_FLAGS) $^
+
+
 clean:
 	rm -f top.sim
 

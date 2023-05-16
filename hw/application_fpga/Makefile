@@ -68,6 +68,7 @@ VERILOG_SRCS = \
 	$(P)/core/uds/rtl/uds_rom.v \
 	$(P)/core/touch_sense/rtl/touch_sense.v \
 	$(P)/core/tk1/rtl/tk1.v \
+	$(P)/core/tk1/rtl/tk1_spi_master.v \
 	$(P)/core/tk1/rtl/udi_rom.v \
 	$(P)/core/uart/rtl/uart_core.v \
 	$(P)/core/uart/rtl/uart_fifo.v \
@@ -236,9 +237,19 @@ tb:
 #-------------------------------------------------------------------
 # Main FPGA build flow.
 # Synthesis. Place & Route. Bitstream generation.
+#
+# To include the SPI-master, add the flag -DINCLUDE_SPI_MASTER to Yosys cmd.
+# This can, for example, be done using
+# 'make application_fpga.bin YOSYS_FLAG=-DINCLUDE_SPI_MASTER'.
+# Important: do a make clean between builds with and wihtout the SPI master.
+# Otherwise, there is a risk of unintended components persisting between
+# builds.
 #-------------------------------------------------------------------
-synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex
-	$(YOSYS_PATH)yosys -v3 -l synth.log -DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
+
+YOSYS_FLAG ?=
+
+synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/udi.hex
+	$(YOSYS_PATH)yosys -v3 -l synth.log $(YOSYS_FLAG) -DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 		-DFIRMWARE_HEX=\"$(P)/bram_fw.hex\" \
 		-p 'synth_ice40 -dsp -top application_fpga -json $@; write_verilog -attr2comment synth.v' \
 		$(filter %.v, $^)

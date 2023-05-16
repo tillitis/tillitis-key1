@@ -33,6 +33,11 @@ run-make:
 	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it \
 	 $(IMAGE) make clean application_fpga.bin
 
+run-make-spi:
+	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it \
+	 $(IMAGE) make clean application_fpga.bin YOSYS_FLAG=-DINCLUDE_SPI_MASTER
+
+
 run-tb:
 	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it \
 	 $(IMAGE) make tb

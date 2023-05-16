@@ -20,6 +20,13 @@ module application_fpga(
                         output wire interface_rx,
                         input wire  interface_tx,
 
+`ifdef INCLUDE_SPI_MASTER
+			output wire spi_ss,
+			output wire spi_sck,
+			output wire spi_mosi,
+			input wire  spi_miso,
+`endif // INCLUDE_SPI_MASTER
+
 			input wire  touch_event,
 
 			input wire  app_gpio1,
@@ -316,6 +323,13 @@ module application_fpga(
 
                .ram_aslr(ram_aslr),
 	       .ram_scramble(ram_scramble),
+
+`ifdef INCLUDE_SPI_MASTER
+	       .spi_ss(spi_ss),
+	       .spi_sck(spi_sck),
+	       .spi_mosi(spi_mosi),
+	       .spi_miso(spi_miso),
+`endif // INCLUDE_SPI_MASTER
 
                .led_r(led_r),
                .led_g(led_g),
