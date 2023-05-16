@@ -59,19 +59,12 @@ module tb_uart();
   reg           tb_reset_n;
   reg           tb_rxd;
   wire          tb_txd;
-  wire          tb_rxd_syn;
-  wire [7 : 0]  tb_rxd_data;
-  wire          tb_rxd_ack;
-  wire          tb_txd_syn;
-  wire [7 : 0]  tb_txd_data;
-  wire          tb_txd_ack;
   reg           tb_cs;
   reg           tb_we;
   reg [7 : 0]   tb_address;
   reg [31 : 0]  tb_write_data;
   wire [31 : 0] tb_read_data;
-  wire          tb_error;
-  wire [7 : 0]  tb_debug;
+  wire          tb_ready;
 
   reg          txd_state;
 
@@ -86,33 +79,19 @@ module tb_uart();
            .rxd(tb_rxd),
            .txd(tb_txd),
 
-           .rxd_syn(tb_rxd_syn),
-           .rxd_data(tb_rxd_data),
-           .rxd_ack(tb_rxd_ack),
-
-           // Internal transmit interface.
-           .txd_syn(tb_txd_syn),
-           .txd_data(tb_txd_data),
-           .txd_ack(tb_txd_ack),
-
             // API interface.
             .cs(tb_cs),
             .we(tb_we),
             .address(tb_address),
             .write_data(tb_write_data),
             .read_data(tb_read_data),
-            .error(tb_error),
-
-           .debug(tb_debug)
+            .ready(tb_ready)
           );
+
 
   //----------------------------------------------------------------
   // Concurrent assignments.
   //----------------------------------------------------------------
-  // We connect the internal facing ports on the dut together.
-  assign tb_txd_syn  = tb_rxd_syn;
-  assign tb_txd_data = tb_rxd_data;
-  assign tb_rxd_ack  = tb_txd_ack;
 
 
   //----------------------------------------------------------------
@@ -223,9 +202,6 @@ module tb_uart();
   //----------------------------------------------------------------
   task dump_tx_state;
     begin
-      $display("txd = 0x%01x, txd_reg = 0x%01x, txd_byte_reg = 0x%01x, txd_bit_ctr_reg = 0x%01x, txd_bitrate_ctr_reg = 0x%02x, txd_ack = 0x%01x, etx_ctrl_reg = 0x%02x",
-               dut.core.txd, dut.core.txd_reg, dut.core.txd_byte_reg, dut.core.txd_bit_ctr_reg,
-               dut.core.txd_bitrate_ctr_reg, dut.core.txd_ack, dut.core.etx_ctrl_reg);
     end
   endtask // dump_dut_state
 
@@ -260,8 +236,8 @@ module tb_uart();
       tb_rxd        = 1;
       tb_cs         = 0;
       tb_we         = 0;
-      tb_address    = 8'h00;
-      tb_write_data = 32'h00000000;
+      tb_address    = 8'h0;
+      tb_write_data = 32'h0;
 
       txd_state     = 1;
     end

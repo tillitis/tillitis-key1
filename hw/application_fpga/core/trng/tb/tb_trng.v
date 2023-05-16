@@ -1,8 +1,8 @@
 //======================================================================
 //
-// tb_touch_sense.v
-// ----------------
-// Testbench for the touch sense core.
+// tb_trng.v
+// -----------
+// Testbench for the TRNG core.
 //
 //
 // Author: Joachim Strombergson
@@ -13,54 +13,54 @@
 
 `default_nettype none
 
-module tb_touch_sense();
+module tb_trng();
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   parameter DEBUG     = 1;
-  parameter DUMP_WAIT = 0;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
 
+  // API
   localparam ADDR_STATUS       = 8'h09;
   localparam STATUS_READY_BIT  = 0;
+  localparam ADDR_ENTROPY      = 8'h20;
 
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [31 : 0] cycle_ctr;
-  reg [31 : 0] error_ctr;
-  reg [31 : 0] tc_ctr;
-  reg          tb_monitor;
+  reg [31 : 0]  cycle_ctr;
+  reg [31 : 0]  error_ctr;
+  reg [31 : 0]  tc_ctr;
+  reg           tb_monitor;
 
   reg           tb_clk;
   reg           tb_reset_n;
-  reg           tb_touch_event;
   reg           tb_cs;
   reg           tb_we;
   reg [7 : 0]   tb_address;
+  reg [31 : 0]  tb_write_data;
   wire [31 : 0] tb_read_data;
-
-  reg [31 : 0] read_data;
+  wire          tb_ready;
 
 
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  touch_sense dut(
-		  .clk(tb_clk),
-		  .reset_n(tb_reset_n),
+  rosc dut(
+           .clk(tb_clk),
+           .reset_n(tb_reset_n),
 
-		  .touch_event(tb_touch_event),
-
-		  .cs(tb_cs),
-		  .we(tb_we),
-		  .address(tb_address),
-		  .read_data(tb_read_data)
-		 );
+           .cs(tb_cs),
+           .we(tb_cs),
+           .address(tb_address),
+           .write_data(tb_write_data),
+           .read_data(tb_read_data),
+	   .ready(tb_ready)
+         );
 
 
   //----------------------------------------------------------------
@@ -98,10 +98,20 @@ module tb_touch_sense();
   // Dump the state of the dump when needed.
   //----------------------------------------------------------------
   task dump_dut_state;
-    begin
-      $display("State of DUT");
+    begin : dump_dut_state
+      integer i;
+      $display("State of DUT at cycle: %08d", cycle_ctr);
       $display("------------");
-      $display("Cycle: %08d", cycle_ctr);
+      $display("Inputs and outputs:");
+      $display("cs: 0x%1x, address: 0x%02x, read_data: 0x%08x", tb_cs, tb_address, tb_read_data);
+      $display("");
+
+      $display("Internal state:");
+      $display("tmp_read_ready: 0x%1x, tmp_read_data: 0x%08x", dut.tmp_ready, dut.tmp_read_data);
+      $display("cycle_ctr_done: 0x%1x, cycle_ctr_rst: 0x%1x, cycle_ctr: 0x%04x",
+	       dut.cycle_ctr_done, dut.cycle_ctr_rst, dut.cycle_ctr_reg);
+      $display("bit_ctr: 0x%02x", dut.bit_ctr_reg);
+      $display("");
       $display("");
     end
   endtask // dump_dut_state
@@ -157,36 +167,12 @@ module tb_touch_sense();
 
       tb_clk         = 1'h0;
       tb_reset_n     = 1'h1;
-      tb_touch_event = 1'h0;
       tb_cs          = 1'h0;
-      tb_we          = 1'h0;
+      tb_cs          = 1'h0;
       tb_address     = 8'h0;
+      tb_write_data  = 32'h0;
     end
   endtask // init_sim
-
-
-  //----------------------------------------------------------------
-  // write_word()
-  //
-  // Write the given word to the DUT using the DUT interface.
-  //----------------------------------------------------------------
-  task write_word(input [7 : 0] address,
-                  input [31 : 0] word);
-    begin
-      if (DEBUG)
-        begin
-          $display("--- Writing 0x%08x to 0x%02x.", word, address);
-          $display("");
-        end
-
-      tb_address = address;
-      tb_cs = 1;
-      tb_we = 1;
-      #(2 * CLK_PERIOD);
-      tb_cs = 0;
-      tb_we = 0;
-    end
-  endtask // write_word
 
 
   //----------------------------------------------------------------
@@ -196,18 +182,28 @@ module tb_touch_sense();
   // the word read will be available in the global variable
   // read_data.
   //----------------------------------------------------------------
-  task read_word(input [7 : 0]  address);
-    begin
-      tb_address = address;
-      tb_cs = 1;
-      tb_we = 0;
-      #(CLK_PERIOD);
+  task read_word(input [11 : 0]  address, input [31 : 0] expected);
+    begin : read_word
+      reg [31 : 0] read_data;
+
+      tb_address   = address;
+      tb_cs        = 1'h1;
+
+      #(CLK_HALF_PERIOD);
       read_data = tb_read_data;
-      tb_cs = 0;
+
+      #(CLK_HALF_PERIOD);
+      tb_cs        = 1'h0;
 
       if (DEBUG)
         begin
-          $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
+	  if (read_data == expected) begin
+            $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
+	  end else begin
+            $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x",
+		     read_data, address, expected);
+	    error_ctr = error_ctr + 1;
+	  end
           $display("");
         end
     end
@@ -215,67 +211,16 @@ module tb_touch_sense();
 
 
   //----------------------------------------------------------------
-  // wait_ready()
-  //
-  // Wait for the ready flag to be set in dut.
-  //----------------------------------------------------------------
-  task wait_ready;
-    begin : wready
-      read_word(ADDR_STATUS);
-      while (read_data == 0)
-        read_word(ADDR_STATUS);
-    end
-  endtask // wait_ready
-
-
-  //----------------------------------------------------------------
-  // test1.
-  // Create a touch event check that it is accessible from the
-  // API. Clear the event from the API and check that it is
-  // really cleared.
+  // test1()
   //----------------------------------------------------------------
   task test1;
     begin
       tc_ctr = tc_ctr + 1;
+      tb_monitor = 1;
 
       $display("");
       $display("--- test1: started.");
-
-      // Set touch event to low:
-      tb_touch_event = 1'h0;
-
-      // Clear the event handler.
-      $display("--- test1: Clearing any stray event.");
-      write_word(8'h09, 32'h0);
-
-
-      // Check status.
-      #(CLK_PERIOD);
-      read_word(8'h09);
-
-      // Set touch event input to high.
-      $display("--- test1: Creating a touch event.");
-      tb_touch_event = 1'h1;
-
-      $display("--- test1: Waiting for the event to be caught.");
-      wait_ready();
-
-      $display("--- test1: Event has been seen.");
-
-      $display("--- test1: Dropping the event input.");
-      tb_touch_event = 1'h0;
-      #(CLK_PERIOD);
-      $display("--- test1: Clearing the event.");
-      write_word(8'h09, 32'h0);
-      #(CLK_PERIOD);
-
-      // Check that the event is now removed.
-      read_word(8'h09);
-      #(CLK_PERIOD);
-      $display("--- test1: Event has been cleared.");
-      read_word(8'h09);
-      #(CLK_PERIOD);
-
+      read_word(ADDR_STATUS, 32'h0);
       $display("--- test1: completed.");
       $display("");
     end
@@ -283,29 +228,28 @@ module tb_touch_sense();
 
 
   //----------------------------------------------------------------
-  // touch_sense_test
+  // trng_test
   //----------------------------------------------------------------
   initial
-    begin : timer_test
+    begin : trng_test
       $display("");
-      $display("   -= Testbench for touch_sense started =-");
-      $display("     ====================================");
+      $display("   -= Testbench for trng started =-");
+      $display("     ============================");
       $display("");
 
       init_sim();
       reset_dut();
-
       test1();
 
       display_test_result();
       $display("");
-      $display("   -= Testbench for touch_sense completed =-");
-      $display("     ======================================");
+      $display("   -= Testbench for trng completed =-");
+      $display("     ==============================");
       $display("");
       $finish;
-    end // touch_sense_test
-endmodule // tb_touch_sense
+    end // trng_test
+endmodule // tb_trng
 
 //======================================================================
-// EOF tb_touch_sense.v
+// EOF tb_trng.v
 //======================================================================
