@@ -1,0 +1,39 @@
+#=======================================================================
+#
+# application_fpga_tk1.pcf
+# ------------------------
+# Pin constraints file for the Application FPGA design to be used
+# on the tk1 board with the CH552 MCU used as a USB-serial chip.
+#
+#
+# Copyright (C) 2022 - Tillitis AB
+# SPDX-License-Identifier: GPL-2.0-only
+#
+#=======================================================================
+
+# UART.
+set_io interface_rx 26
+set_io interface_tx 25
+# set_io interface_cts 27
+# set_io interface_rts 28
+
+
+# Touch sense.
+set_io touch_event 6
+
+
+# GPIOs.
+set_io app_gpio1 36
+set_io app_gpio2 38
+set_io app_gpio3 45
+set_io app_gpio4 46
+
+
+# LEDs
+set_io led_r 39
+set_io led_g 40
+set_io led_b 41
+
+#=======================================================================
+# EOF application_fpga_tk1.pcf
+#=======================================================================
