@@ -28,6 +28,11 @@ module tk1(
 	   output wire [14 : 0] ram_aslr,
 	   output wire [31 : 0] ram_scramble,
 
+	   output wire          spi_ss,
+	   output wire          spi_sck,
+	   output wire          spi_mosi,
+	   input wire           spi_miso,
+
            output wire          led_r,
            output wire          led_g,
            output wire          led_b,
@@ -170,6 +175,10 @@ module tk1(
 
   assign ram_aslr     = ram_aslr_reg;
   assign ram_scramble = ram_scramble_reg;
+
+  assign spi_ss   = 1'h1;
+  assign spi_sck  = 1'h0;
+  assign spi_mosi = 1'h0;
 
 
   //----------------------------------------------------------------

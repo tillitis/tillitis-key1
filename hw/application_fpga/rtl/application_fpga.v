@@ -165,15 +165,6 @@ module application_fpga(
 
 
   //----------------------------------------------------------------
-  // Assignments.
-  //----------------------------------------------------------------
-  // Temporary asignments for the SPI.
-  assign spi_ss   = 1'h1;
-  assign spi_sck  = 1'h0;
-  assign spi_mosi = 1'h0;
-
-
-  //----------------------------------------------------------------
   // Module instantiations.
   //----------------------------------------------------------------
   clk_reset_gen #(.RESET_CYCLES(200))
@@ -342,6 +333,11 @@ module application_fpga(
 
                .ram_aslr(ram_aslr),
 	       .ram_scramble(ram_scramble),
+
+	       .spi_ss(spi_ss),
+	       .spi_sck(spi_sck),
+	       .spi_mosi(spi_mosi),
+	       .spi_miso(spi_miso),
 
                .led_r(led_r),
                .led_g(led_g),
