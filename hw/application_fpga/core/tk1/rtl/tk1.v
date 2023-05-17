@@ -89,6 +89,9 @@ module tk1(
   localparam ADDR_CPU_MON_FIRST = 8'h61;
   localparam ADDR_CPU_MON_LAST  = 8'h62;
 
+  localparam ADDR_SPI_EN        = 8'h80;
+  localparam ADDR_SPI_XFER      = 8'h81;
+  localparam ADDR_SPI_DATA      = 8'h62;
 
   localparam TK1_NAME0    = 32'h746B3120; // "tk1 "
   localparam TK1_NAME1    = 32'h6d6b6466; // "mkdf"
@@ -147,6 +150,17 @@ module tk1(
   reg [31 : 0] cpu_mon_last_reg;
   reg          cpu_mon_last_we;
 
+  reg          spi_ss_reg;
+  reg          spi_ss_we;
+
+  reg          spi_csk_reg;
+  reg          spi_csk_new;
+  reg          spi_csk_we;
+
+  reg [7 : 0]  spi_data_reg;
+  reg [7 : 0]  spi_data_new;
+  reg          spi_data_we;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -176,9 +190,9 @@ module tk1(
   assign ram_aslr     = ram_aslr_reg;
   assign ram_scramble = ram_scramble_reg;
 
-  assign spi_ss   = 1'h1;
-  assign spi_sck  = 1'h0;
-  assign spi_mosi = 1'h0;
+  assign spi_ss   = spi_ss_reg;
+  assign spi_sck  = spi_csk_reg;
+  assign spi_mosi = spi_data_reg[7];
 
 
   //----------------------------------------------------------------
@@ -233,6 +247,9 @@ module tk1(
 	cpu_mon_last_reg  <= 32'h0;
  	ram_aslr_reg      <= 15'h0;
 	ram_scramble_reg  <= 32'h0;
+	spi_ss_reg        <= 1'h1;
+	spi_csk_reg       <= 1'h0;
+	spi_data_reg      <= 8'h0;
       end
 
       else begin
@@ -298,6 +315,18 @@ module tk1(
 
 	if (cpu_mon_last_we) begin
 	  cpu_mon_last_reg <= write_data;
+	end
+
+	if (spi_ss_we) begin
+	  spi_ss_reg <= ~write_data[0];
+	end
+
+	if (spi_csk_we) begin
+	  spi_csk_reg <= spi_csk_new;
+	end
+
+	if (spi_data_we) begin
+	  spi_data_reg <= spi_data_new;
 	end
       end
     end // reg_update
@@ -369,6 +398,9 @@ module tk1(
       cpu_mon_first_we = 1'h0;
       cpu_mon_last_we  = 1'h0;
       cpu_mon_en_we    = 1'h0;
+      spi_ss_we        = 1'h0;
+      spi_csk_we       = 1'h0;
+      spi_data_we      = 1'h0;
       tmp_read_data    = 32'h0;
       tmp_ready        = 1'h0;
 
@@ -439,6 +471,20 @@ module tk1(
 	      cpu_mon_last_we = 1'h1;
 	    end
 	  end
+
+	  if (address == ADDR_SPI_EN) begin
+	    spi_ss_we = 1'h1;
+	  end
+
+	  if (address == ADDR_SPI_XFER) begin
+	    spi_csk_new = write_data[0];
+	    spi_csk_we  = 1'h1;
+	  end
+
+	  if (address == ADDR_SPI_DATA) begin
+	    spi_data_new = write_data[7 : 0];
+	    spi_data_we  = 1'h1;
+	  end
 	end
 
         else begin
@@ -487,6 +533,14 @@ module tk1(
 	    if (!switch_app_reg) begin
 	      tmp_read_data = udi_mem[address[0]];
 	    end
+	  end
+
+	  if (address == ADDR_SPI_XFER) begin
+	    tmp_read_data[0] = spi_csk_reg;
+	  end
+
+	  if (address == ADDR_SPI_DATA) begin
+	    tmp_read_data[7 : 0] = spi_data_reg;
 	  end
         end
       end
