@@ -150,17 +150,6 @@ module tk1(
   reg [31 : 0] cpu_mon_last_reg;
   reg          cpu_mon_last_we;
 
-  reg          spi_ss_reg;
-  reg          spi_ss_we;
-
-  reg          spi_csk_reg;
-  reg          spi_csk_new;
-  reg          spi_csk_we;
-
-  reg [7 : 0]  spi_data_reg;
-  reg [7 : 0]  spi_data_new;
-  reg          spi_data_we;
-
 
   //----------------------------------------------------------------
   // Wires.
@@ -172,6 +161,14 @@ module tk1(
   /* verilator lint_on UNOPTFLAT */
 
   reg [2 : 0]  muxed_led;
+
+  reg          spi_enable;
+  reg          spi_enable_we;
+  reg          spi_start;
+  reg          spi_tx_data;
+  reg          spi_tx_data_we;
+  wire         spi_ready;
+  wire [7 : 0] spi_rx_data;
 
 
   //----------------------------------------------------------------
@@ -189,10 +186,6 @@ module tk1(
 
   assign ram_aslr     = ram_aslr_reg;
   assign ram_scramble = ram_scramble_reg;
-
-  assign spi_ss   = spi_ss_reg;
-  assign spi_sck  = spi_csk_reg;
-  assign spi_mosi = spi_data_reg[7];
 
 
   //----------------------------------------------------------------
@@ -215,6 +208,24 @@ module tk1(
                             .CURREN(1'b1)
     );
   /* verilator lint_on PINMISSING */
+
+  tk1_spi_master spi_master(
+			    .clk(clk),
+			    .reset_n(reset_n),
+
+			    .spi_ss(spi_ss),
+			    .spi_sck(spi_sck),
+			    .spi_mosi(spi_mosi),
+			    .spi_miso(spi_miso),
+
+			    .spi_enable(spi_enable),
+			    .spi_enable_we(spi_enable_we),
+			    .spi_start(spi_start),
+			    .spi_tx_data(spi_tx_data),
+			    .spi_tx_data_we(spi_tx_data_we),
+			    .spi_rx_data(spi_rx_data),
+			    .spi_ready(spi_ready)
+			   );
 
 
   //----------------------------------------------------------------
@@ -247,9 +258,6 @@ module tk1(
 	cpu_mon_last_reg  <= 32'h0;
  	ram_aslr_reg      <= 15'h0;
 	ram_scramble_reg  <= 32'h0;
-	spi_ss_reg        <= 1'h1;
-	spi_csk_reg       <= 1'h0;
-	spi_data_reg      <= 8'h0;
       end
 
       else begin
@@ -315,18 +323,6 @@ module tk1(
 
 	if (cpu_mon_last_we) begin
 	  cpu_mon_last_reg <= write_data;
-	end
-
-	if (spi_ss_we) begin
-	  spi_ss_reg <= ~write_data[0];
-	end
-
-	if (spi_csk_we) begin
-	  spi_csk_reg <= spi_csk_new;
-	end
-
-	if (spi_data_we) begin
-	  spi_data_reg <= spi_data_new;
 	end
       end
     end // reg_update
@@ -398,11 +394,14 @@ module tk1(
       cpu_mon_first_we = 1'h0;
       cpu_mon_last_we  = 1'h0;
       cpu_mon_en_we    = 1'h0;
-      spi_ss_we        = 1'h0;
-      spi_csk_we       = 1'h0;
-      spi_data_we      = 1'h0;
+      spi_enable_we    = 1'h0;
+      spi_start        = 1'h0;
+      spi_tx_data_we   = 1'h0;
       tmp_read_data    = 32'h0;
       tmp_ready        = 1'h0;
+
+      spi_enable       = write_data[0];
+      spi_tx_data      = write_data[7 : 0];
 
       if (cs) begin
 	tmp_ready = 1'h1;
@@ -473,17 +472,15 @@ module tk1(
 	  end
 
 	  if (address == ADDR_SPI_EN) begin
-	    spi_ss_we = 1'h1;
+	    spi_enable_we = 1'h1;
 	  end
 
 	  if (address == ADDR_SPI_XFER) begin
-	    spi_csk_new = write_data[0];
-	    spi_csk_we  = 1'h1;
+	    spi_start = 1'h1;
 	  end
 
 	  if (address == ADDR_SPI_DATA) begin
-	    spi_data_new = write_data[7 : 0];
-	    spi_data_we  = 1'h1;
+	    spi_tx_data_we = 1'h1;
 	  end
 	end
 
@@ -536,11 +533,11 @@ module tk1(
 	  end
 
 	  if (address == ADDR_SPI_XFER) begin
-	    tmp_read_data[0] = spi_csk_reg;
+	    tmp_read_data[0] = spi_ready;
 	  end
 
 	  if (address == ADDR_SPI_DATA) begin
-	    tmp_read_data[7 : 0] = spi_data_reg;
+	    tmp_read_data[7 : 0] = spi_rx_data;
 	  end
         end
       end

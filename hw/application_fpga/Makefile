@@ -63,6 +63,7 @@ VERILOG_SRCS = \
 	$(P)/core/uds/rtl/uds.v \
 	$(P)/core/touch_sense/rtl/touch_sense.v \
 	$(P)/core/tk1/rtl/tk1.v \
+	$(P)/core/tk1/rtl/tk1_spi_master.v \
 	$(P)/core/uart/rtl/uart_core.v \
 	$(P)/core/uart/rtl/uart_fifo.v \
 	$(P)/core/uart/rtl/uart.v \
