@@ -11,7 +11,7 @@ client app as needed to solve different use cases.
 
 This document describes the threat model for the Tillitis TKey device
 and the device app. Based on [the system
-description](system_description.md) and use cases, the threat model
+description](../system_description.md) and use cases, the threat model
 tries to capture and describe the threats that needs to be mitigated
 in order for the device app to work in a secure and trustworthy
 manner.
