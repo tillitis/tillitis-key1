@@ -165,7 +165,7 @@ module tk1(
   reg          spi_enable;
   reg          spi_enable_we;
   reg          spi_start;
-  reg          spi_tx_data;
+  reg [7 : 0]  spi_tx_data;
   reg          spi_tx_data_we;
   wire         spi_ready;
   wire [7 : 0] spi_rx_data;

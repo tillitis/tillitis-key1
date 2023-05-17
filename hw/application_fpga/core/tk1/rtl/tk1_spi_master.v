@@ -29,7 +29,7 @@ module tk1_spi_master(
 		      input wire           spi_start,
 		      input wire  [7 : 0]  spi_tx_data,
 		      input wire           spi_tx_data_we,
-		      input wire  [7 : 0]  spi_rx_data,
+		      output wire  [7 : 0] spi_rx_data,
 		      output wire          spi_ready
 		     );
 
@@ -161,7 +161,7 @@ module tk1_spi_master(
   // bit_ctr
   //----------------------------------------------------------------
   always @*
-    begin : clk_ctr
+    begin : bit_ctr
       spi_bit_ctr_new = 3'h0;
       spi_bit_ctr_we  = 1'h0;
 
