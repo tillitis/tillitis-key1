@@ -45,7 +45,6 @@ module fw_ram(
   //----------------------------------------------------------------
   assign read_data = tmp_read_data;
   assign ready     = ready_reg;
-  assign fw_app_cs = cs && ~fw_app_mode;
 
 
   //----------------------------------------------------------------
@@ -130,6 +129,8 @@ module fw_ram(
       bank0         = 1'h0;
       bank1         = 1'h0;
       tmp_read_data = 32'h0;
+
+      fw_app_cs = cs && ~fw_app_mode;
 
       if (fw_app_cs) begin
 	if (address[8]) begin
