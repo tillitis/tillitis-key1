@@ -37,10 +37,13 @@ module tk1_spi_master(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter CTRL_IDLE   = 2'h0;
-  parameter CTRL_WAIT0  = 2'h1;
-  parameter CTRL_NEXT   = 2'h2;
-  parameter CTRL_WAIT1  = 2'h3;
+  parameter CTRL_IDLE      = 3'h0;
+  parameter CTRL_POS_FLANK = 3'h1;
+  parameter CTRL_WAIT_8    = 3'h2;
+  parameter CTRL_NEG_FLANK = 3'h3;
+  parameter CTRL_WAIT_4_1  = 3'h4;
+  parameter CTRL_SHIFT     = 3'h5;
+  parameter CTRL_WAIT_4_2  = 3'h6;
 
 
   //----------------------------------------------------------------
@@ -76,8 +79,8 @@ module tk1_spi_master(
   reg          spi_ready_new;
   reg          spi_ready_we;
 
-  reg [1 : 0]  spi_ctrl_reg;
-  reg [1 : 0]  spi_ctrl_new;
+  reg [2 : 0]  spi_ctrl_reg;
+  reg [2 : 0]  spi_ctrl_new;
   reg          spi_ctrl_we;
 
 
@@ -207,8 +210,8 @@ module tk1_spi_master(
       spi_tx_data_load  = 1'h0;
       spi_tx_data_shift = 1'h0;
       spi_clk_ctr_rst   = 1'h0;
-      spi_csk_we        = 1'h0;
       spi_csk_new       = 1'h0;
+      spi_csk_we        = 1'h0;
       spi_bit_ctr_rst   = 1'h0;
       spi_bit_ctr_inc   = 1'h0;
       spi_ready_new     = 1'h0;
@@ -220,19 +223,65 @@ module tk1_spi_master(
       case (spi_ctrl_reg)
         CTRL_IDLE: begin
           if (spi_start) begin
+	    spi_tx_data_load  = 1'h1;
+	    spi_bit_ctr_rst   = 1'h1;
 	    spi_ready_new     = 1'h0;
 	    spi_ready_we      = 1'h1;
-	    spi_ctrl_new      = CTRL_WAIT1;
+	    spi_ctrl_new      = CTRL_POS_FLANK;
 	    spi_ctrl_we       = 1'h1;
           end
 	end
 
-
-        CTRL_WAIT1: begin
-	  spi_ready_new     = 1'h1;
-	  spi_ready_we      = 1'h1;
-	  spi_ctrl_new      = CTRL_IDLE;
+	CTRL_POS_FLANK: begin
+	  spi_csk_new       = 1'h1;
+	  spi_csk_we        = 1'h1;
+	  spi_clk_ctr_rst   = 1'h1;
+	  spi_ctrl_new      = CTRL_WAIT_8;
 	  spi_ctrl_we       = 1'h1;
+	end
+
+	CTRL_WAIT_8:begin
+	  if (spi_clk_ctr_reg == 3'h7) begin
+	    spi_ctrl_new      = CTRL_NEG_FLANK;
+	    spi_ctrl_we       = 1'h1;
+	  end
+	end
+
+	CTRL_NEG_FLANK:begin
+	  spi_csk_new       = 1'h0;
+	  spi_csk_we        = 1'h1;
+	  spi_clk_ctr_rst   = 1'h1;
+	  spi_ctrl_new      = CTRL_WAIT_4_1;
+	  spi_ctrl_we       = 1'h1;
+	end
+
+	CTRL_WAIT_4_1:begin
+	  if (spi_clk_ctr_reg == 3'h4) begin
+	    spi_ctrl_new      = CTRL_SHIFT;
+	    spi_ctrl_we       = 1'h1;
+	  end
+	end
+
+	CTRL_SHIFT:begin
+	  spi_tx_data_shift = 1'h1;
+	  spi_ctrl_new      = CTRL_WAIT_4_2;
+	  spi_ctrl_we       = 1'h1;
+	end
+
+	CTRL_WAIT_4_2: begin
+	  if (spi_clk_ctr_reg == 3'h7) begin
+	    if (spi_bit_ctr_reg == 3'h7) begin
+	      spi_ready_new = 1'h1;
+	      spi_ready_we  = 1'h1;
+	      spi_ctrl_new  = CTRL_IDLE;
+	      spi_ctrl_we   = 1'h1;
+	    end
+	    else begin
+	      spi_bit_ctr_inc = 1'h1;
+	      spi_ctrl_new    = CTRL_POS_FLANK;
+	      spi_ctrl_we     = 1'h1;
+	    end
+	  end
 	end
 
         default: begin
