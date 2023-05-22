@@ -58,6 +58,10 @@ module tb_tk1();
   localparam ADDR_CPU_MON_FIRST = 8'h61;
   localparam ADDR_CPU_MON_LAST  = 8'h62;
 
+  localparam ADDR_SPI_EN        = 8'h80;
+  localparam ADDR_SPI_XFER      = 8'h81;
+  localparam ADDR_SPI_DATA      = 8'h62;
+
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -89,12 +93,23 @@ module tb_tk1();
   wire          tb_gpio3;
   wire          tb_gpio4;
 
+  wire          tb_spi_ss;
+  wire          tb_spi_sck;
+  wire          tb_spi_mosi;
+  wire          tb_spi_miso;
+
   reg           tb_cs;
   reg           tb_we;
   reg [7 : 0]   tb_address;
   reg  [31 : 0] tb_write_data;
   wire [31 : 0] tb_read_data;
   wire          tb_ready;
+
+  //----------------------------------------------------------------
+  // Continuous assignments.
+  //----------------------------------------------------------------
+  // Inverted loopback of SPI data lines.
+  assign tb_spi_miso = ~tb_spi_mosi;
 
 
   //----------------------------------------------------------------
@@ -123,6 +138,11 @@ module tb_tk1();
 	  .gpio2(tb_gpio2),
 	  .gpio3(tb_gpio3),
 	  .gpio4(tb_gpio4),
+
+	  .spi_ss(tb_spi_ss),
+	  .spi_sck(tb_spi_sck),
+	  .spi_mosi(tb_spi_mosi),
+	  .spi_miso(tb_spi_miso),
 
           .cs(tb_cs),
           .we(tb_we),
@@ -614,7 +634,37 @@ module tb_tk1();
       $display("--- test9: completed.");
       $display("");
     end
-  endtask // test8
+  endtask // test9
+
+
+  //----------------------------------------------------------------
+  // test10()
+  // SPI master loopback test.
+  //----------------------------------------------------------------
+  task test10;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test10: Loopback in SPI Master started.");
+
+      $display("--- test10: Sending a byte.");
+      write_word(ADDR_SPI_EN, 32'h1);
+      write_word(ADDR_SPI_DATA, 32'ha7);
+      write_word(ADDR_SPI_XFER, 32'h1);
+
+      while (!dut.spi_ready) begin
+
+      end
+      $display("--- test10: Byte should have been sent.");
+      write_word(ADDR_SPI_EN, 32'h0);
+
+      read_word(ADDR_SPI_DATA, 32'h1);
+
+      $display("--- test10: completed.");
+      $display("");
+    end
+  endtask // test10
 
 
   //----------------------------------------------------------------
@@ -639,6 +689,8 @@ module tb_tk1();
       test7();
       test8();
       test9();
+      test9();
+      test10();
 
       display_test_result();
       $display("");
