@@ -654,12 +654,13 @@ module tb_tk1();
       write_word(ADDR_SPI_XFER, 32'h1);
 
       while (!dut.spi_ready) begin
-
+	#(CLK_PERIOD);
       end
       $display("--- test10: Byte should have been sent.");
       write_word(ADDR_SPI_EN, 32'h0);
 
-      read_word(ADDR_SPI_DATA, 32'h1);
+      // 0x58 is the inverse of 0xa7.
+      read_word(ADDR_SPI_DATA, 32'h58);
 
       $display("--- test10: completed.");
       $display("");
