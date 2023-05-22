@@ -50,7 +50,6 @@ module tk1_spi_master(
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
   reg          spi_ss_reg;
-  reg          spi_ss_we;
 
   reg          spi_csk_reg;
   reg          spi_csk_new;
@@ -58,15 +57,14 @@ module tk1_spi_master(
 
   reg [7 : 0]  spi_data_reg;
   reg [7 : 0]  spi_data_new;
-  reg          spi_data_load;
   reg          spi_data_shift;
   reg          spi_data_we;
 
   reg          spi_miso_sample0_reg;
   reg          spi_miso_sample1_reg;
 
-  reg [3 : 0]  spi_clk_ctr_reg;
-  reg [3 : 0]  spi_clk_ctr_new;
+  reg [2 : 0]  spi_clk_ctr_reg;
+  reg [2 : 0]  spi_clk_ctr_new;
   reg          spi_clk_ctr_rst;
 
   reg [2 : 0]  spi_bit_ctr_reg;
@@ -87,8 +85,6 @@ module tk1_spi_master(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg spi_tx_data_load;
-  reg spi_tx_data_shift;
 
 
   //----------------------------------------------------------------
@@ -110,7 +106,7 @@ module tk1_spi_master(
 	spi_ss_reg      <= 1'h1;
 	spi_csk_reg     <= 1'h0;
 	spi_data_reg    <= 8'h0;
-	spi_clk_ctr_reg <= 4'h0;
+	spi_clk_ctr_reg <= 3'h0;
 	spi_bit_ctr_reg <= 3'h0;
 	spi_ready_reg   <= 1'h1;
 	spi_ctrl_reg    <= CTRL_IDLE;
@@ -137,6 +133,10 @@ module tk1_spi_master(
 	  spi_ready_reg <= spi_ready_new;
 	end
 
+	if (spi_bit_ctr_we) begin
+	  spi_bit_ctr_reg <= spi_bit_ctr_new;
+	end
+
 	if (spi_ctrl_we) begin
 	  spi_ctrl_reg <= spi_ctrl_new;
 	end
@@ -147,12 +147,13 @@ module tk1_spi_master(
   //----------------------------------------------------------------
   // clk_ctr
   //
-  // Continuously running counter that can be reset to zero.
+  // Continuously running clock cycle counter that can be
+  // reset to zero.
   //----------------------------------------------------------------
   always @*
     begin : clk_ctr
       if (spi_clk_ctr_rst) begin
-	spi_clk_ctr_new = 4'h0;
+	spi_clk_ctr_new = 3'h0;
       end
       else begin
 	spi_clk_ctr_new = spi_clk_ctr_reg + 1'h1;
@@ -190,9 +191,11 @@ module tk1_spi_master(
       spi_data_new = 8'h0;
       spi_data_we  = 1'h0;
 
-      if (spi_tx_data_load) begin
-	spi_data_new = spi_tx_data;
-	spi_data_we  = 1'h1;
+      if (spi_tx_data_we) begin
+	if (spi_ready_reg) begin
+	  spi_data_new = spi_tx_data;
+	  spi_data_we  = 1'h1;
+	end
       end
 
       if (spi_data_shift) begin
@@ -207,23 +210,21 @@ module tk1_spi_master(
   //----------------------------------------------------------------
   always @*
     begin : spi_master_ctrl
-      spi_tx_data_load  = 1'h0;
-      spi_tx_data_shift = 1'h0;
-      spi_clk_ctr_rst   = 1'h0;
-      spi_csk_new       = 1'h0;
-      spi_csk_we        = 1'h0;
-      spi_bit_ctr_rst   = 1'h0;
-      spi_bit_ctr_inc   = 1'h0;
-      spi_ready_new     = 1'h0;
-      spi_ready_we      = 1'h0;
-      spi_ctrl_new      = CTRL_IDLE;
-      spi_ctrl_we       = 1'h0;
+      spi_data_shift  = 1'h0;
+      spi_clk_ctr_rst = 1'h0;
+      spi_csk_new     = 1'h0;
+      spi_csk_we      = 1'h0;
+      spi_bit_ctr_rst = 1'h0;
+      spi_bit_ctr_inc = 1'h0;
+      spi_ready_new   = 1'h0;
+      spi_ready_we    = 1'h0;
+      spi_ctrl_new    = CTRL_IDLE;
+      spi_ctrl_we     = 1'h0;
 
 
       case (spi_ctrl_reg)
         CTRL_IDLE: begin
           if (spi_start) begin
-	    spi_tx_data_load  = 1'h1;
 	    spi_bit_ctr_rst   = 1'h1;
 	    spi_ready_new     = 1'h0;
 	    spi_ready_we      = 1'h1;
@@ -257,15 +258,15 @@ module tk1_spi_master(
 
 	CTRL_WAIT_4_1:begin
 	  if (spi_clk_ctr_reg == 3'h4) begin
-	    spi_ctrl_new      = CTRL_SHIFT;
-	    spi_ctrl_we       = 1'h1;
+	    spi_ctrl_new = CTRL_SHIFT;
+	    spi_ctrl_we  = 1'h1;
 	  end
 	end
 
 	CTRL_SHIFT:begin
-	  spi_tx_data_shift = 1'h1;
-	  spi_ctrl_new      = CTRL_WAIT_4_2;
-	  spi_ctrl_we       = 1'h1;
+	  spi_data_shift = 1'h1;
+	  spi_ctrl_new = CTRL_WAIT_4_2;
+	  spi_ctrl_we  = 1'h1;
 	end
 
 	CTRL_WAIT_4_2: begin
