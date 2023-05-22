@@ -107,19 +107,27 @@ module tb_tk1_spi_master();
       $display("State of DUT at cycle: %08d", cycle_ctr);
       $display("------------");
       $display("Inputs and outputs:");
-      $display("spi_ss: 0x%1x, spi_sck: 0x%1x, spi_mosi: 0x%1x, spi_miso:0x%1x", dut.spi_ss, dut.spi_sck, dut.spi_mosi, dut.spi_miso);
-      $display("spi_enable_we: 0x%1x, spi_enable: 0x%1x", dut.spi_enable_we, dut.spi_enable);
-      $display("spi_start: 0x%1x, spi_ready: 0x%1x", dut.spi_start, dut.spi_ready);
-      $display("spi_tx_data_we: 0x%1x, spi_tx_data: 0x%02x", dut.spi_tx_data_we, dut.spi_tx_data);
-      $display("spi_rx_data: 0x%02x", dut.spi_rx_data);
+      $display("spi_ss: 0x%1x, spi_sck: 0x%1x, spi_mosi: 0x%1x, spi_miso:0x%1x",
+	       dut.spi_ss, dut.spi_sck, dut.spi_mosi, dut.spi_miso);
+      $display("spi_enable_we: 0x%1x, spi_enable: 0x%1x",
+	       dut.spi_enable_we, dut.spi_enable);
+      $display("spi_start: 0x%1x, spi_ready: 0x%1x",
+	       dut.spi_start, dut.spi_ready);
+      $display("spi_tx_data_we: 0x%1x, spi_tx_data: 0x%02x",
+	       dut.spi_tx_data_we, dut.spi_tx_data);
+      $display("spi_data_shift: 0x%1x, spi_rx_data: 0x%02x",
+	       dut.spi_data_shift, dut.spi_rx_data);
       $display("");
 
 
       $display("");
       $display("Internal state:");
-      $display("spi_clk_ctr_rst: 0x%1x, spi_clk_ctr_reg: 0x%02x", dut.spi_clk_ctr_rst, dut.spi_clk_ctr_reg);
-      $display("spi_bit_ctr_rst: 0x%1x, spi_bit_ctr_inc: 0x%1x, spi_bit_ctr_reg: 0x%02x", dut.spi_bit_ctr_rst, dut.spi_bit_ctr_inc, dut.spi_bit_ctr_reg);
-      $display("");
+      $display("spi_clk_ctr_rst: 0x%1x, spi_clk_ctr_reg: 0x%02x",
+	       dut.spi_clk_ctr_rst, dut.spi_clk_ctr_reg);
+      $display("spi_bit_ctr_rst: 0x%1x, spi_bit_ctr_inc: 0x%1x, spi_bit_ctr_reg: 0x%02x",
+	       dut.spi_bit_ctr_rst, dut.spi_bit_ctr_inc, dut.spi_bit_ctr_reg);
+      $display("spi_ctrl_reg: 0x%02x, spi_ctrl_new: 0x%02x, spi_ctrl_we: 0x%1x",
+	       dut.spi_ctrl_reg, dut.spi_ctrl_new, dut.spi_ctrl_we);
 
       $display("");
       $display("");
@@ -193,11 +201,53 @@ module tb_tk1_spi_master();
   task test1;
     begin
       tc_ctr = tc_ctr + 1;
+      monitor = 1;
+
+      tb_spi_miso = 1'h1;
 
       $display("");
-      $display("--- test1: BLA BLA BLA started.");
+      $display("--- test1: Send a byte, receive a byte.");
+
+      $display("--- test1: State at idle for 4 cycles.");
+      #(4 * CLK_PERIOD);
+
+      $display("--- test1: Enable the SPI master. Should drop cs");
+      tb_spi_enable     = 1'h1;
+      tb_spi_enable_we  = 1'h1;
+      #(CLK_PERIOD);
+      tb_spi_enable_we  = 1'h0;
+
+      $display("--- test1: Load a 0xa7 byte to transmit.");
+      #(CLK_PERIOD);
+      tb_spi_tx_data    = 8'ha7;
+      tb_spi_tx_data_we = 1'h1;
+      #(CLK_PERIOD);
+      tb_spi_tx_data_we = 1'h0;
+
+      $display("--- test1: Start the transfer. This should drop ready.");
+      #(CLK_PERIOD);
+      tb_spi_start = 1'h1;
+      #(CLK_PERIOD);
+      tb_spi_start = 1'h0;
+      #(2 * CLK_PERIOD);
+
+      $display("--- test1: Wait for ready to be set.");
+      while (!tb_spi_ready) begin
+	#(CLK_PERIOD);
+      end
+      $display("--- test1: Ready has been set.");
+      #(CLK_PERIOD);
+
+      $display("--- test1: Disable the SPI master. Should raise cs");
+      tb_spi_enable     = 1'h0;
+      tb_spi_enable_we  = 1'h1;
+      #(CLK_PERIOD);
+      tb_spi_enable_we  = 1'h0;
+      #(CLK_PERIOD);
 
       $display("--- test1: completed.");
+      monitor = 0;
+
       $display("");
     end
   endtask // test1
