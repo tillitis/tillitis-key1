@@ -107,9 +107,18 @@ module tb_tk1_spi_master();
       $display("State of DUT at cycle: %08d", cycle_ctr);
       $display("------------");
       $display("Inputs and outputs:");
+      $display("spi_ss: 0x%1x, spi_sck: 0x%1x, spi_mosi: 0x%1x, spi_miso:0x%1x", dut.spi_ss, dut.spi_sck, dut.spi_mosi, dut.spi_miso);
+      $display("spi_enable_we: 0x%1x, spi_enable: 0x%1x", dut.spi_enable_we, dut.spi_enable);
+      $display("spi_start: 0x%1x, spi_ready: 0x%1x", dut.spi_start, dut.spi_ready);
+      $display("spi_tx_data_we: 0x%1x, spi_tx_data: 0x%02x", dut.spi_tx_data_we, dut.spi_tx_data);
+      $display("spi_rx_data: 0x%02x", dut.spi_rx_data);
       $display("");
 
+
+      $display("");
       $display("Internal state:");
+      $display("spi_clk_ctr_rst: 0x%1x, spi_clk_ctr_reg: 0x%02x", dut.spi_clk_ctr_rst, dut.spi_clk_ctr_reg);
+      $display("spi_bit_ctr_rst: 0x%1x, spi_bit_ctr_inc: 0x%1x, spi_bit_ctr_reg: 0x%02x", dut.spi_bit_ctr_rst, dut.spi_bit_ctr_inc, dut.spi_bit_ctr_reg);
       $display("");
 
       $display("");
