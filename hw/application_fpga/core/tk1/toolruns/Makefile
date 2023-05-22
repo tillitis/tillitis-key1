@@ -47,6 +47,10 @@ lint-top:  $(TOP_SRC)
 	$(LINT) $(LINT_FLAGS) $^ ../tb/sb_rgba_drv.v -DUDI_HEX=\"../tb/udi.hex\"
 
 
+lint-spi:  $(SPI_SRC)
+	$(LINT) $(LINT_FLAGS) $^
+
+
 clean:
 	rm -f spi.sim
 	rm -f top.sim
