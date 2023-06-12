@@ -91,7 +91,7 @@ module tk1(
 
   localparam ADDR_SPI_EN        = 8'h80;
   localparam ADDR_SPI_XFER      = 8'h81;
-  localparam ADDR_SPI_DATA      = 8'h62;
+  localparam ADDR_SPI_DATA      = 8'h82;
 
   localparam TK1_NAME0    = 32'h746B3120; // "tk1 "
   localparam TK1_NAME1    = 32'h6d6b6466; // "mkdf"
