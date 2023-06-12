@@ -163,10 +163,10 @@ module tk1(
   reg [2 : 0]  muxed_led;
 
   reg          spi_enable;
-  reg          spi_enable_we;
+  reg          spi_enable_vld;
   reg          spi_start;
   reg [7 : 0]  spi_tx_data;
-  reg          spi_tx_data_we;
+  reg          spi_tx_data_vld;
   wire         spi_ready;
   wire [7 : 0] spi_rx_data;
 
@@ -219,10 +219,10 @@ module tk1(
 			    .spi_miso(spi_miso),
 
 			    .spi_enable(spi_enable),
-			    .spi_enable_we(spi_enable_we),
+			    .spi_enable_vld(spi_enable_vld),
 			    .spi_start(spi_start),
 			    .spi_tx_data(spi_tx_data),
-			    .spi_tx_data_we(spi_tx_data_we),
+			    .spi_tx_data_vld(spi_tx_data_vld),
 			    .spi_rx_data(spi_rx_data),
 			    .spi_ready(spi_ready)
 			   );
@@ -394,9 +394,9 @@ module tk1(
       cpu_mon_first_we = 1'h0;
       cpu_mon_last_we  = 1'h0;
       cpu_mon_en_we    = 1'h0;
-      spi_enable_we    = 1'h0;
+      spi_enable_vld   = 1'h0;
       spi_start        = 1'h0;
-      spi_tx_data_we   = 1'h0;
+      spi_tx_data_vld  = 1'h0;
       tmp_read_data    = 32'h0;
       tmp_ready        = 1'h0;
 
@@ -472,7 +472,7 @@ module tk1(
 	  end
 
 	  if (address == ADDR_SPI_EN) begin
-	    spi_enable_we = 1'h1;
+	    spi_enable_vld = 1'h1;
 	  end
 
 	  if (address == ADDR_SPI_XFER) begin
@@ -480,7 +480,7 @@ module tk1(
 	  end
 
 	  if (address == ADDR_SPI_DATA) begin
-	    spi_tx_data_we = 1'h1;
+	    spi_tx_data_vld = 1'h1;
 	  end
 	end
 
