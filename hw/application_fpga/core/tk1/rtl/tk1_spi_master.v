@@ -39,11 +39,9 @@ module tk1_spi_master(
   //----------------------------------------------------------------
   parameter CTRL_IDLE      = 3'h0;
   parameter CTRL_POS_FLANK = 3'h1;
-  parameter CTRL_WAIT_8    = 3'h2;
+  parameter CTRL_WAIT_POS  = 3'h2;
   parameter CTRL_NEG_FLANK = 3'h3;
-  parameter CTRL_WAIT_4_1  = 3'h4;
-  parameter CTRL_SHIFT     = 3'h5;
-  parameter CTRL_WAIT_4_2  = 3'h6;
+  parameter CTRL_WAIT_NEG  = 3'h4;
 
 
   //----------------------------------------------------------------
@@ -63,8 +61,8 @@ module tk1_spi_master(
   reg          spi_miso_sample0_reg;
   reg          spi_miso_sample1_reg;
 
-  reg [2 : 0]  spi_clk_ctr_reg;
-  reg [2 : 0]  spi_clk_ctr_new;
+  reg [3 : 0]  spi_clk_ctr_reg;
+  reg [3 : 0]  spi_clk_ctr_new;
   reg          spi_clk_ctr_rst;
 
   reg [2 : 0]  spi_bit_ctr_reg;
@@ -106,7 +104,7 @@ module tk1_spi_master(
 	spi_ss_reg      <= 1'h1;
 	spi_csk_reg     <= 1'h0;
 	spi_data_reg    <= 8'h0;
-	spi_clk_ctr_reg <= 3'h0;
+	spi_clk_ctr_reg <= 4'h0;
 	spi_bit_ctr_reg <= 3'h0;
 	spi_ready_reg   <= 1'h1;
 	spi_ctrl_reg    <= CTRL_IDLE;
@@ -153,7 +151,7 @@ module tk1_spi_master(
   always @*
     begin : clk_ctr
       if (spi_clk_ctr_rst) begin
-	spi_clk_ctr_new = 3'h0;
+	spi_clk_ctr_new = 4'h0;
       end
       else begin
 	spi_clk_ctr_new = spi_clk_ctr_reg + 1'h1;
@@ -237,12 +235,12 @@ module tk1_spi_master(
 	  spi_csk_new       = 1'h1;
 	  spi_csk_we        = 1'h1;
 	  spi_clk_ctr_rst   = 1'h1;
-	  spi_ctrl_new      = CTRL_WAIT_8;
+	  spi_ctrl_new      = CTRL_WAIT_POS;
 	  spi_ctrl_we       = 1'h1;
 	end
 
-	CTRL_WAIT_8:begin
-	  if (spi_clk_ctr_reg == 3'h7) begin
+	CTRL_WAIT_POS:begin
+	  if (spi_clk_ctr_reg == 4'hf) begin
 	    spi_ctrl_new      = CTRL_NEG_FLANK;
 	    spi_ctrl_we       = 1'h1;
 	  end
@@ -252,25 +250,12 @@ module tk1_spi_master(
 	  spi_csk_new       = 1'h0;
 	  spi_csk_we        = 1'h1;
 	  spi_clk_ctr_rst   = 1'h1;
-	  spi_ctrl_new      = CTRL_WAIT_4_1;
+	  spi_ctrl_new      = CTRL_WAIT_NEG;
 	  spi_ctrl_we       = 1'h1;
 	end
 
-	CTRL_WAIT_4_1:begin
-	  if (spi_clk_ctr_reg == 3'h4) begin
-	    spi_ctrl_new = CTRL_SHIFT;
-	    spi_ctrl_we  = 1'h1;
-	  end
-	end
-
-	CTRL_SHIFT:begin
-	  spi_data_shift = 1'h1;
-	  spi_ctrl_new = CTRL_WAIT_4_2;
-	  spi_ctrl_we  = 1'h1;
-	end
-
-	CTRL_WAIT_4_2: begin
-	  if (spi_clk_ctr_reg == 3'h7) begin
+	CTRL_WAIT_NEG: begin
+	  if (spi_clk_ctr_reg == 4'hf) begin
 	    if (spi_bit_ctr_reg == 3'h7) begin
 	      spi_ready_new = 1'h1;
 	      spi_ready_we  = 1'h1;
@@ -279,6 +264,7 @@ module tk1_spi_master(
 	    end
 	    else begin
 	      spi_bit_ctr_inc = 1'h1;
+	      spi_data_shift  = 1'h1;
 	      spi_ctrl_new    = CTRL_POS_FLANK;
 	      spi_ctrl_we     = 1'h1;
 	    end
