@@ -19,10 +19,10 @@ set_io interface_tx 25
 
 
 # SPI master to flash memory.
-set_io spi_miso 14
+set_io spi_miso 17
 set_io spi_sck  15
 set_io spi_ss   16
-set_io spi_mosi 17
+set_io spi_mosi 14
 
 
 # Touch sense.
