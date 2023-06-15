@@ -60,7 +60,7 @@ module tb_tk1();
 
   localparam ADDR_SPI_EN        = 8'h80;
   localparam ADDR_SPI_XFER      = 8'h81;
-  localparam ADDR_SPI_DATA      = 8'h62;
+  localparam ADDR_SPI_DATA      = 8'h82;
 
 
   //----------------------------------------------------------------
