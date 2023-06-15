@@ -18,10 +18,15 @@ module tb_tk1_spi_master();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG     = 1;
+  parameter DEBUG = 1;
 
   parameter CLK_HALF_PERIOD = 1;
-  parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
+  parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
+
+  parameter MISO_ALL_ZERO = 0;
+  parameter MISO_ALL_ONE  = 1;
+  parameter MISO_MOSI     = 2;
+  parameter MISO_INV_MOSI = 3;
 
 
   //----------------------------------------------------------------
@@ -46,6 +51,9 @@ module tb_tk1_spi_master();
   wire  [7 : 0] tb_spi_rx_data;
   wire          tb_spi_ready;
 
+  reg [1 : 0]   tb_miso_mux_ctrl;
+
+
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
@@ -67,6 +75,21 @@ module tb_tk1_spi_master();
 		     .spi_ready(tb_spi_ready)
 		     );
 
+  //----------------------------------------------------------------
+  // miso_mux
+  //
+  // This is a MUX that controls the input to the miso signal.
+  //----------------------------------------------------------------
+  always @*
+    begin : miso_mux
+      case (tb_miso_mux_ctrl)
+	MISO_ALL_ZERO: tb_spi_miso = 1'h0;
+	MISO_ALL_ONE:  tb_spi_miso = 1'h1;
+	MISO_MOSI:     tb_spi_miso = tb_spi_mosi;
+	MISO_INV_MOSI: tb_spi_miso = ~tb_spi_mosi;
+	default: begin end
+      endcase // case (miso_mux_ctrl)
+    end
 
   //----------------------------------------------------------------
   // clk_gen
@@ -104,6 +127,7 @@ module tb_tk1_spi_master();
   //----------------------------------------------------------------
   task dump_dut_state;
     begin : dump_dut_state
+      $display("");
       $display("State of DUT at cycle: %08d", cycle_ctr);
       $display("------------");
       $display("Inputs and outputs:");
@@ -111,12 +135,10 @@ module tb_tk1_spi_master();
 	       dut.spi_ss, dut.spi_sck, dut.spi_mosi, dut.spi_miso);
       $display("spi_enable_vld: 0x%1x, spi_enable: 0x%1x",
 	       dut.spi_enable_vld, dut.spi_enable);
-      $display("spi_start: 0x%1x, spi_ready: 0x%1x",
-	       dut.spi_start, dut.spi_ready);
       $display("spi_tx_data_vld: 0x%1x, spi_tx_data: 0x%02x",
 	       dut.spi_tx_data_vld, dut.spi_tx_data);
-      $display("spi_tx__data_nxt: 0x%1x, spi_rx_data: 0x%02x",
-	       dut.spi_tx_data_nxt, dut.spi_rx_data);
+      $display("spi_start: 0x%1x, spi_ready: 0x%1x, spi_rx_data: 0x%02x",
+	       dut.spi_start, dut.spi_ready, dut.spi_rx_data);
       $display("");
 
 
@@ -124,12 +146,42 @@ module tb_tk1_spi_master();
       $display("Internal state:");
       $display("spi_clk_ctr_rst: 0x%1x, spi_clk_ctr_reg: 0x%02x",
 	       dut.spi_clk_ctr_rst, dut.spi_clk_ctr_reg);
+      $display("");
       $display("spi_bit_ctr_rst: 0x%1x, spi_bit_ctr_inc: 0x%1x, spi_bit_ctr_reg: 0x%02x",
 	       dut.spi_bit_ctr_rst, dut.spi_bit_ctr_inc, dut.spi_bit_ctr_reg);
+      $display("");
       $display("spi_ctrl_reg: 0x%02x, spi_ctrl_new: 0x%02x, spi_ctrl_we: 0x%1x",
 	       dut.spi_ctrl_reg, dut.spi_ctrl_new, dut.spi_ctrl_we);
 
       $display("");
+      $display("spi_tx_data_new: 0x%1x, spi_tx_data_nxt: 0x%1x, spi_tx_data_we: 0x%1x",
+	       dut.spi_tx_data_new, dut.spi_tx_data_nxt, dut.spi_tx_data_we);
+      $display("spi_tx_data_reg: 0x%02x, spi_tx_data_new: 0x%02x",
+	       dut.spi_tx_data_reg, dut.spi_tx_data_new);
+      $display("");
+      $display("spi_miso_sample0_reg: 0x%1x, spi_miso_sample1_reg: 0x%1x",
+	       dut.spi_miso_sample0_reg, dut.spi_miso_sample1_reg);
+      $display("");
+      $display("spi_rx_data_rst: 0x%1x, spi_rx_data_nxt: 0x%1x, spi_rx_data_we: 0x%1x",
+	       dut.spi_rx_data_rst, dut.spi_rx_data_nxt, dut.spi_rx_data_we);
+      $display("spi_rx_data_reg: 0x%02x, spi_rx_data_new: 0x%02x",
+	       dut.spi_rx_data_reg, dut.spi_rx_data_new);
+      $display("spi_rx_data_reg0: 0x%1x, spi_rx_data_new0: 0x%1x",
+	       dut.spi_rx_data_reg[0], dut.spi_rx_data_new[0]);
+      $display("spi_rx_data_reg1: 0x%1x, spi_rx_data_new1: 0x%1x",
+	       dut.spi_rx_data_reg[1], dut.spi_rx_data_new[1]);
+      $display("spi_rx_data_reg2: 0x%1x, spi_rx_data_new2: 0x%1x",
+	       dut.spi_rx_data_reg[2], dut.spi_rx_data_new[2]);
+      $display("spi_rx_data_reg3: 0x%1x, spi_rx_data_new3: 0x%1x",
+	       dut.spi_rx_data_reg[3], dut.spi_rx_data_new[3]);
+      $display("spi_rx_data_reg4: 0x%1x, spi_rx_data_new4: 0x%1x",
+	       dut.spi_rx_data_reg[4], dut.spi_rx_data_new[4]);
+      $display("spi_rx_data_reg5: 0x%1x, spi_rx_data_new5: 0x%1x",
+	       dut.spi_rx_data_reg[5], dut.spi_rx_data_new[5]);
+      $display("spi_rx_data_reg6: 0x%1x, spi_rx_data_new6: 0x%1x",
+	       dut.spi_rx_data_reg[6], dut.spi_rx_data_new[6]);
+      $display("spi_rx_data_reg7: 0x%1x, spi_rx_data_new7: 0x%1x",
+	       dut.spi_rx_data_reg[7], dut.spi_rx_data_new[7]);
       $display("");
     end
   endtask // dump_dut_state
@@ -183,14 +235,15 @@ module tb_tk1_spi_master();
       tc_ctr    = 0;
       monitor   = 0;
 
-      tb_clk            = 1'h0;
-      tb_reset_n        = 1'h1;
-      tb_spi_miso       = 1'h0;
-      tb_spi_enable     = 1'h0;
+      tb_clk             = 1'h0;
+      tb_reset_n         = 1'h1;
+      tb_spi_miso        = 1'h0;
+      tb_spi_enable      = 1'h0;
       tb_spi_enable_vld  = 1'h0;
-      tb_spi_start      = 1'h0;
-      tb_spi_tx_data    = 8'h0;
+      tb_spi_start       = 1'h0;
+      tb_spi_tx_data     = 8'h0;
       tb_spi_tx_data_vld = 1'h0;
+      tb_miso_mux_ctrl   = MISO_MOSI;
     end
   endtask // init_sim
 
@@ -203,7 +256,7 @@ module tb_tk1_spi_master();
       tc_ctr = tc_ctr + 1;
       monitor = 1;
 
-      tb_spi_miso = 1'h1;
+      tb_miso_mux_ctrl = MISO_INV_MOSI;
 
       $display("");
       $display("--- test1: Send a byte, receive a byte.");
@@ -244,6 +297,38 @@ module tb_tk1_spi_master();
       #(CLK_PERIOD);
       tb_spi_enable_vld  = 1'h0;
       #(CLK_PERIOD);
+
+      if (tb_miso_mux_ctrl == MISO_ALL_ZERO) begin
+	if (tb_spi_rx_data == 8'h0) begin
+	  $display("--- test1: Correct all zero data received.");
+	end else begin
+	  $display("--- test1: Error, Incorrect all zero data data received.");
+	end
+      end
+
+      if (tb_miso_mux_ctrl == MISO_ALL_ONE) begin
+	if (tb_spi_rx_data == 8'hff) begin
+	  $display("--- test1: Correct all one data received.");
+	end else begin
+	  $display("--- test1: Error, Incorrect all one data data received.");
+	end
+      end
+
+      if (tb_miso_mux_ctrl == MISO_MOSI) begin
+	if (tb_spi_rx_data == tb_spi_tx_data) begin
+	  $display("--- test1: Correct MOSI data received.");
+	end else begin
+	  $display("--- test1: Error, Incorrect MOSI data received.");
+	end
+      end
+
+      if (tb_miso_mux_ctrl == MISO_INV_MOSI) begin
+	if (tb_spi_rx_data == ~tb_spi_tx_data) begin
+	  $display("--- test1: Correct inverse MOSI data received.");
+	end else begin
+	  $display("--- test1: Error, Incorrect inverse MOSI data received.");
+	end
+      end
 
       $display("--- test1: completed.");
       monitor = 0;
