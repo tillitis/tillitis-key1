@@ -6,6 +6,14 @@
 // The SPI master is able to generate a clock, and transfer,
 // exchange a single byte with the slave.
 //
+// This master is compatible with the Winbond W25Q80DV memory.
+// This means that MSB of a response from the memory is provided
+// on the falling clock edge on the LSB of the command byte, not
+// on a dummy byte. This means that the response spans the boundary
+// of the bytes, The core handles this by sampling the MISO
+// just prior to settint the positive clock flank at the start
+// of a byte transfer.
+//
 //
 // Author: Joachim Strombergson
 // Copyright (C) 2023 - Tillitis AB
