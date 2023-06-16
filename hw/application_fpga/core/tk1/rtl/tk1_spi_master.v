@@ -24,9 +24,6 @@ module tk1_spi_master(
 		      output wire          spi_mosi,
 		      input wire           spi_miso,
 
-		      output wire          sample,
-		      output wire          ew,
-
 		      input wire           spi_enable,
 		      input wire           spi_enable_vld,
 		      input wire           spi_start,
@@ -64,7 +61,6 @@ module tk1_spi_master(
 
   reg [7 : 0]  spi_rx_data_reg;
   reg [7 : 0]  spi_rx_data_new;
-  reg          spi_rx_data_rst;
   reg          spi_rx_data_nxt;
   reg          spi_rx_data_we;
 
@@ -98,9 +94,6 @@ module tk1_spi_master(
   assign spi_mosi    = spi_tx_data_reg[7];
   assign spi_rx_data = spi_rx_data_reg;
   assign spi_ready   = spi_ready_reg;
-
-  assign ew     = spi_rx_data_we;
-  assign sample = spi_miso_sample1_reg;
 
 
   //----------------------------------------------------------------
@@ -225,11 +218,6 @@ module tk1_spi_master(
       spi_rx_data_new = 8'h0;
       spi_rx_data_we  = 1'h0;
 
-      if (spi_rx_data_rst) begin
-	spi_rx_data_new = 8'h0;
-	spi_rx_data_we  = 1'h1;
-      end
-
       if (spi_rx_data_nxt) begin
 	spi_rx_data_new = {spi_rx_data_reg[6 : 0], spi_miso_sample1_reg};
 	spi_rx_data_we  = 1'h1;
@@ -242,7 +230,6 @@ module tk1_spi_master(
   //----------------------------------------------------------------
   always @*
     begin : spi_master_ctrl
-      spi_rx_data_rst = 1'h0;
       spi_rx_data_nxt = 1'h0;
       spi_tx_data_nxt = 1'h0;
       spi_clk_ctr_rst = 1'h0;
@@ -261,7 +248,6 @@ module tk1_spi_master(
           if (spi_start) begin
 	    spi_csk_new     = 1'h0;
 	    spi_csk_we      = 1'h1;
-	    spi_rx_data_rst = 1'h1;
 	    spi_bit_ctr_rst = 1'h1;
 	    spi_ready_new   = 1'h0;
 	    spi_ready_we    = 1'h1;
@@ -271,11 +257,12 @@ module tk1_spi_master(
 	end
 
 	CTRL_POS_FLANK: begin
-	  spi_csk_new       = 1'h1;
-	  spi_csk_we        = 1'h1;
-	  spi_clk_ctr_rst   = 1'h1;
-	  spi_ctrl_new      = CTRL_WAIT_POS;
-	  spi_ctrl_we       = 1'h1;
+	  spi_rx_data_nxt = 1'h1;
+	  spi_csk_new     = 1'h1;
+	  spi_csk_we      = 1'h1;
+	  spi_clk_ctr_rst = 1'h1;
+	  spi_ctrl_new    = CTRL_WAIT_POS;
+	  spi_ctrl_we     = 1'h1;
 	end
 
 	CTRL_WAIT_POS: begin
@@ -295,8 +282,6 @@ module tk1_spi_master(
 
 	CTRL_WAIT_NEG: begin
 	  if (spi_clk_ctr_reg == 4'hf) begin
-	    spi_tx_data_nxt = 1'h1;
-	    spi_rx_data_nxt = 1'h1;
 	    spi_ctrl_new    = CTRL_NEXT;
 	    spi_ctrl_we     = 1'h1;
 	  end
@@ -310,6 +295,7 @@ module tk1_spi_master(
 	    spi_ctrl_we   = 1'h1;
 	  end
 	  else begin
+	    spi_tx_data_nxt = 1'h1;
 	    spi_bit_ctr_inc = 1'h1;
 	    spi_ctrl_new    = CTRL_POS_FLANK;
 	    spi_ctrl_we     = 1'h1;

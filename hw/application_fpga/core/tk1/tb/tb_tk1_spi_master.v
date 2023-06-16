@@ -162,8 +162,8 @@ module tb_tk1_spi_master();
       $display("spi_miso_sample0_reg: 0x%1x, spi_miso_sample1_reg: 0x%1x",
 	       dut.spi_miso_sample0_reg, dut.spi_miso_sample1_reg);
       $display("");
-      $display("spi_rx_data_rst: 0x%1x, spi_rx_data_nxt: 0x%1x, spi_rx_data_we: 0x%1x",
-	       dut.spi_rx_data_rst, dut.spi_rx_data_nxt, dut.spi_rx_data_we);
+      $display("spi_rx_data_nxt: 0x%1x, spi_rx_data_we: 0x%1x",
+	       dut.spi_rx_data_nxt, dut.spi_rx_data_we);
       $display("spi_rx_data_reg: 0x%02x, spi_rx_data_new: 0x%02x",
 	       dut.spi_rx_data_reg, dut.spi_rx_data_new);
       $display("spi_rx_data_reg0: 0x%1x, spi_rx_data_new0: 0x%1x",
