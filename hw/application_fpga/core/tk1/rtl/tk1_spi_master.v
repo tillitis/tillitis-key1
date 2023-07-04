@@ -226,7 +226,12 @@ module tk1_spi_master(
       spi_rx_data_new = 8'h0;
       spi_rx_data_we  = 1'h0;
 
-      if (spi_rx_data_nxt) begin
+      if (spi_ss) begin
+	spi_rx_data_new = 8'h0;
+	spi_rx_data_we  = 1'h1;
+      end
+
+      else if (spi_rx_data_nxt) begin
 	spi_rx_data_new = {spi_rx_data_reg[6 : 0], spi_miso_sample1_reg};
 	spi_rx_data_we  = 1'h1;
       end
