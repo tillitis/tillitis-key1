@@ -2,6 +2,14 @@
 
 Descriptions of the tagged TKey releases.
 
+## TK1-23.03.2
+
+This is the official release of the "Bellatrix" version of the
+Tillitis TKey device. This version is ready for general use.
+
+This release only contains a hardware update to tk1. Capacitor C8 is
+not populated. A PCB spring contact, U11, is insted placed on the
+footprint of C8.
 
 ## TK1-23.03.1
 
