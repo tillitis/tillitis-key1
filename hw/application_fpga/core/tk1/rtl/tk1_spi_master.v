@@ -72,8 +72,7 @@ module tk1_spi_master(
   reg          spi_rx_data_nxt;
   reg          spi_rx_data_we;
 
-  reg          spi_miso_sample0_reg;
-  reg          spi_miso_sample1_reg;
+  reg          spi_miso_sample_reg;
 
   reg [3 : 0]  spi_clk_ctr_reg;
   reg [3 : 0]  spi_clk_ctr_new;
@@ -110,20 +109,20 @@ module tk1_spi_master(
   always @ (posedge clk)
     begin : reg_update
       if (!reset_n) begin
-	spi_ss_reg      <= 1'h1;
-	spi_csk_reg     <= 1'h0;
-	spi_tx_data_reg <= 8'h0;
-	spi_rx_data_reg <= 8'h0;
-	spi_clk_ctr_reg <= 4'h0;
-	spi_bit_ctr_reg <= 3'h0;
-	spi_ready_reg   <= 1'h1;
-	spi_ctrl_reg    <= CTRL_IDLE;
+	spi_ss_reg          <= 1'h1;
+	spi_csk_reg         <= 1'h0;
+	spi_miso_sample_reg <= 1'h0;
+	spi_tx_data_reg     <= 8'h0;
+	spi_rx_data_reg     <= 8'h0;
+	spi_clk_ctr_reg     <= 4'h0;
+	spi_bit_ctr_reg     <= 3'h0;
+	spi_ready_reg       <= 1'h1;
+	spi_ctrl_reg        <= CTRL_IDLE;
       end
 
       else begin
-	spi_miso_sample0_reg <= spi_miso;
-	spi_miso_sample1_reg <= spi_miso_sample0_reg;
-	spi_clk_ctr_reg      <= spi_clk_ctr_new;
+	spi_miso_sample_reg <= spi_miso;
+	spi_clk_ctr_reg     <= spi_clk_ctr_new;
 
 	if (spi_enable_vld) begin
 	  spi_ss_reg <= ~spi_enable;
@@ -167,6 +166,7 @@ module tk1_spi_master(
       if (spi_clk_ctr_rst) begin
 	spi_clk_ctr_new = 4'h0;
       end
+
       else begin
 	spi_clk_ctr_new = spi_clk_ctr_reg + 1'h1;
       end
@@ -186,7 +186,7 @@ module tk1_spi_master(
 	spi_bit_ctr_we  = 1'h1;
       end
 
-      if (spi_bit_ctr_inc) begin
+      else if (spi_bit_ctr_inc) begin
 	spi_bit_ctr_new = spi_bit_ctr_reg + 1'h1;
 	spi_bit_ctr_we  = 1'h1;
       end
@@ -232,7 +232,7 @@ module tk1_spi_master(
       end
 
       else if (spi_rx_data_nxt) begin
-	spi_rx_data_new = {spi_rx_data_reg[6 : 0], spi_miso_sample1_reg};
+	spi_rx_data_new = {spi_rx_data_reg[6 : 0], spi_miso_sample_reg};
 	spi_rx_data_we  = 1'h1;
       end
     end
