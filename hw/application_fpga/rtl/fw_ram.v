@@ -35,7 +35,7 @@ module fw_ram(
   reg [31 : 0] mem_read_data0;
   reg [31 : 0] mem_read_data1;
   reg          ready_reg;
-  reg          fw_app_cs;
+  wire         fw_app_cs;
   reg          bank0;
   reg          bank1;
 
