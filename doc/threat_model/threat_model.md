@@ -174,6 +174,21 @@ This threat model will be updated for each release of the TKey device.
 For each version we describe what threats are in scope, what threats
 are out of scope and what mitigations are in place.
 
+### TKey Unlocked
+
+Note that the trust model as desribed for the TK1-23.03.1-Bellatrix
+release (see below) applies to TKey Unlocked devices as long as the
+TKey has been provisioned with:
+
+- the Tillitis TKey TK1-23.03.1-Bellatrix FPGA design and Tillitis TKey
+firmware.
+- A unique, random UDS
+- A unique UDI
+
+The configuration must have been written into the NVCM and
+locked by blowing the fuses.
+
+
 ### TK1-23.03.1-Bellatrix
 
 This is the first general release of the TKey TK1 end user device. In this
