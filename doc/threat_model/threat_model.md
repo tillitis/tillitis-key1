@@ -176,17 +176,23 @@ are out of scope and what mitigations are in place.
 
 ### TKey Unlocked
 
-Note that the trust model as desribed for the TK1-23.03.1-Bellatrix
+Note that the threat model as described for the TK1-23.03.2-Bellatrix
 release (see below) applies to TKey Unlocked devices as long as the
 TKey has been provisioned with:
 
-- the Tillitis TKey TK1-23.03.1-Bellatrix FPGA design and Tillitis TKey
-firmware.
+- the Tillitis TKey TK1-23.03.2-Bellatrix FPGA design and Tillitis
+  TKey firmware.
 - A unique, random UDS
 - A unique UDI
 
 The configuration must have been written into the NVCM and
 locked by blowing the fuses.
+
+
+### TK1-23.03.2-Bellatrix
+This release contains a BOM update to the Tkey hardware for the touch
+capabilites, hence the specific scope for TK1-23.03-1-Bellatrix is
+valid for this release.
 
 
 ### TK1-23.03.1-Bellatrix
