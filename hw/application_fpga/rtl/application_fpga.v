@@ -49,6 +49,7 @@ module application_fpga(
   localparam UART_PREFIX        = 6'h03;
   localparam TOUCH_SENSE_PREFIX = 6'h04;
   localparam FW_RAM_PREFIX      = 6'h10;
+  localparam BLAKE2S_PREFIX     = 6'h12;
   localparam TK1_PREFIX         = 6'h3f;
 
   // Instruction used to cause a trap.
@@ -102,6 +103,15 @@ module application_fpga(
   reg [31 : 0]  trng_write_data;
   wire [31 : 0] trng_read_data;
   wire          trng_ready;
+
+  /* verilator lint_off UNOPTFLAT */
+  reg           blake2s_cs;
+  /* verilator lint_on UNOPTFLAT */
+  reg           blake2s_we;
+  reg  [7 : 0]  blake2s_address;
+  reg [31 : 0]  blake2s_write_data;
+  wire [31 : 0] blake2s_read_data;
+  wire          blake2s_ready;
 
   /* verilator lint_off UNOPTFLAT */
   reg           timer_cs;
@@ -258,6 +268,17 @@ module application_fpga(
 		  );
 
 
+  blake2s blake2s_inst(
+		       .clk(clk),
+		       .reset_n(reset_n),
+		       .cs(blake2s_cs),
+		       .we(blake2s_we),
+		       .address(blake2s_address),
+		       .write_data(blake2s_write_data),
+		       .read_data(blake2s_read_data)
+		      );
+
+
   timer timer_inst(
                    .clk(clk),
                    .reset_n(reset_n),
@@ -398,6 +419,11 @@ module application_fpga(
       trng_address        = cpu_addr[9 : 2];
       trng_write_data     = cpu_wdata;
 
+      blake2s_cs          = 1'h0;
+      blake2s_we          = |cpu_wstrb;
+      blake2s_address     = cpu_addr[9 : 2];
+      blake2s_write_data  = cpu_wdata;
+
       timer_cs            = 1'h0;
       timer_we            = |cpu_wstrb;
       timer_address       = cpu_addr[9 : 2];
@@ -480,6 +506,12 @@ module application_fpga(
                   fw_ram_cs       = 1'h1;
 	          muxed_rdata_new = fw_ram_read_data;
 	          muxed_ready_new = fw_ram_ready;
+		end
+
+		BLAKE2S_PREFIX: begin
+                  blake2s_cs      = 1'h1;
+	          muxed_rdata_new = blake2s_read_data;
+	          muxed_ready_new = 1'h1;
 		end
 
 		TK1_PREFIX: begin
