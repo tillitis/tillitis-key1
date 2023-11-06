@@ -177,3 +177,8 @@ inline void CH554WDTFeed(uint8_t tim)
    WDOG_COUNT = tim;                                                            // Watchdog counter assignment
 
 }
+
+// Set pin p1.4 and p1.5 to GPIO output mode.
+void gpio_init();
+void gpio_set(uint8_t pin);
+void gpio_unset(uint8_t pin);

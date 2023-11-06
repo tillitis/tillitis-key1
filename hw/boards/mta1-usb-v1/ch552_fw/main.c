@@ -573,12 +573,17 @@ main()
     UEP1_T_LEN = 0;                                                       //Pre-use send length must be cleared
     UEP2_T_LEN = 0;                                                       //Pre-use send length must be cleared
     
+    gpio_init();
+    gpio_unset(0x10);
+    gpio_unset(0x20);
+
     while(1)
     {
         if(UsbConfig)
         {
             if(USBByteCount)   // USB receiving endpoint has data
             {
+                gpio_set(0x20);
                 CH554UART1SendByte(Ep2Buffer[USBBufOutPoint++]);
                 recievedData[USBBufOutPoint] = Ep2Buffer[USBBufOutPoint];
                 USBByteCount--;
@@ -586,6 +591,7 @@ main()
                 if(USBByteCount==0)
                     UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_ACK;
 
+                gpio_unset(0x20);
             }
             if(UartByteCount)
                 Uart_Timeout++;
@@ -596,6 +602,7 @@ main()
                 {
                     if(length>39 || Uart_Timeout>100)
                     {
+                        gpio_set(0x10);
                         Uart_Timeout = 0;
                         if(Uart_Output_Point+length>UART_REV_LEN)
                             length = UART_REV_LEN-Uart_Output_Point;
@@ -605,12 +612,13 @@ main()
 
                         Uart_Output_Point+=length;
                         if (Uart_Output_Point>=UART_REV_LEN)
-                            Uart_Output_Point = 0;
-                        UEP2_T_LEN = length; // Pre-use send length must be cleared
-                        UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK; // Answer ACK
-                        UpPoint2_Busy = 1;
-                    }
-                }
+                            Uart_Output_Point = 0;
+                        UEP2_T_LEN = length; // Pre-use send length must be cleared
+                        UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK; // Answer ACK
+                        UpPoint2_Busy = 1;
+                        gpio_unset(0x10);
+                    }
+                }
             }
         }
     }

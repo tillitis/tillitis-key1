@@ -160,3 +160,44 @@ int getchar() {
     return SBUF;
 }
 #endif
+
+// Set pin p1.4 and p1.5 to GPIO output mode.
+void gpio_init(){
+	// p1.4
+	P1_MOD_OC &= ~0x10;
+	P1_DIR_PU |= 0x10;
+
+	// p1.5
+	P1_MOD_OC &= ~0x20;
+	P1_DIR_PU |= 0x20;
+
+}
+
+void gpio_set(uint8_t pin) {
+	switch (pin)
+	{
+	case 0x10: // p1.4
+		P1 |= 0x10;
+		break;
+	case 0x20: // p1.5
+		P1 |= 0x20;
+		break;
+	default: // do nothing, unsupported pin.
+		break;
+	}
+}
+
+void gpio_unset(uint8_t pin) {
+	switch (pin)
+	{
+	case 0x10:
+		P1 &= ~0x10;
+		break;
+	case 0x20:
+		P1 &= ~0x20;
+		break;
+	default: // do nothing, unsupported pin.
+		break;
+	}
+
+}
