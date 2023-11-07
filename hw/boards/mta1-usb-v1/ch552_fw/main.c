@@ -40,7 +40,7 @@ __code uint8_t DevDesc[] = {0x12,0x01,0x10,0x01,0x02,0x00,0x00,DEFAULT_ENDP0_SIZ
 __code uint8_t CfgDesc[] ={
     0x09,0x02,0x43,0x00,0x02,0x01,0x00,0xa0,0x32,             //Configuration descriptor (two interfaces)
 // The following is the interface 0 (CDC interface) descriptor
-    0x09,0x04,0x00,0x00,0x01,0x02,0x02,0x01,0x00, // CDC interface descriptor (one endpoint)
+    0x09,0x04,0x00,0x00,0x01,0x02,0x02,0x01,0x00, // CDC interface descriptor (one endpoint)
     //The following is the function descriptor
     0x05,0x24,0x00,0x10,0x01,                                 //Function descriptor (header)
     0x05,0x24,0x01,0x00,0x00,                                 //Management descriptor (no data interface) 03 01
@@ -173,40 +173,40 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
     {
         switch (USB_INT_ST & (MASK_UIS_TOKEN | MASK_UIS_ENDP))
         {
-        case UIS_TOKEN_IN | 1:                                                  //endpoint 1# 端点中断上传
+        case UIS_TOKEN_IN | 1:                                                  //endpoint 1# Endpoint interrupts upload
             UEP1_T_LEN = 0;
-            UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;           //默认应答NAK
+            UEP1_CTRL = UEP1_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;           //Default answer NAK
             break;
-        case UIS_TOKEN_IN | 2:                                                  //endpoint 2# 端点批量上传
+        case UIS_TOKEN_IN | 2:                                                  //endpoint 2# Endpoint bulk upload
         {
-            UEP2_T_LEN = 0;                                                    //预使用发送长度一定要清空
-            UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;           //默认应答NAK
-            UpPoint2_Busy = 0;                                                  //清除忙标志
+            UEP2_T_LEN = 0;                                                    //The pre-used sending length must be cleared
+            UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_NAK;           //Default answer NAK
+            UpPoint2_Busy = 0;                                                  //clear busy flag
         }
             break;
-        case UIS_TOKEN_OUT | 2:                                                 //endpoint 3# 端点批量下传
-            if ( U_TOG_OK )                                                     // 不同步的数据包将丢弃
+        case UIS_TOKEN_OUT | 2:                                                 //endpoint 3# Endpoint batch download
+            if ( U_TOG_OK )                                                     // Out-of-sync packets will be dropped
             {
-                USBByteCount = USB_RX_LEN;                          // Grads length of recieved data
+                USBByteCount = USB_RX_LEN;                                      // Grads length of recieved data
                 USBBufOutPoint = 0;                                             //Get data pointer reset
                 UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_NAK;       //NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
             }
             break;
-        case UIS_TOKEN_SETUP | 0:                                                //SETUP事务
+        case UIS_TOKEN_SETUP | 0:                                                //SETUP routine
             len = USB_RX_LEN;
             if(len == (sizeof(USB_SETUP_REQ)))
             {
                 SetupLen = ((uint16_t)UsbSetupBuf->wLengthH<<8) | (UsbSetupBuf->wLengthL);
-                len = 0;                                                      // 默认为成功并且上传0长度
+                len = 0;                                                      // Defaults to success and uploading 0 length
                 SetupReq = UsbSetupBuf->bRequest;
-                if ( ( UsbSetupBuf->bRequestType & USB_REQ_TYP_MASK ) != USB_REQ_TYP_STANDARD )//非标准请求
+                if ( ( UsbSetupBuf->bRequestType & USB_REQ_TYP_MASK ) != USB_REQ_TYP_STANDARD )// non-standard request
                 {
                     switch( SetupReq )
                     {
                     case GET_LINE_CODING:   //0x21  currently configured
                         pDescr = LineCoding;
                         len = sizeof(LineCoding);
-                        len = SetupLen >= DEFAULT_ENDP0_SIZE ? DEFAULT_ENDP0_SIZE : SetupLen;  // 本次传输长度
+                        len = SetupLen >= DEFAULT_ENDP0_SIZE ? DEFAULT_ENDP0_SIZE : SetupLen;  // The length of this transmission
                         memcpy(Ep0Buffer,pDescr,len);
                         SetupLen -= len;
                         pDescr += len;
@@ -227,12 +227,12 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
                     case USB_GET_DESCRIPTOR:
                         switch(UsbSetupBuf->wValueH)
                         {
-                        case 1:                                                       //设备描述符
-                            pDescr = DevDesc;                                         //把设备描述符送到要发送的缓冲区
+                        case 1:                                                       // device descriptor
+                            pDescr = DevDesc;                                         //Send the device descriptor to the buffer to be sent
                             len = sizeof(DevDesc);
                             break;
-                        case 2:                                                        //配置描述符
-                            pDescr = CfgDesc;                                          //把设备描述符送到要发送的缓冲区
+                        case 2:                                                        //configuration descriptor
+                            pDescr = CfgDesc;                                          //Send the device descriptor to the buffer to be sent
                             len = sizeof(CfgDesc);
                             break;
                         case 3:
@@ -292,19 +292,19 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
                             {
                                 if( CfgDesc[ 7 ] & 0x20 )
                                 {
-                                    /* 唤醒 */
+                                    /* Wake */
                                 }
                                 else
                                 {
-                                    len = 0xFF;                                        /* 操作失败 */
+                                    len = 0xFF;                                        /* operation failed */
                                 }
                             }
                             else
                             {
-                                len = 0xFF;                                            /* 操作失败 */
+                                len = 0xFF;                                            /* operation failed */
                             }
                         }
-                        else if ( ( UsbSetupBuf->bRequestType & USB_REQ_RECIP_MASK ) == USB_REQ_RECIP_ENDP )// 端点
+                        else if ( ( UsbSetupBuf->bRequestType & USB_REQ_RECIP_MASK ) == USB_REQ_RECIP_ENDP )// endpoint
                         {
                             switch( UsbSetupBuf->wIndexL )
                             {
@@ -327,25 +327,25 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
                                 UEP1_CTRL = UEP1_CTRL & ~ ( bUEP_R_TOG | MASK_UEP_R_RES ) | UEP_R_RES_ACK;
                                 break;
                             default:
-                                len = 0xFF;                                         // 不支持的端点
+                                len = 0xFF;                                         // Unsupported endpoint
                                 break;
                             }
                         }
                         else
                         {
-                            len = 0xFF;                                                // 不是端点不支持
+                            len = 0xFF;                                                // It's not that the endpoint doesn't support it
                         }
                         break;
                     case USB_SET_FEATURE:                                          /* Set Feature */
-                        if( ( UsbSetupBuf->bRequestType & 0x1F ) == USB_REQ_RECIP_DEVICE )                  /* 设置设备 */
+                        if( ( UsbSetupBuf->bRequestType & 0x1F ) == USB_REQ_RECIP_DEVICE )                  /* Set up the device */
                         {
                             if( ( ( ( uint16_t )UsbSetupBuf->wValueH << 8 ) | UsbSetupBuf->wValueL ) == 0x01 )
                             {
                                 if( CfgDesc[ 7 ] & 0x20 )
                                 {
-                                    /* 休眠 */
+                                    /* hibernate */
 #ifdef DE_PRINTF
-                                    printf( "suspend\n" );                                                             //睡眠状态
+                                    printf( "suspend\n" );                                                             //sleep state
 #endif
                                     while ( XBUS_AUX & bUART0_TX )
                                     {
@@ -353,58 +353,58 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
                                     }
                                     SAFE_MOD = 0x55;
                                     SAFE_MOD = 0xAA;
-                                    WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO | bWAK_RXD1_LO;                      //USB或者RXD0/1有信号时可被唤醒
-                                    PCON |= PD;                                                                 //睡眠
+                                    WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO | bWAK_RXD1_LO;                      //USB or RXD0/1 can be woken up when there is a signal
+                                    PCON |= PD;                                                                 // sleep
                                     SAFE_MOD = 0x55;
                                     SAFE_MOD = 0xAA;
                                     WAKE_CTRL = 0x00;
                                 }
                                 else
                                 {
-                                    len = 0xFF;                                        /* 操作失败 */
+                                    len = 0xFF;                                        /* operation failed */
                                 }
                             }
                             else
                             {
-                                len = 0xFF;                                            /* 操作失败 */
+                                len = 0xFF;                                            /* operation failed */
                             }
                         }
-                        else if( ( UsbSetupBuf->bRequestType & 0x1F ) == USB_REQ_RECIP_ENDP )             /* 设置端点 */
+                        else if( ( UsbSetupBuf->bRequestType & 0x1F ) == USB_REQ_RECIP_ENDP )             /* Set endpoint */
                         {
                             if( ( ( ( uint16_t )UsbSetupBuf->wValueH << 8 ) | UsbSetupBuf->wValueL ) == 0x00 )
                             {
                                 switch( ( ( uint16_t )UsbSetupBuf->wIndexH << 8 ) | UsbSetupBuf->wIndexL )
                                 {
                                 case 0x83:
-                                    UEP3_CTRL = UEP3_CTRL & (~bUEP_T_TOG) | UEP_T_RES_STALL;/* 设置端点3 IN STALL */
+                                    UEP3_CTRL = UEP3_CTRL & (~bUEP_T_TOG) | UEP_T_RES_STALL;/* Set endpoint 3 IN STALL */
                                     break;
                                 case 0x03:
-                                    UEP3_CTRL = UEP3_CTRL & (~bUEP_R_TOG) | UEP_R_RES_STALL;/* 设置端点3 OUT Stall */
+                                    UEP3_CTRL = UEP3_CTRL & (~bUEP_R_TOG) | UEP_R_RES_STALL;/* Set endpoint 3 OUT Stall */
                                     break;
                                 case 0x82:
-                                    UEP2_CTRL = UEP2_CTRL & (~bUEP_T_TOG) | UEP_T_RES_STALL;/* 设置端点2 IN STALL */
+                                    UEP2_CTRL = UEP2_CTRL & (~bUEP_T_TOG) | UEP_T_RES_STALL;/* Set endpoint 2 IN STALL */
                                     break;
                                 case 0x02:
-                                    UEP2_CTRL = UEP2_CTRL & (~bUEP_R_TOG) | UEP_R_RES_STALL;/* 设置端点2 OUT Stall */
+                                    UEP2_CTRL = UEP2_CTRL & (~bUEP_R_TOG) | UEP_R_RES_STALL;/* Set endpoint 2 OUT Stall */
                                     break;
                                 case 0x81:
-                                    UEP1_CTRL = UEP1_CTRL & (~bUEP_T_TOG) | UEP_T_RES_STALL;/* 设置端点1 IN STALL */
+                                    UEP1_CTRL = UEP1_CTRL & (~bUEP_T_TOG) | UEP_T_RES_STALL;/* Set endpoint 1 IN STALL */
                                     break;
                                 case 0x01:
-                                    UEP1_CTRL = UEP1_CTRL & (~bUEP_R_TOG) | UEP_R_RES_STALL;/* 设置端点1 OUT Stall */
+                                    UEP1_CTRL = UEP1_CTRL & (~bUEP_R_TOG) | UEP_R_RES_STALL;/* Set endpoint 1 OUT Stall */
                                 default:
-                                    len = 0xFF;                                    /* 操作失败 */
+                                    len = 0xFF;                                    /* operation failed */
                                     break;
                                 }
                             }
                             else
                             {
-                                len = 0xFF;                                      /* 操作失败 */
+                                len = 0xFF;                                      /* operation failed  */
                             }
                         }
                         else
                         {
-                            len = 0xFF;                                          /* 操作失败 */
+                            len = 0xFF;                                          /* operation failed */
                         }
                         break;
                     case USB_GET_STATUS:
@@ -420,67 +420,67 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
                         }
                         break;
                     default:
-                        len = 0xff;                                                    //操作失败
+                        len = 0xff;                                                    //operation failed
                         break;
                     }
                 }
             }
             else
             {
-                len = 0xff;                                                         //包长度错误
+                len = 0xff;                                                         //Packet length error
             }
             if(len == 0xff)
             {
                 SetupReq = 0xFF;
                 UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_STALL | UEP_T_RES_STALL;//STALL
             }
-            else if(len <= DEFAULT_ENDP0_SIZE)                                                       //上传数据或者状态阶段返回0长度包
+            else if(len <= DEFAULT_ENDP0_SIZE)                                                       //Upload data or status phase returns 0 length packet
             {
                 UEP0_T_LEN = len;
-                UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK;//默认数据包是DATA1，返回应答ACK
+                UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK;//The default packet is DATA1，Return response ACK
             }
             else
             {
-                UEP0_T_LEN = 0;  //虽然尚未到状态阶段，但是提前预置上传0长度数据包以防主机提前进入状态阶段
-                UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK;//默认数据包是DATA1,返回应答ACK
+                UEP0_T_LEN = 0;  //Although it has not yet reached the status stage, it is preset to upload 0-length data packets in advance to prevent the host from entering the status stage early.
+                UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK; //The default data packet is DATA1, and the response ACK is returned
             }
             break;
         case UIS_TOKEN_IN | 0:                                                      //endpoint0 IN
             switch(SetupReq)
             {
             case USB_GET_DESCRIPTOR:
-                len = SetupLen >= DEFAULT_ENDP0_SIZE ? DEFAULT_ENDP0_SIZE : SetupLen;                                 //本次传输长度
-                memcpy( Ep0Buffer, pDescr, len );                                   //加载上传数据
+                len = SetupLen >= DEFAULT_ENDP0_SIZE ? DEFAULT_ENDP0_SIZE : SetupLen;                                 //The length of this transmission
+                memcpy( Ep0Buffer, pDescr, len );                                   //Load upload data
                 SetupLen -= len;
                 pDescr += len;
                 UEP0_T_LEN = len;
-                UEP0_CTRL ^= bUEP_T_TOG;                                             //同步标志位翻转
+                UEP0_CTRL ^= bUEP_T_TOG;                                             //Sync flag flip
                 break;
             case USB_SET_ADDRESS:
                 USB_DEV_AD = USB_DEV_AD & bUDA_GP_BIT | SetupLen;
                 UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
                 break;
             default:
-                UEP0_T_LEN = 0;                                                      //状态阶段完成中断或者是强制上传0长度数据包结束控制传输
+                UEP0_T_LEN = 0;                                                      //The status phase is completed and interrupted or the 0-length data packet is forced to be uploaded to end the control transmission.
                 UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
                 break;
             }
             break;
         case UIS_TOKEN_OUT | 0:  // endpoint0 OUT
-            if(SetupReq ==SET_LINE_CODING)  //设置串口属性
+            if(SetupReq ==SET_LINE_CODING)  // Set serial port properties
             {
                 if( U_TOG_OK )
                 {
                     memcpy(LineCoding,UsbSetupBuf,USB_RX_LEN);
                     Config_Uart1(LineCoding);
                     UEP0_T_LEN = 0;
-                    UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_ACK;  // 准备上传0包
+                    UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_ACK;  // Prepare to upload 0 packages
                 }
             }
             else
             {
                 UEP0_T_LEN = 0;
-                UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_NAK;  //状态阶段，对IN响应NAK
+                UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_NAK;  // Status phase, responds to IN with NAK
             }
             break;
 
@@ -489,12 +489,12 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
         default:
             break;
         }
-        UIF_TRANSFER = 0;                                                           //写0清空中断
+        UIF_TRANSFER = 0;                                                           //Writing 0 clears the interrupt
     }
-    if(UIF_BUS_RST)                                                                 //设备模式USB总线复位中断
+    if(UIF_BUS_RST)                                                                 //Device mode USB bus reset interrupt
     {
 #ifdef DE_PRINTF
-        printf( "reset\n" );                                                             //睡眠状态
+        printf( "reset\n" );                                                             //sleep state
 #endif
         UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
         UEP1_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK;
@@ -502,21 +502,21 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
         USB_DEV_AD = 0x00;
         UIF_SUSPEND = 0;
         UIF_TRANSFER = 0;
-        UIF_BUS_RST = 0;                                                             //清中断标志
-        Uart_Input_Point = 0;   //循环缓冲区输入指针
-        Uart_Output_Point = 0;  //循环缓冲区读出指针
-        UartByteCount = 0;      //当前缓冲区剩余待取字节数
-        USBByteCount = 0;       //USB端点收到的长度
-        UsbConfig = 0;          //清除配置值
+        UIF_BUS_RST = 0;                                                             //clear interrupt flag
+        Uart_Input_Point = 0;   //Circular buffer input pointer
+        Uart_Output_Point = 0;  //Circular buffer read pointer
+        UartByteCount = 0;      //The number of bytes remaining in the current buffer to be fetched
+        USBByteCount = 0;       //USB endpoint received length
+        UsbConfig = 0;          //Clear configuration values
         UpPoint2_Busy = 0;
     }
-    if (UIF_SUSPEND)                                                                 //USB总线挂起/唤醒完成
+    if (UIF_SUSPEND)                                                                 //USB bus suspend/wake completed
     {
         UIF_SUSPEND = 0;
-        if ( USB_MIS_ST & bUMS_SUSPEND )                                             //挂起
+        if ( USB_MIS_ST & bUMS_SUSPEND )                                             //hang
         {
 #ifdef DE_PRINTF
-            printf( "suspend\n" );                                                             //睡眠状态
+            printf( "suspend\n" );                                                             //sleep state
 #endif
             while ( XBUS_AUX & bUART0_TX )
             {
@@ -524,15 +524,15 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
             }
             SAFE_MOD = 0x55;
             SAFE_MOD = 0xAA;
-            WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO | bWAK_RXD1_LO;                      //USB或者RXD0/1有信号时可被唤醒
-            PCON |= PD;                                                                 //睡眠
+            WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO | bWAK_RXD1_LO;                      //Can be woken up when there is a signal from USB or RXD0/1
+            PCON |= PD;                                                                 //sleep
             SAFE_MOD = 0x55;
             SAFE_MOD = 0xAA;
             WAKE_CTRL = 0x00;
         }
     }
-    else {                                                                             //意外的中断,不可能发生的情况
-        USB_INT_FG = 0xFF;                                                             //清中断标志
+    else {                                                                             //Unexpected interruption, impossible situation
+        USB_INT_FG = 0xFF;                                                             //clear interrupt flag
 
     }
 }
@@ -542,22 +542,24 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
 *******************************************************************************/
 void Uart1_ISR(void) __interrupt (INT_NO_UART1)
 {
-    if(U1RI)   //收到数据
+    if(U1RI)   //data received
     {
+        gpio_set(0x20);
         Receive_Uart_Buf[Uart_Input_Point++] = SBUF1;
         UartByteCount++;                    //Number of bytes remaining in the current buffer
-        if(Uart_Input_Point>=UART_REV_LEN)
+        if(Uart_Input_Point>=UART_REV_LEN) {
             Uart_Input_Point = 0;           //Write pointer
+        }
         U1RI =0;
+        gpio_unset(0x20);
     }
 
 }
-//主函数
+//main function
 main()
 {
     uint8_t length;
     uint8_t Uart_Timeout = 0;
-    uint8_t recievedData[MAX_PACKET_SIZE] ="";
     CfgFsys( );                                                           // CH559 clock selection configuration
     mDelaymS(5);                                                          // Modify the main frequency and wait for the internal crystal to stabilize, which must be added
     mInitSTDIO( );                                                        // Serial port 0, can be used for debugging
@@ -572,7 +574,7 @@ main()
     UEP0_T_LEN = 0;
     UEP1_T_LEN = 0;                                                       //Pre-use send length must be cleared
     UEP2_T_LEN = 0;                                                       //Pre-use send length must be cleared
-    
+
     gpio_init();
     gpio_unset(0x10);
     gpio_unset(0x20);
@@ -583,18 +585,18 @@ main()
         {
             if(USBByteCount)   // USB receiving endpoint has data
             {
-                gpio_set(0x20);
                 CH554UART1SendByte(Ep2Buffer[USBBufOutPoint++]);
-                recievedData[USBBufOutPoint] = Ep2Buffer[USBBufOutPoint];
                 USBByteCount--;
 
-                if(USBByteCount==0)
+                if(USBByteCount==0) {
                     UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_ACK;
-
-                gpio_unset(0x20);
+                }
             }
-            if(UartByteCount)
+
+            if(UartByteCount) {
                 Uart_Timeout++;
+            }
+
             if(!UpPoint2_Busy)   // The endpoint is not busy (the first packet of data after idle, only used to trigger upload)
             {
                 length = UartByteCount;
@@ -604,15 +606,19 @@ main()
                     {
                         gpio_set(0x10);
                         Uart_Timeout = 0;
-                        if(Uart_Output_Point+length>UART_REV_LEN)
+                        if(Uart_Output_Point+length>UART_REV_LEN) {
                             length = UART_REV_LEN-Uart_Output_Point;
+                        }
                         UartByteCount -= length;
                         // write upload endpoint
                         memcpy(Ep2Buffer+MAX_PACKET_SIZE,&Receive_Uart_Buf[Uart_Output_Point],length);
 
                         Uart_Output_Point+=length;
-                        if (Uart_Output_Point>=UART_REV_LEN)
+
+                        if (Uart_Output_Point>=UART_REV_LEN) {
                             Uart_Output_Point = 0;
+                        }
+
                         UEP2_T_LEN = length; // Pre-use send length must be cleared
                         UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK; // Answer ACK
                         UpPoint2_Busy = 1;
