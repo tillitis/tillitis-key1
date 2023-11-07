@@ -188,7 +188,6 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
             if ( U_TOG_OK )                                                     // Out-of-sync packets will be dropped
             {
                 USBByteCount = USB_RX_LEN;                                      // Grads length of recieved data
-                USBBufOutPoint = 0;                                             //Get data pointer reset
                 UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_NAK;       //NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
             }
             break;
@@ -520,7 +519,7 @@ void DeviceInterrupt(void) __interrupt (INT_NO_USB)                       //USB 
 #endif
             while ( XBUS_AUX & bUART0_TX )
             {
-                ;    //等待发送完成
+                ;    //Wait for sending to complete
             }
             SAFE_MOD = 0x55;
             SAFE_MOD = 0xAA;
@@ -544,22 +543,33 @@ void Uart1_ISR(void) __interrupt (INT_NO_UART1)
 {
     if(U1RI)   //data received
     {
-        gpio_set(0x20);
         Receive_Uart_Buf[Uart_Input_Point++] = SBUF1;
-        UartByteCount++;                    //Number of bytes remaining in the current buffer
         if(Uart_Input_Point>=UART_REV_LEN) {
             Uart_Input_Point = 0;           //Write pointer
         }
-        U1RI =0;
-        gpio_unset(0x20);
+        U1RI = 0;
     }
 
 }
+
+uint8_t uart_byte_count() {
+    uint8_t in = Uart_Input_Point;
+    uint8_t out = Uart_Output_Point;
+
+    if (in < out) {
+        in = in + UART_REV_LEN;
+    }
+
+    return in - out;
+}
+
 //main function
 main()
 {
     uint8_t length;
     uint8_t Uart_Timeout = 0;
+    uint8_t USB_output_buffer[64] = {0};
+    uint8_t USB_output_buffer_remain = 0;
     CfgFsys( );                                                           // CH559 clock selection configuration
     mDelaymS(5);                                                          // Modify the main frequency and wait for the internal crystal to stabilize, which must be added
     mInitSTDIO( );                                                        // Serial port 0, can be used for debugging
@@ -575,9 +585,10 @@ main()
     UEP1_T_LEN = 0;                                                       //Pre-use send length must be cleared
     UEP2_T_LEN = 0;                                                       //Pre-use send length must be cleared
 
-    gpio_init();
-    gpio_unset(0x10);
-    gpio_unset(0x20);
+    // Enable GPIO debugging on p1.4 and p1.5
+    // gpio_init();
+    // gpio_unset(0x10);
+    // gpio_unset(0x20);
 
     while(1)
     {
@@ -585,14 +596,23 @@ main()
         {
             if(USBByteCount)   // USB receiving endpoint has data
             {
-                CH554UART1SendByte(Ep2Buffer[USBBufOutPoint++]);
-                USBByteCount--;
+                memcpy(USB_output_buffer, Ep2Buffer, USBByteCount);
+                USB_output_buffer_remain = USBByteCount;
+                USBBufOutPoint = 0;
+                USBByteCount = 0;
+            }
 
-                if(USBByteCount==0) {
+            if(USB_output_buffer_remain)
+            {
+                CH554UART1SendByte(USB_output_buffer[USBBufOutPoint++]);
+                USB_output_buffer_remain--;
+
+                if(USB_output_buffer_remain==0) {
                     UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_R_RES | UEP_R_RES_ACK;
                 }
             }
 
+            UartByteCount = uart_byte_count();
             if(UartByteCount) {
                 Uart_Timeout++;
             }
@@ -604,12 +624,13 @@ main()
                 {
                     if(length>39 || Uart_Timeout>100)
                     {
-                        gpio_set(0x10);
+
                         Uart_Timeout = 0;
+                        // if we reach a wrap-around, just transmit from index to end of buffer.
+                        // The rest goes in next packet, i.e., not handling wrap-around.
                         if(Uart_Output_Point+length>UART_REV_LEN) {
                             length = UART_REV_LEN-Uart_Output_Point;
                         }
-                        UartByteCount -= length;
                         // write upload endpoint
                         memcpy(Ep2Buffer+MAX_PACKET_SIZE,&Receive_Uart_Buf[Uart_Output_Point],length);
 
@@ -622,10 +643,17 @@ main()
                         UEP2_T_LEN = length; // Pre-use send length must be cleared
                         UEP2_CTRL = UEP2_CTRL & ~ MASK_UEP_T_RES | UEP_T_RES_ACK; // Answer ACK
                         UpPoint2_Busy = 1;
-                        gpio_unset(0x10);
+
+                        // Should according to the USB-spec check if
+			// length == 64, if so we should send a
+			// zero-length USB packet. This is very
+			// unlikley to happen.
                     }
                 }
             }
+	    // Should have a timeout if the transfer for some reason
+	    // fails to reset UpPoint2_Busy. But does not seem to
+	    // happen.
         }
     }
 }
