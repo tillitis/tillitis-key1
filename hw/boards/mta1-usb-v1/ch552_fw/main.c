@@ -645,15 +645,15 @@ main()
                         UpPoint2_Busy = 1;
 
                         // Should according to the USB-spec check if
-			// length == 64, if so we should send a
-			// zero-length USB packet. This is very
-			// unlikley to happen.
+                        // length == 64, if so we should send a
+                        // zero-length USB packet. This is very
+                        // unlikley to happen.
                     }
                 }
             }
-	    // Should have a timeout if the transfer for some reason
-	    // fails to reset UpPoint2_Busy. But does not seem to
-	    // happen.
+        // Should have a timeout if the transfer for some reason
+        // fails to reset UpPoint2_Busy. But does not seem to
+        // happen.
         }
     }
 }
