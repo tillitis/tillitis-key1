@@ -65,8 +65,10 @@ VERILOG_SRCS = \
 	$(P)/core/timer/rtl/timer_core.v \
 	$(P)/core/timer/rtl/timer.v \
 	$(P)/core/uds/rtl/uds.v \
+	$(P)/core/uds/rtl/uds_rom.v \
 	$(P)/core/touch_sense/rtl/touch_sense.v \
 	$(P)/core/tk1/rtl/tk1.v \
+	$(P)/core/tk1/rtl/udi_rom.v \
 	$(P)/core/uart/rtl/uart_core.v \
 	$(P)/core/uart/rtl/uart_fifo.v \
 	$(P)/core/uart/rtl/uart.v \
@@ -228,17 +230,18 @@ tb:
 # Main FPGA build flow.
 # Synthesis. Place & Route. Bitstream generation.
 #-------------------------------------------------------------------
-synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/udi.hex
+synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex
 	$(YOSYS_PATH)yosys -v3 -l synth.log -DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 		-DFIRMWARE_HEX=\"$(P)/bram_fw.hex\" \
-		-DUDS_HEX=\"$(P)/data/uds.hex\" \
-		-DUDI_HEX=\"$(P)/data/udi.hex\" \
 		-p 'synth_ice40 -dsp -top application_fpga -json $@; write_verilog -attr2comment synth.v' \
 		$(filter %.v, $^)
 
-application_fpga.asc: synth.json $(P)/data/$(PIN_FILE)
+application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
 	$(NEXTPNR_PATH)nextpnr-ice40  --ignore-loops --up5k --package sg48 --json $< \
-		--pcf $(P)/data/$(PIN_FILE) --asc $@
+		--pcf $(P)/data/$(PIN_FILE) --write $@
+
+application_fpga.asc: application_fpga_par.json $(P)/data/uds.hex $(P)/data/udi.hex
+	UDS_HEX="$(P)/data/uds.hex" UDI_HEX="$(P)/data/udi.hex" OUT_ASC=$@ $(NEXTPNR_PATH)nextpnr-ice40 --up5k --package sg48 --ignore-loops --json $< --run tools/personalize.py
 
 application_fpga.bin: application_fpga.asc bram_fw.hex firmware.hex
 	$(ICESTORM_PATH)icebram -v bram_fw.hex firmware.hex < $< > $<.tmp
@@ -320,6 +323,7 @@ clean: clean_fw
 	rm -f bram_fw.hex
 	rm -f synth.{log,v,json} route.v application_fpga.{asc,bin,vcd} application_fpga_testfw.bin
 	rm -f tb_application_fpga.vvp synth_tb.vvp route_tb.vvp
+	rm -f application_fpga_par.json
 	rm -f *.vcd
 	rm -f lint_issues.txt
 	rm -rf verilated

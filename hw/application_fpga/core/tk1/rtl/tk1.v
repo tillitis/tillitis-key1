@@ -99,9 +99,6 @@ module tk1(
   reg [31 : 0] cdi_mem [0 : 7];
   reg          cdi_mem_we;
 
-  reg [31 : 0] udi_mem [0 : 1];
-  initial $readmemh(`UDI_HEX, udi_mem);
-
   reg          switch_app_reg;
   reg          switch_app_we;
 
@@ -156,6 +153,7 @@ module tk1(
 
   reg [2 : 0]  muxed_led;
 
+  wire [31:0]  udi_rdata;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -194,6 +192,12 @@ module tk1(
                             .CURREN(1'b1)
     );
   /* verilator lint_on PINMISSING */
+
+
+    udi_rom rom_i(
+		  .addr(address[0]),
+		  .data(udi_rdata)
+		 );
 
 
   //----------------------------------------------------------------
@@ -500,7 +504,7 @@ module tk1(
 
 	  if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
 	    if (!switch_app_reg) begin
-	      tmp_read_data = udi_mem[address[0]];
+	      tmp_read_data = udi_rdata;
 	    end
 	  end
         end

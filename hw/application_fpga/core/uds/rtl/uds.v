@@ -36,9 +36,6 @@ module uds(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [31 : 0] uds_reg [0 : 7];
-  initial $readmemh(`UDS_HEX, uds_reg);
-
   reg          uds_rd_reg [0 : 7];
   reg          uds_rd_we;
 
@@ -55,6 +52,17 @@ module uds(
   //----------------------------------------------------------------
   assign read_data = tmp_read_data;
   assign ready     = tmp_ready;
+
+
+  //----------------------------------------------------------------
+  // uds rom instance.
+  //----------------------------------------------------------------
+  uds_rom rom_i(
+		.addr(address),
+		.re(uds_rd_we),
+		.data(tmp_read_data)
+	       );
+
 
 
   //----------------------------------------------------------------
@@ -85,7 +93,6 @@ module uds(
   always @*
     begin : api
       uds_rd_we     = 1'h0;
-      tmp_read_data = 32'h0;
       tmp_ready     = 1'h0;
 
       if (cs) begin
@@ -94,14 +101,12 @@ module uds(
 	if ((address >= ADDR_UDS_FIRST) && (address <= ADDR_UDS_LAST)) begin
 	  if (!fw_app_mode) begin
             if (uds_rd_reg[address[2 : 0]] == 1'h0) begin
-              tmp_read_data = uds_reg[address[2 : 0]];
               uds_rd_we     = 1'h1;
             end
 	  end
         end
       end
     end
-
 endmodule // uds
 
 //======================================================================
