@@ -1,4 +1,4 @@
-FROM docker.io/library/ubuntu:22.10 as base
+FROM docker.io/library/ubuntu:23.10 as base
 
 RUN apt-get -qq update -y \
     && DEBIAN_FRONTEND=noninteractive \
@@ -67,7 +67,7 @@ RUN git >/usr/local/repo-commit-tillitis--icestorm describe --all --always --lon
 WORKDIR /
 RUN rm -rf /src
 
-RUN git clone -b yosys-0.26 --depth=1 https://github.com/YosysHQ/yosys /src
+RUN git clone -b yosys-0.36 --depth=1 https://github.com/YosysHQ/yosys /src
 WORKDIR /src
 RUN make -j$(nproc --ignore=2) \
     && make install
@@ -75,7 +75,7 @@ RUN git >/usr/local/repo-commit-yosys describe --all --always --long --dirty
 WORKDIR /
 RUN rm -rf /src
 
-RUN git clone -b nextpnr-0.5 --depth=1 https://github.com/YosysHQ/nextpnr /src
+RUN git clone -b nextpnr-0.6 --depth=1 https://github.com/YosysHQ/nextpnr /src
 WORKDIR /src
 RUN cmake -DARCH=ice40 -DCMAKE_INSTALL_PREFIX=/usr/local . \
     && make -j$(nproc --ignore=2) \
