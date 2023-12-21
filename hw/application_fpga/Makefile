@@ -26,7 +26,7 @@ ICESTORM_PATH ?=
 # bits wide; an EBR is 128 32-bits words)
 BRAM_FW_SIZE ?= 1536
 
-PIN_FILE ?= application_fpga_tk1.pcf
+PIN_FILE ?= application_fpga_tk1_uwg30.pcf
 
 SIZE ?= llvm-size
 OBJCOPY ?= llvm-objcopy
@@ -221,7 +221,7 @@ synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/
 		$(filter %.v, $^)
 
 application_fpga.asc: synth.json $(P)/data/$(PIN_FILE)
-	$(NEXTPNR_PATH)nextpnr-ice40  --ignore-loops --up5k --package sg48 --json $< \
+	$(NEXTPNR_PATH)nextpnr-ice40  --ignore-loops --up5k --package uwg30 --json $< \
 		--pcf $(P)/data/$(PIN_FILE) --asc $@
 
 application_fpga.bin: application_fpga.asc bram_fw.hex firmware.hex
@@ -291,7 +291,7 @@ check-hardware:
 # Post build analysis.
 #-------------------------------------------------------------------
 timing: application_fpga.asc $(P)/data/$(PIN_FILE)
-	$(ICESTORM_PATH)icetime -c 18 -tmd up5k -P sg48 -p $(P)/data/$(PIN_FILE) -t $<
+	$(ICESTORM_PATH)icetime -c 18 -tmd up5k -P uwg30 -p $(P)/data/$(PIN_FILE) -t $<
 
 view: tb_application_fpga_vcd
 	gtkwave $< application_fpga.gtkw
