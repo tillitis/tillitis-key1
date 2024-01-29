@@ -54,6 +54,7 @@ module uart(
 
             input wire           rxd,
             output wire          txd,
+            output wire          txd_debug,
 
             input wire           cs,
             input wire           we,
@@ -72,6 +73,7 @@ module uart(
   localparam ADDR_BIT_RATE     = 8'h10;
   localparam ADDR_DATA_BITS    = 8'h11;
   localparam ADDR_STOP_BITS    = 8'h12;
+  localparam ADDR_TX_SELECT    = 8'h18;
 
   localparam ADDR_RX_STATUS    = 8'h20;
   localparam ADDR_RX_DATA      = 8'h21;
@@ -90,6 +92,9 @@ module uart(
   localparam DEFAULT_DATA_BITS = 4'h8;
   localparam DEFAULT_STOP_BITS = 2'h1;
 
+  // By default send UART tx to the normal UART pin.
+  localparam DEFAULT_TX_SELECT = 1'h0;
+
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -102,6 +107,9 @@ module uart(
 
   reg [1 : 0]  stop_bits_reg;
   reg          stop_bits_we;
+
+  reg          tx_select_reg;
+  reg          tx_select_we;
 
 
   //----------------------------------------------------------------
@@ -123,12 +131,18 @@ module uart(
   reg [31 : 0]  tmp_read_data;
   reg           tmp_ready;
 
+  wire          txd_internal;
+  reg           tmp_txd;
+  reg           tmp_txd_debug;
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign read_data = tmp_read_data;
   assign ready     = tmp_ready;
+  assign txd       = tmp_txd;
+  assign txd_debug = tmp_txd_debug;
 
 
   //----------------------------------------------------------------
@@ -145,7 +159,7 @@ module uart(
 
                  // External data interface
                  .rxd(rxd),
-                 .txd(txd),
+                 .txd(txd_internal),
 
                  // Internal receive interface.
                  .rxd_syn(core_rxd_syn),
@@ -188,6 +202,7 @@ module uart(
         bit_rate_reg  <= DEFAULT_BIT_RATE;
         data_bits_reg <= DEFAULT_DATA_BITS;
         stop_bits_reg <= DEFAULT_STOP_BITS;
+	tx_select_reg <= DEFAULT_TX_SELECT;
       end
       else begin
         if (bit_rate_we) begin
@@ -201,8 +216,29 @@ module uart(
         if (stop_bits_we) begin
           stop_bits_reg  <= write_data[1 : 0];
         end
+
+        if (tx_select_we) begin
+          tx_select_reg  <= write_data[0];
+        end
       end
     end // reg_update
+
+  //----------------------------------------------------------------
+  // tx_select
+  //
+  // Logic that selects which pin tx data should be sent to.
+  //----------------------------------------------------------------
+  always @*
+    begin: tx_select
+      if (tx_select_reg) begin
+        tmp_txd       = 1'h0;
+	tmp_txd_debug = txd_internal;
+
+      end else begin
+        tmp_txd       = txd_internal;
+	tmp_txd_debug = 1'h0;
+      end
+    end
 
 
   //----------------------------------------------------------------
@@ -219,6 +255,7 @@ module uart(
       stop_bits_we  = 1'h0;
       core_txd_syn  = 1'h0;
       fifo_out_ack  = 1'h0;
+      tx_select_we  = 1'h0;
       tmp_read_data = 32'h0;
       tmp_ready     = 1'h0;
 
@@ -240,6 +277,12 @@ module uart(
             ADDR_STOP_BITS: begin
               stop_bits_we  = 1;
             end
+
+	    ADDR_TX_SELECT: begin
+	      if (core_txd_ready) begin
+		tx_select_we = 1'h1;
+	      end
+	    end
 
 	    ADDR_TX_DATA: begin
 	      if (core_txd_ready) begin
@@ -264,6 +307,10 @@ module uart(
 
             ADDR_STOP_BITS: begin
               tmp_read_data = {30'h0, stop_bits_reg};
+            end
+
+            ADDR_TX_SELECT: begin
+              tmp_read_data = {31'h0, tx_select_reg};
             end
 
 	    ADDR_RX_STATUS: begin

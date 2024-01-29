@@ -290,6 +290,7 @@ module application_fpga(
 
                  .rxd(interface_tx),
                  .txd(interface_rx),
+		 .txd_debug(app_gpio4),
 
                  .cs(uart_cs),
                  .we(uart_we),
@@ -336,7 +337,7 @@ module application_fpga(
                .gpio1(app_gpio1),
                .gpio2(app_gpio2),
                .gpio3(app_gpio3),
-               .gpio4(app_gpio4),
+               .gpio4(),
 
 	       .cs(tk1_cs),
 	       .we(tk1_we),

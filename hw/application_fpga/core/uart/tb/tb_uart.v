@@ -59,6 +59,7 @@ module tb_uart();
   reg           tb_reset_n;
   reg           tb_rxd;
   wire          tb_txd;
+  wire          tb_txd_debug;
   reg           tb_cs;
   reg           tb_we;
   reg [7 : 0]   tb_address;
@@ -78,6 +79,7 @@ module tb_uart();
 
            .rxd(tb_rxd),
            .txd(tb_txd),
+           .txd_debug(tb_txd_debug),
 
             // API interface.
             .cs(tb_cs),
@@ -156,8 +158,8 @@ module tb_uart();
       $display("State of DUT");
       $display("------------");
       $display("Inputs and outputs:");
-      $display("rxd = 0x%01x, txd = 0x%01x,",
-               dut.core.rxd, dut.core.txd);
+      $display("rxd = 0x%01x, txd = 0x%01x,  txd_debug = 0x%01x",
+               dut.rxd, dut.txd, dut.txd_debug);
       $display("");
 
       $display("Sample and data registers:");
