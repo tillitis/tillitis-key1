@@ -175,4 +175,29 @@ execution is possible.
 The core is implemented as a single module. Future versions will
 probably be separated into separate modules.
 
+
+## Winbond Flash memory model
+
+The testbench for the SPI master includes a memory model of the Flash
+memory.  The model is provided by Winbond and the copyright for the
+model is:
+
+```
+/******************************************************************************
+ Winbond Electronics Corporation
+ Verilog Simulation for W25Q80DL Serial Flash Memory
+
+ V1.01
+
+ Copyright (c) 2001-2015 Winbond Electronics Corporation
+ All Rights Reserved.
+
+
+ Notes:
+
+ Versions:
+	12/09/2015		Initial Version
+******************************************************************************/
+```
+
 ---
