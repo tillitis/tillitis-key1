@@ -25,7 +25,11 @@ LINT = verilator
 LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
-all: spi.sim top.sim
+all: MEM.TXT spi.sim top.sim
+
+
+MEM.TXT:
+	../tools/mem_gen.py > MEM.TXT
 
 
 spi.sim: $(TB_SPI_SRC) $(SPI_SRC) $(MEM_MODEL_SRC)
@@ -55,7 +59,7 @@ lint-spi:  $(SPI_SRC)
 clean:
 	rm -f spi.sim
 	rm -f top.sim
-
+	rm -f MEM.TXT
 
 help:
 	@echo "Build system for simulation of TK1 core"

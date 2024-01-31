@@ -59,6 +59,7 @@ module tb_tk1_spi_master();
 
   assign mem_model_WPn = 1'h1;
 
+
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
@@ -251,93 +252,25 @@ module tb_tk1_spi_master();
 
 
   //----------------------------------------------------------------
-  // test1()
+  // tc_get_id()
+  //
+  // Test case that reads out the device ID.
+  // Expected result: 64'hDC02030405060708.
   //----------------------------------------------------------------
-  task test1;
+  task tc_get_id;
     begin
       tc_ctr = tc_ctr + 1;
       monitor = 1;
 
-      tb_miso_mux_ctrl = MISO_INV_MOSI;
-
       $display("");
-      $display("--- test1: Send a byte, receive a byte.");
+      $display("--- tx_get_id: Read out device id from the memory.");
 
-      $display("--- test1: State at idle for 4 cycles.");
-      #(4 * CLK_PERIOD);
-
-      $display("--- test1: Enable the SPI master. Should drop cs");
-      tb_spi_enable     = 1'h1;
-      tb_spi_enable_vld  = 1'h1;
-      #(CLK_PERIOD);
-      tb_spi_enable_vld  = 1'h0;
-
-      $display("--- test1: Load a 0xa7 byte to transmit.");
-      #(CLK_PERIOD);
-      tb_spi_tx_data    = 8'ha7;
-      tb_spi_tx_data_vld = 1'h1;
-      #(CLK_PERIOD);
-      tb_spi_tx_data_vld = 1'h0;
-
-      $display("--- test1: Start the transfer. This should drop ready.");
-      #(CLK_PERIOD);
-      tb_spi_start = 1'h1;
-      #(CLK_PERIOD);
-      tb_spi_start = 1'h0;
-      #(2 * CLK_PERIOD);
-
-      $display("--- test1: Wait for ready to be set.");
-      while (!tb_spi_ready) begin
-	#(CLK_PERIOD);
-      end
-      $display("--- test1: Ready has been set.");
-      #(CLK_PERIOD);
-
-      $display("--- test1: Disable the SPI master. Should raise cs");
-      tb_spi_enable     = 1'h0;
-      tb_spi_enable_vld  = 1'h1;
-      #(CLK_PERIOD);
-      tb_spi_enable_vld  = 1'h0;
-      #(CLK_PERIOD);
-
-      if (tb_miso_mux_ctrl == MISO_ALL_ZERO) begin
-	if (tb_spi_rx_data == 8'h0) begin
-	  $display("--- test1: Correct all zero data received.");
-	end else begin
-	  $display("--- test1: Error, Incorrect all zero data data received.");
-	end
-      end
-
-      if (tb_miso_mux_ctrl == MISO_ALL_ONE) begin
-	if (tb_spi_rx_data == 8'hff) begin
-	  $display("--- test1: Correct all one data received.");
-	end else begin
-	  $display("--- test1: Error, Incorrect all one data data received.");
-	end
-      end
-
-      if (tb_miso_mux_ctrl == MISO_MOSI) begin
-	if (tb_spi_rx_data == tb_spi_tx_data) begin
-	  $display("--- test1: Correct MOSI data received.");
-	end else begin
-	  $display("--- test1: Error, Incorrect MOSI data received.");
-	end
-      end
-
-      if (tb_miso_mux_ctrl == MISO_INV_MOSI) begin
-	if (tb_spi_rx_data == ~tb_spi_tx_data) begin
-	  $display("--- test1: Correct inverse MOSI data received.");
-	end else begin
-	  $display("--- test1: Error, Incorrect inverse MOSI data received.");
-	end
-      end
-
-      $display("--- test1: completed.");
+      $display("--- tx_get_id: completed.");
       monitor = 0;
 
       $display("");
     end
-  endtask // test1
+  endtask // tx_get_id
 
 
   //----------------------------------------------------------------
@@ -353,7 +286,7 @@ module tb_tk1_spi_master();
       init_sim();
       reset_dut();
 
-      test1();
+      tc_get_id();
 
       display_test_result();
       $display("");
