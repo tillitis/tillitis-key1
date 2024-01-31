@@ -12,6 +12,7 @@
 //======================================================================
 
 `default_nettype none
+`timescale 1ns / 1ns
 
 module tb_tk1_spi_master();
 
@@ -42,7 +43,7 @@ module tb_tk1_spi_master();
   wire          tb_spi_ss;
   wire          tb_spi_sck;
   wire          tb_spi_mosi;
-  reg           tb_spi_miso;
+  wire          tb_spi_miso;
   reg           tb_spi_enable;
   reg           tb_spi_enable_vld;
   reg           tb_spi_start;
@@ -51,8 +52,12 @@ module tb_tk1_spi_master();
   wire  [7 : 0] tb_spi_rx_data;
   wire          tb_spi_ready;
 
+  wire          mem_model_WPn;
+  wire          mem_model_HOLDn;
+
   reg [1 : 0]   tb_miso_mux_ctrl;
 
+  assign mem_model_WPn = 1'h1;
 
   //----------------------------------------------------------------
   // Device Under Test.
@@ -75,21 +80,19 @@ module tb_tk1_spi_master();
 		     .spi_ready(tb_spi_ready)
 		     );
 
+
   //----------------------------------------------------------------
-  // miso_mux
-  //
-  // This is a MUX that controls the input to the miso signal.
+  // spi_memory
   //----------------------------------------------------------------
-  always @*
-    begin : miso_mux
-      case (tb_miso_mux_ctrl)
-	MISO_ALL_ZERO: tb_spi_miso = 1'h0;
-	MISO_ALL_ONE:  tb_spi_miso = 1'h1;
-	MISO_MOSI:     tb_spi_miso = tb_spi_mosi;
-	MISO_INV_MOSI: tb_spi_miso = ~tb_spi_mosi;
-	default: begin end
-      endcase // case (miso_mux_ctrl)
-    end
+  W25Q80DL spi_memory(
+		      .CSn(tb_reset_n),
+		      .CLK(tb_spi_sck),
+		      .DIO(tb_spi_mosi),
+		      .DO(tb_spi_miso),
+		      .WPn(mem_model_WPn),
+		      .HOLDn(mem_model_HOLDn)
+		     );
+
 
   //----------------------------------------------------------------
   // clk_gen
@@ -158,9 +161,6 @@ module tb_tk1_spi_master();
 	       dut.spi_tx_data_new, dut.spi_tx_data_nxt, dut.spi_tx_data_we);
       $display("spi_tx_data_reg: 0x%02x, spi_tx_data_new: 0x%02x",
 	       dut.spi_tx_data_reg, dut.spi_tx_data_new);
-      $display("");
-      $display("spi_miso_sample0_reg: 0x%1x, spi_miso_sample1_reg: 0x%1x",
-	       dut.spi_miso_sample0_reg, dut.spi_miso_sample1_reg);
       $display("");
       $display("spi_rx_data_nxt: 0x%1x, spi_rx_data_we: 0x%1x",
 	       dut.spi_rx_data_nxt, dut.spi_rx_data_we);
@@ -237,13 +237,15 @@ module tb_tk1_spi_master();
 
       tb_clk             = 1'h0;
       tb_reset_n         = 1'h1;
-      tb_spi_miso        = 1'h0;
       tb_spi_enable      = 1'h0;
       tb_spi_enable_vld  = 1'h0;
       tb_spi_start       = 1'h0;
       tb_spi_tx_data     = 8'h0;
       tb_spi_tx_data_vld = 1'h0;
       tb_miso_mux_ctrl   = MISO_MOSI;
+
+//      mem_model_WPn      = 1'h1;
+//      mem_model_HOLDn    = 1'h1;
     end
   endtask // init_sim
 

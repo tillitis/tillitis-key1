@@ -13,6 +13,7 @@
 
 SPI_SRC=../rtl/tk1_spi_master.v
 TB_SPI_SRC =../tb/tb_tk1_spi_master.v
+MEM_MODEL_SRC =../tb/W25Q80DL.v
 
 TOP_SRC=../rtl/tk1.v $(SPI_SRC)
 TB_TOP_SRC =../tb/tb_tk1.v ../tb/sb_rgba_drv.v
@@ -27,7 +28,7 @@ LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 all: spi.sim top.sim
 
 
-spi.sim: $(TB_SPI_SRC) $(SPI_SRC)
+spi.sim: $(TB_SPI_SRC) $(SPI_SRC) $(MEM_MODEL_SRC)
 	$(CC) $(CC_FLAGS) -o spi.sim $^
 
 
