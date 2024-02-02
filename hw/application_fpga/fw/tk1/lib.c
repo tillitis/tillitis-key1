@@ -155,3 +155,10 @@ int memeq(void *dest, const void *src, size_t n)
 
 	return res;
 }
+
+void secure_wipe(void *v, size_t n)
+{
+	volatile uint8_t *p = (volatile uint8_t *)v;
+	while (n--)
+		*p++ = 0;
+}

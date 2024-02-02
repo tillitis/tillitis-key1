@@ -115,7 +115,7 @@ static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 	// while on the firmware stack which is in the special fw_ram.
 	wordcpy_s(local_uds, 8, (void *)uds, 8);
 	blake2s_update(&secure_ctx, (const void *)local_uds, 32);
-	(void)memset(local_uds, 0, 32);
+	(void)secure_wipe(local_uds, sizeof(local_uds));
 
 	// Update with TKey program digest
 	blake2s_update(&secure_ctx, digest, 32);
@@ -130,7 +130,7 @@ static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 
 	// Clear secure_ctx of any residue of UDS. Don't want to keep
 	// that for long even though fw_ram is cleared later.
-	(void)memset(&secure_ctx, 0, sizeof(secure_ctx));
+	(void)secure_wipe(&secure_ctx, sizeof(secure_ctx));
 
 	// CDI only word writable
 	wordcpy_s((void *)cdi, 8, &local_cdi, 8);
