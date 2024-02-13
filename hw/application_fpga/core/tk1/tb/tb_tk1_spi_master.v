@@ -37,6 +37,7 @@ module tb_tk1_spi_master();
   reg [31 : 0] error_ctr;
   reg [31 : 0] tc_ctr;
   reg          monitor;
+  reg          verbose;
 
   reg           tb_clk;
   reg           tb_reset_n;
@@ -57,6 +58,12 @@ module tb_tk1_spi_master();
 
   reg [1 : 0]   tb_miso_mux_ctrl;
 
+  reg          my_tb_spi_ss;
+
+
+  //----------------------------------------------------------------
+  // Assignments.
+  //----------------------------------------------------------------
   assign mem_model_WPn = 1'h1;
 
 
@@ -86,7 +93,7 @@ module tb_tk1_spi_master();
   // spi_memory
   //----------------------------------------------------------------
   W25Q80DL spi_memory(
-		      .CSn(tb_reset_n),
+		      .CSn(tb_spi_ss),
 		      .CLK(tb_spi_sck),
 		      .DIO(tb_spi_mosi),
 		      .DO(tb_spi_miso),
@@ -244,33 +251,288 @@ module tb_tk1_spi_master();
       tb_spi_tx_data     = 8'h0;
       tb_spi_tx_data_vld = 1'h0;
       tb_miso_mux_ctrl   = MISO_MOSI;
-
-//      mem_model_WPn      = 1'h1;
-//      mem_model_HOLDn    = 1'h1;
     end
   endtask // init_sim
 
 
   //----------------------------------------------------------------
-  // tc_get_id()
+  // enable_spi
+  //
+  // Enable the SPI-interface
+  //----------------------------------------------------------------
+  task enable_spi;
+    begin
+      if (verbose) begin
+	$display("enable_spi: Started");
+      end
+
+      tb_spi_enable     = 1'h1;
+      tb_spi_enable_vld = 1'h1;
+      #(CLK_PERIOD);
+      tb_spi_enable_vld = 1'h0;
+      #(CLK_PERIOD);
+
+      if (verbose) begin
+	$display("enable_spi: Completed");
+      end
+    end
+  endtask // enable_spi
+
+
+  //----------------------------------------------------------------
+  // disable_spi
+  //
+  // Disable the SPI-interface
+  //----------------------------------------------------------------
+  task disable_spi;
+    begin
+      if (verbose) begin
+	$display("disable_spi: Started");
+      end
+
+      tb_spi_enable     = 1'h0;
+      tb_spi_enable_vld = 1'h1;
+      #(CLK_PERIOD);
+      tb_spi_enable_vld = 1'h0;
+      #(CLK_PERIOD);
+
+      if (verbose) begin
+	$display("disable_spi: Completed");
+      end
+    end
+  endtask // disable_spi
+
+
+  //----------------------------------------------------------------
+  // xfer_byte
+  //
+  // Wait until the SPI-master is ready, then send input byte
+  // and return the received byte.
+  //----------------------------------------------------------------
+  task xfer_byte (input [7 : 0] to_mem, output [7 : 0] from_mem);
+    begin
+      if (verbose) begin
+	$display("xfer_byte: Trying to send 0x%02x to mem", to_mem);
+      end
+
+      tb_spi_tx_data     = to_mem;
+      tb_spi_tx_data_vld = 1'h1;
+      #(CLK_PERIOD);
+      tb_spi_tx_data_vld = 1'h0;
+      #(CLK_PERIOD);
+
+      while (tb_spi_ready == 1'h0) begin
+	#(CLK_PERIOD);
+      end
+      #(CLK_PERIOD);
+
+      tb_spi_start = 1'h1;
+      #(CLK_PERIOD);
+      tb_spi_start = 1'h0;
+      #(CLK_PERIOD);
+
+      while (tb_spi_ready == 1'h0) begin
+	#(CLK_PERIOD);
+      end
+      #(CLK_PERIOD);
+
+      from_mem = tb_spi_rx_data;
+      #(CLK_PERIOD);
+      if (verbose) begin
+	$display("xfer_byte: Received 0x%02x from mem", from_mem);
+      end
+    end
+  endtask // xfer_byte
+
+
+  //----------------------------------------------------------------
+  // tc_get_device_id()
   //
   // Test case that reads out the device ID.
-  // Expected result: 64'hDC02030405060708.
   //----------------------------------------------------------------
-  task tc_get_id;
-    begin
+  task tc_get_device_id;
+    begin : tc_get_id
+      reg [7 : 0] rx_byte;
       tc_ctr = tc_ctr + 1;
-      monitor = 1;
-
-      $display("");
-      $display("--- tx_get_id: Read out device id from the memory.");
-
-      $display("--- tx_get_id: completed.");
       monitor = 0;
 
       $display("");
+      $display("--- tc_get_device_id: Read out device id from the memory.");
+
+      #(2 * CLK_PERIOD);
+      enable_spi();
+      #(2 * CLK_PERIOD);
+
+      // Send 0xab command.
+      $display("--- tc_get_device_id: Sending 0xab command.");
+      xfer_byte(8'hab, rx_byte);
+      #(CLK_PERIOD);
+
+      // Dummy bytes.
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_device_id: Got 0x%02x after dummy byte 1", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_device_id: Got 0x%02x after dummy byte 2", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_device_id: Got 0x%02x after dummy byte 3", rx_byte);
+
+      // Get the ID byte.
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_device_id: Got ID 0x%02x after dummy byte 4", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_device_id: Got ID 0x%02x after dummy byte 5", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_device_id: Got ID 0x%02x after dummy byte 6", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_device_id: Got ID 0x%02x after dummy byte 6", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_device_id: Got ID 0x%02x after dummy byte 6", rx_byte);
+
+      disable_spi();
+      #(2 * CLK_PERIOD);
+
+      $display("--- tc_get_device_id: completed.");
+      $display("");
     end
-  endtask // tx_get_id
+  endtask // tc_get_device_id
+
+
+  //----------------------------------------------------------------
+  // tc_get_jedec_id()
+  //
+  // Test case that reads out the JEDEC ID.
+  //----------------------------------------------------------------
+  task tc_get_jedec_id;
+    begin : tc_get_id
+      reg [7 : 0] rx_byte;
+      tc_ctr = tc_ctr + 1;
+      monitor = 0;
+      verbose = 0;
+
+      $display("");
+      $display("--- tc_get_jedec_id: Read out device id from the memory.");
+
+      #(2 * CLK_PERIOD);
+      enable_spi();
+      #(2 * CLK_PERIOD);
+
+      // Send 0x9f command.
+      $display("--- tc_get_jedec_id: Sending 0xab command.");
+      xfer_byte(8'h9f, rx_byte);
+
+      // Send dummy bytes and get response back.
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_jedec_id: Got manufacture ID 0x%02x", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_jedec_id: Got memory type 0x%02x", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_jedec_id: Got memory capacity 0x%02x", rx_byte);
+
+      disable_spi();
+      #(2 * CLK_PERIOD);
+
+      $display("--- tc_get_jedec_id: completed.");
+      $display("");
+
+      verbose = 1;
+    end
+  endtask // tc_get_jedec_id
+
+
+  //----------------------------------------------------------------
+  // tc_get_unique_device_id()
+  //
+  // Test case that reads out the JEDEC ID.
+  // Expected: 0xdc02030405060708
+  //----------------------------------------------------------------
+  task tc_get_unique_device_id;
+    begin : tc_get_id
+      reg [7 : 0] rx_byte;
+      integer i;
+      tc_ctr = tc_ctr + 1;
+      monitor = 0;
+      verbose = 0;
+
+      $display("");
+      $display("--- tc_get_unique_device_id: Read out unique id from the memory");
+      $display("--- tc_get_unique_device_id: Expected result: 0xdc02030405060708");
+
+      #(2 * CLK_PERIOD);
+      enable_spi();
+      #(2 * CLK_PERIOD);
+
+      // Send 0x9f command.
+      $display("--- tc_get_unique_device_id: Sending 0x4b command.");
+      xfer_byte(8'h4b, rx_byte);
+
+      // Send four dummy bytes and get response back.
+      $display("--- tc_get_unique_device_id: Sending for dummy bytes");
+      xfer_byte(8'h00, rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      xfer_byte(8'h00, rx_byte);
+
+      // Send eight bytes and get unique device id back.
+      $display("--- tc_get_unique_device_id: reading out the unique device UD");
+      for (i = 0 ; i < 8 ; i = i + 1) begin
+	xfer_byte(8'h00, rx_byte);
+	$display("--- tc_get_unique_device_id: 0x%02x", rx_byte);
+      end
+
+      disable_spi();
+      #(2 * CLK_PERIOD);
+
+      $display("--- tc_get_unique_device_id: completed.");
+      $display("");
+
+      verbose = 1;
+    end
+  endtask // tc_get_unique_device_id
+
+
+  //----------------------------------------------------------------
+  // tc_get_manufacturer_id()
+  //
+  // Test case that reads out the device ID.
+  //----------------------------------------------------------------
+  task tc_get_manufacturer_id;
+    begin : tc_get_id
+      reg [7 : 0] rx_byte;
+      tc_ctr = tc_ctr + 1;
+      monitor = 0;
+
+      $display("");
+      $display("--- tc_get_manufacturer_id: Read out device id from the memory.");
+
+      #(2 * CLK_PERIOD);
+      enable_spi();
+      #(2 * CLK_PERIOD);
+
+      // Send 0x90 command.
+      $display("--- tc_get_manufacturer_id: Sending 0xab command.");
+      xfer_byte(8'h90, rx_byte);
+
+      // Dummy bytes.
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_manufacturer_id: Got 0x%02x after dummy byte 1", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_manufacturer_id: Got 0x%02x after dummy byte 2", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_manufacturer_id: Got 0x%02x after dummy byte 3", rx_byte);
+
+      // Get the ID byte.
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_manufacturer_id: Got ID 0x%02x after dummy byte 4", rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      $display("--- tc_get_manufacturer_id: Got ID 0x%02x after dummy byte 5", rx_byte);
+
+      disable_spi();
+      #(2 * CLK_PERIOD);
+
+      $display("--- tc_get_manufacturer_id: completed.");
+      $display("");
+    end
+  endtask // tc_get_manufacturer_id
 
 
   //----------------------------------------------------------------
@@ -285,8 +547,14 @@ module tb_tk1_spi_master();
 
       init_sim();
       reset_dut();
+      disable_spi();
 
-      tc_get_id();
+      verbose = 1;
+
+//      tc_get_device_id();
+//      tc_get_jedec_id();
+//      tc_get_manufacturer_id();
+      tc_get_unique_device_id();
 
       display_test_result();
       $display("");
