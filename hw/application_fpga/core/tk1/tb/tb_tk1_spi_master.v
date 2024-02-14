@@ -346,6 +346,67 @@ module tb_tk1_spi_master();
 
 
   //----------------------------------------------------------------
+  // read_mem_range()
+  //
+  // Read out a specified memory range. Result is printed,
+  //----------------------------------------------------------------
+  task read_mem_range (input [23 : 0] address, input integer num_bytes);
+    begin : read_mem_range
+      reg [7 : 0] rx_byte;
+      integer i;
+
+      if (verbose) begin
+	$display("read_mem_range: Reading out %d bytes starting at address 0x%06x", num_bytes, address);
+      end
+
+      #(2 * CLK_PERIOD);
+      enable_spi();
+      #(2 * CLK_PERIOD);
+
+      // Send read command 0x03.
+      xfer_byte(8'h03, rx_byte);
+
+      // Send adress 0x000000.
+      xfer_byte(address[23 : 16], rx_byte);
+      xfer_byte(address[15 : 8], rx_byte);
+      xfer_byte(address[7 : 0], rx_byte);
+
+      // Read out num_bytes bytes.
+      for (i = 0 ; i < num_bytes ; i = i + 1) begin
+	xfer_byte(8'h00, rx_byte);
+	$display("--- tc_read_mem_range: Byte 0x%06x: 0x%02x", address + i, rx_byte);
+      end
+
+      disable_spi();
+      #(2 * CLK_PERIOD);
+
+      if (verbose) begin
+	$display("read_mem_range: Completed");
+      end
+    end
+  endtask // read_mem_range
+
+
+  //----------------------------------------------------------------
+  // read_status()
+  //----------------------------------------------------------------
+  task read_status ();
+    begin : read_status
+      reg [7 : 0] dummy;
+      reg [15 : 0] status;
+      enable_spi();
+      #(2 * CLK_PERIOD);
+      xfer_byte(8'h05, dummy);
+      xfer_byte(8'h00, status[15 : 8]);
+      xfer_byte(8'h00, status[7 : 0]);
+      #(2 * CLK_PERIOD);
+      disable_spi();
+      $display("--- read_status: 0x%04x", status);
+    end
+  endtask // read_status
+
+
+  //----------------------------------------------------------------
   // tc_get_device_id()
   //
   // Test case that reads out the device ID.
@@ -410,7 +471,7 @@ module tb_tk1_spi_master();
       verbose = 0;
 
       $display("");
-      $display("--- tc_get_jedec_id: Read out device id from the memory.");
+      $display("--- tc_get_jedec_id: Read out JEDEC device id, type and capacity from the memory.");
 
       #(2 * CLK_PERIOD);
       enable_spi();
@@ -466,7 +527,6 @@ module tb_tk1_spi_master();
       xfer_byte(8'h4b, rx_byte);
 
       // Send four dummy bytes and get response back.
-      $display("--- tc_get_unique_device_id: Sending for dummy bytes");
       xfer_byte(8'h00, rx_byte);
       xfer_byte(8'h00, rx_byte);
       xfer_byte(8'h00, rx_byte);
@@ -536,6 +596,106 @@ module tb_tk1_spi_master();
 
 
   //----------------------------------------------------------------
+  // tc_read_mem()
+  //
+  // Test case that reads out the first 16 bytes of the memory.
+  //----------------------------------------------------------------
+  task tc_read_mem;
+    begin : tc_get_id
+      reg [7 : 0] rx_byte;
+      integer i;
+      tc_ctr = tc_ctr + 1;
+      monitor = 0;
+      verbose = 0;
+
+      $display("");
+      $display("--- tc_read_mem: Read out the first 16 bytes from the memory.");
+
+      #(2 * CLK_PERIOD);
+      enable_spi();
+      #(2 * CLK_PERIOD);
+
+      // Send read command 0x03.
+      $display("--- tc_read_mem: Sending 0x03 command.");
+      xfer_byte(8'h03, rx_byte);
+
+      // Send adress 0x000000.
+      $display("--- tc_read_mem: Sending 24 bit address 0x000000.");
+      xfer_byte(8'h00, rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      xfer_byte(8'h00, rx_byte);
+
+      // Read out 16 bytes.
+      $display("--- tc_read_mem: Reading out 16 bytes from the memory.");
+      for (i = 1 ; i < 17 ; i = i + 1) begin
+	xfer_byte(8'h00, rx_byte);
+	$display("--- tc_read_mem: Byte %d: 0x%02x", i, rx_byte);
+      end
+
+      disable_spi();
+      #(2 * CLK_PERIOD);
+
+      $display("--- tc_read_mem: completed.");
+      $display("");
+    end
+  endtask // tc_read_mem
+
+
+  //----------------------------------------------------------------
+  // tc_rmr_mem()
+  //
+  // Test case that reads out the first 16 bytes of the memory,
+  // erase the same area, reads out the contents again, writes
+  // a known pattern and the reads it out again.
+  //----------------------------------------------------------------
+  task tc_rmr_mem;
+    begin : tc_get_id
+      reg [7 : 0] rx_byte;
+      integer i;
+      tc_ctr = tc_ctr + 1;
+      monitor = 0;
+      verbose = 0;
+
+      $display("");
+      $display("--- tc_rmr_mem: Read out the first 16 bytes from the memory.");
+      read_mem_range(24'h000000, 16);
+
+      $display("");
+      $display("--- tc_rmr_mem: Status before write enable:");
+      read_status();
+
+      // Set write enable mode.
+      enable_spi();
+//      #(2 * CLK_PERIOD);
+      xfer_byte(8'h06, rx_byte);
+//      #(2 * CLK_PERIOD);
+      disable_spi();
+      #(2 * CLK_PERIOD);
+      $display("--- tc_rmr_mem: Status after write enable:");
+      read_status();
+
+      // Erase sector. Command 0x20 followed by 24 bit address.
+      enable_spi();
+      #(2 * CLK_PERIOD);
+      xfer_byte(8'h20, rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      xfer_byte(8'h00, rx_byte);
+      disable_spi();
+      #(4096 * CLK_PERIOD);
+      $display("--- tc_rmr_mem: Content of memory after erase.");
+      read_mem_range(24'h000000, 16);
+
+      disable_spi();
+      #(2 * CLK_PERIOD);
+
+      $display("--- tc_rmr_mem: completed.");
+      $display("");
+    end
+  endtask // tc_rmr_mem
+
+
+  //----------------------------------------------------------------
   // tk1_spi_master_test
   //----------------------------------------------------------------
   initial
@@ -552,9 +712,11 @@ module tb_tk1_spi_master();
       verbose = 1;
 
 //      tc_get_device_id();
-//      tc_get_jedec_id();
+      tc_get_jedec_id();
 //      tc_get_manufacturer_id();
       tc_get_unique_device_id();
+      tc_read_mem();
+//      tc_rmr_mem();
 
       display_test_result();
       $display("");
