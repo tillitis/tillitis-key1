@@ -237,4 +237,8 @@ Winbond](https://www.winbond.com/hq/support/documentation/downloadV2022.jsp?__lo
 by providing the requested information and supplying the received
 verification code.
 
+From the downloaded file 'W25Q80DL.zip', please extract the file
+W25Q80DL.v and place it in the 'tb' directory before building the
+simulation model.
+
 ---
