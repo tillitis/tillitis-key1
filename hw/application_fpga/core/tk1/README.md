@@ -231,26 +231,10 @@ probably be separated into separate modules.
 
 ## Winbond Flash memory model
 
-The testbench for the SPI master includes a memory model of the Flash
-memory. The model is provided by Winbond and the copyright for the
-model is:
-
-```
-/******************************************************************************
- Winbond Electronics Corporation
- Verilog Simulation for W25Q80DL Serial Flash Memory
-
- V1.01
-
- Copyright (c) 2001-2015 Winbond Electronics Corporation
- All Rights Reserved.
-
-
- Notes:
-
- Versions:
-	12/09/2015		Initial Version
-******************************************************************************/
-```
+The testbench for the SPI master requires a memory model of the
+Winbond Flash memory. The model [can be downloaded from
+Winbond](https://www.winbond.com/hq/support/documentation/downloadV2022.jsp?__locale=en&xmlPath=/support/resources/.content/item/DA02-KAG049.html&level=2)
+by providing the requested information and supplying the received
+verification code.
 
 ---
