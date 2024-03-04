@@ -106,7 +106,7 @@ uint32_t wait_timer_tick(uint32_t last_timer)
 	}
 }
 
-void zero_fwram()
+void zero_fwram(void)
 {
 	for (int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
 		fw_ram[i] = 0x00;
@@ -149,7 +149,7 @@ void failmsg(char *s)
 	puts("\r\n");
 }
 
-int main()
+int main(void)
 {
 	// Function pointer to blake2s()
 	volatile int (*fw_blake2s)(void *, unsigned long, const void *,

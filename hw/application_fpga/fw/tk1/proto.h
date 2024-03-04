@@ -51,7 +51,7 @@ struct frame_header {
 };
 
 void writebyte(uint8_t b);
-uint8_t readbyte();
+uint8_t readbyte(void);
 void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf);
 int readcommand(struct frame_header *hdr, uint8_t *cmd, int state);
 #endif

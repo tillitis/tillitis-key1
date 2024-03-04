@@ -142,7 +142,7 @@ static void write(uint8_t *buf, size_t nbytes)
 	}
 }
 
-uint8_t readbyte()
+uint8_t readbyte(void)
 {
 	for (;;) {
 		if (*can_rx) {
