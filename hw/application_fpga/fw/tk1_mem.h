@@ -1,5 +1,5 @@
 /*
- * QEMU RISC-V Board Compatible with Tillitis TK1 platform
+ * Tillitis TKey Memory Map
  *
  * Copyright (c) 2022, 2023 Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
@@ -45,6 +45,7 @@
   MMIO UART	0xc3
   MMIO TOUCH	0xc4
   MMIO FW_RAM	0xd0
+  MMIO QEMU	0xfe   Not used in real hardware
   MMIO TK1	0xff
  */
 
@@ -63,6 +64,10 @@
 #define TK1_MMIO_TRNG_STATUS_READY_BIT 0
 #define TK1_MMIO_TRNG_ENTROPY 0xc0000080
 
+#define TK1_MMIO_TIMER_CTRL 0xc1000020
+#define TK1_MMIO_TIMER_CTRL_START_BIT 0
+#define TK1_MMIO_TIMER_CTRL_STOP_BIT 1
+#define TK1_MMIO_TIMER_BASE 0xc1000000
 #define TK1_MMIO_TIMER_CTRL 0xc1000020
 #define TK1_MMIO_TIMER_CTRL_START_BIT 0
 #define TK1_MMIO_TIMER_CTRL_STOP_BIT 1
@@ -90,8 +95,11 @@
 #define TK1_MMIO_TOUCH_STATUS 0xc4000024
 #define TK1_MMIO_TOUCH_STATUS_EVENT_BIT 0
 
-// This only exists in QEMU
+// This only exists in QEMU, not real hardware
+#define TK1_MMIO_QEMU_BASE 0xfe000000
 #define TK1_MMIO_QEMU_DEBUG 0xfe001000
+
+#define TK1_MMIO_TK1_BASE 0xff000000
 
 #define TK1_MMIO_TK1_NAME0 0xff000000
 #define TK1_MMIO_TK1_NAME1 0xff000004
@@ -128,4 +136,3 @@
 #define TK1_MMIO_TK1_CPU_MON_FIRST 0xff000184
 #define TK1_MMIO_TK1_CPU_MON_LAST 0xff000188
 #endif
-
