@@ -384,7 +384,7 @@ module application_fpga(
       rom_address         = cpu_addr[13 : 2];
 
       ram_cs              = 1'h0;
-      ram_we              = cpu_wstrb;
+      ram_we              = 4'h0;
       ram_address         = cpu_addr[16 : 2] ^ ram_aslr;
       ram_write_data      = cpu_wdata ^ ram_scramble ^ {2{cpu_addr[15 : 0]}};
 
@@ -434,10 +434,11 @@ module application_fpga(
             end
 
             RAM_PREFIX: begin
-              ram_cs          = 1'h1;
+	      ram_cs          = 1'h1;
+	      ram_we          = cpu_wstrb;
 	      muxed_rdata_new = ram_read_data ^ ram_scramble ^ {2{cpu_addr[15 : 0]}};
 	      muxed_ready_new = ram_ready;
-            end
+	    end
 
             RESERVED_PREFIX: begin
 	      muxed_rdata_new = 32'h0;
