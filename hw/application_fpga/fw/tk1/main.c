@@ -431,7 +431,7 @@ int main()
 			htif_puts("firmware state 0x");
 			htif_puthex(state);
 			htif_lf();
-			forever_redflash();
+			assert(1 == 2);
 			break; // Not reached
 		}
 	}

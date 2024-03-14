@@ -20,6 +20,9 @@ void assert_fail(const char *assertion, const char *file, unsigned int line,
 	htif_puts(function);
 	htif_lf();
 
-	forever_redflash();
+	// Force illegal instruction to halt CPU
+	asm volatile("unimp");
+
 	// Not reached
+	__builtin_unreachable();
 }
