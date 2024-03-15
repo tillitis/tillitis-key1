@@ -1,5 +1,8 @@
 # Tillitis TKey software
 
+**NOTE:** Documentation migrated to dev.tillitis.se, this is kept for
+history. This is likely to be outdated.
+
 ## Introduction
 
 This text is both an introduction to and a requirement specification

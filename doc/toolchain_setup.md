@@ -1,5 +1,8 @@
 # Toolchain setup
 
+**NOTE:** Documentation migrated to dev.tillitis.se, this is kept for
+history. This is likely to be outdated.
+
 Here are instructions for setting up the tools required to build the
 project. Tested on Ubuntu 22.10.
 

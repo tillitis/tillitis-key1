@@ -1,5 +1,8 @@
 # System Description
 
+**NOTE:** Documentation migrated to dev.tillitis.se, this is kept for
+history. This is likely to be outdated.
+
 ## Purpose and Revision
 
 The purpose of this document is to provide a description of the

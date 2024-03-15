@@ -1,5 +1,9 @@
 # Tillitis TKey Quickstart
 
+**NOTE:** Documentation migrated to dev.tillitis.se, this is kept for
+history. This is likely to be outdated, and are only relevant if you
+have an "older" DevKit, typically handed out during OSFC 2022.
+
 This document describes how to build the FPGA bitstream, including the
 firmware, and get this programmed onto the flash memory of the
 Tillitis TKey USB device.

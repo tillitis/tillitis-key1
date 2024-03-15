@@ -1,5 +1,8 @@
 # Framing Protocol
 
+**NOTE:** Documentation migrated to dev.tillitis.se, this is kept for
+history. This is likely to be outdated.
+
 #### Version
 * Version: Draft 1.3
 * 2021-12-20

@@ -43,40 +43,47 @@ security-critical operations.
 *The TK1 PCB, the first implementation of the TKey.*
 
 
-## Documentation
+## Getting started
+The official website is [tillitis.se](https://tillitis.se).
 
-### Getting started
+The Tkey can be purchased at
+[shop.tillitis.se](https://shop.tillitis.se).
 
-* [tillitis-key1-apps repository](https://github.com/tillitis/tillitis-key1-apps),
-  with device apps and client apps for using the TKey
-* [Quickstart](doc/quickstart.md) to initial programming of the TKey
-  (only required for the DevKit)
-* [Toolchain setup](doc/toolchain_setup.md)
-* [Release Notes](doc/release_notes.md)
+All documentation concerning the TKey has been migrated to [TKey
+Developer Handbook](https://dev.tillitis.se).
 
-### In-depth technical information
 
-* [System Description](doc/system_description/system_description.md)
+## Tkey Device Apps
+Offically supported apps can be found at
+[tillitis.se](https://tillitis.se/download/)
+
+The source and other projects from us can be found here at our
+[GitHub](https://github.com/tillitis).
+
+Other known (but not all) projects can be found at
+[dev.tillitis.se](https://dev.tillitis.se/projects/).
+
+### Other noteworthy links
+
 * [Threat Model](doc/threat_model/threat_model.md)
-* [Framing Protocol](doc/framing_protocol/framing_protocol.md)
-* [Boards](doc/system_description/boards.md)
-* [FPGA](doc/system_description/fpga.md)
-* [Software](doc/system_description/software.md)
-* [QEMU](https://github.com/tillitis/qemu/tree/tk1) (branch `tk1` in
-  separate repository)
+* [Release Notes](doc/release_notes.md)
+* [Quickstart for the DevKit](doc/quickstart.md). Initial programming
+if you have the "old" DevKit.
 
-Note that development is ongoing. For example, changes might be made
-to the measuring and derivation of key material, causing the
-public/private keys of a signer app to change. To avoid unexpected
-changes, please use a tagged release. Read the [Release
+
+Note that development is ongoing. To avoid unexpected changes of
+derived key material, please use a tagged release. Read the [Release
 Notes](doc/release_notes.md) to keep up to date with changes and new
 releases.
 
 ## About this repository
 
-This repository contains hardware, software and utilities written as
+This repository contains hardware, firmware and utilities written as
 part of the TKey. It is structured as monolithic repository, or
 "monorepo", where all components live in one repository.
+
+Device and client applications, however, are kept in other
+repositories here at our [GitHub](https://github.com/tillitis).
 
 ## Licensing
 
