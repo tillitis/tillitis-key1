@@ -125,14 +125,12 @@ module ram(
   //----------------------------------------------------------------
   always @*
     begin : mem_mux
-      cs0 = 1'h0;
-      cs1 = 1'h0;
+      cs0 = ~address[14] & cs;
+      cs1 = address[14] & cs;
 
       if (address[14]) begin
-        cs1             = cs;
         muxed_read_data = read_data1;
       end else begin
-        cs0             = cs;
         muxed_read_data = read_data0;
       end
     end
