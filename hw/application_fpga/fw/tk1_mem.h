@@ -1,8 +1,12 @@
 /*
  * Tillitis TKey Memory Map
  *
- * Copyright (c) 2022, 2023 Tillitis AB
- * SPDX-License-Identifier: GPL-2.0-only
+ * Copyright (c) 2022, 2023, 2024 Tillitis AB
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ * Note that this file is also included in at least qemu
+ * (GPL-2.0-or-later) besides tillitis-key1 (GPL-2.0-only) and
+ * tkey-libs (GPL-2.0-only) so it's licensed as GPL v2 or later.
  */
 
 // clang-format off
