@@ -29,7 +29,7 @@ static volatile uint32_t *timer           = (volatile uint32_t *)TK1_MMIO_TIMER_
 static volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
 static volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
 static volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
-static volatile uint32_t *ram_aslr        = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ASLR;
+static volatile uint32_t *ram_rand        = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
 static volatile uint32_t *ram_scramble    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_SCRAMBLE;
 // clang-format on
 
@@ -369,7 +369,7 @@ static void scramble_ram(void)
 	uint32_t rnd_incr = rnd_word();
 
 	// Set RAM address and data scrambling values
-	*ram_aslr = rnd_word();
+	*ram_rand = rnd_word();
 	*ram_scramble = rnd_word();
 
 	// Fill RAM with random data (FW does not use RAM, has its stack in
@@ -380,7 +380,7 @@ static void scramble_ram(void)
 	}
 
 	// Set new scrambling values, for all use of RAM by app
-	*ram_aslr = rnd_word();
+	*ram_rand = rnd_word();
 	*ram_scramble = rnd_word();
 }
 
