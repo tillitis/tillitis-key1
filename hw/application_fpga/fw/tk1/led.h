@@ -18,5 +18,4 @@
 // clang-format on
 
 void set_led(uint32_t led_value);
-void forever_redflash();
 #endif

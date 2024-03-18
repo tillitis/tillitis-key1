@@ -13,15 +13,3 @@ void set_led(uint32_t led_value)
 {
 	*led = led_value;
 }
-
-void forever_redflash()
-{
-	int led_on = 0;
-
-	for (;;) {
-		*led = led_on ? LED_RED : LED_BLACK;
-		for (volatile int i = 0; i < 800000; i++) {
-		}
-		led_on = !led_on;
-	}
-}
