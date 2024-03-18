@@ -14,6 +14,7 @@ RUN apt-get -qq update -y \
                git \
                golang \
                graphviz \
+               iverilog \
                less \
                libboost-dev \
                libboost-filesystem-dev \
