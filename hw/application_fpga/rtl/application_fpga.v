@@ -115,7 +115,7 @@ module application_fpga(
   /* verilator lint_off UNOPTFLAT */
   reg           uds_cs;
   /* verilator lint_on UNOPTFLAT */
-  reg  [7 : 0]  uds_address;
+  reg  [2 : 0]  uds_address;
   wire [31 : 0] uds_read_data;
   wire          uds_ready;
 
@@ -404,7 +404,7 @@ module application_fpga(
       timer_write_data    = cpu_wdata;
 
       uds_cs              = 1'h0;
-      uds_address         = cpu_addr[9 : 2];
+      uds_address         = cpu_addr[4 : 2];
 
       uart_cs             = 1'h0;
       uart_we             = |cpu_wstrb;

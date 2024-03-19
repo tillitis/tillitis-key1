@@ -20,17 +20,10 @@ module uds(
 	   input wire           fw_app_mode,
 
            input wire           cs,
-           input wire  [7 : 0]  address,
+           input wire  [2 : 0]  address,
            output wire [31 : 0] read_data,
            output wire          ready
           );
-
-
-  //----------------------------------------------------------------
-  // Internal constant and parameter definitions.
-  //----------------------------------------------------------------
-  localparam ADDR_UDS_FIRST    = 8'h10;
-  localparam ADDR_UDS_LAST     = 8'h17;
 
 
   //----------------------------------------------------------------
@@ -98,13 +91,11 @@ module uds(
       if (cs) begin
 	tmp_ready = 1'h1;
 
-	if ((address >= ADDR_UDS_FIRST) && (address <= ADDR_UDS_LAST)) begin
-	  if (!fw_app_mode) begin
-            if (uds_rd_reg[address[2 : 0]] == 1'h0) begin
-              uds_rd_we     = 1'h1;
-            end
-	  end
-        end
+	if (!fw_app_mode) begin
+          if (uds_rd_reg[address[2 : 0]] == 1'h0) begin
+            uds_rd_we     = 1'h1;
+          end
+	end
       end
     end
 endmodule // uds
