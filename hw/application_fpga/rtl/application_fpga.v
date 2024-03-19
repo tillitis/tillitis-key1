@@ -71,18 +71,16 @@ module application_fpga(
   wire          clk;
   wire          reset_n;
 
+  /* verilator lint_off UNOPTFLAT */
   wire          cpu_trap;
   wire          cpu_valid;
   wire          cpu_instr;
   wire [03 : 0] cpu_wstrb;
   /* verilator lint_off UNUSED */
   wire [31 : 0] cpu_addr;
-  /* verilator lint_on UNUSED */
   wire [31 : 0] cpu_wdata;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           rom_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg  [11 : 0] rom_address;
   wire [31 : 0] rom_read_data;
   wire          rom_ready;
@@ -94,60 +92,46 @@ module application_fpga(
   wire [31 : 0] ram_read_data;
   wire          ram_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           trng_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg           trng_we;
   reg  [7 : 0]  trng_address;
   reg [31 : 0]  trng_write_data;
   wire [31 : 0] trng_read_data;
   wire          trng_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           timer_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg           timer_we;
   reg  [7 : 0]  timer_address;
   reg  [31 : 0] timer_write_data;
   wire [31 : 0] timer_read_data;
   wire          timer_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           uds_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg  [2 : 0]  uds_address;
   wire [31 : 0] uds_read_data;
   wire          uds_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           uart_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg           uart_we;
   reg  [7 : 0]  uart_address;
   reg  [31 : 0] uart_write_data;
   wire [31 : 0] uart_read_data;
   wire          uart_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           fw_ram_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg  [3 : 0]  fw_ram_we;
   reg  [8 : 0]  fw_ram_address;
   reg  [31 : 0] fw_ram_write_data;
   wire [31 : 0] fw_ram_read_data;
   wire          fw_ram_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           touch_sense_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg           touch_sense_we;
   reg  [7 : 0]  touch_sense_address;
   wire [31 : 0] touch_sense_read_data;
   wire          touch_sense_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           tk1_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg           tk1_we;
   reg  [7 : 0]  tk1_address;
   reg [31 : 0]  tk1_write_data;
@@ -157,6 +141,7 @@ module application_fpga(
   wire          force_trap;
   wire [14 : 0] ram_aslr;
   wire [31 : 0] ram_scramble;
+  /* verilator lint_on UNOPTFLAT */
 
 
   //----------------------------------------------------------------
@@ -211,6 +196,9 @@ module application_fpga(
 
 
   rom rom_inst(
+               .clk(clk),
+               .reset_n(reset_n),
+
                .cs(rom_cs),
                .address(rom_address),
                .read_data(rom_read_data),

@@ -36,7 +36,6 @@ module rosc(
   //----------------------------------------------------------------
   // API
   localparam ADDR_STATUS       = 8'h09;
-  localparam STATUS_READY_BIT  = 0;
   localparam ADDR_ENTROPY      = 8'h20;
 
   // Total number of ROSCs will be 2 x NUM_ROSC.
@@ -115,10 +114,12 @@ module rosc(
     for(i = 0 ; i < NUM_ROSC ; i = i + 1)
       begin: oscillators
 	/* verilator lint_off PINMISSING */
+	/* verilator lint_off UNOPTFLAT */
 	(* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv_f (.I0(f[i]), .O(f[i]));
 
 	(* keep *) SB_LUT4 #(.LUT_INIT(16'h1)) osc_inv_g (.I0(g[i]), .O(g[i]));
-	/* verilator lint_off PINMISSING */
+	/* verilator lint_on UNOPTFLAT */
+	/* verilator lint_on PINMISSING */
       end
   endgenerate
 

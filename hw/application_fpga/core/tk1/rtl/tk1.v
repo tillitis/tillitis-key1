@@ -61,8 +61,10 @@ module tk1(
   localparam LED_B_BIT          = 0;
 
   localparam ADDR_GPIO          = 8'h0a;
+  /* verilator lint_off UNUSED */
   localparam GPIO1_BIT          = 0;
   localparam GPIO2_BIT          = 1;
+  /* verilator lint_on UNUSED */
   localparam GPIO3_BIT          = 2;
   localparam GPIO4_BIT          = 3;
 

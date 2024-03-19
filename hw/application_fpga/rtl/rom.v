@@ -15,6 +15,9 @@
 `default_nettype none
 
 module rom(
+	   input wire           clk,
+	   input wire           reset_n,
+
 	   input wire           cs,
   /* verilator lint_off UNUSED */
 	   input wire  [11 : 0] address,
@@ -42,15 +45,28 @@ module rom(
   initial $readmemh(`FIRMWARE_HEX, memory);
 
   reg [31 : 0] rom_rdata;
-
-  reg          rom_ready;
+  reg          ready_reg;
 
 
   //----------------------------------------------------------------
   // Concurrent assignments of ports.
   //----------------------------------------------------------------
   assign read_data = rom_rdata;
-  assign ready     = rom_ready;
+  assign ready     = ready_reg;
+
+
+  //----------------------------------------------------------------
+  // reg_update
+  //----------------------------------------------------------------
+  always @ (posedge clk)
+    begin : reg_update
+      if (!reset_n) begin
+	ready_reg <= 1'h0;
+      end
+      else begin
+	ready_reg <= cs;
+      end
+    end // reg_update
 
 
   //----------------------------------------------------------------
@@ -58,11 +74,9 @@ module rom(
   //----------------------------------------------------------------
   always @*
     begin : rom_logic
-
       /* verilator lint_off WIDTH */
       rom_rdata = memory[address];
       /* verilator lint_on WIDTH */
-      rom_ready = cs;
     end
 
 endmodule // rom
