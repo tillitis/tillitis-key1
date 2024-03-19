@@ -142,6 +142,9 @@ module tk1(
   reg [31 : 0] cpu_mon_last_reg;
   reg          cpu_mon_last_we;
 
+  reg          force_trap_reg;
+  reg          force_trap_set;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -149,7 +152,6 @@ module tk1(
   /* verilator lint_off UNOPTFLAT */
   reg [31 : 0] tmp_read_data;
   reg          tmp_ready;
-  reg          tmp_force_trap;
   /* verilator lint_on UNOPTFLAT */
 
   reg [2 : 0]  muxed_led;
@@ -163,7 +165,7 @@ module tk1(
 
   assign fw_app_mode = switch_app_reg;
 
-  assign force_trap = tmp_force_trap;
+  assign force_trap = force_trap_reg;
 
   assign gpio3 = gpio3_reg;
   assign gpio4 = gpio4_reg;
@@ -224,6 +226,7 @@ module tk1(
 	cpu_mon_last_reg  <= 32'h0;
  	ram_aslr_reg      <= 15'h0;
 	ram_scramble_reg  <= 32'h0;
+	force_trap_reg    <= 1'h0;
       end
 
       else begin
@@ -290,6 +293,10 @@ module tk1(
 	if (cpu_mon_last_we) begin
 	  cpu_mon_last_reg <= write_data;
 	end
+
+	if (force_trap_set) begin
+	  force_trap_reg <= 1'h1;
+	end
       end
     end // reg_update
 
@@ -322,18 +329,18 @@ module tk1(
   //----------------------------------------------------------------
   always @*
     begin : cpu_monitor
-      tmp_force_trap = 1'h0;
+      force_trap_set = 1'h0;
 
 	if (cpu_valid && cpu_instr) begin
 	  if ((cpu_addr >= FW_RAM_FIRST) &&
 	      (cpu_addr <= FW_RAM_LAST)) begin
-	    tmp_force_trap = 1'h1;
+	    force_trap_set = 1'h1;
 	  end
 
 	  if (cpu_mon_en_reg) begin
 	    if ((cpu_addr >= cpu_mon_first_reg) &&
 		(cpu_addr <= cpu_mon_last_reg)) begin
-	      tmp_force_trap = 1'h1;
+	      force_trap_set = 1'h1;
 	    end
 	  end
 	end
