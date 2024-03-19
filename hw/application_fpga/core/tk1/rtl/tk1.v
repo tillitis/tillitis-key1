@@ -325,22 +325,39 @@ module tk1(
 
 
   //----------------------------------------------------------------
-  // cpu_monitor
+  // security_monitor
+  //
+  // Monitor events and state changes in the SoC, and handle
+  // security violations. We currently check for:
+  //
+  // Any access to RAM but outside of the size of the physical mem.
+  //
+  // Trying to execute instructions in FW-RAM.
+  //
+  // Trying to execute code in mem area set to be data access only.
+  // This requires execution monitor to have been setup and
+  // enabled.
   //----------------------------------------------------------------
   always @*
-    begin : cpu_monitor
+    begin : security_monitor
       force_trap_set = 1'h0;
 
-	if (cpu_valid && cpu_instr) begin
-	  if ((cpu_addr >= FW_RAM_FIRST) &&
-	      (cpu_addr <= FW_RAM_LAST)) begin
-	    force_trap_set = 1'h1;
+	if (cpu_valid) begin
+	  if (cpu_addr[31 : 30] == 2'h01 & |cpu_addr[29 : 17]) begin
+	      force_trap_set = 1'h1;
 	  end
 
-	  if (cpu_mon_en_reg) begin
-	    if ((cpu_addr >= cpu_mon_first_reg) &&
-		(cpu_addr <= cpu_mon_last_reg)) begin
+	  if (cpu_instr) begin
+	    if ((cpu_addr >= FW_RAM_FIRST) &&
+		(cpu_addr <= FW_RAM_LAST)) begin
 	      force_trap_set = 1'h1;
+	    end
+
+	    if (cpu_mon_en_reg) begin
+	      if ((cpu_addr >= cpu_mon_first_reg) &&
+		  (cpu_addr <= cpu_mon_last_reg)) begin
+		force_trap_set = 1'h1;
+	      end
 	    end
 	  end
 	end

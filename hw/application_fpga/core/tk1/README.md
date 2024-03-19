@@ -129,7 +129,7 @@ data itself is scrambled. FW writes random values to these registers
 during boot.
 
 
-### Execution monitor
+### Security monitor
 
 ```
   ADDR_CPU_MON_CTRL: 0x60
@@ -137,38 +137,40 @@ during boot.
   ADDR_CPU_MON_LAST: 0x62
 ```
 
-These registers control the execution monitor related to the RAM. Once
-enabled, by writing to ADDR_CPU_MON_CTRL, the memory are defined by
-ADDR_CPU_MON_FIRST and ADDR_CPU_MON_LAST inclusive will be protected
-against execution. Typically this will be the application stack and,
-or heap.
+Monitors events and state changes in the SoC and handles security
+violations. Currently checks for:
 
-Applications can write to these registers to define the area and then
-enable the monitor. One enabled, the monitor can't be disabled, and
-the ADDR_CPU_MON_FIRST and ADDR_CPU_MON_LAST registers can't be
-changes. This means that an application that wants to use the monitor
+1. Trying to execute instructions in FW_RAM. *Always enabled.*
+2. Trying to access RAM outside of the physical memory. *Always enabled*
+3. Trying to execute instructions from a memory area in RAM defined by
+   the application.
+
+Number 1 and 2 are always enabled. Number 3 is set and enabled by the
+device application. Once enabled, by writing to ADDR_CPU_MON_CTRL, the
+memory defined by ADDR_CPU_MON_FIRST and ADDR_CPU_MON_LAST will be
+protected against execution. Typically the application developer will
+set this protection to cover the application stack and/or heap.
+
+An application can write to these registers to define the area and
+then enable the monitor. Once enabled the monitor can't be disabled,
+and the ADDR_CPU_MON_FIRST and ADDR_CPU_MON_LAST registers can't be
+changed. This means that an application that wants to use the monitor
 must define the area first before enabling the monitor.
 
 Once enabled, if the CPU tries to read an instruction from the defined
-area, the core will force the CPU to instead read an all zero, illegal
-instruction. This illegal instruction will trigger the CPU to enter
-its TRAP state, from which it can't returned unless the TKey is power
-cycled.
+area, the core will force the CPU to instead read an all zero, which
+is an illegal instruction. This illegal instruction will trigger the
+CPU to enter its TRAP state, from which it can't return unless the
+TKey is power cycled.
 
-The FW will not write to these registers as part of loading an
+The firmware will not write to these registers as part of loading an
 app. The app developer must define the area and enable the monitor to
 get the protection.
 
-Note that there is a second memory area that is under the protection
-of the execution monitor - the FW_RAM. The execution protection of
-this memory is always anabled and the definition of the area is hard
-coded into the FPGA design.
-
-One feature not obvious from the API is that when the CPU traps, the
-core will detect that and start flashing the RGB LED with a red
-light - indicating that the CPU is its trap state and no further
+One feature not obvious from the API is that when the CPU traps the
+core will detect that and start flashing the status LED with a red
+light indicating that the CPU is in a trapped state and no further
 execution is possible.
-
 
 ## Implementation
 
