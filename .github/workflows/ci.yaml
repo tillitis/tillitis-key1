@@ -45,6 +45,10 @@ jobs:
         working-directory: hw/boards/mta1-usb-v1/ch552_fw
         run: make
 
+      - name: compile tp1 firmware
+        working-directory: hw/boards/tp1/firmware
+        run: ./build.sh
+
       - name: make production test gateware
         working-directory: hw/production_test/application_fpga_test_gateware
         run: make
