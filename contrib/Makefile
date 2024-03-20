@@ -5,7 +5,7 @@
 BUILDIMAGE=tkey-builder-local
 
 # default image used when running a container
-IMAGE=ghcr.io/tillitis/tkey-builder:2
+IMAGE=ghcr.io/tillitis/tkey-builder:3
 
 all:
 	@echo "Targets:"
