@@ -1,3 +1,5 @@
+# Copyright (C) 2024 - Tillitis AB
+# SPDX-License-Identifier: GPL-2.0-only
 
 # image produced by build-image targets
 BUILDIMAGE=tkey-builder-local
@@ -9,6 +11,7 @@ all:
 	@echo "Targets:"
 	@echo "run                   Run a shell using image '$(IMAGE)' (Podman)"
 	@echo "run-make              Build the FPGA bitstream using image '$(IMAGE)' (Podman)"
+	@echo "run-tb                Run all the testbenches using image '$(IMAGE)' (Podman)"
 	@echo "run-make-no-clean     Like run-make but without cleaning first, useful for iterative firmware dev"
 	@echo "run-make-clean_fw     Like run-make but cleans only firmware"
 	@echo "flash                 Program the SPI flash on the TKey - needs an existing bitstream"
@@ -29,6 +32,10 @@ docker-run:
 run-make:
 	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it \
 	 $(IMAGE) make clean application_fpga.bin
+
+run-tb:
+	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it \
+	 $(IMAGE) make tb
 
 run-make-testfw:
 	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it \

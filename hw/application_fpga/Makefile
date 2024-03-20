@@ -6,8 +6,12 @@
 # HW targets as well as its firmware.
 #
 #
-# Copyright (C) 2022, 2023 - Tillitis AB
+# Copyright (C) 2022-2024 - Tillitis AB
 # SPDX-License-Identifier: GPL-2.0-only
+#
+#
+# Please note: When creating a new cores and adding more testbenches,
+# please update the tb target below to include it as well.
 #
 #=======================================================================
 
@@ -207,6 +211,18 @@ verilator: $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS) firmware.hex $(ICE40_SIM_CELLS)
 	make -C verilated -f Vapplication_fpga.mk
 .PHONY: verilator
 
+#-------------------------------------------------------------------
+# Run all testbenches
+#-------------------------------------------------------------------
+tb:
+	make -C core/timer/toolruns sim-top
+	make -C core/tk1/toolruns sim-top
+	make -C core/touch_sense/toolruns sim-top
+	make -C core/trng/toolruns sim-top
+	make -C core/uart/toolruns sim-top
+	make -C core/uds/toolruns sim-top
+
+.PHONY: tb
 
 #-------------------------------------------------------------------
 # Main FPGA build flow.
@@ -333,6 +349,7 @@ help:
 	@echo "bram_fw.hex        Build a fake BRAM file that will be filled in later after place-n-route."
 	@echo "verilator          Build Verilator simulation program"
 	@echo "lint               Run lint on Verilog source files."
+	@echo "tb                 Run all testbenches"
 	@echo "prog_flash         Program device flash with FGPA bitstream including firmware (using the RPi Pico-based programmer)."
 	@echo "prog_flash_testfw  Program device flash as above, but with testfw."
 	@echo "clean              Delete all generated files."
