@@ -92,8 +92,8 @@ static uint32_t rnd_word(void)
 static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 			const uint8_t *uss)
 {
-	uint32_t local_uds[8];
-	uint32_t local_cdi[8];
+	uint32_t local_uds[8] = {0};
+	uint32_t local_cdi[8] = {0};
 	blake2s_ctx secure_ctx = {0};
 	uint32_t rnd_sleep = 0;
 	int blake2err = 0;
@@ -115,7 +115,7 @@ static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 	// while on the firmware stack which is in the special fw_ram.
 	wordcpy_s(local_uds, 8, (void *)uds, 8);
 	blake2s_update(&secure_ctx, (const void *)local_uds, 32);
-	memset(local_uds, 0, 32);
+	(void)memset(local_uds, 0, 32);
 
 	// Update with TKey program digest
 	blake2s_update(&secure_ctx, digest, 32);
@@ -268,7 +268,9 @@ static enum state loading_commands(const struct frame_header *hdr,
 			nbytes = ctx->left;
 		}
 		memcpy_s(ctx->loadaddr, ctx->left, cmd + 1, nbytes);
+		/*@-mustfreeonly@*/
 		ctx->loadaddr += nbytes;
+		/*@+mustfreeonly@*/
 		ctx->left -= nbytes;
 
 		if (ctx->left == 0) {
@@ -396,7 +398,12 @@ int main(void)
 	// Let the app know the function adddress for blake2s()
 	*fw_blake2s_addr = (uint32_t)blake2s;
 
+	/*@-mustfreeonly@*/
+	/* Yes, splint, this points directly to RAM and we don't care
+	 * about freeing anything was pointing to 0x0 before.
+	 */
 	ctx.loadaddr = (uint8_t *)TK1_RAM_BASE;
+	/*@+mustfreeonly@*/
 	ctx.use_uss = FALSE;
 
 	scramble_ram();
@@ -436,5 +443,7 @@ int main(void)
 		}
 	}
 
+	/*@ -compdestroy @*/
+	/* We don't care about memory leaks here. */
 	return (int)0xcafebabe;
 }

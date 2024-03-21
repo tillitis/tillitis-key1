@@ -20,8 +20,10 @@ void assert_fail(const char *assertion, const char *file, unsigned int line,
 	htif_puts(function);
 	htif_lf();
 
+#ifndef S_SPLINT_S
 	// Force illegal instruction to halt CPU
 	asm volatile("unimp");
+#endif
 
 	// Not reached
 	__builtin_unreachable();

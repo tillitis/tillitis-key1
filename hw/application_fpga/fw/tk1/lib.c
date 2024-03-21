@@ -104,6 +104,7 @@ void *memset(void *dest, int c, unsigned n)
 	for (; n; n--, s++)
 		*s = (uint8_t)c;
 
+	/*@ -temptrans @*/
 	return dest;
 }
 
@@ -117,6 +118,11 @@ void memcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 	uint8_t *dest_byte = (uint8_t *)dest;
 
 	for (size_t i = 0; i < n; i++) {
+		/*@ -nullderef @*/
+		/* splint complains that dest_byte and src_byte can be
+		 * NULL, but it seems it doesn't understand assert.
+		 * See above.
+		 */
 		dest_byte[i] = src_byte[i];
 	}
 }

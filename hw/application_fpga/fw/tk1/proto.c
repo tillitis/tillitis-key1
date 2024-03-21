@@ -167,7 +167,7 @@ static int read(uint8_t *buf, size_t bufsize, size_t nbytes)
 // bytelen returns the number of bytes a cmdlen takes
 static int bytelen(enum cmdlen cmdlen)
 {
-	int len;
+	int len = 0;
 
 	switch (cmdlen) {
 	case LEN_1:
