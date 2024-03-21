@@ -85,7 +85,7 @@ RUN git >/usr/local/repo-commit-nextpnr describe --all --always --long --dirty
 WORKDIR /
 RUN rm -rf /src
 
-RUN git clone --branch 1.5.0 --depth 1 https://github.com/raspberrypi/pico-sdk.git /usr/local/pico-sdk
+RUN git clone --branch 1.5.1 --depth 1 https://github.com/raspberrypi/pico-sdk.git /usr/local/pico-sdk
 WORKDIR /usr/local/pico-sdk
 RUN git submodule update --init
 RUN git >/usr/local/repo-commit-picosdk describe --all --always --long --dirty
