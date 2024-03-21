@@ -42,7 +42,7 @@ RUN apt-get -qq update -y \
                vim \
                xdot \
                sdcc \
-               splint \               
+               splint \
                cmake \
                gcc-arm-none-eabi \
                libnewlib-arm-none-eabi \

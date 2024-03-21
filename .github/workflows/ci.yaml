@@ -13,10 +13,10 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/tillitis/tkey-builder:3
+      image: ghcr.io/tillitis/tkey-builder:4
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # fetch-depth: 0
           persist-credentials: false
