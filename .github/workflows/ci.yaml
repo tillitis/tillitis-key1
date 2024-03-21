@@ -26,6 +26,21 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      - name: check indentation of our firmware C code
+        working-directory: hw/application_fpga
+        run: |
+          make -C fw/tk1 checkfmt
+          make -C fw/testfw checkfmt
+
+      - name: run static analysis on firmware C code
+        working-directory: hw/application_fpga
+        run: |
+          make check
+
+      - name: lint verilog using verilator
+        working-directory: hw/application_fpga
+        run: make lint
+
       - name: compile ch552 firmware
         working-directory: hw/boards/mta1-usb-v1/ch552_fw
         run: make
@@ -37,16 +52,6 @@ jobs:
       - name: compile firmware and testfw
         working-directory: hw/application_fpga
         run: make firmware.bin testfw.bin
-
-      - name: check fmt of our firmware C code
-        working-directory: hw/application_fpga
-        run: |
-          make -C fw/tk1 checkfmt
-          make -C fw/testfw checkfmt
-
-      - name: lint verilog using verilator
-        working-directory: hw/application_fpga
-        run: make lint
 
       # doing this last as it takes long time
       - name: make application FPGA gateware

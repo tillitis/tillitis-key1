@@ -149,6 +149,9 @@ firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 .PHONY: check
 check:
 	clang-tidy -header-filter=.* -checks=cert-* $(FIRMWARE_SOURCES) -- $(CFLAGS)
+
+.PHONY: splint
+splint:
 	splint -nolib -predboolint +boolint -nullpass -unrecog -infloops -initallelements -type -unreachable -unqualifiedtrans -fullinitblock $(FIRMWARE_SOURCES)
 
 testfw.elf: $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
@@ -165,6 +168,8 @@ testfw.hex: testfw.bin testfw_size_mismatch
 
 .PHONY: check-binary-hashes
 check-binary-hashes:
+	sha512sum firmware.bin
+	sha256sum application_fpga.bin
 	sha512sum -c firmware.bin.sha512
 	sha256sum -c application_fpga.bin.sha256
 
@@ -350,6 +355,8 @@ help:
 	@echo "Supported targets:"
 	@echo "------------------"
 	@echo "all                Build all targets."
+	@echo "check              Run static analysis on firmware."
+	@echo "splint             Run splint static analysis on firmware."
 	@echo "firmware.elf       Build firmware ELF file."
 	@echo "firmware.hex       Build firmware converted to hex, to be included in bitstream."
 	@echo "bram_fw.hex        Build a fake BRAM file that will be filled in later after place-n-route."
