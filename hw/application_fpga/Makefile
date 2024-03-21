@@ -248,7 +248,7 @@ application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
 		--pcf $(P)/data/$(PIN_FILE) --write $@
 
 application_fpga.asc: application_fpga_par.json $(P)/data/uds.hex $(P)/data/udi.hex
-	UDS_HEX="$(P)/data/uds.hex" UDI_HEX="$(P)/data/udi.hex" OUT_ASC=$@ $(NEXTPNR_PATH)nextpnr-ice40 --up5k --package sg48 --ignore-loops --json $< --run tools/personalize.py
+	UDS_HEX="$(P)/data/uds.hex" UDI_HEX="$(P)/data/udi.hex" OUT_ASC=$@ $(NEXTPNR_PATH)nextpnr-ice40 --up5k --package sg48 --ignore-loops --json $< --run tools/patch_uds_udi.py
 
 application_fpga.bin: application_fpga.asc bram_fw.hex firmware.hex
 	$(ICESTORM_PATH)icebram -v bram_fw.hex firmware.hex < $< > $<.tmp
