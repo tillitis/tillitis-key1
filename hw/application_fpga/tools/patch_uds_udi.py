@@ -5,32 +5,40 @@
 # Written by Myrtle Shah <gatecat@ds0.me>
 # SPDX-License-Identifier: GPL-2.0-only
 #
-# patch_uds_udi.py
-# --------------
-# Python program that patches the UDS and UDI implemented using
-# named LUT4 instances to have unique initial values, not the generic
-# values used during synthesis, p&r and mapping. This allows us to
-# generate device unique bitstreams without running the complete flow.
+# Script to patch in a Unique Device Secret (UDS) and a Unique Device
+# Identifier (UDI) from files into a bitstream.
 #
-# Both the UDI and UDS are using bit indexing from 32 LUTs for each
-# word, i.e., the first word consists of bit 0 from each 32 LUTs and
-# so on.
+# It's supposed to be run like this:
 #
-# The size requirements for the UDI and UDS are specified as 1 bit (8
-# bytes of data) and 3 bits (32 bytes of data), respectively. The UDI
-# does not occupy the entire LUT4 instance, and to conserve resources,
-# the pattern of the UDI is repeated over the unused portion of the
-# LUT4 instance. This eliminates the need to drive the three MSB pins
-# while still achieving the correct output.
+# nextpnr-ice40 --up5k --package sg48 --ignore-loops \
+#    --json application_fpga_par.json --run patch_uds_udi.py
 #
-# In the case of UDS, a read-enable signal is present, and the most
-# significant bit serves as the read-enable input. This requires the
-# lower half of initialization bits to be forced to zero, ensuring
-# that the memory outputs zero when the read-enable signal is
-# inactive.
+# with this environment:
 #
+# - UDS_HEX: path to the UDS file, typically the path to
+#   ../data/uds.hex
+# - UDI_HEX: path to the UDI file, typically the path to ../data/udi.hex
+# - OUT_ASC: path to the ASC output that is then used by icebram and icepack.
 #
-#=======================================================================
+# The script changes the UDS and UDI that are stored in named 4-bit
+# LUT instances in the JSON file so we can generate device
+# unique bitstreams without running the complete flow just to change
+# UDS and UDI. Then we can just run the final bitstream generation
+# from the ASC file.
+#
+# We represent our UDI and UDS values as a number of 32 bit words:
+#
+# - UDI: 2 words.
+# - UDS: 8 words.
+#
+# We reserve 32 named 4-bit LUTs *each* to store the data: UDS in
+# "uds_rom_idx" and UDI in "udi_rom_idx".
+#
+# The script repeats the value in the LUTs so we don't have to care
+# about the value of the unused address bits.
+#
+# See documentation in their implementation in ../core/uds/README.md
+# and ../core/tk1/README.md
 
 import os
 
@@ -49,7 +57,8 @@ def rewrite_lut(lut, idx, data, has_re=False):
     new_init = 0
     for i, word in enumerate(data):
         if (word >> idx) & 0x1:
-            # repeat so inputs above address have a don't care value
+            # repeat so we don't have to care about inputs above
+            # address
             repeat = (16 // len(data))
             for k in range(repeat):
                 # UDS also has a read enable

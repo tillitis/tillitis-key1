@@ -110,9 +110,27 @@ secret for any secrets it needs to perform its intended use case.
   ADDR_UDI_LAST:  0x31
 ```
 
-These registers provide read access to the 64-bit unique device
-identity. The UDI is stored as ROM within the FPGA configuration. The
-registers can't be written to.
+These read-only registers provide access to the 64-bit Unique Device
+Identity (UDI).
+
+The two UDI words are stored using 32 named SB\_LUT4 FPGA multiplexer
+(MUX) instances, identified in the source code as "udi\_rom\_idx". One
+instance for each bit in core read_data output bus.
+
+Each SB\_LUT4 MUX is able to store 16 bits of data, in total 512 bits.
+But since the UDI is 64 bits, we only use the two LSBs in each MUX.
+Note that only the LSB address of the SB_LUT4 instances are connected
+to the CPU address. This means that only the two LSBs in each MUX can
+be addressed.
+
+During build of the FPGA design, the UDI is set to a known bit
+pattern, which means that the SB_LUT4 instantiations are initialized
+to a fixed bit pattern.
+
+The tool 'patch\_uds\_udi.py' is used to replace the fixed bit pattern
+with a unique bit pattern before generating the per device unique FPGA
+bitstream. This allows us to generate these device unique FPGA
+bitstreams without having to do a full FPGA build.
 
 
 ### RAM memory protecion
