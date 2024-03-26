@@ -111,9 +111,21 @@ secret for any secrets it needs to perform its intended use case.
 ```
 
 These registers provide read access to the 64-bit unique device
-identity. The UDI is stored as ROM within the FPGA configuration. The
-registers can't be written to.
+identity. The registers can't be written to.
 
+The 2 UDI words are stored using 32 named LUT4s identified by
+"udi\_rom\_idx".
+
+We use bit indexing from all of the 32 LUTs to store each bit of the
+word, i.e., the first UDS word consists of bit 0 from each 32 LUTs,
+the second word consists of bit 1 from each of the 32 LUTs, and so
+on... for a maximum storage of 16 words.
+
+The UDI does not occupy the entire LUT4 instance and to preserve
+hardware resources and not having to care about all the address bits
+the UDI should be initialized to be repeated over the unused portion
+of the LUT4 instance. This eliminates the need to drive the three MSB
+pins into the LUT4 while still achieving the correct output.
 
 ### RAM memory protecion
 
