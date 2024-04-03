@@ -36,6 +36,7 @@ module application_fpga(
 
                         output wire          interface_rx,
                         input wire           interface_tx,
+                        input wire           interface_rts,
 
 			input wire           touch_event,
 

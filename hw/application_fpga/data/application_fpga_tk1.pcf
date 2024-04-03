@@ -15,7 +15,7 @@
 set_io interface_rx 26
 set_io interface_tx 25
 # set_io interface_cts 27
-# set_io interface_rts 28
+set_io interface_rts 28
 
 
 # Touch sense.

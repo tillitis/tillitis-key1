@@ -19,6 +19,7 @@
 module application_fpga(
                         output wire interface_rx,
                         input wire  interface_tx,
+                        input wire  interface_rts,
 
 			input wire  touch_event,
 
@@ -148,7 +149,11 @@ module application_fpga(
   // Module instantiations.
   //----------------------------------------------------------------
   clk_reset_gen #(.RESET_CYCLES(200))
-  reset_gen_inst(.clk(clk), .rst_n(reset_n));
+  reset_gen_inst(
+                 .host_reset(interface_rts),
+                 .clk(clk),
+                 .rst_n(reset_n)
+                 );
 
 
   picorv32 #(
