@@ -54,6 +54,7 @@ static enum state loading_commands(const struct frame_header *hdr,
 				   const uint8_t *cmd, enum state state,
 				   struct context *ctx);
 static void run(const struct context *ctx);
+static uint32_t xorwow(uint32_t state, uint32_t acc);
 static void scramble_ram(void);
 
 static void print_hw_version(void)
@@ -363,24 +364,35 @@ static void run(const struct context *ctx)
 	__builtin_unreachable();
 }
 
+static uint32_t xorwow(uint32_t state, uint32_t acc)
+{
+	state ^= state << 13;
+	state ^= state >> 17;
+	state ^= state << 5;
+	state += acc;
+	return state;
+}
+
 static void scramble_ram(void)
 {
 	uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
-	uint32_t rnd = rnd_word();
-	uint32_t rnd_incr = rnd_word();
 
 	// Set RAM address and data scrambling values
 	*ram_rand = rnd_word();
 	*ram_scramble = rnd_word();
 
-	// Fill RAM with random data (FW does not use RAM, has its stack in
-	// FW_RAM)
+	// Fill RAM with random data
+	// Get random state and accumulator seeds.
+	uint32_t data_state = rnd_word();
+	uint32_t data_acc = rnd_word();
+
 	for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
-		ram[w] = rnd;
-		rnd += rnd_incr;
+		data_state = xorwow(data_state, data_acc);
+		ram[w] = data_state;
 	}
 
-	// Set new scrambling values, for all use of RAM by app
+	// Set new address and RAM scrambling values,
+	// for all use of RAM by app.
 	*ram_rand = rnd_word();
 	*ram_scramble = rnd_word();
 }
