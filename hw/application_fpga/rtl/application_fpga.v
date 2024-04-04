@@ -142,6 +142,7 @@ module application_fpga(
   wire          force_trap;
   wire [14 : 0] ram_aslr;
   wire [31 : 0] ram_scramble;
+  wire          tk1_sys_reset;
   /* verilator lint_on UNOPTFLAT */
 
 
@@ -150,7 +151,7 @@ module application_fpga(
   //----------------------------------------------------------------
   clk_reset_gen #(.RESET_CYCLES(200))
   reset_gen_inst(
-                 .host_reset(interface_rts),
+                 .sys_reset(tk1_sys_reset),
                  .clk(clk),
                  .rst_n(reset_n)
                  );
@@ -321,6 +322,9 @@ module application_fpga(
 
                .ram_aslr(ram_aslr),
 	       .ram_scramble(ram_scramble),
+
+	       .external_reset(interface_rts),
+	       .sys_reset(tk1_sys_reset),
 
                .led_r(led_r),
                .led_g(led_g),

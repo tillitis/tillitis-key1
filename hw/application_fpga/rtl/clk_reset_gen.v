@@ -21,7 +21,7 @@
 
 module clk_reset_gen #(parameter RESET_CYCLES = 200)
   (
-   input wire  host_reset,
+   input wire  sys_reset,
    output wire clk,
    output wire rst_n
    );
@@ -37,7 +37,7 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
   reg         rst_n_reg = 1'h0;
   reg         rst_n_new;
 
-  reg [1 : 0] host_reset_sample_reg = 2'h0;
+  reg         sys_reset_reg;
 
   wire        hfosc_clk;
   wire        pll_clk;
@@ -102,8 +102,8 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
   //----------------------------------------------------------------
     always @(posedge clk)
       begin : reg_update
-        rst_n_reg             <= rst_n_new;
-        host_reset_sample_reg <= {host_reset_sample_reg[0], host_reset};
+        rst_n_reg     <= rst_n_new;
+        sys_reset_reg <= sys_reset;
 
         if (rst_ctr_we)
           rst_ctr_reg <= rst_ctr_new;
@@ -118,8 +118,8 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
   // logic is active, and the reset is being asserted for
   // RESET_CYCLES. Then the default reset reg value is applied.
   //
-  // When a second reset is requested from the host we
-  // reset the counter. This activates the counter logic.
+  // When a system reset is requested we reset the counter.
+  // This activates the counter logic and the reset is asserted.
   //----------------------------------------------------------------
   always @*
     begin : rst_logic
@@ -133,7 +133,7 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
         rst_ctr_we  = 1'h1;
       end
 
-      if (host_reset_sample_reg[1]) begin
+      if (sys_reset_reg) begin
         rst_ctr_new = 8'h0;
         rst_ctr_we  = 1'h1;
       end

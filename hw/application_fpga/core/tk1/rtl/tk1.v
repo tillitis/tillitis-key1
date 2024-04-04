@@ -28,6 +28,9 @@ module tk1(
 	   output wire [14 : 0] ram_aslr,
 	   output wire [31 : 0] ram_scramble,
 
+	   input wire           external_reset,
+	   output wire          sys_reset,
+
            output wire          led_r,
            output wire          led_g,
            output wire          led_b,
@@ -144,6 +147,15 @@ module tk1(
   reg          force_trap_reg;
   reg          force_trap_set;
 
+  reg [1 : 0]  external_reset_sample_reg = 2'h0;
+  reg [1 : 0]  external_reset_sample_new;
+  reg          sys_reset_reg;
+  reg          sys_reset_we;
+
+  reg [1 : 0]  reset_status_reg = 2'h0;
+  reg [1 : 0]  reset_status_new;
+  reg          reset_status_we;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -172,6 +184,8 @@ module tk1(
 
   assign ram_aslr     = ram_aslr_reg;
   assign ram_scramble = ram_scramble_reg;
+
+  assign sys_reset = sys_reset_reg;
 
 
   //----------------------------------------------------------------
@@ -204,35 +218,40 @@ module tk1(
 
   //----------------------------------------------------------------
   // reg_update
+  //
+  // Note that the reset_status_reg is not reset, since that would
+  // erase the status info we want to persist between reboots.
   //----------------------------------------------------------------
   always @ (posedge clk)
     begin : reg_update
       if (!reset_n) begin
-	switch_app_reg    <= 1'h0;
-        led_reg           <= 3'h6;
-        gpio1_reg         <= 2'h0;
-        gpio2_reg         <= 2'h0;
-        gpio3_reg         <= 1'h0;
-        gpio4_reg         <= 1'h0;
-        app_start_reg     <= 32'h0;
-        app_size_reg      <= 32'h0;
-        blake2s_addr_reg  <= 32'h0;
-	cdi_mem[0]        <= 32'h0;
-	cdi_mem[1]        <= 32'h0;
-	cdi_mem[2]        <= 32'h0;
-	cdi_mem[3]        <= 32'h0;
-	cdi_mem[4]        <= 32'h0;
-	cdi_mem[5]        <= 32'h0;
-	cdi_mem[6]        <= 32'h0;
-	cdi_mem[7]        <= 32'h0;
-	cpu_trap_ctr_reg  <= 24'h0;
-	cpu_trap_led_reg  <= 3'h0;
-        cpu_mon_en_reg    <= 1'h0;
-	cpu_mon_first_reg <= 32'h0;
-	cpu_mon_last_reg  <= 32'h0;
- 	ram_aslr_reg      <= 15'h0;
-	ram_scramble_reg  <= 32'h0;
-	force_trap_reg    <= 1'h0;
+	switch_app_reg            <= 1'h0;
+        led_reg                   <= 3'h6;
+        gpio1_reg                 <= 2'h0;
+        gpio2_reg                 <= 2'h0;
+        gpio3_reg                 <= 1'h0;
+        gpio4_reg                 <= 1'h0;
+        app_start_reg             <= 32'h0;
+        app_size_reg              <= 32'h0;
+        blake2s_addr_reg          <= 32'h0;
+	cdi_mem[0]                <= 32'h0;
+	cdi_mem[1]                <= 32'h0;
+	cdi_mem[2]                <= 32'h0;
+	cdi_mem[3]                <= 32'h0;
+	cdi_mem[4]                <= 32'h0;
+	cdi_mem[5]                <= 32'h0;
+	cdi_mem[6]                <= 32'h0;
+	cdi_mem[7]                <= 32'h0;
+	cpu_trap_ctr_reg          <= 24'h0;
+	cpu_trap_led_reg          <= 3'h0;
+        cpu_mon_en_reg            <= 1'h0;
+	cpu_mon_first_reg         <= 32'h0;
+	cpu_mon_last_reg          <= 32'h0;
+ 	ram_aslr_reg              <= 15'h0;
+	ram_scramble_reg          <= 32'h0;
+	force_trap_reg            <= 1'h0;
+	sys_reset_reg             <= 1'h0;
+	external_reset_sample_reg <= 2'h0;
       end
 
       else begin
@@ -243,6 +262,17 @@ module tk1(
 
         gpio2_reg[0] <= gpio2;
         gpio2_reg[1] <= gpio2_reg[0];
+
+	external_reset_sample_reg <= external_reset_sample_new;
+
+
+	if (sys_reset_we) begin
+	  sys_reset_reg <= 1'h1;
+	end
+
+	if (reset_status_we) begin
+	  reset_status_reg <= reset_status_new;
+	end
 
 	if (switch_app_we) begin
 	  switch_app_reg <= 1'h1;
@@ -326,6 +356,30 @@ module tk1(
 	muxed_led = cpu_trap_led_reg;
       end else begin
 	muxed_led = led_reg;
+      end
+    end
+
+
+  //----------------------------------------------------------------
+  // system_reset_logic
+  //
+  // Sample the external reset request input. If it is set, we
+  // assert the sys_reset signal and sets the reset status reg
+  // to indicate that the reset was caused by external request.
+  // When the reset happens the sys_reset_reg will be cleared.
+  //----------------------------------------------------------------
+  always @*
+    begin : system_reset_logic
+      sys_reset_we     = 1'h0;
+      reset_status_new = 2'h0;
+      reset_status_we  = 1'h0;
+
+      external_reset_sample_new = {external_reset_sample_reg[0], external_reset};
+
+      if (external_reset_sample_reg[1]) begin
+	sys_reset_we     = 1'h1;
+	reset_status_new = 2'h1;
+	reset_status_we  = 1'h1;
       end
     end
 
@@ -476,7 +530,7 @@ module tk1(
 	  end
 
 	  if (address == ADDR_SWITCH_APP) begin
-	    tmp_read_data = {32{switch_app_reg}};
+	    tmp_read_data = {14'h0, reset_status_reg, 15'h0, switch_app_reg};
 	  end
 
 	  if (address == ADDR_LED) begin
