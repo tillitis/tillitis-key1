@@ -363,26 +363,41 @@ static void run(const struct context *ctx)
 	__builtin_unreachable();
 }
 
+uint32_t xorwow(uint32_t state, uint32_t acc)
+{
+  state ^= state << 13;
+  state ^= state >> 17;
+  state ^= state << 5;
+  state += acc;
+  return state;
+}
+
 static void scramble_ram(void)
 {
-	uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
-	uint32_t rnd = rnd_word();
-	uint32_t rnd_incr = rnd_word();
+        uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
 
-	// Set RAM address and data scrambling values
-	*ram_rand = rnd_word();
-	*ram_scramble = rnd_word();
+        // Set RAM address and data scrambling values
+        *ram_rand = rnd_word();
+        *ram_scramble = rnd_word();
 
-	// Fill RAM with random data (FW does not use RAM, has its stack in
-	// FW_RAM)
-	for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
-		ram[w] = rnd;
-		rnd += rnd_incr;
-	}
+        // Use Marsaglia xorshift PRNG variant xorwow for address and
+        // data to fill the RAM random data (FW does not use RAM, has
+        // its stack in FW_RAM)
+        uint32_t addr_state = rnd_word();
+        uint32_t addr_acc = rnd_word();
+        uint32_t data_state = rnd_word();
+        uint32_t data_acc = rnd_word();
 
-	// Set new scrambling values, for all use of RAM by app
-	*ram_rand = rnd_word();
-	*ram_scramble = rnd_word();
+        for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
+          addr_state = xorwow(addr_state, addr_acc);
+          data_state = xorwow(data_state, data_acc);
+
+          ram[(addr_state & TK1_RAM_SIZE)] = data_state;
+        }
+
+        // Set new scrambling values, for all use of RAM by app
+        *ram_rand = rnd_word();
+        *ram_scramble = rnd_word();
 }
 
 int main(void)
