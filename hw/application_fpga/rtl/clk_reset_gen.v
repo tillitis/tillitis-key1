@@ -1,11 +1,14 @@
 //======================================================================
 //
 // clk_reset_gen.v
-// -----------
+// ---------------
 // Clock and reset generator used in the Tillitis Key 1 design.
+//
 // This module instantiate the internal SB_HFOSC clock source in the
 // Lattice ice40 UP device. It then connects it to the PLL, and
 // finally connects the output from the PLL to the global clock net.
+//
+// The reset generator provides a stable reset of the design.
 //
 //
 // Author: Joachim Strombergson
@@ -92,13 +95,15 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
 
 
   //----------------------------------------------------------------
-  // reg_update.
+  // reg_update
+  //
+  // Note no reset, since these registers are used to create
+  // the reset in the design.
   //----------------------------------------------------------------
     always @(posedge clk)
       begin : reg_update
-        rst_n_reg                <= rst_n_new;
-        host_reset_sample_reg[0] <= host_reset;
-        host_reset_sample_reg[1] <= host_reset_sample_reg[0];
+        rst_n_reg             <= rst_n_new;
+        host_reset_sample_reg <= {host_reset_sample_reg[0], host_reset};
 
         if (rst_ctr_we)
           rst_ctr_reg <= rst_ctr_new;
@@ -106,7 +111,15 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
 
 
   //----------------------------------------------------------------
-  // rst_logic.
+  // rst_logic
+  //
+  // From cold boot, when the bitstream has been loaded and
+  // all registers are zeroised. This means that the counter
+  // logic is active, and the reset is being asserted for
+  // RESET_CYCLES. Then the default reset reg value is applied.
+  //
+  // When a second reset is requested from the host we
+  // reset the counter. This activates the counter logic.
   //----------------------------------------------------------------
   always @*
     begin : rst_logic
@@ -121,14 +134,13 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
       end
 
       if (host_reset_sample_reg[1]) begin
-        rst_n_new   = 1'h0;
+        rst_ctr_new = 8'h0;
+        rst_ctr_we  = 1'h1;
       end
-
-
     end
 
-endmodule // reset_gen
+endmodule // clk_reset_gen
 
 //======================================================================
-// EOF reset_gen.v
+// EOF clk_reset_gen.v
 //======================================================================
