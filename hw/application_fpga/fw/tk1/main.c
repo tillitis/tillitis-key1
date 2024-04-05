@@ -380,22 +380,17 @@ static void scramble_ram(void)
         *ram_rand = rnd_word();
         *ram_scramble = rnd_word();
 
-        // Use Marsaglia xorshift PRNG variant xorwow for address and
-        // data to fill the RAM random data (FW does not use RAM, has
-        // its stack in FW_RAM)
-        uint32_t addr_state = rnd_word();
-        uint32_t addr_acc = rnd_word();
+        // Get random state and accumulator seeds.
         uint32_t data_state = rnd_word();
         uint32_t data_acc = rnd_word();
 
         for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
-          addr_state = xorwow(addr_state, addr_acc);
           data_state = xorwow(data_state, data_acc);
-
-          ram[(addr_state & TK1_RAM_SIZE)] = data_state;
+          ram[w] = data_state;
         }
 
-        // Set new scrambling values, for all use of RAM by app
+        // Set new address and RAM scrambling values,
+	// for all use of RAM by app.
         *ram_rand = rnd_word();
         *ram_scramble = rnd_word();
 }
