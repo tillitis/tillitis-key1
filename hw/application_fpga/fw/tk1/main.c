@@ -365,34 +365,34 @@ static void run(const struct context *ctx)
 
 uint32_t xorwow(uint32_t state, uint32_t acc)
 {
-  state ^= state << 13;
-  state ^= state >> 17;
-  state ^= state << 5;
-  state += acc;
-  return state;
+	state ^= state << 13;
+	state ^= state >> 17;
+	state ^= state << 5;
+	state += acc;
+	return state;
 }
 
 static void scramble_ram(void)
 {
-        uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
+	uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
 
-        // Set RAM address and data scrambling values
-        *ram_rand = rnd_word();
-        *ram_scramble = rnd_word();
+	// Set RAM address and data scrambling values
+	*ram_rand = rnd_word();
+	*ram_scramble = rnd_word();
 
-        // Get random state and accumulator seeds.
-        uint32_t data_state = rnd_word();
-        uint32_t data_acc = rnd_word();
+	// Get random state and accumulator seeds.
+	uint32_t data_state = rnd_word();
+	uint32_t data_acc = rnd_word();
 
-        for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
-          data_state = xorwow(data_state, data_acc);
-          ram[w] = data_state;
-        }
+	for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
+		data_state = xorwow(data_state, data_acc);
+		ram[w] = data_state;
+	}
 
-        // Set new address and RAM scrambling values,
+	// Set new address and RAM scrambling values,
 	// for all use of RAM by app.
-        *ram_rand = rnd_word();
-        *ram_scramble = rnd_word();
+	*ram_rand = rnd_word();
+	*ram_scramble = rnd_word();
 }
 
 int main(void)
