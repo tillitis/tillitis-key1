@@ -212,6 +212,8 @@ verilator: $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS) firmware.hex $(ICE40_SIM_CELLS)
 #-------------------------------------------------------------------
 # Main FPGA build flow.
 # Synthesis. Place & Route. Bitstream generation.
+#
+# For minimal SPI-master add flag -DINCLUDE_SPI_MASTER to Yosys.
 #-------------------------------------------------------------------
 synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/udi.hex
 	$(YOSYS_PATH)yosys -v3 -l synth.log -DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
