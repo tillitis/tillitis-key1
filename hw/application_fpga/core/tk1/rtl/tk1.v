@@ -75,7 +75,6 @@ module tk1(
 
   localparam ADDR_CDI_FIRST     = 8'h20;
   localparam ADDR_CDI_LAST      = 8'h27;
-  localparam ADDR_CDI_DONE      = 8'h28;
 
   localparam ADDR_UDI_FIRST     = 8'h30;
   localparam ADDR_UDI_LAST      = 8'h31;
@@ -436,13 +435,9 @@ module tk1(
             end
 	  end
 
-	  if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
-	    if (!switch_app_reg) begin
-	      cdi_mem_we = 1'h1;
-	    end
-	  end
-
-	  if (address == ADDR_CDI_DONE) begin
+	  if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST) & !switch_app_reg ) begin
+	    cdi_mem_we = 1'h1;
+	  end else begin
 	    cdi_access_we = 1'h1;
 	  end
 
