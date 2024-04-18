@@ -249,4 +249,17 @@ https://www.mouser.se/datasheet/2/949/w25q80dv_dl_revh_10022015-1489677.pdf
 The core is implemented as a single module. Future versions will
 probably be separated into separate modules.
 
+
+## Winbond Flash memory model
+
+The testbench for the SPI master requires a memory model of the
+Winbond Flash memory. The model [can be downloaded from
+Winbond](https://www.winbond.com/hq/support/documentation/downloadV2022.jsp?__locale=en&xmlPath=/support/resources/.content/item/DA02-KAG049.html&level=2)
+by providing the requested information and supplying the received
+verification code.
+
+From the downloaded file 'W25Q80DL.zip', please extract the file
+W25Q80DL.v and place it in the 'tb' directory before building the
+simulation model.
+
 ---

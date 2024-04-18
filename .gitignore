@@ -60,6 +60,6 @@ fp-info-cache
 *.net
 *.dsn
 *.ses
-
 __pycache__
 application_fpga_par.json
+MEM.TXT
