@@ -1,16 +1,18 @@
 # touch_sense
 
-Core that handles touch senor events and provides them SW via an API.
+Core that handles touch sensor events and provides them to the SW via
+an API.
 
 ## Introduction
 
 This core implements a touch sensor handler. The core detects and
 holds events for SW to read. The touch sensor input is expected to be
 a change in level from low (0) to high (1). When an event is seen, the
-core will set a status bit that SW can read. SW must then clear the
-event by writing to the status register.
+core will set a status bit that SW can read.
 
-The user is expected to lift the finger between multiple touch events.
+SW must clear the captured event by writing to the status
+register. The core will wait for the sensor input to become low again
+before being able to detect another event.
 
 
 ## API
