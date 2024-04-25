@@ -18,7 +18,7 @@ CC = iverilog
 CC_FLAGS = -Wall
 
 LINT = verilator
-LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
+LINT_FLAGS = +1364-2005ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
 all: top.sim

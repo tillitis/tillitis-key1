@@ -10,7 +10,7 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  ci:
+  check-firmware:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/tillitis/tkey-builder:4
@@ -26,7 +26,7 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: check indentation of our firmware C code
+      - name: check indentation in firmware C code
         working-directory: hw/application_fpga
         run: |
           make -C fw/tk1 checkfmt
@@ -37,9 +37,45 @@ jobs:
         run: |
           make check
 
+      - name: compile firmware and testfw
+        working-directory: hw/application_fpga
+        run: make firmware.bin testfw.bin
+
+  check-verilog:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/tillitis/tkey-builder:4
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0
+          persist-credentials: false
+
+      - name: fix
+        # https://github.com/actions/runner-images/issues/6775
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: lint verilog using verilator
         working-directory: hw/application_fpga
         run: make lint
+
+  build-other-firmwares:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/tillitis/tkey-builder:4
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0
+          persist-credentials: false
+
+      - name: fix
+        # https://github.com/actions/runner-images/issues/6775
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: compile ch552 firmware
         working-directory: hw/boards/mta1-usb-v1/ch552_fw
@@ -49,15 +85,28 @@ jobs:
         working-directory: hw/boards/tp1/firmware
         run: ./build.sh
 
+  build-bitstream:
+    outputs:
+      commit_sha: ${{ github.sha }}
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/tillitis/tkey-builder:4
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0
+          persist-credentials: false
+
+      - name: fix
+        # https://github.com/actions/runner-images/issues/6775
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: make production test gateware
         working-directory: hw/production_test/application_fpga_test_gateware
         run: make
 
-      - name: compile firmware and testfw
-        working-directory: hw/application_fpga
-        run: make firmware.bin testfw.bin
-
-      # doing this last as it takes long time
       - name: make application FPGA gateware
         working-directory: hw/application_fpga
         run: make all
@@ -68,16 +117,10 @@ jobs:
           path: |
             hw/application_fpga/application_fpga.bin
             hw/application_fpga/firmware.bin
-          key: ${{ runner.os }}-build-${{ github.sha }}
-          restore-keys: ${{ runner.os }}-build-
-
-
-      # TODO? first deal with hw/boards/ and hw/production_test/
-      # - name: check for SPDX tags
-      #   run: ./LICENSES/spdx-ensure
+          key: build-${{ github.run_number }}-${{ github.sha }}-${{ github.run_attempt }}
 
   check-hashes:
-    needs: ci
+    needs: build-bitstream
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/tillitis/tkey-builder:4
@@ -93,9 +136,13 @@ jobs:
           path: |
             hw/application_fpga/application_fpga.bin
             hw/application_fpga/firmware.bin
-          key: ${{ runner.os }}-build-${{ needs.build.outputs.commit_sha }}
-          restore-keys: ${{ runner.os }}-build-
+          key: build-${{ github.run_number }}-${{ needs.build-bitstream.outputs.commit_sha }}-${{ github.run_attempt }}
 
       - name: check matching hashes for firmware.bin & application_fpga.bin
         working-directory: hw/application_fpga
         run: make check-binary-hashes
+
+
+      # TODO? first deal with hw/boards/ and hw/production_test/
+      # - name: check for SPDX tags
+      #   run: ./LICENSES/spdx-ensure

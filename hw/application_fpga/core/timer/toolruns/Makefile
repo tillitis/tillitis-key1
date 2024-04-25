@@ -21,7 +21,7 @@ CC = iverilog
 CC_FLAGS = -Wall
 
 LINT = verilator
-LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
+LINT_FLAGS = +1364-2005ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
 all: top.sim core.sim
@@ -67,7 +67,7 @@ help:
 	@echo "sim-top:      Run top level simulation."
 	@echo "sim-core:     Run core level simulation."
 	@echo "lint-core:    Lint core rtl source files."
-	@echo "lint-core:    Lint top rtl source files."
+	@echo "lint-top:     Lint top rtl source files."
 	@echo "clean:        Delete all built files."
 
 #===================================================================
