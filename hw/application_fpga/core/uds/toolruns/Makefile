@@ -11,7 +11,9 @@
 #
 #===================================================================
 
-TOP_SRC=../rtl/uds.v
+TOP_SRC=../rtl/uds.v ../rtl/uds_rom.v
+
+TB_SB_LUT4_SRC=../tb/tb_SB_LUT4.v
 TB_TOP_SRC =../tb/tb_uds.v
 
 CC = iverilog
@@ -24,8 +26,8 @@ LINT_FLAGS = +1364-2005ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 all: top.sim
 
 
-top.sim: $(TB_TOP_SRC) $(TOP_SRC)
-	$(CC) $(CC_FLAGS) -o top.sim $(TB_TOP_SRC) $(TOP_SRC)
+top.sim: $(TB_TOP_SRC) $(TOP_SRC) $(TB_SB_LUT4_SRC)
+	$(CC) $(CC_FLAGS) -o top.sim $^
 
 
 sim-top: top.sim
@@ -33,7 +35,7 @@ sim-top: top.sim
 
 
 lint-top:  $(TOP_SRC)
-	$(LINT) $(LINT_FLAGS) $(TOP_SRC)
+	$(LINT) $(LINT_FLAGS) $(TOP_SRC) $(TB_SB_LUT4_SRC)
 
 
 clean:
