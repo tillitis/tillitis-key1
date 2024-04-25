@@ -62,3 +62,4 @@ fp-info-cache
 *.ses
 
 __pycache__
+application_fpga_par.json
