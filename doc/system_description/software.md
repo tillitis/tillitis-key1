@@ -80,7 +80,7 @@ by clearing all CPU registers, and then sets up a stack for
 itself. The FW then jumps to main().
 
 Beginning at main(), the FW fills the RAM with pseudo random values,
-thus whiping out any contents in the RAM. Finally the FW sets the RAM
+thus wiping out any contents in the RAM. Finally the FW sets the RAM
 access scrambling parameters to values read from the True Random
 Number Generator (TRNG).
 
@@ -111,23 +111,25 @@ Typical use scenario:
      containing the measurement.
 
   5. The Compound Device Identifier (CDI) is then computed by using
-     the `UDS`, application digest, and the `USS`, and placed in
-     `CDI`. (see [Compound Device Identifier
-     computation](#compound-device-identifier-computation)) Then the
-     start address of the device app, `0x4000_0000`, is written to
-     `APP_ADDR` and the size to `APP_SIZE` to let the device
-     application know where it is loaded and how large it is, if it
+     the `UDS`, the application digest, and any `USS` supplied. The
+     CDI is copied into the `CDI` API registers for the application to
+     use. (see [Compound Device Identifier
+     computation](#compound-device-identifier-computation)). The CDI
+     calculation context is then wiped. The start address of the
+     device app, `0x4000_0000` is written to `APP_ADDR`, and the size
+     of the device app is written to `APP_SIZE`. This allows the
+     device app to know where it is located and how large it is, if it
      wants to relocate in RAM.
 
   6. The firmware now clears the special `FW_RAM` where it keeps it
      stack. After this it does no more function calls and uses no more
      automatic variables.
 
-  7. Firmware starts the application by first switching to application
-     mode by writing to the `SWITCH_APP` register. In this mode the
-     MMIO region is restricted, e.g. some registers are removed
-     (`UDS`), and some are switched from read/write to read-only (see
-     [memory
+  7. Firmware starts the application by first switching from FW MODE
+     to APP MODE by writing to the `SWITCH_APP` register to APP
+     MODE. In this mode the MMIO region is restricted, e.g. some
+     registers are removed (`UDS`), and some are switched from
+     read/write to read-only (see [memory
      map](system_description.md#memory-mapped-hardware-functions)).
 
      Then the firmware jumps to what's in `APP_ADDR` which starts
