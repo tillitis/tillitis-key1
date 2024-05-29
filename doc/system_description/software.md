@@ -60,8 +60,8 @@ little-endian.
 
 ## Firmware
 
-The purpose of the firmware (FW) is to bootstrap itseld, set up the
-application environment and then load and measure application to
+The purpose of the firmware (FW) is to bootstrap itself, set up the
+application environment and then load and measure an application to
 generate the application compound device identifier (CD).
 
 The TKey has 128 kilobyte RAM. The FW loads the application at the
@@ -75,7 +75,7 @@ the Block RAMs used to construct the `FW_ROM`. The FW ROM start
 address is located at `0x0000_0000` in the CPU memory map, which is
 the CPU reset vector.
 
-When reset is released, the CPU starts executing the FW. The FW begin
+When reset is released, the CPU starts executing the FW. The FW begins
 by clearing all CPU registers, and then sets up a stack for
 itself. The FW then jumps to main().
 
