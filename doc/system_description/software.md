@@ -60,39 +60,56 @@ little-endian.
 
 ## Firmware
 
-The purpose of the firmware is to bootstrap and measure an
-application.
+The purpose of the firmware (FW) is to bootstrap itseld, set up the
+application environment and then load and measure application to
+generate the application compound device identifier (CD).
 
-The TKey has 128 kilobyte RAM. Firmware loads the application at the
+The TKey has 128 kilobyte RAM. The FW loads the application at the
 start of RAM. The current C runtime (`crt0.S`) of apps in our [apps
 repo](https://github.com/tillitis/tillitis-key1-apps) sets up the
-stack to start just below the end of RAM. This means that a larger app
-comes at the compromise of it having a smaller stack.
+application stack to start just below the end of RAM. This means that
+a larger app comes at the expense of it having a smaller stack.
 
-The firmware is part of FPGA bitstream (ROM), and is loaded at
-`0x0000_0000`.
+The FW binary is part of FPGA the bitstream as the initial values of
+the Block RAMs used to construct the `FW_ROM`. The FW ROM start
+address is located at `0x0000_0000` in the CPU memory map, which is
+the CPU reset vector.
 
-When the firmware starts it clears all RAM and then wait for commands
-coming in on `UART_RX`.
+When reset is released, the CPU starts executing the FW. The FW begin
+by clearing all CPU registers, and then sets up a stack for
+itself. The FW then jumps to main().
+
+Beginning at main(), the FW fills the RAM with pseudo random values,
+thus whiping out any contents in the RAM. Finally the FW sets the RAM
+access scrambling parameters to values read from the True Random
+Number Generator (TRNG).
+
+After these initalization steps, the FW wait for commands coming
+in on `UART_RX`.
 
 Typical use scenario:
 
   1. The host sends the `FW_CMD_LOAD_APP` command with the size of the
-     device app and the optional user-supplied secret as arguments and
-     and gets a `FW_RSP_LOAD_APP` back. After using this it's not
-     possible to restart the loading of an application.
+     device app and the optional 32 byte hash of the user-supplied
+     secret (USS) as arguments and and gets a `FW_RSP_LOAD_APP`
+     back. After using this it's not possible to restart the loading
+     of an application.
+
   2. If the the host receive a sucessful response, it will send
      multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
      full application.
-  3. On receiving`FW_CMD_LOAD_APP_DATA` commands the firmware places
+
+  3. On receiving `FW_CMD_LOAD_APP_DATA` commands the firmware places
      the data into `0x4000_0000` and upwards. The firmware replies
      with a `FW_RSP_LOAD_APP_DATA` response to the host for each
      received block except the last data block.
+
   4. When the final block of the application image is received with a
      `FW_CMD_LOAD_APP_DATA`, the firmware measure the application by
      computing a BLAKE2s digest over the entire application. Then
      firmware send back the `FW_RSP_LOAD_APP_DATA_READY` response
      containing the measurement.
+
   5. The Compound Device Identifier (CDI) is then computed by using
      the `UDS`, application digest, and the `USS`, and placed in
      `CDI`. (see [Compound Device Identifier
@@ -101,9 +118,11 @@ Typical use scenario:
      `APP_ADDR` and the size to `APP_SIZE` to let the device
      application know where it is loaded and how large it is, if it
      wants to relocate in RAM.
+
   6. The firmware now clears the special `FW_RAM` where it keeps it
      stack. After this it does no more function calls and uses no more
      automatic variables.
+
   7. Firmware starts the application by first switching to application
      mode by writing to the `SWITCH_APP` register. In this mode the
      MMIO region is restricted, e.g. some registers are removed
