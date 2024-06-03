@@ -25,8 +25,8 @@ module tk1(
 	   input wire           cpu_valid,
 	   output wire          force_trap,
 
-	   output wire [14 : 0] ram_aslr,
-	   output wire [31 : 0] ram_scramble,
+	   output wire [14 : 0] ram_addr_rand,
+	   output wire [31 : 0] ram_data_rand,
 
 `ifdef INCLUDE_SPI_MASTER
 	   output wire          spi_ss,
@@ -86,8 +86,8 @@ module tk1(
   localparam ADDR_UDI_FIRST     = 8'h30;
   localparam ADDR_UDI_LAST      = 8'h31;
 
-  localparam ADDR_RAM_ASLR      = 8'h40;
-  localparam ADDR_RAM_SCRAMBLE  = 8'h41;
+  localparam ADDR_RAM_ADDR_RAND = 8'h40;
+  localparam ADDR_RAM_DATA_RAND = 8'h41;
 
   localparam ADDR_CPU_MON_CTRL  = 8'h60;
   localparam ADDR_CPU_MON_FIRST = 8'h61;
@@ -141,10 +141,10 @@ module tk1(
   reg [2 : 0]  cpu_trap_led_new;
   reg          cpu_trap_led_we;
 
-  reg [14 : 0] ram_aslr_reg;
-  reg          ram_aslr_we;
-  reg [31 : 0] ram_scramble_reg;
-  reg          ram_scramble_we;
+  reg [14 : 0] ram_addr_rand_reg;
+  reg          ram_addr_rand_we;
+  reg [31 : 0] ram_data_rand_reg;
+  reg          ram_data_rand_we;
 
   reg          cpu_mon_en_reg;
   reg          cpu_mon_en_we;
@@ -193,8 +193,8 @@ module tk1(
   assign gpio3 = gpio3_reg;
   assign gpio4 = gpio4_reg;
 
-  assign ram_aslr     = ram_aslr_reg;
-  assign ram_scramble = ram_scramble_reg;
+  assign ram_addr_rand = ram_addr_rand_reg;
+  assign ram_data_rand = ram_data_rand_reg;
 
 
   //----------------------------------------------------------------
@@ -273,8 +273,8 @@ module tk1(
         cpu_mon_en_reg    <= 1'h0;
 	cpu_mon_first_reg <= 32'h0;
 	cpu_mon_last_reg  <= 32'h0;
- 	ram_aslr_reg      <= 15'h0;
-	ram_scramble_reg  <= 32'h0;
+ 	ram_addr_rand_reg <= 15'h0;
+	ram_data_rand_reg <= 32'h0;
 	force_trap_reg    <= 1'h0;
       end
 
@@ -319,12 +319,12 @@ module tk1(
 	  cdi_mem[address[2 : 0]] <= write_data;
 	end
 
-	if (ram_aslr_we) begin
-	  ram_aslr_reg <= write_data[14 : 0];
+	if (ram_addr_rand_we) begin
+	  ram_addr_rand_reg <= write_data[14 : 0];
  	end
 
-	if (ram_scramble_we) begin
-	  ram_scramble_reg <= write_data;
+	if (ram_data_rand_we) begin
+	  ram_data_rand_reg <= write_data;
  	end
 
 	if (cpu_trap_led_we) begin
@@ -427,8 +427,8 @@ module tk1(
       blake2s_addr_we  = 1'h0;
       cdi_mem_we       = 1'h0;
       cdi_mem_we       = 1'h0;
-      ram_aslr_we      = 1'h0;
-      ram_scramble_we  = 1'h0;
+      ram_addr_rand_we = 1'h0;
+      ram_data_rand_we = 1'h0;
       cpu_mon_en_we    = 1'h0;
       cpu_mon_first_we = 1'h0;
       cpu_mon_last_we  = 1'h0;
@@ -485,15 +485,15 @@ module tk1(
 	    end
 	  end
 
-          if (address == ADDR_RAM_ASLR) begin
+          if (address == ADDR_RAM_ADDR_RAND) begin
  	    if (!switch_app_reg) begin
-              ram_aslr_we = 1'h1;
+              ram_addr_rand_we = 1'h1;
 	    end
 	  end
 
-          if (address == ADDR_RAM_SCRAMBLE) begin
+          if (address == ADDR_RAM_DATA_RAND) begin
 	    if (!switch_app_reg) begin
-              ram_scramble_we = 1'h1;
+              ram_data_rand_we = 1'h1;
             end
  	  end
 

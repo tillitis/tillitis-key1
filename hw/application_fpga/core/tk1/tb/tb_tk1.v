@@ -51,8 +51,8 @@ module tb_tk1();
   localparam ADDR_UDI_FIRST     = 8'h30;
   localparam ADDR_UDI_LAST      = 8'h31;
 
-  localparam ADDR_RAM_ASLR      = 8'h40;
-  localparam ADDR_RAM_SCRAMBLE  = 8'h41;
+  localparam ADDR_RAM_ADDR_RAND = 8'h40;
+  localparam ADDR_RAM_DATA_RAND = 8'h41;
 
   localparam ADDR_CPU_MON_CTRL  = 8'h60;
   localparam ADDR_CPU_MON_FIRST = 8'h61;
@@ -523,8 +523,8 @@ module tb_tk1();
       reset_dut();
 
       $display("--- test6: Write RAM ASLR and RAM SCRAMBLE.");
-      write_word(ADDR_RAM_ASLR, 32'h13371337);
-      write_word(ADDR_RAM_SCRAMBLE, 32'h47114711);
+      write_word(ADDR_RAM_ADDR_RAND, 32'h13371337);
+      write_word(ADDR_RAM_DATA_RAND, 32'h47114711);
 
       $display("--- test6: Check value in dut RAM ASLR and SCRAMBLE registers.");
       $display("--- test6: ram_aslr_reg: 0x%04x, ram_scramble_reg: 0x%08x", dut.ram_aslr_reg, dut.ram_scramble_reg);
@@ -533,8 +533,8 @@ module tb_tk1();
       write_word(ADDR_SWITCH_APP, 32'hf000000);
 
       $display("--- test6: Write RAM ASLR and SCRAMBLE again.");
-      write_word(ADDR_RAM_ASLR, 32'hdeadbeef);
-      write_word(ADDR_RAM_SCRAMBLE, 32'hf00ff00f);
+      write_word(ADDR_RAM_ADDR_RAND, 32'hdeadbeef);
+      write_word(ADDR_RAM_DATA_RAND, 32'hf00ff00f);
 
       $display("--- test6: Check value in dut RAM ASLR and SCRAMBLE registers.");
       $display("--- test6: ram_aslr_reg: 0x%04x, ram_scramble_reg: 0x%08x", dut.ram_aslr_reg, dut.ram_scramble_reg);

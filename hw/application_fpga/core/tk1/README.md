@@ -136,15 +136,19 @@ bitstreams without having to do a full FPGA build.
 ### RAM memory protecion
 
 ```
-  ADDR_RAM_ASLR:     0x40
-  ADDR_RAM_SCRAMBLE: 0x41
+  ADDR_RAM_ADDR_RAND: 0x40
+  ADDR_RAM_DATA_RAND: 0x41
 ```
 
 These write only registers control how the data in the RAM is
-scrambled as a way of protecting the data. The ADDR_RAM_ASLR control
-how the addresses are scrambled. The ADDR_RAM_SCRAMBLE control how the
-data itself is scrambled. FW writes random values to these registers
-during boot.
+randomized as a way of protecting the data. The randomization is
+implemented using a pseudo random number generator with a state
+initalized by a seed.
+
+The ADDR_RAM_ADDR_RAND store the seed for how the addresses are
+randomized over the memory space. The ADDR_RAM_DATA_RAND store the
+seed for how the data itself is randomized. FW writes random seed
+values to these registers during boot.
 
 
 ### Security monitor

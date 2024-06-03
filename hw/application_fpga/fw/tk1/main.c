@@ -28,8 +28,8 @@ static volatile uint32_t *timer           = (volatile uint32_t *)TK1_MMIO_TIMER_
 static volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
 static volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
 static volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
-static volatile uint32_t *ram_rand        = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
-static volatile uint32_t *ram_scramble    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_SCRAMBLE;
+static volatile uint32_t *ram_addr_rand   = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
+static volatile uint32_t *ram_data_rand   = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
 // clang-format on
 
 // Context for the loading of a TKey program
@@ -388,8 +388,8 @@ static void scramble_ram(void)
 	}
 
 	// Set RAM address and data scrambling parameters
-	*ram_rand = rnd_word();
-	*ram_scramble = rnd_word();
+	*ram_addr_rand = rnd_word();
+	*ram_data_rand = rnd_word();
 }
 
 int main(void)

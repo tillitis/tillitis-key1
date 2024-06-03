@@ -146,8 +146,8 @@ module application_fpga(
   wire          tk1_ready;
   wire          fw_app_mode;
   wire          force_trap;
-  wire [14 : 0] ram_aslr;
-  wire [31 : 0] ram_scramble;
+  wire [14 : 0] ram_addr_rand;
+  wire [31 : 0] ram_data_rand;
   /* verilator lint_on UNOPTFLAT */
 
 
@@ -321,8 +321,8 @@ module application_fpga(
 	       .cpu_trap(cpu_trap),
 	       .force_trap(force_trap),
 
-               .ram_aslr(ram_aslr),
-	       .ram_scramble(ram_scramble),
+               .ram_addr_rand(ram_addr_rand),
+	       .ram_data_rand(ram_data_rand),
 
 `ifdef INCLUDE_SPI_MASTER
 	       .spi_ss(spi_ss),
@@ -387,8 +387,8 @@ module application_fpga(
 
       ram_cs              = 1'h0;
       ram_we              = 4'h0;
-      ram_address         = cpu_addr[16 : 2] ^ ram_aslr;
-      ram_write_data      = cpu_wdata ^ ram_scramble ^ {2{cpu_addr[15 : 0]}};
+      ram_address         = cpu_addr[16 : 2] ^ ram_addr_rand;
+      ram_write_data      = cpu_wdata ^ ram_data_rand ^ {2{cpu_addr[15 : 0]}};
 
       fw_ram_cs           = 1'h0;
       fw_ram_we           = cpu_wstrb;
@@ -438,7 +438,7 @@ module application_fpga(
             RAM_PREFIX: begin
 	      ram_cs          = 1'h1;
 	      ram_we          = cpu_wstrb;
-	      muxed_rdata_new = ram_read_data ^ ram_scramble ^ {2{cpu_addr[15 : 0]}};
+	      muxed_rdata_new = ram_read_data ^ ram_data_rand ^ {2{cpu_addr[15 : 0]}};
 	      muxed_ready_new = ram_ready;
 	    end
 
