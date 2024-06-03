@@ -79,8 +79,8 @@ module tk1(
   localparam ADDR_UDI_FIRST     = 8'h30;
   localparam ADDR_UDI_LAST      = 8'h31;
 
-  localparam ADDR_RAM_ASLR      = 8'h40;
-  localparam ADDR_RAM_SCRAMBLE  = 8'h41;
+  localparam ADDR_RAM_ADDR_RAND = 8'h40;
+  localparam ADDR_RAM_DATA_RAND = 8'h41;
 
   localparam ADDR_CPU_MON_CTRL  = 8'h60;
   localparam ADDR_CPU_MON_FIRST = 8'h61;
@@ -433,13 +433,13 @@ module tk1(
 	    end
 	  end
 
-          if (address == ADDR_RAM_ASLR) begin
+          if (address == ADDR_RAM_ADDR_RAND) begin
  	    if (!switch_app_reg) begin
               ram_aslr_we = 1'h1;
 	    end
 	  end
 
-          if (address == ADDR_RAM_SCRAMBLE) begin
+          if (address == ADDR_RAM_DATA_RAND) begin
 	    if (!switch_app_reg) begin
               ram_scramble_we = 1'h1;
             end
