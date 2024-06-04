@@ -129,8 +129,8 @@ module tk1(
   reg [2 : 0]  cpu_trap_led_new;
   reg          cpu_trap_led_we;
 
-  reg [14 : 0] ram_aslr_reg;
-  reg          ram_aslr_we;
+  reg [14 : 0] ram_addr_reg;
+  reg          ram_addr_we;
   reg [31 : 0] ram_scramble_reg;
   reg          ram_scramble_we;
 
@@ -170,7 +170,7 @@ module tk1(
   assign gpio3 = gpio3_reg;
   assign gpio4 = gpio4_reg;
 
-  assign ram_aslr     = ram_aslr_reg;
+  assign ram_aslr     = ram_addr_reg;
   assign ram_scramble = ram_scramble_reg;
 
 
@@ -230,7 +230,7 @@ module tk1(
         cpu_mon_en_reg    <= 1'h0;
 	cpu_mon_first_reg <= 32'h0;
 	cpu_mon_last_reg  <= 32'h0;
- 	ram_aslr_reg      <= 15'h0;
+ 	ram_addr_reg      <= 15'h0;
 	ram_scramble_reg  <= 32'h0;
 	force_trap_reg    <= 1'h0;
       end
@@ -276,8 +276,8 @@ module tk1(
 	  cdi_mem[address[2 : 0]] <= write_data;
 	end
 
-	if (ram_aslr_we) begin
-	  ram_aslr_reg <= write_data[14 : 0];
+	if (ram_addr_we) begin
+	  ram_addr_reg <= write_data[14 : 0];
  	end
 
 	if (ram_scramble_we) begin
@@ -384,7 +384,7 @@ module tk1(
       blake2s_addr_we  = 1'h0;
       cdi_mem_we       = 1'h0;
       cdi_mem_we       = 1'h0;
-      ram_aslr_we      = 1'h0;
+      ram_addr_we      = 1'h0;
       ram_scramble_we  = 1'h0;
       cpu_mon_en_we    = 1'h0;
       cpu_mon_first_we = 1'h0;
@@ -435,7 +435,7 @@ module tk1(
 
           if (address == ADDR_RAM_ASLR) begin
  	    if (!switch_app_reg) begin
-              ram_aslr_we = 1'h1;
+              ram_addr_we = 1'h1;
 	    end
 	  end
 
