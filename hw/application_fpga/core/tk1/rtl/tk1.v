@@ -25,8 +25,8 @@ module tk1(
 	   input wire           cpu_valid,
 	   output wire          force_trap,
 
-	   output wire [14 : 0] ram_aslr,
-	   output wire [31 : 0] ram_scramble,
+	   output wire [14 : 0] ram_addr_rand,
+	   output wire [31 : 0] ram_data_rand,
 
            output wire          led_r,
            output wire          led_g,
@@ -170,8 +170,8 @@ module tk1(
   assign gpio3 = gpio3_reg;
   assign gpio4 = gpio4_reg;
 
-  assign ram_aslr     = ram_addr_rand_reg;
-  assign ram_scramble = ram_data_rand_reg;
+  assign ram_addr_rand = ram_addr_rand_reg;
+  assign ram_data_rand = ram_data_rand_reg;
 
 
   //----------------------------------------------------------------
