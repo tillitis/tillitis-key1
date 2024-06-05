@@ -38,9 +38,9 @@ _start:
 	li x30,0
 	li x31,0
 
-	/* Clear all RAM */
-	li a0, 0x40000000 // TK1_RAM_BASE
-	li a1, 0x40020000 // TK1_RAM_BASE + TK1_RAM_SIZE
+	/* Clear FW_RAM */
+	li a0, 0xd0000000 // TK1_MMIO_FW_RAM_BASE
+	li a1, 0xd0000800 // TK1_MMIO_FW_RAM_BASE + TK1_MMIO_FW_RAM_SIZE
 clear:
 	sw zero, 0(a0)
 	addi a0, a0, 4
