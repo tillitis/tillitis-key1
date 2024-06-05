@@ -363,12 +363,11 @@ static void run(const struct context *ctx)
 	__builtin_unreachable();
 }
 
-uint32_t xorwow(uint32_t state, uint32_t acc)
+uint32_t xorshift(uint32_t state)
 {
 	state ^= state << 13;
 	state ^= state >> 17;
 	state ^= state << 5;
-	state += acc;
 	return state;
 }
 
@@ -382,10 +381,9 @@ static void scramble_ram(void)
 
 	// Get random state and accumulator seeds.
 	uint32_t data_state = rnd_word();
-	uint32_t data_acc = rnd_word();
 
 	for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
-		data_state = xorwow(data_state, data_acc);
+		data_state = xorshift(data_state);
 		ram[w] = data_state;
 	}
 
