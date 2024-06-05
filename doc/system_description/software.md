@@ -62,16 +62,16 @@ little-endian.
 
 The purpose of the firmware (FW) is to bootstrap itself, set up the
 application environment and then load and measure an application to
-generate the application compound device identifier (CD).
+generate the application Compound Device Identifier (CDI).
 
 The TKey has 128 kilobyte RAM. The FW loads the application at the
-start of RAM. The current C runtime (`crt0.S`) of apps in our [apps
-repo](https://github.com/tillitis/tillitis-key1-apps) sets up the
-application stack to start just below the end of RAM. This means that
-a larger app comes at the expense of it having a smaller stack.
+start of RAM. The current C runtime (`crt0.S`) for TKey apps sets up
+the application stack to start just below the end of RAM, see
+[tkey-libs](https://github.com/tillitis/tkey-libs). This means that a
+larger app comes at the expense of it having a smaller stack.
 
-The FW binary is part of FPGA the bitstream as the initial values of
-the Block RAMs used to construct the `FW_ROM`. The FW ROM start
+The FW binary is part of the FPGA bitstream as the initial values of
+the Block RAMs used to construct the `FW_ROM`. The `FW_ROM` start
 address is located at `0x0000_0000` in the CPU memory map, which is
 the CPU reset vector.
 
@@ -91,9 +91,9 @@ Typical use scenario:
 
   1. The host sends the `FW_CMD_LOAD_APP` command with the size of the
      device app and the optional 32 byte hash of the user-supplied
-     secret (USS) as arguments and and gets a `FW_RSP_LOAD_APP`
-     back. After using this it's not possible to restart the loading
-     of an application.
+     secret (USS) as arguments and gets a `FW_RSP_LOAD_APP` back.
+     After using this it's not possible to restart the loading of an
+     application.
 
   2. If the the host receive a sucessful response, it will send
      multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
@@ -126,13 +126,12 @@ Typical use scenario:
      automatic variables.
 
   7. Firmware starts the application by first switching from FW MODE
-     to APP MODE by writing to the `SWITCH_APP` register to APP
-     MODE. In this mode the MMIO region is restricted, e.g. some
-     registers are removed (`UDS`), and some are switched from
-     read/write to read-only (see [memory
-     map](system_description.md#memory-mapped-hardware-functions)).
+     to APP MODE by writing APP MODE to the `SWITCH_APP` register. In
+     this mode the MMIO region is restricted, e.g. some registers are
+     removed (`UDS`), and some are switched from read/write to read-only
+     (see [memory map](system_description.md#memory-mapped-hardware-functions)).
 
-     Then the firmware jumps to what's in `APP_ADDR` which starts
+     Then the firmware jumps to what is in `APP_ADDR`, which starts
      the application.
 
      There is now no other means of getting back from application mode
