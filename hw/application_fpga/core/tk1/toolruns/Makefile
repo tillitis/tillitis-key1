@@ -13,6 +13,7 @@
 
 TOP_SRC=../rtl/tk1.v
 TB_TOP_SRC =../tb/tb_tk1.v ../tb/sb_rgba_drv.v ../tb/udi_rom_sim.v
+LINT_SRC=../rtl/tk1.v ../tb/sb_rgba_drv.v ../tb/udi_rom_sim.v
 
 CC = iverilog
 CC_FLAGS = -Wall
@@ -32,8 +33,8 @@ sim-top: top.sim
 	./top.sim
 
 
-lint-top:  $(TOP_SRC)
-	$(LINT) $(LINT_FLAGS) $(TOP_SRC)
+lint-top:  $(LINT_SRC)
+	$(LINT) $(LINT_FLAGS) $(LINT_SRC)
 
 
 clean:
