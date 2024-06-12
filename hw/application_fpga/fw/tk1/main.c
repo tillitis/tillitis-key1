@@ -377,10 +377,6 @@ static void scramble_ram(void)
 {
 	uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
 
-	// Set RAM address and data scrambling values
-	*ram_rand = rnd_word();
-	*ram_scramble = rnd_word();
-
 	// Fill RAM with random data
 	// Get random state and accumulator seeds.
 	uint32_t data_state = rnd_word();
@@ -391,8 +387,7 @@ static void scramble_ram(void)
 		ram[w] = data_state;
 	}
 
-	// Set new address and RAM scrambling values,
-	// for all use of RAM by app.
+	// Set RAM address and data scrambling parameters
 	*ram_rand = rnd_word();
 	*ram_scramble = rnd_word();
 }
