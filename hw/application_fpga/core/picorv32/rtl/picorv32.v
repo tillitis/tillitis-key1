@@ -271,7 +271,7 @@ module picorv32 #(
 	reg        pcpi_int_wait;
 	reg        pcpi_int_ready;
 
-	generate if (ENABLE_FAST_MUL) begin
+	generate if (ENABLE_FAST_MUL) begin : gen_fast_mul
 		picorv32_pcpi_fast_mul pcpi_mul (
 			.clk       (clk            ),
 			.resetn    (resetn         ),
@@ -284,7 +284,7 @@ module picorv32 #(
 			.pcpi_wait (pcpi_mul_wait  ),
 			.pcpi_ready(pcpi_mul_ready )
 		);
-	end else if (ENABLE_MUL) begin
+	end else if (ENABLE_MUL) begin : gen_mul
 		picorv32_pcpi_mul pcpi_mul (
 			.clk       (clk            ),
 			.resetn    (resetn         ),
@@ -297,14 +297,14 @@ module picorv32 #(
 			.pcpi_wait (pcpi_mul_wait  ),
 			.pcpi_ready(pcpi_mul_ready )
 		);
-	end else begin
+	end else begin : gen_no_mul
 		assign pcpi_mul_wr = 0;
 		assign pcpi_mul_rd = 32'bx;
 		assign pcpi_mul_wait = 0;
 		assign pcpi_mul_ready = 0;
 	end endgenerate
 
-	generate if (ENABLE_DIV) begin
+	generate if (ENABLE_DIV) begin : gen_div
 		picorv32_pcpi_div pcpi_div (
 			.clk       (clk            ),
 			.resetn    (resetn         ),
@@ -317,7 +317,7 @@ module picorv32 #(
 			.pcpi_wait (pcpi_div_wait  ),
 			.pcpi_ready(pcpi_div_ready )
 		);
-	end else begin
+	end else begin : gen_no_div
 		assign pcpi_div_wr = 0;
 		assign pcpi_div_rd = 32'bx;
 		assign pcpi_div_wait = 0;
@@ -1230,7 +1230,7 @@ module picorv32 #(
 	reg [31:0] alu_shl, alu_shr;
 	reg alu_eq, alu_ltu, alu_lts;
 
-	generate if (TWO_CYCLE_ALU) begin
+	generate if (TWO_CYCLE_ALU) begin : gen_two_cycle_alu
 		always @(posedge clk) begin
 			alu_add_sub <= instr_sub ? reg_op1 - reg_op2 : reg_op1 + reg_op2;
 			alu_eq <= reg_op1 == reg_op2;
@@ -1239,7 +1239,7 @@ module picorv32 #(
 			alu_shl <= reg_op1 << reg_op2[4:0];
 			alu_shr <= $signed({instr_sra || instr_srai ? reg_op1[31] : 1'b0, reg_op1}) >>> reg_op2[4:0];
 		end
-	end else begin
+	end else begin : gen_single_cycle_alu
 		always @* begin
 			alu_add_sub = instr_sub ? reg_op1 - reg_op2 : reg_op1 + reg_op2;
 			alu_eq = reg_op1 == reg_op2;
