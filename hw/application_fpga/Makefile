@@ -186,7 +186,10 @@ check-binary-hashes:
 # Source linting.
 #-------------------------------------------------------------------
 LINT=verilator
-LINT_FLAGS = +1364-2005ext+ --lint-only  -Wall -Wno-DECLFILENAME \
+# For Verilator 5.019 -Wno-GENUNNAMED needs to be added to LINT_FLAGS for the
+# cell library.
+LINT_FLAGS = +1364-2005ext+ --lint-only \
+	-Wall -Wno-DECLFILENAME  -Wno-WIDTHEXPAND \
 	--timescale 1ns/1ns -DNO_ICE40_DEFAULT_ASSIGNMENTS
 
 lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
