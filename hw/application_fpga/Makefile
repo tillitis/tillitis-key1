@@ -202,9 +202,7 @@ lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
 	config.vlt $^ \
 	>lint_issues.txt 2>&1 \
 	&& { rm -f lint_issues.txt; exit 0; } \
-	|| {   cat lint_issues.txt; exit 0; }
-	echo "Non-zero exit temporarily removed, see issue 182."
-	#|| {   cat lint_issues.txt; exit 1; }
+	|| {   cat lint_issues.txt; exit 1; }
 .PHONY: lint
 
 
