@@ -70,14 +70,14 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
   //
   // F_pllout == (F_referenceclk * (DIVF + 1)) / (2^DIVQ * (DIVR + 1))
   //
-  // Given the 12 MHz HFOSC clock set above, we get a final 18 MHz:
+  // Given the 12 MHz HFOSC clock set above, we get a final 21 MHz:
   //
-  // (12000000 * (47 + 1)) / (2^5 * (0 + 1)) = 18000000
+  // (12000000 * (55 + 1)) / (2^5 * (0 + 1)) = 21000000
   SB_PLL40_CORE #(
 		  .FEEDBACK_PATH("SIMPLE"),
-		  .DIVR(4'b0000),	// DIVR =  0
-		  .DIVF(7'b0101111),	// DIVF = 47
-		  .DIVQ(3'b101),	// DIVQ =  5
+		  .DIVR(4'd0),	// DIVR =  0
+		  .DIVF(7'd55),	// DIVF = 55
+		  .DIVQ(3'd5),	// DIVQ =  5
 		  .FILTER_RANGE(3'b001)	// FILTER_RANGE = 1
 		  ) pll_inst (
 			 .RESETB(1'b1),
