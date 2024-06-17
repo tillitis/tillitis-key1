@@ -1407,9 +1407,11 @@ module picorv32 #(
 		trap <= 0;
 		reg_sh <= 'bx;
 		reg_out <= 'bx;
+	        // verilator lint_off BLKSEQ
 		set_mem_do_rinst = 0;
 		set_mem_do_rdata = 0;
 		set_mem_do_wdata = 0;
+	        // verilator lint_on BLKSEQ
 
 		alu_out_0_q <= alu_out_0;
 		alu_out_q <= alu_out;
@@ -1441,7 +1443,9 @@ module picorv32 #(
 			count_instr <= 'bx;
 		end
 
+	        // verilator lint_off BLKSEQ
 		next_irq_pending = ENABLE_IRQ ? irq_pending & LATCHED_IRQ : 'bx;
+	        // verilator lint_on BLKSEQ
 
 		if (ENABLE_IRQ && ENABLE_IRQ_TIMER && timer) begin
 			timer <= timer - 1;
@@ -1475,7 +1479,9 @@ module picorv32 #(
 			irq_active <= 0;
 			irq_delay <= 0;
 			irq_mask <= ~0;
+		        // verilator lint_off BLKSEQ
 			next_irq_pending = 0;
+		        // verilator lint_on BLKSEQ
 			irq_state <= 0;
 			eoi <= 0;
 			timer <= 0;
@@ -1496,12 +1502,16 @@ module picorv32 #(
 				mem_do_rinst <= !decoder_trigger && !do_waitirq;
 				mem_wordsize <= 0;
 
+			        // verilator lint_off BLKSEQ
 				current_pc = reg_next_pc;
+			        // verilator lint_on BLKSEQ
 
 				(* parallel_case *)
 				case (1'b1)
 					latched_branch: begin
+					        // verilator lint_off BLKSEQ
 						current_pc = latched_store ? (latched_stalu ? alu_out_q : reg_out) & ~1 : reg_next_pc;
+					        // verilator lint_on BLKSEQ
 						`debug($display("ST_RD:  %2d 0x%08x, BRANCH 0x%08x", latched_rd, reg_pc + (latched_compr ? 2 : 4), current_pc);)
 					end
 					latched_store && !latched_branch: begin
@@ -1820,7 +1830,9 @@ module picorv32 #(
 						cpu_state <= cpu_state_fetch;
 					if (TWO_CYCLE_COMPARE ? alu_out_0_q : alu_out_0) begin
 						decoder_trigger <= 0;
+					        // verilator lint_off BLKSEQ
 						set_mem_do_rinst = 1;
+					        // verilator lint_on BLKSEQ
 					end
 				end else begin
 					latched_branch <= instr_jalr;
@@ -1871,7 +1883,9 @@ module picorv32 #(
 							trace_data <= (irq_active ? TRACE_IRQ : 0) | TRACE_ADDR | ((reg_op1 + decoded_imm) & 32'hffffffff);
 						end
 						reg_op1 <= reg_op1 + decoded_imm;
+					        // verilator lint_off BLKSEQ
 						set_mem_do_wdata = 1;
+					        // verilator lint_on BLKSEQ
 					end
 					if (!mem_do_prefetch && mem_done) begin
 						cpu_state <= cpu_state_fetch;
@@ -1899,7 +1913,9 @@ module picorv32 #(
 							trace_data <= (irq_active ? TRACE_IRQ : 0) | TRACE_ADDR | ((reg_op1 + decoded_imm) & 32'hffffffff);
 						end
 						reg_op1 <= reg_op1 + decoded_imm;
+					        // verilator lint_off BLKSEQ
 						set_mem_do_rdata = 1;
+					        // verilator lint_on BLKSEQ
 					end
 					if (!mem_do_prefetch && mem_done) begin
 						(* parallel_case, full_case *)
@@ -1975,7 +1991,9 @@ module picorv32 #(
 				reg_next_pc[1:0] <= 0;
 			end
 		end
+	        // verilator lint_off BLKSEQ
 		current_pc = 'bx;
+	        // verilator lint_on BLKSEQ
 	end
 
 `ifdef RISCV_FORMAL
