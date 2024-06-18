@@ -52,7 +52,7 @@ module tk1_spi_master(
   localparam CTRL_WAIT_NEG  = 3'h4;
   localparam CTRL_NEXT      = 3'h5;
 
-  localparam SPI_CLK_CYCLES = 4'hf;
+  localparam SPI_CLK_CYCLES = 4'h1;
 
 
   //----------------------------------------------------------------
