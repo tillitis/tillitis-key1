@@ -48,9 +48,6 @@ module tk1_spi_master(
   localparam CTRL_IDLE      = 3'h0;
   localparam CTRL_POS_FLANK = 3'h1;
   localparam CTRL_NEG_FLANK = 3'h2;
-  localparam CTRL_NEXT      = 3'h3;
-
-  localparam SPI_CLK_CYCLES = 4'h1;
 
 
   //----------------------------------------------------------------
@@ -73,10 +70,6 @@ module tk1_spi_master(
   reg          spi_rx_data_we;
 
   reg          spi_miso_sample_reg;
-
-  reg [3 : 0]  spi_clk_ctr_reg;
-  reg [3 : 0]  spi_clk_ctr_new;
-  reg          spi_clk_ctr_rst;
 
   reg [2 : 0]  spi_bit_ctr_reg;
   reg [2 : 0]  spi_bit_ctr_new;
@@ -120,7 +113,6 @@ module tk1_spi_master(
 	spi_miso_sample_reg <= 1'h0;
 	spi_tx_data_reg     <= 8'h0;
 	spi_rx_data_reg     <= 8'h0;
-	spi_clk_ctr_reg     <= 4'h0;
 	spi_bit_ctr_reg     <= 3'h0;
 	spi_ready_reg       <= 1'h1;
 	spi_ctrl_reg        <= CTRL_IDLE;
@@ -128,7 +120,6 @@ module tk1_spi_master(
 
       else begin
 	spi_miso_sample_reg <= spi_miso;
-	spi_clk_ctr_reg     <= spi_clk_ctr_new;
 
 	if (spi_enable_vld) begin
 	  spi_ss_reg <= ~spi_enable;
@@ -159,31 +150,6 @@ module tk1_spi_master(
 	end
       end
     end // reg_update
-
-
-  //----------------------------------------------------------------
-  // cpi_clk_ctr
-  //
-  // Resettable clock cycle counter used to generate the SPI clock.
-  //----------------------------------------------------------------
-  always @*
-    begin : spi_clk_ctr
-      spi_clk_cycles_reached = 1'h0;
-
-      if (spi_clk_ctr_reg == SPI_CLK_CYCLES) begin
-	spi_clk_cycles_reached = 1'h1;
-      end
-      else begin
-	spi_clk_cycles_reached = 1'h0;
-      end
-
-      if (spi_clk_ctr_rst) begin
-	spi_clk_ctr_new = 4'h0;
-      end
-      else begin
-	spi_clk_ctr_new = spi_clk_ctr_reg + 1'h1;
-      end
-    end
 
 
   //----------------------------------------------------------------
@@ -259,7 +225,6 @@ module tk1_spi_master(
     begin : spi_master_ctrl
       spi_rx_data_nxt = 1'h0;
       spi_tx_data_nxt = 1'h0;
-      spi_clk_ctr_rst = 1'h0;
       spi_csk_new     = 1'h0;
       spi_csk_we      = 1'h0;
       spi_bit_ctr_rst = 1'h0;
@@ -294,11 +259,6 @@ module tk1_spi_master(
 	CTRL_NEG_FLANK: begin
 	  spi_csk_new  = 1'h0;
 	  spi_csk_we   = 1'h1;
-	  spi_ctrl_new = CTRL_NEXT;
-	  spi_ctrl_we  = 1'h1;
-	end
-
-	CTRL_NEXT: begin
 	  if (spi_bit_ctr_reg == 3'h7) begin
 	    spi_ready_new = 1'h1;
 	    spi_ready_we  = 1'h1;
