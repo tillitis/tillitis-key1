@@ -47,12 +47,10 @@ module tk1_spi_master(
   //----------------------------------------------------------------
   localparam CTRL_IDLE      = 3'h0;
   localparam CTRL_POS_FLANK = 3'h1;
-  localparam CTRL_WAIT_POS  = 3'h2;
-  localparam CTRL_NEG_FLANK = 3'h3;
-  localparam CTRL_WAIT_NEG  = 3'h4;
-  localparam CTRL_NEXT      = 3'h5;
+  localparam CTRL_NEG_FLANK = 3'h2;
+  localparam CTRL_NEXT      = 3'h3;
 
-  localparam SPI_CLK_CYCLES = 4'hf;
+  localparam SPI_CLK_CYCLES = 4'h1;
 
 
   //----------------------------------------------------------------
@@ -289,31 +287,15 @@ module tk1_spi_master(
 	  spi_rx_data_nxt = 1'h1;
 	  spi_csk_new     = 1'h1;
 	  spi_csk_we      = 1'h1;
-	  spi_clk_ctr_rst = 1'h1;
-	  spi_ctrl_new    = CTRL_WAIT_POS;
-	  spi_ctrl_we     = 1'h1;
-	end
-
-	CTRL_WAIT_POS: begin
-	  if (spi_clk_cycles_reached) begin
-	    spi_ctrl_new      = CTRL_NEG_FLANK;
-	    spi_ctrl_we       = 1'h1;
-	  end
-	end
-
-	CTRL_NEG_FLANK: begin
-	  spi_csk_new       = 1'h0;
-	  spi_csk_we        = 1'h1;
-	  spi_clk_ctr_rst   = 1'h1;
-	  spi_ctrl_new      = CTRL_WAIT_NEG;
+	  spi_ctrl_new      = CTRL_NEG_FLANK;
 	  spi_ctrl_we       = 1'h1;
 	end
 
-	CTRL_WAIT_NEG: begin
-	  if (spi_clk_cycles_reached) begin
-	    spi_ctrl_new    = CTRL_NEXT;
-	    spi_ctrl_we     = 1'h1;
-	  end
+	CTRL_NEG_FLANK: begin
+	  spi_csk_new  = 1'h0;
+	  spi_csk_we   = 1'h1;
+	  spi_ctrl_new = CTRL_NEXT;
+	  spi_ctrl_we  = 1'h1;
 	end
 
 	CTRL_NEXT: begin
