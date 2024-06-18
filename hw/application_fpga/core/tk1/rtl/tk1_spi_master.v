@@ -45,12 +45,14 @@ module tk1_spi_master(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter CTRL_IDLE      = 3'h0;
-  parameter CTRL_POS_FLANK = 3'h1;
-  parameter CTRL_WAIT_POS  = 3'h2;
-  parameter CTRL_NEG_FLANK = 3'h3;
-  parameter CTRL_WAIT_NEG  = 3'h4;
-  parameter CTRL_NEXT      = 3'h5;
+  localparam CTRL_IDLE      = 3'h0;
+  localparam CTRL_POS_FLANK = 3'h1;
+  localparam CTRL_WAIT_POS  = 3'h2;
+  localparam CTRL_NEG_FLANK = 3'h3;
+  localparam CTRL_WAIT_NEG  = 3'h4;
+  localparam CTRL_NEXT      = 3'h5;
+
+  localparam SPI_CLK_CYCLES = 4'hf;
 
 
   //----------------------------------------------------------------
@@ -91,6 +93,12 @@ module tk1_spi_master(
   reg [2 : 0]  spi_ctrl_reg;
   reg [2 : 0]  spi_ctrl_new;
   reg          spi_ctrl_we;
+
+
+  //----------------------------------------------------------------
+  // Wires.
+  //----------------------------------------------------------------
+  reg spi_clk_cycles_reached;
 
 
   //----------------------------------------------------------------
@@ -156,17 +164,24 @@ module tk1_spi_master(
 
 
   //----------------------------------------------------------------
-  // clk_ctr
+  // cpi_clk_ctr
   //
-  // Continuously running clock cycle counter that can be
-  // reset to zero.
+  // Resettable clock cycle counter used to generate the SPI clock.
   //----------------------------------------------------------------
   always @*
-    begin : clk_ctr
+    begin : spi_clk_ctr
+      spi_clk_cycles_reached = 1'h0;
+
+      if (spi_clk_ctr_reg == SPI_CLK_CYCLES) begin
+	spi_clk_cycles_reached = 1'h1;
+      end
+      else begin
+	spi_clk_cycles_reached = 1'h0;
+      end
+
       if (spi_clk_ctr_rst) begin
 	spi_clk_ctr_new = 4'h0;
       end
-
       else begin
 	spi_clk_ctr_new = spi_clk_ctr_reg + 1'h1;
       end
@@ -195,8 +210,9 @@ module tk1_spi_master(
 
   //----------------------------------------------------------------
   // spi_tx_data_logic
+  //
   // Logic for the tx_data shift register.
-  // Either load or shift the data  register.
+  // Either load or shift the data register.
   //----------------------------------------------------------------
   always @*
     begin : spi_tx_data_logic
@@ -279,7 +295,7 @@ module tk1_spi_master(
 	end
 
 	CTRL_WAIT_POS: begin
-	  if (spi_clk_ctr_reg == 4'hf) begin
+	  if (spi_clk_cycles_reached) begin
 	    spi_ctrl_new      = CTRL_NEG_FLANK;
 	    spi_ctrl_we       = 1'h1;
 	  end
@@ -294,7 +310,7 @@ module tk1_spi_master(
 	end
 
 	CTRL_WAIT_NEG: begin
-	  if (spi_clk_ctr_reg == 4'hf) begin
+	  if (spi_clk_cycles_reached) begin
 	    spi_ctrl_new    = CTRL_NEXT;
 	    spi_ctrl_we     = 1'h1;
 	  end
