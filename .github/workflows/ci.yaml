@@ -78,7 +78,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: compile ch552 firmware
-        working-directory: hw/boards/mta1-usb-v1/ch552_fw
+        working-directory: hw/usb_interface/ch552_fw
         run: make
 
       - name: compile tp1 firmware

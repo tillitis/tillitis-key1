@@ -319,7 +319,7 @@ instructions.
 ### CH552 firmware
 
 See the build instructions in the
-[ch552_fw](../boards/mta1-usb-v1/ch552_fw/README.md) directory.
+[ch552_fw](../usb_interface/ch552_fw/README.md) directory.
 
 ### Test Application gateware
 

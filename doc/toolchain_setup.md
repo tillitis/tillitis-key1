@@ -194,4 +194,4 @@ with the CH552 microcontroller pre-programmed.
 
 Toolchain setup and build instructions for this firmware are detailed
 in the
-[ch552_fw directory](../hw/boards/mta1-usb-v1/ch552_fw/README.md)
+[ch552_fw directory](../hw/usb_interface/ch552_fw/README.md)
