@@ -35,8 +35,8 @@ for details about access rules control in the memory system and MMIO.
 
 The firmware (and optionally all software) on the TKey can communicate
 to the host via the `UART_{RX,TX}_{STATUS,DATA}` registers, using the
-framing protocol described in [Framing
-Protocol](../framing_protocol/framing_protocol.md).
+framing protocol described in the [Framing
+Protocol](https://dev.tillitis.se/protocol/).
 
 The firmware defines a protocol on top of this framing layer which is
 used to bootstrap the application. All commands are initiated by the
@@ -258,7 +258,7 @@ USS and then finalizing the hash, storing the resulting digest in
 ### Firmware protocol
 
 The firmware commands and responses are built on top of the [Framing
-Protocol](../framing_protocol/framing_protocol.md).
+Protocol](https://dev.tillitis.se/protocol/).
 
 The commands look like this:
 
