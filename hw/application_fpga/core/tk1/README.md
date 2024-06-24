@@ -248,6 +248,32 @@ see the datasheet:
 https://www.mouser.se/datasheet/2/949/w25q80dv_dl_revh_10022015-1489677.pdf
 
 
+## System Reset
+
+The TK1 includes an ability for FW and applications to trigger a
+hardware reset of the FPGA by writing to an API address.
+
+The hardware reset will force all registers that are in the Tkey FPGA
+design reset circuit to be reset to their default values. Basically
+this is all registers in the Tkey FPGA design.
+
+The reset will not clear the RAM. However since the CPU program
+counter is reset to its reset vector, the CPU will unconditionally
+start executing the FW. As part of the device initialization, the FW
+will fill the RAM with random data, overwriting any app and
+data present in the RAM before the reset was triggered.
+
+The hardware reset will not force the FPGA to read its
+configuration. That requires a power cycle of the Tkey device.
+
+The reset is controlled by the following API address. Note that
+any value written to the address will trigger the reset.
+
+```
+localparam ADDR_SYSTEM_RESET  = 8'h70;
+```
+
+
 ## Implementation
 
 The core is implemented as a single module. Future versions will

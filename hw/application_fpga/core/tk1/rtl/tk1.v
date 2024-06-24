@@ -24,6 +24,7 @@ module tk1(
 	   input wire           cpu_instr,
 	   input wire           cpu_valid,
 	   output wire          force_trap,
+	   output               system_reset,
 
 	   output wire [14 : 0] ram_addr_rand,
 	   output wire [31 : 0] ram_data_rand,
@@ -93,6 +94,8 @@ module tk1(
   localparam ADDR_CPU_MON_FIRST = 8'h61;
   localparam ADDR_CPU_MON_LAST  = 8'h62;
 
+  localparam ADDR_SYSTEM_RESET  = 8'h70;
+
 `ifdef INCLUDE_SPI_MASTER
   localparam ADDR_SPI_EN        = 8'h80;
   localparam ADDR_SPI_XFER      = 8'h81;
@@ -146,6 +149,9 @@ module tk1(
   reg [31 : 0] ram_data_rand_reg;
   reg          ram_data_rand_we;
 
+  reg          system_reset_reg;
+  reg          system_reset_new;
+
   reg          cpu_mon_en_reg;
   reg          cpu_mon_en_we;
   reg [31 : 0] cpu_mon_first_reg;
@@ -195,6 +201,8 @@ module tk1(
 
   assign ram_addr_rand = ram_addr_rand_reg;
   assign ram_data_rand = ram_data_rand_reg;
+
+  assign system_reset = system_reset_reg;
 
 
   //----------------------------------------------------------------
@@ -276,10 +284,13 @@ module tk1(
  	ram_addr_rand_reg <= 15'h0;
 	ram_data_rand_reg <= 32'h0;
 	force_trap_reg    <= 1'h0;
+	system_reset_reg  <= 1'h0;
       end
 
       else begin
 	cpu_trap_ctr_reg <= cpu_trap_ctr_new;
+
+	system_reset_reg <= system_reset_new;
 
         gpio1_reg[0] <= gpio1;
         gpio1_reg[1] <= gpio1_reg[0];
@@ -429,6 +440,7 @@ module tk1(
       cdi_mem_we       = 1'h0;
       ram_addr_rand_we = 1'h0;
       ram_data_rand_we = 1'h0;
+      system_reset_new = 1'h0;
       cpu_mon_en_we    = 1'h0;
       cpu_mon_first_we = 1'h0;
       cpu_mon_last_we  = 1'h0;
@@ -472,6 +484,10 @@ module tk1(
               app_size_we = 1'h1;
             end
 	  end
+
+          if (address == ADDR_SYSTEM_RESET) begin
+            system_reset_new = 1'h1;
+          end
 
           if (address == ADDR_BLAKE2S) begin
 	    if (!switch_app_reg) begin

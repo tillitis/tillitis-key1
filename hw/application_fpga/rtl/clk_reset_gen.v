@@ -18,6 +18,8 @@
 
 module clk_reset_gen #(parameter RESET_CYCLES = 200)
   (
+   input wire sys_reset,
+
    output wire clk,
    output wire rst_n
    );
@@ -33,6 +35,12 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
   reg         rst_n_reg = 1'h0;
   reg         rst_n_new;
 
+  reg         sys_reset_reg;
+
+
+  //----------------------------------------------------------------
+  // Wires.
+  //----------------------------------------------------------------
   wire        hfosc_clk;
   wire        pll_clk;
 
@@ -93,7 +101,8 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
   //----------------------------------------------------------------
     always @(posedge clk)
       begin : reg_update
-        rst_n_reg <= rst_n_new;
+        rst_n_reg     <= rst_n_new;
+	sys_reset_reg <= sys_reset;
 
         if (rst_ctr_we)
           rst_ctr_reg <= rst_ctr_new;
@@ -109,7 +118,12 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
       rst_ctr_new = 8'h0;
       rst_ctr_we  = 1'h0;
 
-      if (rst_ctr_reg < RESET_CYCLES) begin
+      if (sys_reset_reg) begin
+	rst_ctr_new = 8'h0;
+	rst_ctr_we  = 1'h1;
+      end
+
+      else if (rst_ctr_reg < RESET_CYCLES) begin
         rst_n_new   = 1'h0;
         rst_ctr_new = rst_ctr_reg + 1'h1;
         rst_ctr_we  = 1'h1;

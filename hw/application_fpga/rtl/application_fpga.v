@@ -148,6 +148,7 @@ module application_fpga(
   wire          force_trap;
   wire [14 : 0] ram_addr_rand;
   wire [31 : 0] ram_data_rand;
+  wire          tk1_system_reset;
   /* verilator lint_on UNOPTFLAT */
 
 
@@ -155,7 +156,11 @@ module application_fpga(
   // Module instantiations.
   //----------------------------------------------------------------
   clk_reset_gen #(.RESET_CYCLES(200))
-  reset_gen_inst(.clk(clk), .rst_n(reset_n));
+  reset_gen_inst(
+		 .sys_reset(tk1_system_reset),
+		 .clk(clk),
+		 .rst_n(reset_n)
+		);
 
 
   picorv32 #(
@@ -320,6 +325,8 @@ module application_fpga(
 	       .cpu_valid(cpu_valid),
 	       .cpu_trap(cpu_trap),
 	       .force_trap(force_trap),
+
+	       .system_reset(tk1_system_reset),
 
                .ram_addr_rand(ram_addr_rand),
 	       .ram_data_rand(ram_data_rand),
