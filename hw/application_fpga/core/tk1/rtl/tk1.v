@@ -106,6 +106,8 @@ module tk1(
   localparam FW_RAM_FIRST = 32'hd0000000;
   localparam FW_RAM_LAST  = 32'hd00007ff;
 
+  localparam ROM_PREFIX   = 2'h0;
+
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -155,6 +157,8 @@ module tk1(
 
   reg          force_trap_reg;
   reg          force_trap_set;
+
+  reg          spi_access_ok;
 
 
   //----------------------------------------------------------------
@@ -223,13 +227,13 @@ module tk1(
 			    .clk(clk),
 			    .reset_n(reset_n),
 
-			    .spi_ss(spi_ss),
-			    .spi_sck(spi_sck),
-			    .spi_mosi(spi_mosi),
-			    .spi_miso(spi_miso),
+			    .spi_ss((spi_ss & ~spi_access_ok)),
+			    .spi_sck((spi_sck & spi_access_ok)),
+			    .spi_mosi((spi_mosi & spi_access_ok)),
+			    .spi_miso((spi_miso & spi_access_ok)),
 
-			    .spi_enable(spi_enable),
-			    .spi_enable_vld(spi_enable_vld),
+			    .spi_enable((spi_enable & spi_access_ok)),
+			    .spi_enable_vld((spi_enable_vld & spi_access_ok)),
 			    .spi_start(spi_start),
 			    .spi_tx_data(spi_tx_data),
 			    .spi_tx_data_vld(spi_tx_data_vld),
@@ -369,6 +373,23 @@ module tk1(
 	muxed_led = cpu_trap_led_reg;
       end else begin
 	muxed_led = led_reg;
+      end
+    end
+
+
+  //----------------------------------------------------------------
+  // spi_access_control
+  //
+  // Logic thar controls if any access to the SPI master is done
+  // by FW-code.
+  //----------------------------------------------------------------
+  always @*
+    begin : spi_access_control
+      if ((cpu_valid & cpu_instr) & (cpu_addr[31 : 30] == ROM_PREFIX)) begin
+	spi_access_ok = 1'h1;
+      end
+      else begin
+	spi_access_ok = 1'h0;
       end
     end
 
