@@ -227,18 +227,18 @@ module tk1(
 			    .clk(clk),
 			    .reset_n(reset_n),
 
-			    .spi_ss((spi_ss & ~spi_access_ok)),
-			    .spi_sck((spi_sck & spi_access_ok)),
-			    .spi_mosi((spi_mosi & spi_access_ok)),
-			    .spi_miso((spi_miso & spi_access_ok)),
+			    .spi_ss(spi_ss),
+			    .spi_sck(spi_sck)),
+			    .spi_mosi(spi_mosi),
+			    .spi_miso(spi_miso),
 
 			    .spi_enable((spi_enable & spi_access_ok)),
 			    .spi_enable_vld((spi_enable_vld & spi_access_ok)),
-			    .spi_start(spi_start),
+			    .spi_start((spi_start & spi_access_ok)),
 			    .spi_tx_data(spi_tx_data),
-			    .spi_tx_data_vld(spi_tx_data_vld),
+			    .spi_tx_data_vld((spi_tx_data_vld  & spi_access_ok)),
 			    .spi_rx_data(spi_rx_data),
-			    .spi_ready(spi_ready)
+			    .spi_ready((spi_ready & spi_access_ok))
 			    );
 `endif // INCLUDE_SPI_MASTER
 
