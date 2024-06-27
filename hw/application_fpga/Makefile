@@ -26,6 +26,10 @@ YOSYS_PATH ?=
 NEXTPNR_PATH ?=
 ICESTORM_PATH ?=
 
+# FPGA target frequency. Should be in sync with the clock frequency
+# given by the parameters to the PLL in rtl/clk_reset_gen.v
+TARGET_FREQ ?= 21
+
 # Size in 32-bit words, must be divisible by 256 (pairs of EBRs, because 16
 # bits wide; an EBR is 128 32-bits words)
 BRAM_FW_SIZE ?= 1536
@@ -256,7 +260,7 @@ synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/
 		$(filter %.v, $^)
 
 application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
-	$(NEXTPNR_PATH)nextpnr-ice40  --ignore-loops --up5k --package sg48 --json $< \
+	$(NEXTPNR_PATH)nextpnr-ice40  --freq $(TARGET_FREQ) --ignore-loops --up5k --package sg48 --json $< \
 		--pcf $(P)/data/$(PIN_FILE) --write $@
 
 application_fpga.asc: application_fpga_par.json $(P)/data/uds.hex $(P)/data/udi.hex
