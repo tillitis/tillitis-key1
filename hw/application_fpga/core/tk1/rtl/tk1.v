@@ -156,6 +156,9 @@ module tk1(
   reg          force_trap_reg;
   reg          force_trap_set;
 
+  reg          cdi_access_reg;
+  reg          cdi_access_we;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -276,6 +279,7 @@ module tk1(
  	ram_aslr_reg      <= 15'h0;
 	ram_scramble_reg  <= 32'h0;
 	force_trap_reg    <= 1'h0;
+	cdi_access_reg    <= 1'h1;
       end
 
       else begin
@@ -345,6 +349,10 @@ module tk1(
 
 	if (force_trap_set) begin
 	  force_trap_reg <= 1'h1;
+	end
+
+	if (cdi_access_we) begin
+	  cdi_access_reg <= 1'h0;
 	end
       end
     end // reg_update
@@ -426,7 +434,7 @@ module tk1(
       app_size_we      = 1'h0;
       blake2s_addr_we  = 1'h0;
       cdi_mem_we       = 1'h0;
-      cdi_mem_we       = 1'h0;
+      cdi_access_we    = 1'h0;
       ram_aslr_we      = 1'h0;
       ram_scramble_we  = 1'h0;
       cpu_mon_en_we    = 1'h0;
@@ -479,10 +487,10 @@ module tk1(
             end
 	  end
 
-	  if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
-	    if (!switch_app_reg) begin
-	      cdi_mem_we = 1'h1;
-	    end
+	  if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST) & !switch_app_reg ) begin
+	    cdi_mem_we = 1'h1;
+	  end else begin
+	    cdi_access_we = 1'h1;
 	  end
 
           if (address == ADDR_RAM_ASLR) begin
@@ -567,7 +575,9 @@ module tk1(
 	  end
 
 	  if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
+	    if (cdi_access_reg) begin
 	    tmp_read_data = cdi_mem[address[2 : 0]];
+	    end
 	  end
 
 	  if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
