@@ -49,9 +49,11 @@ The official website is [tillitis.se](https://tillitis.se).
 The Tkey can be purchased at
 [shop.tillitis.se](https://shop.tillitis.se).
 
-All documentation concerning the TKey has been migrated to [TKey
+TKey software developer documentation is available in the [TKey
 Developer Handbook](https://dev.tillitis.se).
 
+Specific documentation regarding implementation is kept close to the
+code/design in README files, typically in the same directory.
 
 ## Tkey Device Apps
 Offically supported apps can be found at
