@@ -107,6 +107,16 @@ TESTFW_OBJS = \
 	$(P)/fw/tk1/lib.o \
 	$(P)/fw/tk1/blake2s/blake2s.o
 
+SPIFW_OBJS = \
+	$(P)/fw/spifw/main.o \
+	$(P)/fw/spifw/start.o \
+	$(P)/fw/spifw/spi.o \
+	$(P)/fw/spifw/flash.o \
+	$(P)/fw/tk1/proto.o \
+	$(P)/fw/tk1/lib.o \
+	$(P)/fw/tk1/assert.o \
+	$(P)/fw/tk1/led.o
+
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
 #-------------------------------------------------------------------
@@ -143,6 +153,7 @@ LDFLAGS=-T $(P)/fw/tk1/firmware.lds
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
+$(SPIFW_OBJS): $(FIRMWARE_DEPS)
 
 firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
@@ -158,6 +169,9 @@ splint:
 testfw.elf: $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@
 
+spifw.elf: $(SPIFW_OBJS) $(P)/fw/tk1/firmware.lds
+	$(CC) $(CFLAGS) $(SPIFW_OBJS) $(LDFLAGS) -o $@
+
 # Generate a fake BRAM file that will be filled in later after place-n-route
 bram_fw.hex:
 	$(ICESTORM_PATH)icebram -v -g 32 $(BRAM_FW_SIZE) > $@
@@ -165,6 +179,8 @@ bram_fw.hex:
 firmware.hex: firmware.bin firmware_size_mismatch
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
 testfw.hex: testfw.bin testfw_size_mismatch
+	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
+spifw.hex: spifw.bin testfw_size_mismatch
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
 
 .PHONY: check-binary-hashes
@@ -273,6 +289,10 @@ application_fpga_testfw.bin: application_fpga.asc bram_fw.hex testfw.hex
 	$(ICESTORM_PATH)icepack $<.tmp $@
 	@-$(RM) $<.tmp
 
+application_fpga_spifw.bin: application_fpga.asc bram_fw.hex spifw.hex
+	$(ICESTORM_PATH)icebram -v bram_fw.hex spifw.hex < $< > $<.tmp
+	$(ICESTORM_PATH)icepack $<.tmp $@
+	@-$(RM) $<.tmp
 #-------------------------------------------------------------------
 # post-synthesis functional simulation.
 #-------------------------------------------------------------------

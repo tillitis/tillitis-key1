@@ -51,6 +51,7 @@ struct frame_header {
 };
 
 /*@ -exportlocal @*/
+void write(uint8_t *buf, size_t nbytes);
 void writebyte(uint8_t b);
 uint8_t readbyte(void);
 void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf);
