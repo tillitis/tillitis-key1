@@ -8,6 +8,8 @@ WCHISP ?= wchisptool -g -f
 
 #######################################################
 
+EXTRA_FLAGS = -D BUILD_CODE
+
 FREQ_SYS ?= 24000000
 
 XRAM_SIZE ?= 0x0400
