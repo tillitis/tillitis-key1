@@ -228,7 +228,7 @@ module tk1(
 			    .reset_n(reset_n),
 
 			    .spi_ss(spi_ss),
-			    .spi_sck(spi_sck)),
+			    .spi_sck(spi_sck),
 			    .spi_mosi(spi_mosi),
 			    .spi_miso(spi_miso),
 
@@ -236,7 +236,7 @@ module tk1(
 			    .spi_enable_vld((spi_enable_vld & spi_access_ok)),
 			    .spi_start((spi_start & spi_access_ok)),
 			    .spi_tx_data(spi_tx_data),
-			    .spi_tx_data_vld((spi_tx_data_vld  & spi_access_ok)),
+			    .spi_tx_data_vld((spi_tx_data_vld & spi_access_ok)),
 			    .spi_rx_data(spi_rx_data),
 			    .spi_ready((spi_ready & spi_access_ok))
 			    );
