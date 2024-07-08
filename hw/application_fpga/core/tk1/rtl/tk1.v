@@ -385,13 +385,11 @@ module tk1(
   //----------------------------------------------------------------
   always @*
     begin : spi_access_control
-      spi_access_ok = 1'h1;
-//      if ((cpu_valid & cpu_instr) & (cpu_addr[31 : 30] == ROM_PREFIX)) begin
-//	spi_access_ok = 1'h1;
-//      end
-//      else begin
-//	spi_access_ok = 1'h0;
-//      end
+      spi_access_ok = 1'h0;
+
+      if (cpu_valid & (cpu_addr[31 : 30] == ROM_PREFIX)) begin
+	spi_access_ok = 1'h1;
+      end
     end
 
 
