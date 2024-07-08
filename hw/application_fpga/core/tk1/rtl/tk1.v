@@ -570,10 +570,12 @@ module tk1(
 	    tmp_read_data = cdi_mem[address[2 : 0]];
 	  end
 
-	  if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
-	    if (!switch_app_reg) begin
-	      tmp_read_data = udi_rdata;
-	    end
+	  if ((address == ADDR_UDI_FIRST) & ~switch_app_reg) begin
+	    tmp_read_data = udi_rdata;
+	  end
+
+	  if (address == ADDR_UDI_LAST) begin
+	    tmp_read_data = udi_rdata;
 	  end
 
 `ifdef INCLUDE_SPI_MASTER
