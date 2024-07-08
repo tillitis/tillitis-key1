@@ -387,7 +387,7 @@ module tk1(
     begin : spi_access_control
       spi_access_ok = 1'h0;
 
-      if (cpu_valid & (cpu_addr[31 : 30] == ROM_PREFIX)) begin
+      if (cpu_addr[31 : 30] == ROM_PREFIX) begin
 	spi_access_ok = 1'h1;
       end
     end
