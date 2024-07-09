@@ -109,8 +109,6 @@ module tk1(
   localparam FW_RAM_FIRST = 32'hd0000000;
   localparam FW_RAM_LAST  = 32'hd00007ff;
 
-  localparam ROM_PREFIX   = 2'h0;
-
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -237,13 +235,13 @@ module tk1(
 			    .spi_mosi(spi_mosi),
 			    .spi_miso(spi_miso),
 
-			    .spi_enable((spi_enable & spi_access_ok_reg)),
-			    .spi_enable_vld((spi_enable_vld & spi_access_ok_reg)),
-			    .spi_start((spi_start & spi_access_ok_reg)),
+			    .spi_enable((spi_enable & access_ok_reg)),
+			    .spi_enable_vld((spi_enable_vld & access_ok_reg)),
+			    .spi_start((spi_start & access_ok_reg)),
 			    .spi_tx_data(spi_tx_data),
-			    .spi_tx_data_vld((spi_tx_data_vld & spi_access_ok_reg)),
+			    .spi_tx_data_vld((spi_tx_data_vld & access_ok_reg)),
 			    .spi_rx_data(spi_rx_data),
-			    .spi_ready((spi_ready & spi_access_ok_reg))
+			    .spi_ready((spi_ready & access_ok_reg))
 			    );
 `endif // INCLUDE_SPI_MASTER
 
