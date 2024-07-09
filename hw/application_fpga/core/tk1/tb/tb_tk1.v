@@ -84,6 +84,9 @@ module tb_tk1();
   wire [14 : 0] tb_ram_aslr;
   wire [31 : 0] tb_ram_scramble;
 
+  reg           tb_ram_access;
+  reg           tb_rom_access;
+
   wire          tb_led_r;
   wire          tb_led_g;
   wire          tb_led_b;
@@ -126,6 +129,9 @@ module tb_tk1();
 	  .cpu_instr(tb_cpu_instr),
 	  .cpu_valid(tb_cpu_valid),
 	  .force_trap(tb_force_trap),
+
+	  .ram_access(tb_ram_access),
+	  .rom_access(tb_rom_access),
 
 	  .ram_aslr(tb_ram_aslr),
 	  .ram_scramble(tb_ram_scramble),
@@ -265,6 +271,9 @@ module tb_tk1();
       tb_cpu_instr  = 1'h0;
       tb_cpu_valid  = 1'h0;
       tb_cpu_trap   = 1'h0;
+
+      tb_ram_access = 1'h0;
+      tb_rom_access = 1'h0;
 
       tb_gpio1      = 1'h0;
       tb_gpio2      = 1'h0;
@@ -668,6 +677,52 @@ module tb_tk1();
   endtask // test10
 
 
+
+  //----------------------------------------------------------------
+  // test11()
+  // SPI access control test.
+  //----------------------------------------------------------------
+  task test11;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test11: SPI access control started.");
+
+      // Read SPI ready. Access should be blocked after reset.
+      $display("Status of access_ok_reg after reset: 0x%1x", dut.access_ok_reg);
+      read_word(ADDR_SPI_XFER, 32'h0);
+
+      // Signal that we are performing access from ROM.
+      // Then try to read SPI ready. This should be granted.
+      tb_rom_access = 1'h1;
+      #(CLK_PERIOD);
+      tb_rom_access = 1'h0;
+      $display("Status of access_ok_reg after ROM access: 0x%1x", dut.access_ok_reg);
+      read_word(ADDR_SPI_XFER, 32'h1);
+
+      // Signal that we are performing access from RAM.
+      // Then try to read SPI ready. This should be blocked.
+      tb_ram_access = 1'h1;
+      #(CLK_PERIOD);
+      tb_ram_access = 1'h0;
+      $display("Status of access_ok_reg after RAM access: 0x%1x", dut.access_ok_reg);
+      read_word(ADDR_SPI_XFER, 32'h0);
+
+      // Signal that we are performing access from ROM again.
+      // Then try to read SPI ready. This should be granted.
+      tb_rom_access = 1'h1;
+      #(CLK_PERIOD);
+      tb_rom_access = 1'h0;
+      $display("Status of access_ok_reg after ROM access: 0x%1x", dut.access_ok_reg);
+      read_word(ADDR_SPI_XFER, 32'h1);
+
+      $display("--- test11: completed.");
+      $display("");
+    end
+  endtask // test11
+
+
   //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
@@ -692,6 +747,7 @@ module tb_tk1();
       test9();
       test9();
       test10();
+      test11();
 
       display_test_result();
       $display("");
