@@ -392,7 +392,7 @@ module tk1(
       force_trap_set = 1'h0;
 
 	if (cpu_valid) begin
-	  if (cpu_addr[31 : 30] == 2'h01 & |cpu_addr[29 : 17]) begin
+	  if (cpu_addr[31 : 30] == 2'h1 & |cpu_addr[29 : 17]) begin
 	      force_trap_set = 1'h1;
 	  end
 
