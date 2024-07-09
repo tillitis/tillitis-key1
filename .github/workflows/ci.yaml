@@ -1,4 +1,3 @@
-
 name: ci
 
 on:
@@ -84,6 +83,26 @@ jobs:
       - name: compile tp1 firmware
         working-directory: hw/boards/tp1/firmware
         run: ./build.sh
+
+  build-spi-bitstream:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/tillitis/tkey-builder:4
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0
+          persist-credentials: false
+
+      - name: fix
+        # https://github.com/actions/runner-images/issues/6775
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: make application FPGA with SPI master
+        working-directory: hw/application_fpga
+        run: make application_fpga.bin YOSYS_FLAG=-DINCLUDE_SPI_MASTER
 
   build-bitstream:
     outputs:
