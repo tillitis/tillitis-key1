@@ -321,6 +321,9 @@ module application_fpga(
 	       .cpu_trap(cpu_trap),
 	       .force_trap(force_trap),
 
+	       .ram_access(ram_cs),
+	       .rom_access(rom_cs),
+
                .ram_aslr(ram_aslr),
 	       .ram_scramble(ram_scramble),
 
