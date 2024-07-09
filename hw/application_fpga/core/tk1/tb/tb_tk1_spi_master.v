@@ -155,9 +155,6 @@ module tb_tk1_spi_master();
 
       $display("");
       $display("Internal state:");
-      $display("spi_clk_ctr_rst: 0x%1x, spi_clk_ctr_reg: 0x%02x",
-	       dut.spi_clk_ctr_rst, dut.spi_clk_ctr_reg);
-      $display("");
       $display("spi_bit_ctr_rst: 0x%1x, spi_bit_ctr_inc: 0x%1x, spi_bit_ctr_reg: 0x%02x",
 	       dut.spi_bit_ctr_rst, dut.spi_bit_ctr_inc, dut.spi_bit_ctr_reg);
       $display("");
@@ -445,9 +442,9 @@ module tb_tk1_spi_master();
       xfer_byte(8'h00, rx_byte);
       $display("--- tc_get_device_id: Got ID 0x%02x after dummy byte 6", rx_byte);
       xfer_byte(8'h00, rx_byte);
-      $display("--- tc_get_device_id: Got ID 0x%02x after dummy byte 6", rx_byte);
+      $display("--- tc_get_device_id: Got ID 0x%02x after dummy byte 7", rx_byte);
       xfer_byte(8'h00, rx_byte);
-      $display("--- tc_get_device_id: Got ID 0x%02x after dummy byte 6", rx_byte);
+      $display("--- tc_get_device_id: Got ID 0x%02x after dummy byte 8", rx_byte);
 
       disable_spi();
       #(2 * CLK_PERIOD);
@@ -516,7 +513,7 @@ module tb_tk1_spi_master();
 
       $display("");
       $display("--- tc_get_unique_device_id: Read out unique id from the memory");
-      $display("--- tc_get_unique_device_id: Expected result: 0x0102030405060708");
+      $display("--- tc_get_unique_device_id: Expected result: 0xdc02030405060708");
 
       #(2 * CLK_PERIOD);
       enable_spi();
