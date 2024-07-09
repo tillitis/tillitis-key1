@@ -26,6 +26,9 @@ module tk1(
 	   output wire          force_trap,
 	   output               system_reset,
 
+	   input wire           ram_access,
+	   input wire           rom_access,
+
 	   output wire [14 : 0] ram_addr_rand,
 	   output wire [31 : 0] ram_data_rand,
 
@@ -164,7 +167,9 @@ module tk1(
   reg          force_trap_reg;
   reg          force_trap_set;
 
-  reg          spi_access_ok;
+  reg          access_ok_reg;
+  reg          access_ok_new;
+  reg          access_ok_we;
 
 
   //----------------------------------------------------------------
@@ -240,13 +245,13 @@ module tk1(
 			    .spi_mosi(spi_mosi),
 			    .spi_miso(spi_miso),
 
-			    .spi_enable((spi_enable & spi_access_ok)),
-			    .spi_enable_vld((spi_enable_vld & spi_access_ok)),
-			    .spi_start((spi_start & spi_access_ok)),
+			    .spi_enable((spi_enable & spi_access_ok_reg)),
+			    .spi_enable_vld((spi_enable_vld & spi_access_ok_reg)),
+			    .spi_start((spi_start & spi_access_ok_reg)),
 			    .spi_tx_data(spi_tx_data),
-			    .spi_tx_data_vld((spi_tx_data_vld & spi_access_ok)),
+			    .spi_tx_data_vld((spi_tx_data_vld & spi_access_ok_reg)),
 			    .spi_rx_data(spi_rx_data),
-			    .spi_ready((spi_ready & spi_access_ok))
+			    .spi_ready((spi_ready & spi_access_ok_reg))
 			    );
 `endif // INCLUDE_SPI_MASTER
 
@@ -282,13 +287,14 @@ module tk1(
 	cdi_mem[7]        <= 32'h0;
 	cpu_trap_ctr_reg  <= 24'h0;
 	cpu_trap_led_reg  <= 3'h0;
-        cpu_mon_en_reg    <= 1'h0;
+	cpu_mon_en_reg    <= 1'h0;
 	cpu_mon_first_reg <= 32'h0;
 	cpu_mon_last_reg  <= 32'h0;
- 	ram_addr_rand_reg <= 15'h0;
+	ram_addr_rand_reg <= 15'h0;
 	ram_data_rand_reg <= 32'h0;
 	force_trap_reg    <= 1'h0;
 	system_reset_reg  <= 1'h0;
+	access_ok_reg     <= 1'h0;
       end
 
       else begin
@@ -361,6 +367,10 @@ module tk1(
 	if (force_trap_set) begin
 	  force_trap_reg <= 1'h1;
 	end
+
+	if (access_ok_we) begin
+	  access_ok_reg <= access_ok_new;
+	end
       end
     end // reg_update
 
@@ -389,17 +399,24 @@ module tk1(
 
 
   //----------------------------------------------------------------
-  // spi_access_control
+  // access_control
   //
-  // Logic thar controls if any access to the SPI master is done
-  // by FW-code.
+  // Logic that controls access to resources that only FW (ROM),
+  // not applications should be allowed to use.
   //----------------------------------------------------------------
   always @*
-    begin : spi_access_control
-      spi_access_ok = 1'h0;
+    begin : access_control
+      access_ok_new = 1'h0;
+      access_ok_we  = 1'h0;
 
-      if (cpu_addr[31 : 30] == ROM_PREFIX) begin
-	spi_access_ok = 1'h1;
+      if (rom_access) begin
+	access_ok_new = 1'h1;
+	access_ok_we  = 1'h1;
+      end
+
+      if (ram_access) begin
+	access_ok_new = 1'h0;
+	access_ok_we  = 1'h1;
       end
     end
 
