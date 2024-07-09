@@ -61,6 +61,10 @@ jobs:
         working-directory: hw/application_fpga
         run: make lint
 
+      - name: run testbench
+        working-directory: hw/application_fpga
+        run: make tb
+
   build-other-firmwares:
     runs-on: ubuntu-latest
     container:
