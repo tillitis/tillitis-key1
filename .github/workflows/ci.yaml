@@ -102,7 +102,29 @@ jobs:
 
       - name: make application FPGA with SPI master
         working-directory: hw/application_fpga
-        run: make application_fpga.bin YOSYS_FLAG=-DINCLUDE_SPI_MASTER
+        shell: bash # To make sure the pipeline failes on non-zero exit (bash defaults to set -eo pipefail)
+        run: |
+          make application_fpga.bin YOSYS_FLAG=-DINCLUDE_SPI_MASTER 2>&1 | tee build.log
+
+      - name: Extract and print max frequency info
+        working-directory: hw/application_fpga
+        if: success()
+        run: |
+          MAX_FREQ=$(grep "Info: Max frequency for clock 'clk':" build.log | awk -F': ' '{print $3}' | tail -n 1 || echo "Frequency info not found")
+          echo "Max Frequency Info: $MAX_FREQ"
+          echo "MAX_FREQ_INFO=$MAX_FREQ" >> $GITHUB_ENV
+
+      - name: Comment PR
+        uses: actions/github-script@v7
+        if: success() && github.event_name == 'pull_request'
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'FPGA (SPI): Max Frequency Info: ${{ env.MAX_FREQ_INFO }}'
+            })
 
   build-bitstream:
     outputs:
