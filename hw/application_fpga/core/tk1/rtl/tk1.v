@@ -241,7 +241,7 @@ module tk1(
 			    .spi_tx_data(spi_tx_data),
 			    .spi_tx_data_vld((spi_tx_data_vld & access_ok_reg)),
 			    .spi_rx_data(spi_rx_data),
-			    .spi_ready((spi_ready & access_ok_reg))
+			    .spi_ready(spi_ready)
 			    );
 `endif // INCLUDE_SPI_MASTER
 
@@ -613,11 +613,11 @@ module tk1(
 
 `ifdef INCLUDE_SPI_MASTER
 	  if (address == ADDR_SPI_XFER) begin
-	    tmp_read_data[0] = spi_ready;
+	    tmp_read_data[0] = spi_ready & access_ok_reg;
 	  end
 
 	  if (address == ADDR_SPI_DATA) begin
-	    tmp_read_data[7 : 0] = spi_rx_data;
+	    tmp_read_data[7 : 0] = spi_rx_data & {8{access_ok_reg}};
 	  end
 `endif // INCLUDE_SPI_MASTER
 
