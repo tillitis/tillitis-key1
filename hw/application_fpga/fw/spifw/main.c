@@ -30,23 +30,23 @@ static uint8_t rnd_byte(void)
 // dump_memory
 // dump the complete contents of the memory
 //------------------------------------------------------------------
-void spi_dump_memory(void)
-{
-	flash_release_powerdown();
-
-	uint8_t rx_buf[4096] = {0x00};
-
-	for (int block = 0; block < 0x02; block += 1) {
-		uint32_t address = 0x00000000;
-		address |= (block << ADDR_BYTE_3_BIT) & 0x00FF0000;
-		for (int i = 0; i < 16; i++) {
-			memset(rx_buf, 0x00, sizeof(rx_buf));
-			flash_read_data(address, rx_buf, sizeof(rx_buf));
-			write(rx_buf, sizeof(rx_buf));
-			address += 4096;
-		}
-	}
-}
+// void spi_dump_memory(void)
+// {
+// 	flash_release_powerdown();
+//
+// 	uint8_t rx_buf[4096] = {0x00};
+//
+// 	for (int block = 0; block < 0x02; block += 1) {
+// 		uint32_t address = 0x00000000;
+// 		address |= (block << ADDR_BYTE_3_BIT) & 0x00FF0000;
+// 		for (int i = 0; i < 16; i++) {
+// 			memset(rx_buf, 0x00, sizeof(rx_buf));
+// 			flash_read_data(address, rx_buf, sizeof(rx_buf));
+// 			write(rx_buf, sizeof(rx_buf));
+// 			address += 4096;
+// 		}
+// 	}
+// }
 
 bool comp(uint8_t *a, uint8_t b, size_t size)
 {
@@ -165,7 +165,7 @@ int main(void)
 	// It this is reached, the read/writing is successful.
 	// touch_wait(LED_GREEN, 0); // start dump
 	set_led(LED_BLACK);
-	spi_dump_memory();
+	// spi_dump_memory();
 
 	for (;;) {
 		set_led(LED_GREEN);
