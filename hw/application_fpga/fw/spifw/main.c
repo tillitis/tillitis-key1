@@ -94,12 +94,12 @@ int main(void)
 
 	uint8_t read_buf[0xff] = {0x00};
 
-	// touch_wait(LED_BLUE, 0); // start test
-	flash_release_powerdown();
+	read_buf[0] = RELEASE_POWER_DOWN;
 
-	// touch_wait(LED_BLUE, 0); // start test
-	flash_release_powerdown();
+	spi_write(read_buf, sizeof(read_buf), NULL, 0);
+	spi_write(read_buf, sizeof(read_buf), NULL, 0);
 	// Read out IDs
+	memset(read_buf, 0x00, sizeof(read_buf));
 	flash_read_manufacturer_device_id(read_buf);
 	write(read_buf, 2);
 
