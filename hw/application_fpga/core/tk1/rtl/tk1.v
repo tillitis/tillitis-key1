@@ -102,6 +102,8 @@ module tk1(
   localparam ADDR_SPI_DATA      = 8'h82;
 `endif // INCLUDE_SPI_MASTER
 
+  localparam ADDR_ACCESS_CTRL   = 8'h83;
+
   localparam TK1_NAME0    = 32'h746B3120; // "tk1 "
   localparam TK1_NAME1    = 32'h6d6b6466; // "mkdf"
   localparam TK1_VERSION  = 32'h00000005;
@@ -160,7 +162,6 @@ module tk1(
   reg          force_trap_set;
 
   reg          access_ok_reg;
-  reg          access_ok_new;
   reg          access_ok_we;
 
 
@@ -356,7 +357,7 @@ module tk1(
 	end
 
 	if (access_ok_we) begin
-	  access_ok_reg <= access_ok_new;
+	  access_ok_reg <= write_data[0];
 	end
       end
     end // reg_update
@@ -381,29 +382,6 @@ module tk1(
 	muxed_led = cpu_trap_led_reg;
       end else begin
 	muxed_led = led_reg;
-      end
-    end
-
-
-  //----------------------------------------------------------------
-  // access_control
-  //
-  // Logic that controls access to resources that only FW (ROM),
-  // not applications should be allowed to use.
-  //----------------------------------------------------------------
-  always @*
-    begin : access_control
-      access_ok_new = 1'h0;
-      access_ok_we  = 1'h0;
-
-      if (rom_access) begin
-	access_ok_new = 1'h1;
-	access_ok_we  = 1'h1;
-      end
-
-      if (ram_access) begin
-	access_ok_new = 1'h0;
-	access_ok_we  = 1'h1;
       end
     end
 
@@ -470,14 +448,16 @@ module tk1(
       cpu_mon_en_we    = 1'h0;
       tmp_read_data    = 32'h0;
       tmp_ready        = 1'h0;
+      access_ok_we     = 1'h0;
 
 `ifdef INCLUDE_SPI_MASTER
       spi_enable_vld   = 1'h0;
       spi_start        = 1'h0;
       spi_tx_data_vld  = 1'h0;
 
-      spi_enable       = write_data[0];
-      spi_tx_data      = write_data[7 : 0];
+      spi_enable       = write_data[0] & access_ok_reg;
+      spi_tx_data      = write_data[7 : 0] & {8{access_ok_reg}};
+
 `endif // INCLUDE_SPI_MASTER
 
       if (cs) begin
@@ -548,6 +528,11 @@ module tk1(
 	    end
 	  end
 
+	  if (address == ADDR_ACCESS_CTRL) begin
+	    access_ok_we = 1'h1;
+	  end
+
+
 `ifdef INCLUDE_SPI_MASTER
 	  if (address == ADDR_SPI_EN) begin
 	    spi_enable_vld = 1'h1;
@@ -613,11 +598,15 @@ module tk1(
 
 `ifdef INCLUDE_SPI_MASTER
 	  if (address == ADDR_SPI_XFER) begin
-	    tmp_read_data[0] = spi_ready & access_ok_reg;
+	    if (access_ok_reg) begin
+	    tmp_read_data[0] = spi_ready;
+	    end
 	  end
 
 	  if (address == ADDR_SPI_DATA) begin
-	    tmp_read_data[7 : 0] = spi_rx_data & {8{access_ok_reg}};
+	    if (access_ok_reg) begin
+	      tmp_read_data[7 : 0] = spi_rx_data;
+	    end
 	  end
 `endif // INCLUDE_SPI_MASTER
 
