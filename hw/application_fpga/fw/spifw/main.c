@@ -97,6 +97,8 @@ int main(void)
 	// touch_wait(LED_BLUE, 0); // start test
 	flash_release_powerdown();
 
+	// touch_wait(LED_BLUE, 0); // start test
+	flash_release_powerdown();
 	// Read out IDs
 	flash_read_manufacturer_device_id(read_buf);
 	write(read_buf, 2);
