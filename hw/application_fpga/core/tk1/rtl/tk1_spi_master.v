@@ -229,7 +229,6 @@ module tk1_spi_master(
       spi_ctrl_new    = CTRL_IDLE;
       spi_ctrl_we     = 1'h0;
 
-
       case (spi_ctrl_reg)
         CTRL_IDLE: begin
           if (spi_start) begin
@@ -244,14 +243,14 @@ module tk1_spi_master(
 	end
 
 	CTRL_POS_FLANK: begin
-	  spi_rx_data_nxt = 1'h1;
 	  spi_csk_new     = 1'h1;
 	  spi_csk_we      = 1'h1;
-	  spi_ctrl_new      = CTRL_NEG_FLANK;
-	  spi_ctrl_we       = 1'h1;
+	  spi_ctrl_new    = CTRL_NEG_FLANK;
+	  spi_ctrl_we     = 1'h1;
 	end
 
 	CTRL_NEG_FLANK: begin
+	  spi_tx_data_nxt = 1'h1;
 	  spi_csk_new  = 1'h0;
 	  spi_csk_we   = 1'h1;
 	  spi_ctrl_new = CTRL_NEXT;
@@ -259,6 +258,7 @@ module tk1_spi_master(
 	end
 
 	CTRL_NEXT: begin
+	  spi_rx_data_nxt = 1'h1;
 	  if (spi_bit_ctr_reg == 3'h7) begin
 	    spi_ready_new = 1'h1;
 	    spi_ready_we  = 1'h1;
@@ -266,7 +266,6 @@ module tk1_spi_master(
 	    spi_ctrl_we   = 1'h1;
 	  end
 	  else begin
-	    spi_tx_data_nxt = 1'h1;
 	    spi_bit_ctr_inc = 1'h1;
 	    spi_ctrl_new    = CTRL_POS_FLANK;
 	    spi_ctrl_we     = 1'h1;
