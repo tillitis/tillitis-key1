@@ -18,6 +18,8 @@
 
 module clk_reset_gen #(parameter RESET_CYCLES = 200)
   (
+   input wire sys_reset,
+
    output wire clk,
    output wire rst_n
    );
@@ -109,7 +111,12 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
       rst_ctr_new = 8'h0;
       rst_ctr_we  = 1'h0;
 
-      if (rst_ctr_reg < RESET_CYCLES) begin
+      if (sys_reset) begin
+	rst_ctr_new = 8'h0;
+	rst_ctr_we  = 1'h1;
+      end
+
+      else if (rst_ctr_reg < RESET_CYCLES) begin
         rst_n_new   = 1'h0;
         rst_ctr_new = rst_ctr_reg + 1'h1;
         rst_ctr_we  = 1'h1;
