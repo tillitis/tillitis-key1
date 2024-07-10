@@ -96,8 +96,8 @@ int main(void)
 
 	read_buf[0] = RELEASE_POWER_DOWN;
 
-	spi_write(read_buf, sizeof(read_buf), NULL, 0);
-	spi_write(read_buf, sizeof(read_buf), NULL, 0);
+	spi_write(read_buf, 4, NULL, 0);
+	spi_write(read_buf, 4, NULL, 0);
 	// Read out IDs
 	memset(read_buf, 0x00, sizeof(read_buf));
 	flash_read_manufacturer_device_id(read_buf);
