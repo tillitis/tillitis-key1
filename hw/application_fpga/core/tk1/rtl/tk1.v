@@ -25,9 +25,6 @@ module tk1(
 	   input wire           cpu_valid,
 	   output wire          force_trap,
 
-	   input wire           ram_access,
-	   input wire           rom_access,
-
 	   output wire [14 : 0] ram_aslr,
 	   output wire [31 : 0] ram_scramble,
 
@@ -100,9 +97,8 @@ module tk1(
   localparam ADDR_SPI_EN        = 8'h80;
   localparam ADDR_SPI_XFER      = 8'h81;
   localparam ADDR_SPI_DATA      = 8'h82;
+  localparam ADDR_SPI_CMD       = 8'h83;
 `endif // INCLUDE_SPI_MASTER
-
-  localparam ADDR_ACCESS_CTRL   = 8'h83;
 
   localparam TK1_NAME0    = 32'h746B3120; // "tk1 "
   localparam TK1_NAME1    = 32'h6d6b6466; // "mkdf"
@@ -110,6 +106,10 @@ module tk1(
 
   localparam FW_RAM_FIRST = 32'hd0000000;
   localparam FW_RAM_LAST  = 32'hd00007ff;
+
+`ifdef INCLUDE_SPI_MASTER
+  localparam RAM_PREFIX   = 2'h1;
+`endif // INCLUDE_SPI_MASTER
 
 
   //----------------------------------------------------------------
@@ -161,8 +161,14 @@ module tk1(
   reg          force_trap_reg;
   reg          force_trap_set;
 
-  reg          access_ok_reg;
-  reg          access_ok_we;
+`ifdef INCLUDE_SPI_MASTER
+  reg [31 : 0] spi_cmd_addr_reg;
+  reg          spi_cmd_addr_we;
+
+  reg          spi_access_ctrl_reg;
+  reg          spi_access_ctrl_new;
+  reg          spi_access_ctrl_we;
+`endif // INCLUDE_SPI_MASTER
 
 
   //----------------------------------------------------------------
@@ -236,11 +242,11 @@ module tk1(
 			    .spi_mosi(spi_mosi),
 			    .spi_miso(spi_miso),
 
-			    .spi_enable((spi_enable & access_ok_reg)),
-			    .spi_enable_vld((spi_enable_vld & access_ok_reg)),
-			    .spi_start((spi_start & access_ok_reg)),
+			    .spi_enable(spi_enable),
+			    .spi_enable_vld(spi_enable_vld),
+			    .spi_start(spi_start),
 			    .spi_tx_data(spi_tx_data),
-			    .spi_tx_data_vld((spi_tx_data_vld & access_ok_reg)),
+			    .spi_tx_data_vld(spi_tx_data_vld),
 			    .spi_rx_data(spi_rx_data),
 			    .spi_ready(spi_ready)
 			    );
@@ -259,32 +265,36 @@ module tk1(
   always @ (posedge clk)
     begin : reg_update
       if (!reset_n) begin
-	switch_app_reg    <= 1'h0;
-        led_reg           <= 3'h6;
-        gpio1_reg         <= 2'h0;
-        gpio2_reg         <= 2'h0;
-        gpio3_reg         <= 1'h0;
-        gpio4_reg         <= 1'h0;
-        app_start_reg     <= 32'h0;
-        app_size_reg      <= 32'h0;
-        blake2s_addr_reg  <= 32'h0;
-	cdi_mem[0]        <= 32'h0;
-	cdi_mem[1]        <= 32'h0;
-	cdi_mem[2]        <= 32'h0;
-	cdi_mem[3]        <= 32'h0;
-	cdi_mem[4]        <= 32'h0;
-	cdi_mem[5]        <= 32'h0;
-	cdi_mem[6]        <= 32'h0;
-	cdi_mem[7]        <= 32'h0;
-	cpu_trap_ctr_reg  <= 24'h0;
-	cpu_trap_led_reg  <= 3'h0;
-        cpu_mon_en_reg    <= 1'h0;
-	cpu_mon_first_reg <= 32'h0;
-	cpu_mon_last_reg  <= 32'h0;
- 	ram_aslr_reg      <= 15'h0;
-	ram_scramble_reg  <= 32'h0;
-	force_trap_reg    <= 1'h0;
-	access_ok_reg     <= 1'h0;
+	switch_app_reg      <= 1'h0;
+        led_reg             <= 3'h6;
+        gpio1_reg           <= 2'h0;
+        gpio2_reg           <= 2'h0;
+        gpio3_reg           <= 1'h0;
+        gpio4_reg           <= 1'h0;
+        app_start_reg       <= 32'h0;
+        app_size_reg        <= 32'h0;
+        blake2s_addr_reg    <= 32'h0;
+	cdi_mem[0]          <= 32'h0;
+	cdi_mem[1]          <= 32'h0;
+	cdi_mem[2]          <= 32'h0;
+	cdi_mem[3]          <= 32'h0;
+	cdi_mem[4]          <= 32'h0;
+	cdi_mem[5]          <= 32'h0;
+	cdi_mem[6]          <= 32'h0;
+	cdi_mem[7]          <= 32'h0;
+	cpu_trap_ctr_reg    <= 24'h0;
+	cpu_trap_led_reg    <= 3'h0;
+        cpu_mon_en_reg      <= 1'h0;
+	cpu_mon_first_reg   <= 32'h0;
+	cpu_mon_last_reg    <= 32'h0;
+ 	ram_aslr_reg        <= 15'h0;
+	ram_scramble_reg    <= 32'h0;
+	force_trap_reg      <= 1'h0;
+
+`ifdef INCLUDE_SPI_MASTER
+	spi_cmd_addr_reg    <= 32'h0;
+	spi_access_ctrl_reg <= 1'h0;
+`endif // INCLUDE_SPI_MASTER
       end
 
       else begin
@@ -356,9 +366,16 @@ module tk1(
 	  force_trap_reg <= 1'h1;
 	end
 
-	if (access_ok_we) begin
-	  access_ok_reg <= write_data[0];
+`ifdef INCLUDE_SPI_MASTER
+	if (spi_cmd_addr_we) begin
+	  spi_cmd_addr_reg <= write_data;
 	end
+
+	if (spi_access_ctrl_we) begin
+	  spi_access_ctrl_reg <= spi_access_ctrl_new;
+	end
+`endif // INCLUDE_SPI_MASTER
+
       end
     end // reg_update
 
@@ -405,7 +422,7 @@ module tk1(
       force_trap_set = 1'h0;
 
 	if (cpu_valid) begin
-	  if (cpu_addr[31 : 30] == 2'h01 & |cpu_addr[29 : 17]) begin
+	  if (cpu_addr[31 : 30] == 2'h1 & |cpu_addr[29 : 17]) begin
 	      force_trap_set = 1'h1;
 	  end
 
@@ -424,6 +441,39 @@ module tk1(
 	  end
 	end
     end
+
+
+`ifdef INCLUDE_SPI_MASTER
+  //----------------------------------------------------------------
+  // spi_access_ctrl
+  //
+  // Logic that implements the detection of a SPI command trampoline
+  // event, when the CPU reads an instruction from the specified
+  // SPI command handler FW entry point. When that happens SPI
+  // access is enabled.
+  //
+  // The logic also handles the event when the SPI access control
+  // API is written to. WHen that happens SPI access is
+  // disabled.
+  //----------------------------------------------------------------
+  always @*
+    begin : spi_access_ctrl
+      spi_access_ctrl_new = 1'h0;
+      spi_access_ctrl_we  = 1'h0;
+
+      if (cpu_valid & cpu_instr) begin
+	if (cpu_addr == spi_cmd_addr_reg) begin
+	  spi_access_ctrl_new = 1'h1;
+	  spi_access_ctrl_we  = 1'h1;
+	end
+
+	if (cpu_addr[31 : 30] == RAM_PREFIX) begin
+	  spi_access_ctrl_new = 1'h0;
+	  spi_access_ctrl_we  = 1'h1;
+	end
+      end
+    end
+`endif // INCLUDE_SPI_MASTER
 
 
   //----------------------------------------------------------------
@@ -448,15 +498,15 @@ module tk1(
       cpu_mon_en_we    = 1'h0;
       tmp_read_data    = 32'h0;
       tmp_ready        = 1'h0;
-      access_ok_we     = 1'h0;
 
 `ifdef INCLUDE_SPI_MASTER
+      spi_cmd_addr_we  = 1'h0;
       spi_enable_vld   = 1'h0;
       spi_start        = 1'h0;
       spi_tx_data_vld  = 1'h0;
 
-      spi_enable       = write_data[0] & access_ok_reg;
-      spi_tx_data      = write_data[7 : 0] & {8{access_ok_reg}};
+      spi_enable       = write_data[0] & spi_access_ctrl_reg;
+      spi_tx_data      = write_data[7 : 0] & {8{spi_access_ctrl_reg}};
 
 `endif // INCLUDE_SPI_MASTER
 
@@ -528,22 +578,23 @@ module tk1(
 	    end
 	  end
 
-	  if (address == ADDR_ACCESS_CTRL) begin
-	    access_ok_we = 1'h1;
-	  end
-
-
 `ifdef INCLUDE_SPI_MASTER
 	  if (address == ADDR_SPI_EN) begin
-	    spi_enable_vld = 1'h1;
+	    spi_enable_vld = spi_access_ctrl_reg;
 	  end
 
 	  if (address == ADDR_SPI_XFER) begin
-	    spi_start = 1'h1;
+	    spi_start = spi_access_ctrl_reg;
 	  end
 
 	  if (address == ADDR_SPI_DATA) begin
-	    spi_tx_data_vld = 1'h1;
+	    spi_tx_data_vld = spi_access_ctrl_reg;
+	  end
+
+          if (address == ADDR_SPI_CMD) begin
+	    if (!switch_app_reg) begin
+              spi_cmd_addr_we = 1'h1;
+            end
 	  end
 `endif // INCLUDE_SPI_MASTER
 
@@ -598,16 +649,20 @@ module tk1(
 
 `ifdef INCLUDE_SPI_MASTER
 	  if (address == ADDR_SPI_XFER) begin
-	    if (access_ok_reg) begin
+	    if (spi_access_ctrl_reg) begin
 	    tmp_read_data[0] = spi_ready;
 	    end
 	  end
 
 	  if (address == ADDR_SPI_DATA) begin
-	    if (access_ok_reg) begin
+	    if (spi_access_ctrl_reg) begin
 	      tmp_read_data[7 : 0] = spi_rx_data;
 	    end
 	  end
+
+          if (address == ADDR_SPI_CMD) begin
+	    tmp_read_data = spi_cmd_addr_reg;
+          end
 `endif // INCLUDE_SPI_MASTER
 
         end
