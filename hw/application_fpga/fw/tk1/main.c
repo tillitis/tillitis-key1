@@ -8,6 +8,7 @@
 #include "blake2s/blake2s.h"
 #include "lib.h"
 #include "proto.h"
+#include "spi.h"
 #include "state.h"
 #include "types.h"
 
@@ -30,6 +31,8 @@ static volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_
 static volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
 static volatile uint32_t *ram_rand        = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
 static volatile uint32_t *ram_scramble    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_SCRAMBLE;
+
+static volatile uint32_t *spi_func_addr   = (volatile uint32_t *)TK1_MMIO_TK1_ADDR_SPI_CMD;
 // clang-format on
 
 // Context for the loading of a TKey program
@@ -403,6 +406,7 @@ int main(void)
 
 	// Let the app know the function adddress for blake2s()
 	*fw_blake2s_addr = (uint32_t)blake2s;
+	*spi_func_addr = (uint32_t)spi_ready;
 
 	/*@-mustfreeonly@*/
 	/* Yes, splint, this points directly to RAM and we don't care
