@@ -127,7 +127,7 @@ module application_fpga(
 
   reg           fw_ram_cs;
   reg  [3 : 0]  fw_ram_we;
-  reg  [8 : 0]  fw_ram_address;
+  reg  [9 : 0]  fw_ram_address;
   reg  [31 : 0] fw_ram_write_data;
   wire [31 : 0] fw_ram_read_data;
   wire          fw_ram_ready;
