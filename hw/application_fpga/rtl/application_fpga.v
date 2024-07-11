@@ -127,7 +127,7 @@ module application_fpga(
 
   reg           fw_ram_cs;
   reg  [3 : 0]  fw_ram_we;
-  reg  [8 : 0]  fw_ram_address;
+  reg  [9 : 0]  fw_ram_address;
   reg  [31 : 0] fw_ram_write_data;
   wire [31 : 0] fw_ram_read_data;
   wire          fw_ram_ready;
@@ -392,7 +392,7 @@ module application_fpga(
 
       fw_ram_cs           = 1'h0;
       fw_ram_we           = cpu_wstrb;
-      fw_ram_address      = cpu_addr[10 : 2];
+      fw_ram_address      = cpu_addr[11 : 2];
       fw_ram_write_data   = cpu_wdata;
 
       trng_cs             = 1'h0;
