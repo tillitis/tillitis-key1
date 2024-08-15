@@ -175,36 +175,20 @@ module timer_core(
 	  end
 
 	  else begin
-	    if (prescaler_reg == prescaler_init) begin
-              core_ctrl_new = CTRL_TIMER;
-              core_ctrl_we  = 1'h1;
+	    if (prescaler_reg == (prescaler_init - 1)) begin
+	      if ((timer_reg == (timer_init - 1)) & ~free_running) begin
+		running_new   = 1'h0;
+		running_we    = 1'h1;
+		core_ctrl_new = CTRL_IDLE;
+		core_ctrl_we  = 1'h1;
+	      end
+	      else begin
+		timer_inc     = 1'h1;
+		prescaler_rst = 1'h1;
+	      end
 	    end
 	    else begin
 	      prescaler_inc = 1'h1;
-	    end
-	  end
-	end
-
-
-	CTRL_TIMER: begin
-	  if (stop) begin
-            running_new   = 1'h0;
-            running_we    = 1'h1;
-            core_ctrl_new = CTRL_IDLE;
-            core_ctrl_we  = 1'h1;
-	  end
-	  else begin
-	    if ((timer_reg == timer_init) & ~free_running) begin
-              running_new   = 1'h0;
-              running_we    = 1'h1;
-              core_ctrl_new = CTRL_IDLE;
-              core_ctrl_we  = 1'h1;
-	    end
-	    else begin
-	      timer_inc     = 1'h1;
-	      prescaler_rst = 1'h1;
-	      core_ctrl_new = CTRL_PRESCALER;
-	      core_ctrl_we  = 1'h1;
 	    end
 	  end
 	end
