@@ -246,7 +246,7 @@ module tb_timer_core();
 
 
       if (test1_counted_num_cycles == test1_expected_num_cycles) begin
-	$display("--- test1: Corrcet number of cycles counted: %0d", test1_counted_num_cycles);
+	$display("--- test1: Correct number of cycles counted: %0d", test1_counted_num_cycles);
       end
       else begin
 	$display("--- test1: Error, expected %0d cycles, counted cycles: %0d",
@@ -258,6 +258,51 @@ module tb_timer_core();
       $display("");
     end
   endtask // test1
+
+
+
+  //----------------------------------------------------------------
+  // test2()
+  //
+  // Test that the free running functionality works.
+  //----------------------------------------------------------------
+  task test2;
+    begin : test2
+      reg [31 : 0] test1_cycle_ctr_start;
+      reg [31 : 0] test1_counted_num_cycles;
+      reg [31 : 0] test1_expected_num_cycles;
+
+      tc_ctr = tc_ctr + 1;
+
+      $display("--- test2: Run timer in free running mode started.");
+      $display("--- test2: Set prescaler and timer to one, but wait more cycles.");
+
+      tb_prescaler_init     = 32'h1;
+      tb_timer_init         = 32'h1;
+      tb_free_running       = 1'h1;
+      tb_start              = 1'h1;
+      test1_cycle_ctr_start = cycle_ctr;
+
+      #(CLK_PERIOD);
+      tb_start = 1'h0;
+      test1_cycle_ctr_start = cycle_ctr;
+
+      #(1337 * CLK_PERIOD);
+      test1_expected_num_cycles = cycle_ctr - test1_cycle_ctr_start;
+
+      if (tb_curr_timer == test1_expected_num_cycles) begin
+	$display("--- test2: Correct number of cycles counted: %0d", tb_curr_timer);
+      end
+      else begin
+	$display("--- test2: Error, expected %0d cycles, counted cycles: %0d",
+		 test1_expected_num_cycles, tb_curr_timer);
+	error_ctr = error_ctr + 1;
+      end
+
+      $display("--- test2: Completed.");
+      $display("");
+    end
+  endtask // test2
 
 
   //----------------------------------------------------------------
@@ -274,6 +319,7 @@ module tb_timer_core();
       reset_dut();
 
       test1();
+      test2();
 
       display_test_result();
       $display("");
