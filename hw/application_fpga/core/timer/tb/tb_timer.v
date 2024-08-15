@@ -250,6 +250,7 @@ module tb_timer();
 
   //----------------------------------------------------------------
   // test1()
+
   // Set timer and scaler and then start the timer. Wait
   // for the ready flag to be asserted again.
   //----------------------------------------------------------------
@@ -257,6 +258,8 @@ module tb_timer();
     begin : test1
       reg [31 : 0] time_start;
       reg [31 : 0] time_stop;
+      reg [31 : 0] time_expected;
+      reg [31 : 0] time_counted;
 
       tc_ctr = tc_ctr + 1;
       tb_monitor = 0;
@@ -264,24 +267,30 @@ module tb_timer();
       $display("");
       $display("--- test1: started.");
 
-      write_word(ADDR_PRESCALER, 8'h02);
-      write_word(ADDR_TIMER, 8'h10);
+      write_word(ADDR_PRESCALER, 32'h6);
+      write_word(ADDR_TIMER, 32'h9);
+      time_expected = 32'h6 * 32'h9;
 
+      write_word(ADDR_CTRL, 32'h1);
       time_start = cycle_ctr;
-      write_word(ADDR_CTRL, 8'h01);
 
-      #(2 * CLK_PERIOD);
+      #(CLK_PERIOD);
       read_word(ADDR_STATUS);
       while (read_data) begin
 	read_word(ADDR_STATUS);
       end
-
       time_stop = cycle_ctr;
-      write_word(CTRL_START_BIT, 8'h02);
+      time_counted = time_stop - time_start;
 
-      $display("--- test1: Cycles between start and stop: %d", (time_stop - time_start));
-      #(CLK_PERIOD);
-      tb_monitor = 0;
+
+      if (time_counted == time_expected) begin
+	$display("--- test1: Correct number of cycles counted: %0d", time_counted);
+      end
+      else begin
+	$display("--- test1: Error, expected %0d cycles, counted cycles: %0d",
+		 time_expected, time_counted);
+	error_ctr = error_ctr + 1;
+      end
 
       $display("--- test1: completed.");
       $display("");
@@ -308,7 +317,7 @@ module tb_timer();
       $display("   -= Testbench for timer completed =-");
       $display("     ===============================");
       $display("");
-      $finish;
+      $finish(error_ctr);
     end // timer_test
 endmodule // tb_timer
 

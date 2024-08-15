@@ -103,10 +103,11 @@ module timer(
   always @ (posedge clk)
     begin : reg_update
       if (!reset_n) begin
-	start_reg     <= 1'h0;
-	stop_reg      <= 1'h0;
-	prescaler_reg <= 32'h0;
-	timer_reg     <= 32'h0;
+	start_reg        <= 1'h0;
+	stop_reg         <= 1'h0;
+	free_running_reg <= 1'h0;
+	prescaler_reg    <= 32'h0;
+	timer_reg        <= 32'h0;
       end
       else begin
 	start_reg <= start_new;
@@ -121,7 +122,7 @@ module timer(
 	end
 
 	if (free_running_we) begin
-	  free_running_reg <= write_data[0];
+	  free_running_reg <= write_data[FREE_RUNNING_BIT];
 	end
       end
     end // reg_update
