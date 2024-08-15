@@ -37,3 +37,6 @@ The following addresses define the API for the timer:
 	FREE_RUNNING_BIT    0
 
 ```
+
+ADDR_PRESCALER and ADDR_TIMER should be set to a non-negative value (default are one.)
+Note that these values can't be changed when the timer is running.

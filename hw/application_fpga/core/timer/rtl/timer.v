@@ -106,8 +106,8 @@ module timer(
 	start_reg        <= 1'h0;
 	stop_reg         <= 1'h0;
 	free_running_reg <= 1'h0;
-	prescaler_reg    <= 32'h0;
-	timer_reg        <= 32'h0;
+	prescaler_reg    <= 32'h1;
+	timer_reg        <= 32'h1;
       end
       else begin
 	start_reg <= start_new;
