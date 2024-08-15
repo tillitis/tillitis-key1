@@ -30,15 +30,17 @@ module timer(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_CTRL          = 8'h08;
-  localparam CTRL_START_BIT     = 0;
-  localparam CTRL_STOP_BIT      = 1;
+  localparam ADDR_CTRL             = 8'h08;
+  localparam CTRL_START_BIT        = 0;
+  localparam CTRL_STOP_BIT         = 1;
 
-  localparam ADDR_STATUS        = 8'h09;
-  localparam STATUS_RUNNING_BIT = 0;
+  localparam ADDR_STATUS           = 8'h09;
+  localparam STATUS_RUNNING_BIT    = 0;
 
-  localparam ADDR_PRESCALER     = 8'h0a;
-  localparam ADDR_TIMER         = 8'h0b;
+  localparam ADDR_PRESCALER        = 8'h0a;
+  localparam ADDR_TIMER            = 8'h0b;
+  localparam ADDR_FREE_RUNNING     = 8'h0c;
+  localparam FREE_RUNNING_BIT      = 0;
 
 
   //----------------------------------------------------------------
@@ -55,6 +57,9 @@ module timer(
 
   reg          stop_reg;
   reg          stop_new;
+
+  reg          free_running_reg;
+  reg          free_running_we;
 
 
   //----------------------------------------------------------------
@@ -85,6 +90,7 @@ module timer(
                   .timer_init(timer_reg),
                   .start(start_reg),
                   .stop(stop_reg),
+		  .free_running(free_running_reg),
 
 		  .curr_timer(core_curr_timer),
                   .running(core_running)
@@ -113,6 +119,10 @@ module timer(
 	if (timer_we) begin
 	  timer_reg <= write_data;
 	end
+
+	if (free_running_we) begin
+	  free_running_reg <= write_data[0];
+	end
       end
     end // reg_update
 
@@ -124,12 +134,13 @@ module timer(
   //----------------------------------------------------------------
   always @*
     begin : api
-      start_new     = 1'h0;
-      stop_new      = 1'h0;
-      prescaler_we  = 1'h0;
-      timer_we      = 1'h0;
-      tmp_read_data = 32'h0;
-      tmp_ready     = 1'h0;
+      start_new       = 1'h0;
+      stop_new        = 1'h0;
+      free_running_we = 1'h0;
+      prescaler_we    = 1'h0;
+      timer_we        = 1'h0;
+      tmp_read_data   = 32'h0;
+      tmp_ready       = 1'h0;
 
       if (cs) begin
 	tmp_ready = 1'h1;
@@ -147,6 +158,10 @@ module timer(
 
             if (address == ADDR_TIMER) begin
 	      timer_we = 1'h1;
+	    end
+
+            if (address == ADDR_FREE_RUNNING) begin
+	      free_running_we = 1'h1;
 	    end
 	  end
         end
