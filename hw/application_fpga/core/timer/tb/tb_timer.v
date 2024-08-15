@@ -344,10 +344,67 @@ module tb_timer();
 	error_ctr = error_ctr + 1;
       end
 
+      // Stop the timer.
+      write_word(ADDR_CTRL, 32'h2);
+
       $display("--- test2: completed.");
       $display("");
     end
-  endtask // tes1
+  endtask // test2
+
+
+  //----------------------------------------------------------------
+  // test3()
+  //
+  // Set free running mode, set the prescler to two and start the
+  // timer. Wait a numer of cycles and read out the current timer
+  // value. the counter value should be half of the number
+  // of cycles executed.
+  // ----------------------------------------------------------------
+  task test3;
+    begin : test3
+      reg [31 : 0] time_start;
+      reg [31 : 0] time_stop;
+      reg [31 : 0] time_expected;
+      reg [31 : 0] time_counted;
+
+      tc_ctr = tc_ctr + 1;
+      tb_monitor = 0;
+
+      $display("");
+      $display("--- test3: started.");
+      $display("--- test3: Free running counter with prescaler in an expected number of cycles.");
+
+      write_word(ADDR_PRESCALER, 32'h2);
+      write_word(ADDR_TIMER, 32'h9);
+      write_word(ADDR_FREE_RUNNING, 32'h1);
+
+      write_word(ADDR_CTRL, 32'h1);
+      time_start = cycle_ctr;
+
+      $display("--- test3: Waiting 2048 cycles.");
+      #(2048 * CLK_PERIOD);
+      read_word(ADDR_TIMER);
+
+      time_expected = (cycle_ctr - time_start) >> 1;
+      time_counted = tb_read_data;
+
+      if (time_counted == time_expected) begin
+	$display("--- test3: Correct number of cycles counted: %0d", time_counted);
+      end
+      else begin
+	$display("--- test3: Error, expected %0d cycles, counted cycles: %0d",
+		 time_expected, time_counted);
+	error_ctr = error_ctr + 1;
+      end
+
+      // Stop the timer.
+      write_word(ADDR_CTRL, 32'h2);
+
+      $display("--- test3: completed.");
+      $display("");
+    end
+  endtask // test3
 
 
   //----------------------------------------------------------------
@@ -364,6 +421,7 @@ module tb_timer();
       reset_dut();
       test1();
       test2();
+      test3();
 
       display_test_result();
       $display("");
