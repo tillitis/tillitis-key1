@@ -215,6 +215,8 @@ module tb_timer_core();
 
   //----------------------------------------------------------------
   // test1()
+  //
+  // Test that the timer can count to a specified number of cycles.
   //----------------------------------------------------------------
   task test1;
     begin : test1
@@ -225,7 +227,7 @@ module tb_timer_core();
       tc_ctr = tc_ctr + 1;
 
       $display("--- test1: Run timer to set value started.");
-      $display("--- test1: prescaler: 6, timer: 9. Should take 6*9 + 1 = 55 cycles..");
+      $display("--- test1: prescaler: 6, timer: 9. Should take 6*9 + 1 = 55 cycles.");
       tb_prescaler_init = 32'h6;
       tb_timer_init     = 32'h9;
       test1_expected_num_cycles = tb_prescaler_init * tb_timer_init + 1;

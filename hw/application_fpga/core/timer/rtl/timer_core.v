@@ -31,9 +31,8 @@ module timer_core(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam CTRL_IDLE      = 2'h0;
-  localparam CTRL_PRESCALER = 2'h1;
-  localparam CTRL_TIMER     = 2'h2;
+  localparam CTRL_IDLE    = 1'h0;
+  localparam CTRL_RUNNING = 1'h1;
 
 
   //----------------------------------------------------------------
@@ -55,8 +54,8 @@ module timer_core(
   reg          timer_rst;
   reg          timer_inc;
 
-  reg [1 : 0]  core_ctrl_reg;
-  reg [1 : 0]  core_ctrl_new;
+  reg          core_ctrl_reg;
+  reg          core_ctrl_new;
   reg          core_ctrl_we;
 
 
@@ -160,13 +159,13 @@ module timer_core(
 	    prescaler_rst = 1'h1;
 	    timer_rst     = 1'h1;
 
-	    core_ctrl_new = CTRL_PRESCALER;
+	    core_ctrl_new = CTRL_RUNNING;
 	    core_ctrl_we  = 1'h1;
           end
         end
 
 
-	CTRL_PRESCALER: begin
+	CTRL_RUNNING: begin
 	  if (stop) begin
             running_new   = 1'h0;
             running_we    = 1'h1;
