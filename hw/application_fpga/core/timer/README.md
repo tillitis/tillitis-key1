@@ -13,11 +13,9 @@ done by reading the STATUS_RUNNING_BIT. If set to zero, the timer has
 completed.
 
 If the free running mode is set (default off), the counter will not
-stup when the number of cycles defined by (prescaler * timer) has been
+stpp when the number of cycles defined by (prescaler * timer) has been
 reached. Instead the timer continues until the CTRL_STOP_BIT is
-asserted. Note that in free running mode, the ADDR_PRESCALER shall be
-set to one (1).
-
+asserted.
 
 ## API
 The following addresses define the API for the timer:
@@ -38,5 +36,6 @@ The following addresses define the API for the timer:
 
 ```
 
-ADDR_PRESCALER and ADDR_TIMER should be set to a non-negative value (default are one.)
-Note that these values can't be changed when the timer is running.
+ADDR_PRESCALER and ADDR_TIMER registers should be set to a
+non-negative value. Default values for the these registers are one (1).
+Note that these registers can't be changed when the timer is running.
