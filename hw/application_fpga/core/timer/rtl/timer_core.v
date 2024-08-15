@@ -21,6 +21,7 @@ module timer_core(
                   input wire [31 : 0]  timer_init,
                   input wire           start,
                   input wire           stop,
+                  input wire           free_running,
 
                   output wire [31 : 0] curr_timer,
                   output wire          running
@@ -45,14 +46,14 @@ module timer_core(
   reg [31 : 0] prescaler_reg;
   reg [31 : 0] prescaler_new;
   reg          prescaler_we;
-  reg          prescaler_set;
-  reg          prescaler_dec;
+  reg          prescaler_rst;
+  reg          prescaler_inc;
 
   reg [31 : 0] timer_reg;
   reg [31 : 0] timer_new;
   reg          timer_we;
-  reg          timer_set;
-  reg          timer_dec;
+  reg          timer_rst;
+  reg          timer_inc;
 
   reg [1 : 0]  core_ctrl_reg;
   reg [1 : 0]  core_ctrl_new;
@@ -107,12 +108,12 @@ module timer_core(
       prescaler_new = 32'h0;
       prescaler_we  = 1'h0;
 
-      if (prescaler_set) begin
-	prescaler_new = prescaler_init;
+      if (prescaler_rst) begin
+	prescaler_new = 32'h0;
 	prescaler_we  = 1'h1;
       end
-      else if (prescaler_dec) begin
-	prescaler_new = prescaler_reg - 1'h1;
+      else if (prescaler_inc) begin
+	prescaler_new = prescaler_reg + 1'h1;
 	prescaler_we  = 1'h1;
       end
     end
@@ -126,12 +127,12 @@ module timer_core(
       timer_new = 32'h0;
       timer_we  = 1'h0;
 
-      if (timer_set) begin
-	timer_new = timer_init;
+      if (timer_rst) begin
+	timer_new = 32'h0;
 	timer_we  = 1'h1;
       end
-      else if (timer_dec) begin
-	timer_new = timer_reg - 1'h1;
+      else if (timer_inc) begin
+	timer_new = timer_reg + 1'h1;
 	timer_we  = 1'h1;
       end
     end
@@ -144,10 +145,10 @@ module timer_core(
     begin : core_ctrl
       running_new   = 1'h0;
       running_we    = 1'h0;
-      prescaler_set = 1'h0;
-      prescaler_dec = 1'h0;
-      timer_set     = 1'h0;
-      timer_dec     = 1'h0;
+      prescaler_rst = 1'h0;
+      prescaler_inc = 1'h0;
+      timer_rst     = 1'h0;
+      timer_inc     = 1'h0;
       core_ctrl_new = CTRL_IDLE;
       core_ctrl_we  = 1'h0;
 
@@ -156,18 +157,11 @@ module timer_core(
           if (start) begin
             running_new   = 1'h1;
             running_we    = 1'h1;
-	    prescaler_set = 1'h1;
-	    timer_set     = 1'h1;
+	    prescaler_rst = 1'h1;
+	    timer_rst     = 1'h1;
 
-	    if (prescaler_init == 0) begin
-	      core_ctrl_new = CTRL_TIMER;
-	      core_ctrl_we  = 1'h1;
-	    end
-
-	    else begin
-	      core_ctrl_new = CTRL_PRESCALER;
-	      core_ctrl_we  = 1'h1;
-	    end
+	    core_ctrl_new = CTRL_PRESCALER;
+	    core_ctrl_we  = 1'h1;
           end
         end
 
@@ -181,13 +175,12 @@ module timer_core(
 	  end
 
 	  else begin
-	    if (prescaler_reg == 1) begin
+	    if (prescaler_reg == prescaler_init) begin
               core_ctrl_new = CTRL_TIMER;
               core_ctrl_we  = 1'h1;
 	    end
-
 	    else begin
-	      prescaler_dec = 1'h1;
+	      prescaler_inc = 1'h1;
 	    end
 	  end
 	end
@@ -200,23 +193,18 @@ module timer_core(
             core_ctrl_new = CTRL_IDLE;
             core_ctrl_we  = 1'h1;
 	  end
-
 	  else begin
-	    if (timer_reg == 1) begin
+	    if ((timer_reg == timer_init) & ~free_running) begin
               running_new   = 1'h0;
               running_we    = 1'h1;
               core_ctrl_new = CTRL_IDLE;
               core_ctrl_we  = 1'h1;
 	    end
-
 	    else begin
-	      timer_dec = 1'h1;
-
-	      if (prescaler_init > 0) begin
-		prescaler_set = 1'h1;
-		core_ctrl_new = CTRL_PRESCALER;
-		core_ctrl_we  = 1'h1;
-	      end
+	      timer_inc     = 1'h1;
+	      prescaler_rst = 1'h1;
+	      core_ctrl_new = CTRL_PRESCALER;
+	      core_ctrl_we  = 1'h1;
 	    end
 	  end
 	end

@@ -39,6 +39,7 @@ module tb_timer_core();
   reg  [31 : 0] tb_timer_init;
   reg           tb_start;
   reg           tb_stop;
+  reg           tb_free_running;
   wire [31 : 0] tb_curr_timer;
   wire          tb_running;
 
@@ -53,6 +54,7 @@ module tb_timer_core();
 		 .timer_init(tb_timer_init),
 		 .start(tb_start),
 		 .stop(tb_stop),
+		 .free_running(tb_free_running),
 		 .curr_timer(tb_curr_timer),
 		 .running(tb_running)
                 );
@@ -107,13 +109,13 @@ module tb_timer_core();
       $display("Internal state:");
       $display("prescaler_reg: 0x%08x, prescaler_new: 0x%08x",
 	       dut.prescaler_reg, dut.prescaler_new);
-      $display("prescaler_set: 0x%1x, prescaler_dec: 0x%1x",
-	       dut.prescaler_set, dut.prescaler_dec);
+      $display("prescaler_rst: 0x%1x, prescaler_inc: 0x%1x",
+	       dut.prescaler_rst, dut.prescaler_inc);
       $display("");
       $display("timer_reg: 0x%08x, timer_new: 0x%08x",
 	       dut.timer_reg, dut.timer_new);
-      $display("timer_set: 0x%1x, timer_dec: 0x%1x",
-	       dut.timer_set, dut.timer_dec);
+      $display("timer_rst: 0x%1x, timer_inc: 0x%1x",
+	       dut.timer_rst, dut.timer_inc);
       $display("");
       $display("core_ctrl_reg: 0x%02x, core_ctrl_new: 0x%02x, core_ctrl_we: 0x%1x",
 	       dut.core_ctrl_reg, dut.core_ctrl_new, dut.core_ctrl_we);
@@ -184,6 +186,7 @@ module tb_timer_core();
 
       tb_start          = 1'h0;
       tb_stop           = 1'h0;
+      tb_free_running   = 1'h0;
       tb_prescaler_init = 32'h0;
       tb_timer_init     = 32'h0;
     end
