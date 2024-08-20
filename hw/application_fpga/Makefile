@@ -54,7 +54,7 @@ ICE40_SIM_CELLS = $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 # FPGA specific source files.
 FPGA_SRC = $(P)/rtl/application_fpga.v \
-	   $(P)/rtl/clk_reset_gen.v
+	   $(P)/core/clk_reset_gen/rtl/clk_reset_gen.v
 
 # Verilator simulation specific source files.
 VERILATOR_FPGA_SRC = $(P)/tb/application_fpga_vsim.v \
@@ -62,9 +62,9 @@ VERILATOR_FPGA_SRC = $(P)/tb/application_fpga_vsim.v \
 
 # Common verilog source files.
 VERILOG_SRCS = \
-	$(P)/rtl/ram.v \
-	$(P)/rtl/rom.v \
-	$(P)/rtl/fw_ram.v \
+	$(P)/core/ram/rtl/ram.v \
+	$(P)/core/rom/rtl/rom.v \
+	$(P)/core/fw_ram/rtl/fw_ram.v \
 	$(P)/core/picorv32/rtl/picorv32.v \
 	$(P)/core/timer/rtl/timer_core.v \
 	$(P)/core/timer/rtl/timer.v \
