@@ -36,11 +36,10 @@ module timer(
 
   localparam ADDR_STATUS           = 8'h09;
   localparam STATUS_RUNNING_BIT    = 0;
+  localparam STATUS_REACHED_BIT    = 1;
 
   localparam ADDR_PRESCALER        = 8'h0a;
   localparam ADDR_TIMER            = 8'h0b;
-  localparam ADDR_FREE_RUNNING     = 8'h0c;
-  localparam FREE_RUNNING_BIT      = 0;
 
 
   //----------------------------------------------------------------
@@ -58,9 +57,6 @@ module timer(
   reg          stop_reg;
   reg          stop_new;
 
-  reg          free_running_reg;
-  reg          free_running_we;
-
 
   //----------------------------------------------------------------
   // Wires.
@@ -68,8 +64,9 @@ module timer(
   reg [31 : 0]  tmp_read_data;
   reg           tmp_ready;
 
-  wire          core_running;
   wire [31 : 0] core_curr_timer;
+  wire          core_reached;
+  wire          core_running;
 
 
   //----------------------------------------------------------------
@@ -90,9 +87,9 @@ module timer(
                   .timer_init(timer_reg),
                   .start(start_reg),
                   .stop(stop_reg),
-		  .free_running(free_running_reg),
 
 		  .curr_timer(core_curr_timer),
+		  .reached(core_reached),
                   .running(core_running)
                  );
 
@@ -105,7 +102,6 @@ module timer(
       if (!reset_n) begin
 	start_reg        <= 1'h0;
 	stop_reg         <= 1'h0;
-	free_running_reg <= 1'h0;
 	prescaler_reg    <= 32'h1;
 	timer_reg        <= 32'h1;
       end
@@ -120,10 +116,6 @@ module timer(
 	if (timer_we) begin
 	  timer_reg <= write_data;
 	end
-
-	if (free_running_we) begin
-	  free_running_reg <= write_data[FREE_RUNNING_BIT];
-	end
       end
     end // reg_update
 
@@ -137,7 +129,6 @@ module timer(
     begin : api
       start_new       = 1'h0;
       stop_new        = 1'h0;
-      free_running_we = 1'h0;
       prescaler_we    = 1'h0;
       timer_we        = 1'h0;
       tmp_read_data   = 32'h0;
@@ -160,16 +151,12 @@ module timer(
             if (address == ADDR_TIMER) begin
 	      timer_we = 1'h1;
 	    end
-
-            if (address == ADDR_FREE_RUNNING) begin
-	      free_running_we = 1'h1;
-	    end
-	  end
-        end
+          end
+	end
 
         else begin
 	  if (address == ADDR_STATUS) begin
-	    tmp_read_data[STATUS_RUNNING_BIT] = core_running;
+	    tmp_read_data[1 : 0] =  {core_reached, core_running};
 	  end
 
 	  if (address == ADDR_PRESCALER) begin

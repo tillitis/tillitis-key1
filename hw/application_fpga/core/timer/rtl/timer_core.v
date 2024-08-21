@@ -21,9 +21,9 @@ module timer_core(
                   input wire [31 : 0]  timer_init,
                   input wire           start,
                   input wire           stop,
-                  input wire           free_running,
 
                   output wire [31 : 0] curr_timer,
+                  output wire          reached,
                   output wire          running
                   );
 
@@ -41,6 +41,10 @@ module timer_core(
   reg          running_reg;
   reg          running_new;
   reg          running_we;
+
+  reg          reached_reg;
+  reg          reached_new;
+  reg          reached_we;
 
   reg [31 : 0] prescaler_reg;
   reg [31 : 0] prescaler_new;
@@ -63,6 +67,7 @@ module timer_core(
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign curr_timer = timer_reg;
+  assign reached    = reached_reg;
   assign running    = running_reg;
 
 
@@ -73,6 +78,7 @@ module timer_core(
     begin: reg_update
       if (!reset_n)
         begin
+          reached_reg   <= 1'h0;
           running_reg   <= 1'h0;
 	  prescaler_reg <= 32'h0;
 	  timer_reg     <= 32'h0;
@@ -80,6 +86,9 @@ module timer_core(
         end
       else
         begin
+          if (reached_we) begin
+            reached_reg <= reached_new;
+	  end
           if (running_we) begin
             running_reg <= running_new;
 	  end
@@ -142,6 +151,8 @@ module timer_core(
   //----------------------------------------------------------------
   always @*
     begin : core_ctrl
+      reached_new   = 1'h0;
+      reached_we    = 1'h0;
       running_new   = 1'h0;
       running_we    = 1'h0;
       prescaler_rst = 1'h0;
@@ -158,7 +169,6 @@ module timer_core(
             running_we    = 1'h1;
 	    prescaler_rst = 1'h1;
 	    timer_rst     = 1'h1;
-
 	    core_ctrl_new = CTRL_RUNNING;
 	    core_ctrl_we  = 1'h1;
           end
@@ -167,6 +177,8 @@ module timer_core(
 
 	CTRL_RUNNING: begin
 	  if (stop) begin
+	    reached_new   = 1'h0;
+	    reached_we    = 1'h1;
             running_new   = 1'h0;
             running_we    = 1'h1;
             core_ctrl_new = CTRL_IDLE;
@@ -175,16 +187,12 @@ module timer_core(
 
 	  else begin
 	    if (prescaler_reg == (prescaler_init - 1)) begin
-	      if ((timer_reg == (timer_init - 1)) & ~free_running) begin
-		running_new   = 1'h0;
-		running_we    = 1'h1;
-		core_ctrl_new = CTRL_IDLE;
-		core_ctrl_we  = 1'h1;
+	      if (timer_reg == (timer_init - 1)) begin
+		reached_new   = 1'h1;
+		reached_we    = 1'h1;
 	      end
-	      else begin
-		timer_inc     = 1'h1;
-		prescaler_rst = 1'h1;
-	      end
+	      timer_inc     = 1'h1;
+	      prescaler_rst = 1'h1;
 	    end
 	    else begin
 	      prescaler_inc = 1'h1;

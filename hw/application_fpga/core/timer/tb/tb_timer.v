@@ -255,7 +255,7 @@ module tb_timer();
   // test1()
   //
   // Set timer and scaler and then start the timer. Wait
-  // for the ready flag to be asserted again.
+  // for the reached flag to be asserted.
   //----------------------------------------------------------------
   task test1;
     begin : test1
@@ -275,12 +275,13 @@ module tb_timer();
       write_word(ADDR_TIMER, 32'h9);
       time_expected = 32'h6 * 32'h9;
 
+      // Start the timer.
       write_word(ADDR_CTRL, 32'h1);
       time_start = cycle_ctr;
 
       #(CLK_PERIOD);
       read_word(ADDR_STATUS);
-      while (read_data) begin
+      while (read_data != 3) begin
 	read_word(ADDR_STATUS);
       end
       time_stop = cycle_ctr;
@@ -296,10 +297,13 @@ module tb_timer();
 	error_ctr = error_ctr + 1;
       end
 
+      // Stop the timer.
+      write_word(ADDR_CTRL, 32'h2);
+
       $display("--- test1: completed.");
       $display("");
     end
-  endtask // tes1
+  endtask // test1
 
 
   //----------------------------------------------------------------
@@ -373,7 +377,7 @@ module tb_timer();
 
       $display("");
       $display("--- test3: started.");
-      $display("--- test3: Free running counter with prescaler in an expected number of cycles.");
+      $display("--- test3: Free running counter with prescaler = 2 in an expected number of cycles.");
 
       write_word(ADDR_PRESCALER, 32'h2);
       write_word(ADDR_TIMER, 32'h9);

@@ -39,8 +39,8 @@ module tb_timer_core();
   reg  [31 : 0] tb_timer_init;
   reg           tb_start;
   reg           tb_stop;
-  reg           tb_free_running;
   wire [31 : 0] tb_curr_timer;
+  wire          tb_reached;
   wire          tb_running;
 
 
@@ -54,8 +54,8 @@ module tb_timer_core();
 		 .timer_init(tb_timer_init),
 		 .start(tb_start),
 		 .stop(tb_stop),
-		 .free_running(tb_free_running),
 		 .curr_timer(tb_curr_timer),
+		 .reached(tb_reached),
 		 .running(tb_running)
                 );
 
@@ -103,8 +103,8 @@ module tb_timer_core();
       $display("Inputs and outputs:");
       $display("prescaler_init: 0x%08x, timer_init: 0x%08x",
 	       dut.prescaler_init, dut.timer_init);
-      $display("start: 0x%1x, stop: 0x%1x, running: 0x%1x",
-	       dut.start, dut.stop, dut.running);
+      $display("start: 0x%1x, stop: 0x%1x, reached: 0x%1x,  running: 0x%1x",
+	       dut.start, dut.stop, dut.reached);
       $display("");
       $display("Internal state:");
       $display("prescaler_reg: 0x%08x, prescaler_new: 0x%08x",
@@ -206,7 +206,6 @@ module tb_timer_core();
 
       tb_start          = 1'h0;
       tb_stop           = 1'h0;
-      tb_free_running   = 1'h0;
       tb_prescaler_init = 32'h0;
       tb_timer_init     = 32'h0;
     end
@@ -239,7 +238,7 @@ module tb_timer_core();
       tb_start = 1'h0;
       #(CLK_PERIOD);
 
-      while (tb_running) begin
+      while (~tb_reached) begin
 	#(CLK_PERIOD);
       end
       test1_counted_num_cycles = cycle_ctr - test1_cycle_ctr_start;
@@ -253,6 +252,10 @@ module tb_timer_core();
 		 test1_expected_num_cycles, test1_counted_num_cycles);
 	error_ctr = error_ctr + 1;
       end
+
+      tb_stop = 1'h1;
+      #(CLK_PERIOD);
+      tb_stop = 1'h0;
 
       $display("--- test1: Completed.");
       $display("");
@@ -279,7 +282,6 @@ module tb_timer_core();
 
       tb_prescaler_init     = 32'h1;
       tb_timer_init         = 32'h1;
-      tb_free_running       = 1'h1;
       tb_start              = 1'h1;
       test1_cycle_ctr_start = cycle_ctr;
 
