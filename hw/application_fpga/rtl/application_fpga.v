@@ -94,7 +94,7 @@ module application_fpga(
 
   reg           ram_cs;
   reg  [3 : 0]  ram_we;
-  reg  [14 : 0] ram_address;
+  reg  [15 : 0] ram_address;
   reg  [31 : 0] ram_write_data;
   wire [31 : 0] ram_read_data;
   wire          ram_ready;
@@ -181,6 +181,7 @@ module application_fpga(
 		   .mem_wdata(cpu_wdata),
 		   .mem_wstrb(cpu_wstrb),
 		   .mem_rdata(muxed_rdata_reg),
+                   .mem_instr(cpu_instr),
 
                    // Defined unused ports. Makes lint happy. But
                    // we still needs to help lint with empty ports.
@@ -189,7 +190,6 @@ module application_fpga(
                    .eoi(),
                    .trace_valid(),
                    .trace_data(),
-                   .mem_instr(cpu_instr),
                    .mem_la_read(),
                    .mem_la_write(),
                    .mem_la_addr(),
@@ -221,6 +221,9 @@ module application_fpga(
   ram ram_inst(
                .clk(clk),
                .reset_n(reset_n),
+
+               .ram_addr_rand(ram_addr_rand),
+	       .ram_data_rand(ram_data_rand),
 
                .cs(ram_cs),
                .we(ram_we),
@@ -394,8 +397,8 @@ module application_fpga(
 
       ram_cs              = 1'h0;
       ram_we              = 4'h0;
-      ram_address         = cpu_addr[16 : 2] ^ ram_addr_rand;
-      ram_write_data      = cpu_wdata ^ ram_data_rand ^ {2{cpu_addr[15 : 0]}};
+      ram_address         = cpu_addr[17 : 2];
+      ram_write_data      = cpu_wdata;
 
       fw_ram_cs           = 1'h0;
       fw_ram_we           = cpu_wstrb;
@@ -429,6 +432,10 @@ module application_fpga(
       tk1_address         = cpu_addr[9 : 2];
       tk1_write_data      = cpu_wdata;
 
+
+      // Two stage mux implementing read and
+      // write access performed based on the address
+      // from the CPU.
       if (cpu_valid && !muxed_ready_reg) begin
 	if (force_trap) begin
 	  muxed_rdata_new = ILLEGAL_INSTRUCTION;
@@ -445,7 +452,7 @@ module application_fpga(
             RAM_PREFIX: begin
 	      ram_cs          = 1'h1;
 	      ram_we          = cpu_wstrb;
-	      muxed_rdata_new = ram_read_data ^ ram_data_rand ^ {2{cpu_addr[15 : 0]}};
+	      muxed_rdata_new = ram_read_data;
 	      muxed_ready_new = ram_ready;
 	    end
 
@@ -513,6 +520,7 @@ module application_fpga(
 	end
       end
     end
+
 endmodule // application_fpga
 
 //======================================================================
