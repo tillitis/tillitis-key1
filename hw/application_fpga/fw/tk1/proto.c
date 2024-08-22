@@ -21,7 +21,7 @@ static volatile uint32_t *tx =     (volatile uint32_t *)TK1_MMIO_UART_TX_DATA;
 static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 		      enum cmdlen len);
 static int parseframe(uint8_t b, struct frame_header *hdr);
-static void write(uint8_t *buf, size_t nbytes);
+void write(uint8_t *buf, size_t nbytes);
 static int read(uint8_t *buf, size_t bufsize, size_t nbytes);
 static int bytelen(enum cmdlen cmdlen);
 
@@ -135,7 +135,7 @@ void writebyte(uint8_t b)
 	}
 }
 
-static void write(uint8_t *buf, size_t nbytes)
+void write(uint8_t *buf, size_t nbytes)
 {
 	for (int i = 0; i < nbytes; i++) {
 		writebyte(buf[i]);
