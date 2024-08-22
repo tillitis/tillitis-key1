@@ -6,6 +6,7 @@
 #include "../tk1_mem.h"
 #include "assert.h"
 #include "blake2s/blake2s.h"
+#include "flash.h"
 #include "lib.h"
 #include "proto.h"
 #include "spi.h"
@@ -394,6 +395,35 @@ static void scramble_ram(void)
 	*ram_data_rand = rnd_word();
 }
 
+int spi_test(void)
+{
+
+	// Idea:
+	// Test reading out certain info, and print it to app.
+
+	if (!spi_ready()) {
+		assert(1 == 2);
+	}
+
+	uint8_t read_buf[0xff] = {0x00};
+
+	flash_release_powerdown();
+
+	// Read out IDs
+	flash_read_manufacturer_device_id(read_buf);
+	write(read_buf, 2);
+
+	memset(read_buf, 0x00, sizeof(read_buf));
+	flash_read_unique_id(read_buf);
+	write(read_buf, 8);
+
+	memset(read_buf, 0x00, sizeof(read_buf));
+	flash_read_jedec_id(read_buf);
+	write(read_buf, 3);
+
+	return 0;
+}
+
 int main(void)
 {
 	struct context ctx = {0};
@@ -405,7 +435,7 @@ int main(void)
 
 	// Let the app know the function adddress for blake2s()
 	*fw_blake2s_addr = (uint32_t)blake2s;
-	*spi_func_addr = (uint32_t)spi_ready;
+	*spi_func_addr = (uint32_t)spi_test;
 
 	/*@-mustfreeonly@*/
 	/* Yes, splint, this points directly to RAM and we don't care

@@ -85,7 +85,9 @@ FIRMWARE_DEPS = \
 	$(P)/fw/tk1/lib.h \
 	$(P)/fw/tk1/proto.h \
 	$(P)/fw/tk1/assert.h \
-	$(P)/fw/tk1/led.h
+	$(P)/fw/tk1/led.h \
+	$(P)/fw/tk1/spi.h \
+	$(P)/fw/tk1/flash.h
 
 FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
@@ -95,7 +97,8 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/assert.o \
 	$(P)/fw/tk1/led.o \
 	$(P)/fw/tk1/blake2s/blake2s.o \
-	$(P)/fw/tk1/spi.o
+	$(P)/fw/tk1/spi.o \
+	$(P)/fw/tk1/flash.o
 
 FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/main.c \
@@ -104,7 +107,8 @@ FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/assert.c \
 	$(P)/fw/tk1/led.c \
 	$(P)/fw/tk1/blake2s/blake2s.c \
-	$(P)/fw/tk1/spi.c
+	$(P)/fw/tk1/spi.c \
+	$(P)/fw/tk1/flash.c
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
