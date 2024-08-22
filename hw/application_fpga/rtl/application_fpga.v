@@ -328,9 +328,6 @@ module application_fpga(
 
 	       .system_reset(tk1_system_reset),
 
-	       .ram_access(ram_cs),
-	       .rom_access(rom_cs),
-
                .ram_addr_rand(ram_addr_rand),
 	       .ram_data_rand(ram_data_rand),
 
