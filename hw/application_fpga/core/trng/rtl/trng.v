@@ -1,9 +1,11 @@
 //======================================================================
 //
-// rosc.v
+// trng.v
 // ------
-// Digital ring oscillator based entropy generator.
-// Use this as a source of entropy, for example as seeds.
+// Digital ring oscillator (rosc) based entropy source and true
+// random  number generator.  Use this as a source of entropy,
+// for example as seeds.
+//
 // Do **NOT** use directly as random number in any security
 // related use cases.
 //
@@ -16,7 +18,7 @@
 
 `default_nettype none
 
-module rosc(
+module trng(
 	    input wire           clk,
 	    input wire           reset_n,
 
@@ -78,9 +80,9 @@ module rosc(
   reg          data_ready_new;
   reg          data_ready_we;
 
-  reg [1 : 0]  rosc_ctrl_reg;
-  reg [1 : 0]  rosc_ctrl_new;
-  reg          rosc_ctrl_we;
+  reg [1 : 0]  trng_ctrl_reg;
+  reg [1 : 0]  trng_ctrl_new;
+  reg          trng_ctrl_we;
 
   //----------------------------------------------------------------
   // Wires.
@@ -136,7 +138,7 @@ module rosc(
 	 sample2_reg    <= 2'h0;
 	 entropy_reg    <= 32'h0;
 	 data_ready_reg <= 1'h0;
-	 rosc_ctrl_reg  <= CTRL_SAMPLE1;
+	 trng_ctrl_reg  <= CTRL_SAMPLE1;
        end
 
        else begin
@@ -162,8 +164,8 @@ module rosc(
 	   data_ready_reg <= data_ready_new;
 	 end
 
-	 if (rosc_ctrl_we) begin
-	   rosc_ctrl_reg <= rosc_ctrl_new;
+	 if (trng_ctrl_we) begin
+	   trng_ctrl_reg <= trng_ctrl_new;
 	 end
        end
      end
@@ -244,10 +246,10 @@ module rosc(
 
 
   //----------------------------------------------------------------
-  // rosc_ctrl_logic
+  // trng_ctrl_logic
   //----------------------------------------------------------------
   always @*
-    begin : rosc_ctrl_logic
+    begin : trng_ctrl_logic
       reg xor_f;
       reg xor_g;
       reg xor_sample1;
@@ -258,8 +260,8 @@ module rosc(
       entropy_we     = 1'h0;
       cycle_ctr_rst  = 1'h0;
       bit_ctr_inc    = 1'h0;
-      rosc_ctrl_new  = CTRL_SAMPLE1;
-      rosc_ctrl_we   = 1'h0;
+      trng_ctrl_new  = CTRL_SAMPLE1;
+      trng_ctrl_we   = 1'h0;
 
       xor_f       = ^f;
       xor_g       = ^g;
@@ -270,14 +272,14 @@ module rosc(
       sample2_new = {sample2_reg[0], xor_g};
       entropy_new = {entropy_reg[30 : 0], xor_sample1 ^ xor_sample2};
 
-      case (rosc_ctrl_reg)
+      case (trng_ctrl_reg)
 	CTRL_SAMPLE1: begin
 	  if (cycle_ctr_done) begin
 	    cycle_ctr_rst = 1'h1;
 	    sample1_we    = 1'h1;
 	    sample2_we    = 1'h1;
-	    rosc_ctrl_new = CTRL_SAMPLE2;
-	    rosc_ctrl_we  = 1'h1;
+	    trng_ctrl_new = CTRL_SAMPLE2;
+	    trng_ctrl_we  = 1'h1;
 	  end
 	end
 
@@ -286,25 +288,25 @@ module rosc(
 	    cycle_ctr_rst = 1'h1;
 	    sample1_we    = 1'h1;
 	    sample2_we    = 1'h1;
-	    rosc_ctrl_new = CTRL_DATA_READY;
-	    rosc_ctrl_we  = 1'h1;
+	    trng_ctrl_new = CTRL_DATA_READY;
+	    trng_ctrl_we  = 1'h1;
 	  end
 	end
 
 	CTRL_DATA_READY: begin
 	  entropy_we    = 1'h1;
 	  bit_ctr_inc   = 1'h1;
-	  rosc_ctrl_new = CTRL_SAMPLE1;
-	  rosc_ctrl_we  = 1'h1;
+	  trng_ctrl_new = CTRL_SAMPLE1;
+	  trng_ctrl_we  = 1'h1;
 	end
 
 	default: begin
 	end
-      endcase // case (rosc_ctrl_reg)
+      endcase // case (trng_ctrl_reg)
     end
 
-endmodule // rosc
+endmodule // trng
 
 //======================================================================
-// EOF rosc.v
+// EOF trng.v
 //======================================================================

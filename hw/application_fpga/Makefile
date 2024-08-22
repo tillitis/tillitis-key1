@@ -77,7 +77,7 @@ VERILOG_SRCS = \
 	$(P)/core/uart/rtl/uart_core.v \
 	$(P)/core/uart/rtl/uart_fifo.v \
 	$(P)/core/uart/rtl/uart.v \
-	$(P)/core/trng/rtl/rosc.v
+	$(P)/core/trng/rtl/trng.v
 
 FIRMWARE_DEPS = \
 	$(P)/fw/tk1_mem.h \
