@@ -447,9 +447,9 @@ int main(void)
 
 	scramble_ram();
 
+	readbyte();
 	spi_test();
 
-	write("\n", sizeof("\n"));
 	for (;;) {
 		switch (state) {
 		case FW_STATE_INITIAL:
