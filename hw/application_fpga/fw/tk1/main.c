@@ -32,7 +32,7 @@ static volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_
 static volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
 static volatile uint32_t *ram_addr_rand   = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
 static volatile uint32_t *ram_data_rand   = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
-static volatile uint32_t *spi_func_addr   = (volatile uint32_t *)TK1_MMIO_TK1_ADDR_SPI_CMD;
+static volatile uint32_t *spi_func_addr   = (volatile uint32_t *)TK1_MMIO_TK1_SPI_CMD;
 // clang-format on
 
 // Context for the loading of a TKey program
