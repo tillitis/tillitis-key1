@@ -639,7 +639,7 @@ module tk1(
 	  end
 
 	  if (address == ADDR_SWITCH_APP) begin
-	    tmp_read_data[0] = app_mode_reg;
+	    tmp_read_data[0] = fw_app_mode_reg;
 	  end
 
 	  if (address == ADDR_LED) begin
