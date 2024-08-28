@@ -342,9 +342,6 @@ static void run(const struct context *ctx)
 #endif
 	// clang-format on
 
-	// Flip over to application mode
-	*switch_app = 1;
-
 	// XXX Firmware stack now no longer available
 	// Don't use any function calls!
 
@@ -398,6 +395,9 @@ int main(void)
 	struct frame_header hdr = {0};
 	uint8_t cmd[CMDLEN_MAXBYTES] = {0};
 	enum state state = FW_STATE_INITIAL;
+
+	// Enable FW mode.
+	*switch_app = 0;
 
 	print_hw_version();
 
