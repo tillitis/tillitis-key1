@@ -110,9 +110,7 @@ module tk1(
   localparam FW_RAM_FIRST = 32'hd0000000;
   localparam FW_RAM_LAST  = 32'hd00007ff;
 
-`ifdef INCLUDE_SPI_MASTER
-  localparam RAM_PREFIX   = 2'h1;
-`endif // INCLUDE_SPI_MASTER
+  localparam ROM_PREFIX   = 2'h0;
 
 
   //----------------------------------------------------------------
@@ -121,8 +119,10 @@ module tk1(
   reg [31 : 0] cdi_mem [0 : 7];
   reg          cdi_mem_we;
 
-  reg          switch_app_reg;
-  reg          switch_app_we;
+  reg          fw_app_mode_reg;
+  reg          fw_app_mode_new;
+  reg          fw_app_mode_we;
+  reg          fw_app_mode_rst;
 
   reg [2 : 0]  led_reg;
   reg          led_we;
@@ -167,13 +167,14 @@ module tk1(
   reg          force_trap_reg;
   reg          force_trap_set;
 
+
 `ifdef INCLUDE_SPI_MASTER
+  reg           spi_access_ctrl_reg;
+  reg           spi_access_ctrl_new;
+  reg           spi_access_ctrl_we;
+
   reg [31 : 0] spi_cmd_addr_reg;
   reg          spi_cmd_addr_we;
-
-  reg          spi_access_ctrl_reg;
-  reg          spi_access_ctrl_new;
-  reg          spi_access_ctrl_we;
 `endif // INCLUDE_SPI_MASTER
 
 
@@ -206,7 +207,7 @@ module tk1(
   assign read_data   = tmp_read_data;
   assign ready       = tmp_ready;
 
-  assign fw_app_mode = switch_app_reg;
+  assign fw_app_mode = fw_app_mode_reg;
 
   assign force_trap = force_trap_reg;
 
@@ -273,7 +274,7 @@ module tk1(
   always @ (posedge clk)
     begin : reg_update
       if (!reset_n) begin
-	switch_app_reg      <= 1'h0;
+	fw_app_mode_reg     <= 1'h1;
         led_reg             <= 3'h6;
         gpio1_reg           <= 2'h0;
         gpio2_reg           <= 2'h0;
@@ -317,8 +318,16 @@ module tk1(
         gpio2_reg[0] <= gpio2;
         gpio2_reg[1] <= gpio2_reg[0];
 
-	if (switch_app_we) begin
-	  switch_app_reg <= 1'h1;
+	// When not in FW mode, Disable things that are
+	// explitly enabled.
+	if (!fw_app_mode) begin
+`ifdef INCLUDE_SPI_MASTER
+	  spi_access_ctrl_reg <= 1'h0;
+`endif // INCLUDE_SPI_MASTER
+	end
+
+	if (fw_app_mode_we) begin
+	  fw_app_mode_reg <= fw_app_mode_new;
 	end
 
         if (led_we) begin
@@ -383,7 +392,7 @@ module tk1(
 	end
 
 	if (spi_access_ctrl_we) begin
-	  spi_access_ctrl_reg <= spi_access_ctrl_new;
+	  spi_access_ctrl_reg <= write_data[0];
 	end
 `endif // INCLUDE_SPI_MASTER
 
@@ -454,37 +463,36 @@ module tk1(
     end
 
 
-`ifdef INCLUDE_SPI_MASTER
   //----------------------------------------------------------------
-  // spi_access_ctrl
+  // fw_app_mode_ctrl
   //
-  // Logic that implements the detection of a SPI command trampoline
-  // event, when the CPU reads an instruction from the specified
-  // SPI command handler FW entry point. When that happens SPI
-  // access is enabled.
+  // Logic that implements the switch between FW mode and App
+  // mode. The FW mode can explicitly be enabled via API, but only if
+  // the instruction writing to the API comes from the ROM.
   //
-  // The logic also handles the event when the SPI access control
-  // API is written to. WHen that happens SPI access is
-  // disabled.
-  //----------------------------------------------------------------
+  // As soon as an instruction is executed from RAM, the mode is
+  // switched to App mode. This means that after reset the device is
+  // in App mode, and will be set to App mode when the FW starts
+  // the loaded app.
+  // ----------------------------------------------------------------
   always @*
-    begin : spi_access_ctrl
-      spi_access_ctrl_new = 1'h0;
-      spi_access_ctrl_we  = 1'h0;
+    begin : fw_app_mode_ctrl
+      fw_app_mode_new = 1'h0;
+      fw_app_mode_we  = 1'h0;
 
       if (cpu_valid & cpu_instr) begin
-	if (cpu_addr == spi_cmd_addr_reg) begin
-	  spi_access_ctrl_new = 1'h1;
-	  spi_access_ctrl_we  = 1'h1;
+	if (cpu_addr[31 : 30] == ROM_PREFIX) begin
+	  if (fw_app_mode_rst) begin
+	    fw_app_mode_new = 1'h0;
+	    fw_app_mode_we  = 1'h1;
+	  end
 	end
-
-	if (cpu_addr[31 : 30] == RAM_PREFIX) begin
-	  spi_access_ctrl_new = 1'h0;
-	  spi_access_ctrl_we  = 1'h1;
+	else begin
+	  fw_app_mode_new = 1'h1;
+	  fw_app_mode_new = 1'h1;
 	end
       end
     end
-`endif // INCLUDE_SPI_MASTER
 
 
   //----------------------------------------------------------------
@@ -492,7 +500,6 @@ module tk1(
   //----------------------------------------------------------------
   always @*
     begin : api
-      switch_app_we    = 1'h0;
       led_we           = 1'h0;
       gpio3_we         = 1'h0;
       gpio4_we         = 1'h0;
@@ -508,6 +515,7 @@ module tk1(
       cpu_mon_first_we = 1'h0;
       cpu_mon_last_we  = 1'h0;
       cpu_mon_en_we    = 1'h0;
+      fw_app_mode_rst  = 1'h0;
       tmp_read_data    = 32'h0;
       tmp_ready        = 1'h0;
 
@@ -526,7 +534,7 @@ module tk1(
 	tmp_ready = 1'h1;
         if (we) begin
 	  if (address == ADDR_SWITCH_APP) begin
-	    switch_app_we = 1'h1;
+	    fw_app_mode_rst = 1'h1;
 	  end
 
 	  if (address == ADDR_LED) begin
@@ -539,13 +547,13 @@ module tk1(
 	  end
 
           if (address == ADDR_APP_START) begin
-	    if (!switch_app_reg) begin
+	    if (!fw_app_mode_reg) begin
               app_start_we = 1'h1;
             end
 	  end
 
           if (address == ADDR_APP_SIZE) begin
-	    if (!switch_app_reg) begin
+	    if (!fw_app_mode_reg) begin
               app_size_we = 1'h1;
             end
 	  end
@@ -555,25 +563,25 @@ module tk1(
           end
 
           if (address == ADDR_BLAKE2S) begin
-	    if (!switch_app_reg) begin
+	    if (!fw_app_mode_reg) begin
               blake2s_addr_we = 1'h1;
             end
 	  end
 
 	  if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
-	    if (!switch_app_reg) begin
+	    if (!fw_app_mode_reg) begin
 	      cdi_mem_we = 1'h1;
 	    end
 	  end
 
           if (address == ADDR_RAM_ADDR_RAND) begin
- 	    if (!switch_app_reg) begin
+ 	    if (!fw_app_mode_reg) begin
               ram_addr_rand_we = 1'h1;
 	    end
 	  end
 
           if (address == ADDR_RAM_DATA_RAND) begin
-	    if (!switch_app_reg) begin
+	    if (!fw_app_mode_reg) begin
               ram_data_rand_we = 1'h1;
             end
  	  end
@@ -596,7 +604,9 @@ module tk1(
 
 `ifdef INCLUDE_SPI_MASTER
 	  if (address == ADDR_SPI_EN) begin
-	    spi_enable_vld = spi_access_ctrl_reg;
+	    if (!fw_app_mode_reg) begin
+	      spi_access_ctrl_we  = 1'h1;
+	    end
 	  end
 
 	  if (address == ADDR_SPI_XFER) begin
@@ -608,7 +618,7 @@ module tk1(
 	  end
 
           if (address == ADDR_SPI_CMD) begin
-	    if (!switch_app_reg) begin
+	    if (!fw_app_mode_reg) begin
               spi_cmd_addr_we = 1'h1;
             end
 	  end
@@ -629,7 +639,7 @@ module tk1(
 	  end
 
 	  if (address == ADDR_SWITCH_APP) begin
-	    tmp_read_data = {32{switch_app_reg}};
+	    tmp_read_data[0] = app_mode_reg;
 	  end
 
 	  if (address == ADDR_LED) begin
@@ -658,7 +668,7 @@ module tk1(
 	  end
 
 	  if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
-	    if (!switch_app_reg) begin
+	    if (!fw_app_mode_reg) begin
 	      tmp_read_data = udi_rdata;
 	    end
 	  end
