@@ -28,14 +28,17 @@
 /testbench_verilator*
 /check.smt2
 /check.vcd
+synth.json
 synth.log
+synth.txt
 synth.v
+application_fpga_par.json
+application_fpga_par.txt
 *.o
 *.asc
 *.bin
 *.elf
 *.map
-synth.*
 *.tmp
 *.hex
 !uds.hex
@@ -61,5 +64,4 @@ fp-info-cache
 *.dsn
 *.ses
 __pycache__
-application_fpga_par.json
 MEM.TXT

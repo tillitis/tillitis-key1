@@ -257,11 +257,11 @@ synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/
 	$(YOSYS_PATH)yosys -v3 -l synth.log $(YOSYS_FLAG) -DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 		-DFIRMWARE_HEX=\"$(P)/bram_fw.hex\" \
 		-p 'synth_ice40 -dsp -top application_fpga -json $@; write_verilog -attr2comment synth.v' \
-		$(filter %.v, $^)
+		$(filter %.v, $^) |& tee $(patsubst %.json,%,$@).txt
 
 application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
 	$(NEXTPNR_PATH)nextpnr-ice40  --freq $(TARGET_FREQ) --ignore-loops --up5k --package sg48 --json $< \
-		--pcf $(P)/data/$(PIN_FILE) --write $@
+		--pcf $(P)/data/$(PIN_FILE) --write $@ |& tee $(patsubst %.json,%,$@).txt
 
 application_fpga.asc: application_fpga_par.json $(P)/data/uds.hex $(P)/data/udi.hex
 	UDS_HEX="$(P)/data/uds.hex" UDI_HEX="$(P)/data/udi.hex" OUT_ASC=$@ $(NEXTPNR_PATH)nextpnr-ice40 --up5k --package sg48 --ignore-loops --json $< --run tools/patch_uds_udi.py
@@ -344,9 +344,9 @@ view: tb_application_fpga_vcd
 #-------------------------------------------------------------------
 clean: clean_fw
 	rm -f bram_fw.hex
-	rm -f synth.{log,v,json} route.v application_fpga.{asc,bin,vcd} application_fpga_testfw.bin
+	rm -f synth.{log,v,json,txt} route.v application_fpga.{asc,bin,vcd} application_fpga_testfw.bin
 	rm -f tb_application_fpga.vvp synth_tb.vvp route_tb.vvp
-	rm -f application_fpga_par.json
+	rm -f application_fpga_par.{json,txt}
 	rm -f *.vcd
 	rm -f lint_issues.txt
 	rm -rf verilated
