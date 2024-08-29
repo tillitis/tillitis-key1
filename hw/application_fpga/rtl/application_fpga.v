@@ -149,7 +149,7 @@ module application_fpga(
   wire [14 : 0] ram_addr_rand;
   wire [31 : 0] ram_data_rand;
   wire          tk1_system_reset;
-  wire [31 : 0] tk1_syscall_addr;
+  wire [31 : 0] tk1_syscall_instr;
   wire          tk1_syscall;
   /* verilator lint_on UNOPTFLAT */
 
@@ -330,7 +330,7 @@ module application_fpga(
 
 	       .system_reset(tk1_system_reset),
 
-	       .syscall_addr(tk1_syscall_addr),
+	       .syscall_instr(tk1_syscall_instr),
 	       .syscall(tk1_syscall),
 
                .ram_addr_rand(ram_addr_rand),
@@ -439,6 +439,12 @@ module application_fpga(
 	  muxed_rdata_new = ILLEGAL_INSTRUCTION;
 	  muxed_ready_new = 1'h1;
 	end
+
+	else if (tk1_syscall) begin
+	  muxed_rdata_new = tk1_syscall_instr;
+	  muxed_ready_new = 1'h1;
+	end
+
 	else begin
           case (area_prefix)
             ROM_PREFIX: begin
@@ -448,16 +454,10 @@ module application_fpga(
             end
 
             RAM_PREFIX: begin
-	      if (tk1_syscall) begin
-		muxed_rdata_new = tk1_syscall_addr;
-		muxed_ready_new = 1'h1;
-	      end
-	      else begin
-		ram_cs          = 1'h1;
-		ram_we          = cpu_wstrb;
-		muxed_rdata_new = ram_read_data ^ ram_data_rand ^ {2{cpu_addr[15 : 0]}};
-		muxed_ready_new = ram_ready;
-	      end
+	      ram_cs          = 1'h1;
+	      ram_we          = cpu_wstrb;
+	      muxed_rdata_new = ram_read_data ^ ram_data_rand ^ {2{cpu_addr[15 : 0]}};
+	      muxed_ready_new = ram_ready;
 	    end
 
             RESERVED_PREFIX: begin
