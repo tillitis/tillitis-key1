@@ -29,12 +29,10 @@ module tk1(
 	   output wire [14 : 0] ram_addr_rand,
 	   output wire [31 : 0] ram_data_rand,
 
-`ifdef INCLUDE_SPI_MASTER
 	   output wire          spi_ss,
 	   output wire          spi_sck,
 	   output wire          spi_mosi,
 	   input wire           spi_miso,
-`endif // INCLUDE_SPI_MASTER
 
            output wire          led_r,
            output wire          led_g,
@@ -96,11 +94,9 @@ module tk1(
 
   localparam ADDR_SYSTEM_RESET  = 8'h70;
 
-`ifdef INCLUDE_SPI_MASTER
   localparam ADDR_SPI_EN        = 8'h80;
   localparam ADDR_SPI_XFER      = 8'h81;
   localparam ADDR_SPI_DATA      = 8'h82;
-`endif // INCLUDE_SPI_MASTER
 
   localparam TK1_NAME0    = 32'h746B3120; // "tk1 "
   localparam TK1_NAME1    = 32'h6d6b6466; // "mkdf"
@@ -175,7 +171,6 @@ module tk1(
 
   wire [31:0]  udi_rdata;
 
-`ifdef INCLUDE_SPI_MASTER
   reg          spi_enable;
   reg          spi_enable_vld;
   reg          spi_start;
@@ -183,8 +178,6 @@ module tk1(
   reg          spi_tx_data_vld;
   wire         spi_ready;
   wire [7 : 0] spi_rx_data;
-`endif // INCLUDE_SPI_MASTER
-
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -226,7 +219,6 @@ module tk1(
     );
   /* verilator lint_on PINMISSING */
 
-`ifdef INCLUDE_SPI_MASTER
   tk1_spi_master spi_master(
 			    .clk(clk),
 			    .reset_n(reset_n),
@@ -244,8 +236,6 @@ module tk1(
 			    .spi_rx_data(spi_rx_data),
 			    .spi_ready(spi_ready)
 			    );
-`endif // INCLUDE_SPI_MASTER
-
 
     udi_rom rom_i(
 		  .addr(address[0]),
@@ -448,14 +438,12 @@ module tk1(
       tmp_read_data    = 32'h0;
       tmp_ready        = 1'h0;
 
-`ifdef INCLUDE_SPI_MASTER
       spi_enable_vld   = 1'h0;
       spi_start        = 1'h0;
       spi_tx_data_vld  = 1'h0;
 
       spi_enable       = write_data[0];
       spi_tx_data      = write_data[7 : 0];
-`endif // INCLUDE_SPI_MASTER
 
       if (cs) begin
 	tmp_ready = 1'h1;
@@ -529,7 +517,6 @@ module tk1(
 	    end
 	  end
 
-`ifdef INCLUDE_SPI_MASTER
 	  if (address == ADDR_SPI_EN) begin
 	    spi_enable_vld = 1'h1;
 	  end
@@ -541,7 +528,6 @@ module tk1(
 	  if (address == ADDR_SPI_DATA) begin
 	    spi_tx_data_vld = 1'h1;
 	  end
-`endif // INCLUDE_SPI_MASTER
 
 	end
         else begin
@@ -592,7 +578,6 @@ module tk1(
 	    end
 	  end
 
-`ifdef INCLUDE_SPI_MASTER
 	  if (address == ADDR_SPI_XFER) begin
 	    tmp_read_data[0] = spi_ready;
 	  end
@@ -600,7 +585,6 @@ module tk1(
 	  if (address == ADDR_SPI_DATA) begin
 	    tmp_read_data[7 : 0] = spi_rx_data;
 	  end
-`endif // INCLUDE_SPI_MASTER
 
         end
       end

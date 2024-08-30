@@ -38,7 +38,7 @@ spi.sim: $(TB_SPI_SRC) $(SPI_SRC) $(MEM_MODEL_SRC)
 
 
 top.sim: $(TB_TOP_SRC) $(TOP_SRC)
-	$(CC) $(CC_FLAGS) -o top.sim $^ -DUDI_HEX=\"../tb/udi.hex\" -DINCLUDE_SPI_MASTER
+	$(CC) $(CC_FLAGS) -o top.sim $^ -DUDI_HEX=\"../tb/udi.hex\"
 
 
 sim-spi: spi.sim
@@ -50,7 +50,7 @@ sim-top: top.sim
 
 
 lint-top:  $(LINT_SRC)
-	$(LINT) $(LINT_FLAGS) $^ -DUDI_HEX=\"../tb/udi.hex\" -DINCLUDE_SPI_MASTER
+	$(LINT) $(LINT_FLAGS) $^ -DUDI_HEX=\"../tb/udi.hex\"
 
 
 clean:

@@ -292,13 +292,6 @@ tb:
 #-------------------------------------------------------------------
 # Main FPGA build flow.
 # Synthesis. Place & Route. Bitstream generation.
-#
-# To include the SPI-master, add the flag -DINCLUDE_SPI_MASTER to Yosys cmd.
-# This can, for example, be done using
-# 'make application_fpga.bin YOSYS_FLAG=-DINCLUDE_SPI_MASTER'.
-# Important: do a make clean between builds with and wihtout the SPI master.
-# Otherwise, there is a risk of unintended components persisting between
-# builds.
 #-------------------------------------------------------------------
 
 YOSYS_FLAG ?=
