@@ -7,6 +7,7 @@
 #include "assert.h"
 #include "blake2s/blake2s.h"
 #include "lib.h"
+#include "partition_table.h"
 #include "proto.h"
 #include "state.h"
 
@@ -405,6 +406,7 @@ int main(void)
 	struct frame_header hdr = {0};
 	uint8_t cmd[CMDLEN_MAXBYTES] = {0};
 	enum state state = FW_STATE_INITIAL;
+	partition_table_t part_table;
 
 	print_hw_version();
 
@@ -419,7 +421,11 @@ int main(void)
 	/*@+mustfreeonly@*/
 	ctx.use_uss = false;
 
+	readbyte();
+
 	scramble_ram();
+
+	part_table_read(&part_table);
 
 	for (;;) {
 		switch (state) {
