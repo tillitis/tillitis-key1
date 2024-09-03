@@ -8,6 +8,7 @@
 #include "blake2s/blake2s.h"
 #include "lib.h"
 #include "partition_table.h"
+#include "preload_app.h"
 #include "proto.h"
 #include "state.h"
 
@@ -248,6 +249,13 @@ static enum state initial_commands(const struct frame_header *hdr,
 		break;
 	}
 
+	case FW_CMD_LOAD_APP_FLASH:
+		rsp[0] = STATUS_OK;
+		fwreply(*hdr, FW_RSP_LOAD_APP_FLASH, rsp);
+
+		state = FW_STATE_LOAD_APP_FLASH;
+		break;
+
 	default:
 		htif_puts("Got unknown firmware cmd: 0x");
 		htif_puthex(cmd[0]);
@@ -421,8 +429,6 @@ int main(void)
 	/*@+mustfreeonly@*/
 	ctx.use_uss = false;
 
-	readbyte();
-
 	scramble_ram();
 
 	part_table_read(&part_table);
@@ -445,6 +451,23 @@ int main(void)
 			}
 
 			state = loading_commands(&hdr, cmd, state, &ctx);
+			break;
+
+		case FW_STATE_LOAD_APP_FLASH:
+			if (preload_start(&part_table) == -1) {
+				state = FW_STATE_FAIL;
+				break;
+			}
+
+			*app_size = part_table.pre_app_data.size;
+
+			int digest_err = compute_app_digest(ctx.digest);
+			assert(digest_err == 0);
+			print_digest(ctx.digest);
+			ctx.use_uss = false;
+
+			state = FW_STATE_RUN;
+
 			break;
 
 		case FW_STATE_RUN:
