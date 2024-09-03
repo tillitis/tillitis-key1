@@ -30,6 +30,10 @@ int part_table_init(partition_table_t *part_table)
 			part_table->app_storage[i].size = SIZE_STORAGE_AREA;
 		}
 
+		/* Hardcode that a preloaded app exists in flash */
+		part_table->pre_app_data.size = 28024;
+		part_table->pre_app_data.status = 0x02;
+
 		part_table_write(part_table);
 	}
 
