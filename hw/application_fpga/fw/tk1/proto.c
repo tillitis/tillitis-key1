@@ -108,6 +108,10 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 		len = LEN_32;
 		break;
 
+	case FW_RSP_LOAD_APP_FLASH:
+		len = LEN_1;
+		break;
+
 	default:
 		htif_puts("fwreply(): Unknown response code: 0x");
 		htif_puthex(rspcode);
