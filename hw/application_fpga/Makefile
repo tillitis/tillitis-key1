@@ -116,7 +116,8 @@ FIRMWARE_DEPS = \
 	$(P)/fw/tk1/partition_table.h \
 	$(P)/fw/tk1/preload_app.h \
 	$(P)/fw/tk1/auth_app.h \
-	$(P)/fw/tk1/htif.h
+	$(P)/fw/tk1/htif.h \
+	$(P)/fw/tk1/rng.h
 
 FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
@@ -131,7 +132,8 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/partition_table.o \
 	$(P)/fw/tk1/preload_app.o \
 	$(P)/fw/tk1/auth_app.o \
-	$(P)/fw/tk1/htif.o
+	$(P)/fw/tk1/htif.o \
+	$(P)/fw/tk1/rng.o
 
 FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/main.c \
@@ -145,7 +147,8 @@ FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/partition_table.c \
 	$(P)/fw/tk1/preload_app.c \
 	$(P)/fw/tk1/auth_app.c \
-	$(P)/fw/tk1/htif.c
+	$(P)/fw/tk1/htif.c \
+	$(P)/fw/tk1/rng.c
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
