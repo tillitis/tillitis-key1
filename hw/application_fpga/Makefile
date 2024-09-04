@@ -347,7 +347,7 @@ tb:
 # Synthesis. Place & Route. Bitstream generation.
 #-------------------------------------------------------------------
 
-YOSYS_FLAG ?=
+YOSYS_FLAG ?=-DINCLUDE_SPI_MASTER
 
 synth.json: $(FPGA_SRC) $(VERILOG_SRCS) $(PICORV32_SRCS) bram_fw.hex \
 		$(P)/data/uds.hex $(P)/data/udi.hex
