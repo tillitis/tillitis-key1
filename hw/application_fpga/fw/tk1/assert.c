@@ -4,6 +4,7 @@
  */
 
 #include "assert.h"
+#include "htif.h"
 #include "lib.h"
 
 void assert_fail(const char *assertion, const char *file, unsigned int line,

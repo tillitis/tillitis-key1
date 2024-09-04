@@ -6,6 +6,7 @@
 #include "../tk1_mem.h"
 #include "assert.h"
 #include "blake2s/blake2s.h"
+#include "htif.h"
 #include "lib.h"
 #include "partition_table.h"
 #include "preload_app.h"
