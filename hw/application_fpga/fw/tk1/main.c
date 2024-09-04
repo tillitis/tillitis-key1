@@ -11,6 +11,7 @@
 #include "partition_table.h"
 #include "preload_app.h"
 #include "proto.h"
+#include "rng.h"
 #include "state.h"
 
 #include <stdbool.h>
@@ -28,8 +29,6 @@ static volatile uint32_t *cdi             = (volatile uint32_t *)TK1_MMIO_TK1_CD
 static volatile uint32_t *app_addr        = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
 static volatile uint32_t *app_size        = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
 static volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
-static volatile uint32_t *trng_status     = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
-static volatile uint32_t *trng_entropy    = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
 static volatile uint32_t *timer           = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
 static volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
 static volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
@@ -49,7 +48,6 @@ struct context {
 
 static void print_hw_version(void);
 static void print_digest(uint8_t *md);
-static uint32_t rnd_word(void);
 static int compute_app_digest(uint8_t *digest);
 static void compute_cdi(const uint8_t *digest, const bool use_uss,
 			const uint8_t *uss);
@@ -61,7 +59,6 @@ static enum state loading_commands(const struct frame_header *hdr,
 				   const uint8_t *cmd, enum state state,
 				   struct context *ctx);
 static void run(const struct context *ctx);
-static uint32_t xorwow(uint32_t state, uint32_t acc);
 static void scramble_ram(void);
 
 static void print_hw_version(void)
@@ -88,13 +85,6 @@ static void print_digest(uint8_t *md)
 	htif_lf();
 }
 
-static uint32_t rnd_word(void)
-{
-	while ((*trng_status & (1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
-	}
-	return *trng_entropy;
-}
-
 /* Computes the blake2s digest of the app loaded into RAM */
 static int compute_app_digest(uint8_t *digest)
 {
@@ -115,7 +105,7 @@ static void compute_cdi(const uint8_t *digest, const bool use_uss,
 
 	// Prepare to sleep a random number of cycles before reading out UDS
 	*timer_prescaler = 1;
-	rnd_sleep = rnd_word();
+	rnd_sleep = rng_get_word();
 	// Up to 65536 cycles
 	rnd_sleep &= 0xffff;
 	*timer = (uint32_t)(rnd_sleep == 0 ? 1 : rnd_sleep);
@@ -381,32 +371,23 @@ static void run(const struct context *ctx)
 	__builtin_unreachable();
 }
 
-static uint32_t xorwow(uint32_t state, uint32_t acc)
-{
-	state ^= state << 13;
-	state ^= state >> 17;
-	state ^= state << 5;
-	state += acc;
-	return state;
-}
-
 static void scramble_ram(void)
 {
 	uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
 
 	// Fill RAM with random data
 	// Get random state and accumulator seeds.
-	uint32_t data_state = rnd_word();
-	uint32_t data_acc = rnd_word();
+	uint32_t data_state = rng_get_word();
+	uint32_t data_acc = rng_get_word();
 
 	for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
-		data_state = xorwow(data_state, data_acc);
+		data_state = rng_xorwow(data_state, data_acc);
 		ram[w] = data_state;
 	}
 
 	// Set RAM address and data scrambling parameters
-	*ram_addr_rand = rnd_word();
-	*ram_data_rand = rnd_word();
+	*ram_addr_rand = rng_get_word();
+	*ram_data_rand = rng_get_word();
 }
 
 int main(void)
