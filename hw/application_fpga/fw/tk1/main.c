@@ -47,6 +47,7 @@ struct context {
 static void print_hw_version(void);
 static void print_digest(uint8_t *md);
 static uint32_t rnd_word(void);
+static int compute_app_digest(uint8_t *digest);
 static void compute_cdi(const uint8_t *digest, const bool use_uss,
 			const uint8_t *uss);
 static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word);
@@ -89,6 +90,14 @@ static uint32_t rnd_word(void)
 	while ((*trng_status & (1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
 	}
 	return *trng_entropy;
+}
+
+/* Computes the blake2s digest of the app loaded into RAM */
+static int compute_app_digest(uint8_t *digest)
+{
+	blake2s_ctx b2s_ctx = {0};
+	return blake2s(digest, 32, NULL, 0, (const void *)TK1_RAM_BASE,
+		       *app_size, &b2s_ctx);
 }
 
 // CDI = blake2s(uds, blake2s(app), uss)
@@ -277,19 +286,14 @@ static enum state loading_commands(const struct frame_header *hdr,
 		ctx->left -= nbytes;
 
 		if (ctx->left == 0) {
-			blake2s_ctx b2s_ctx = {0};
-			int blake2err = 0;
-
 			htif_puts("Fully loaded ");
 			htif_putinthex(*app_size);
 			htif_lf();
 
 			// Compute Blake2S digest of the app,
 			// storing it for FW_STATE_RUN
-			blake2err = blake2s(&ctx->digest, 32, NULL, 0,
-					    (const void *)TK1_RAM_BASE,
-					    *app_size, &b2s_ctx);
-			assert(blake2err == 0);
+			int digest_err = compute_app_digest(ctx->digest);
+			assert(digest_err == 0);
 			print_digest(ctx->digest);
 
 			// And return the digest in final
