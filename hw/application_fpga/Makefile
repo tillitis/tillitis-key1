@@ -270,7 +270,7 @@ tb:
 # builds.
 #-------------------------------------------------------------------
 
-YOSYS_FLAG ?=
+YOSYS_FLAG ?=-DINCLUDE_SPI_MASTER
 
 synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/udi.hex
 	$(YOSYS_PATH)yosys -v3 -l synth.log $(YOSYS_FLAG) -DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
