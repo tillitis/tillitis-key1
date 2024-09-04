@@ -6,6 +6,7 @@
 #include "proto.h"
 #include "../tk1_mem.h"
 #include "assert.h"
+#include "htif.h"
 #include "led.h"
 #include "lib.h"
 #include "state.h"
