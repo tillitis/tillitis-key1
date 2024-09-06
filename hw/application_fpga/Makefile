@@ -44,7 +44,7 @@ CC = clang
 CFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 \
    -static -std=gnu99 -O2 -ffast-math -fno-common -fno-builtin-printf \
    -fno-builtin-putchar -fno-builtin-memcpy -nostdlib -mno-relax -Wall \
-   -Wpedantic -Wno-language-extension-token -flto -g -DNOCONSOLE
+   -Wpedantic -Wno-language-extension-token -flto -g
 
 AS = clang
 ASFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 -mno-relax
@@ -150,6 +150,10 @@ $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
 firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
+
+qemu_firmware.elf: CFLAGS += -DQEMU_CONSOLE
+qemu_firmware.elf: firmware.elf
+	mv firmware.elf qemu_firmware.elf
 
 .PHONY: check
 check:
@@ -359,6 +363,7 @@ clean_fw:
 	rm -f $(FIRMWARE_OBJS)
 	rm -f testfw.{elf,elf.map,bin,hex}
 	rm -f $(TESTFW_OBJS)
+	rm -f qemu_firmware.elf
 .PHONY: clean_fw
 
 #-------------------------------------------------------------------

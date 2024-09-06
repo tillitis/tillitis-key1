@@ -286,11 +286,12 @@ for the tools you need. The easiest is probably to use your OCI image,
 also useful for debugging the firmware. You can attach GDB, use
 breakpoints, et cetera.
 
-If you want to use plain debug prints you can remove `-DNOCONSOLE`
-from the `CFLAGS` in the Makefile and using the helper functions in
-`lib.c` like `htif_puts()` `htif_putinthex()` `htif_hexdump()` and
-friends for printf-like debugging. Note that these functions are only
-usable in qemu.
+There is a special make target for QEMU: `qemu_firmware.elf`, which
+sets `-DQEMU_CONSOLE`, so you can use plain debug prints using the
+helper functions in `lib.c` like `htif_puts()` `htif_putinthex()`
+`htif_hexdump()` and friends. Note that these functions are only
+usable in qemu and that you might need to `make clean` before
+building, if you have already built before.
 
 ### Test firmware
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 - Tillitis AB
+ * Copyright (C) 2022-2024 - Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
@@ -7,7 +7,7 @@
 #include "assert.h"
 #include "types.h"
 
-#ifndef NOCONSOLE
+#ifdef QEMU_CONSOLE
 struct {
 	uint32_t arr[2];
 } static volatile tohost __attribute__((section(".htif")));
