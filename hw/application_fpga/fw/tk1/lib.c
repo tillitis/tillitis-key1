@@ -72,7 +72,7 @@ void htif_putc(char ch)
 	htif_putchar(ch);
 }
 
-void htif_lf()
+void htif_lf(void)
 {
 	htif_putchar('\n');
 }
