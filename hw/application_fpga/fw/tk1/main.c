@@ -5,6 +5,7 @@
 
 #include "../tk1_mem.h"
 #include "assert.h"
+#include "auth_app.h"
 #include "blake2s/blake2s.h"
 #include "htif.h"
 #include "lib.h"
@@ -44,6 +45,7 @@ struct context {
 	uint8_t *loadaddr;  // Where we are currently loading a TKey program
 	bool use_uss;	    // Use USS?
 	uint8_t uss[32];    // User Supplied Secret, if any
+	bool from_flash;
 };
 
 static void print_hw_version(void);
@@ -58,7 +60,7 @@ static enum state initial_commands(const struct frame_header *hdr,
 static enum state loading_commands(const struct frame_header *hdr,
 				   const uint8_t *cmd, enum state state,
 				   struct context *ctx);
-static void run(const struct context *ctx);
+static void run(const struct context *ctx, partition_table_t *part_table);
 static void scramble_ram(void);
 
 static void print_hw_version(void)
@@ -323,12 +325,27 @@ static enum state loading_commands(const struct frame_header *hdr,
 	return state;
 }
 
-static void run(const struct context *ctx)
+static void run(const struct context *ctx, partition_table_t *part_table)
 {
+	/* At this point we expect an app to be loaded into RAM */
 	*app_addr = TK1_RAM_BASE;
 
 	// CDI = hash(uds, hash(app), uss)
 	compute_cdi(ctx->digest, ctx->use_uss, ctx->uss);
+
+	if (ctx->from_flash) {
+		if (part_table->pre_app_data.status == 0x02) {
+			htif_puts("Create auth\n");
+			auth_app_create(&part_table->pre_app_data.auth);
+			part_table->pre_app_data.status = 0x01;
+			part_table_write(part_table);
+		}
+
+		if (!auth_app_authenticate(&part_table->pre_app_data.auth)) {
+			htif_puts("!Authenticated\n");
+			assert(1 == 2);
+		}
+	}
 
 	htif_puts("Flipping to app mode!\n");
 	htif_puts("Jumping to ");
@@ -397,6 +414,7 @@ int main(void)
 	uint8_t cmd[CMDLEN_MAXBYTES] = {0};
 	enum state state = FW_STATE_INITIAL;
 	partition_table_t part_table;
+	ctx.from_flash = false;
 
 	print_hw_version();
 
@@ -414,6 +432,13 @@ int main(void)
 	scramble_ram();
 
 	part_table_read(&part_table);
+
+	/* Force a preloaded app to start, to create the authentication digest
+	 */
+	if (preload_check_valid_app(&part_table) &&
+	    part_table.pre_app_data.status == 0x02) {
+		state = FW_STATE_LOAD_APP_FLASH;
+	}
 
 	for (;;) {
 		switch (state) {
@@ -442,18 +467,20 @@ int main(void)
 			}
 
 			*app_size = part_table.pre_app_data.size;
+			assert(*app_size <= TK1_APP_MAX_SIZE);
 
 			int digest_err = compute_app_digest(ctx.digest);
 			assert(digest_err == 0);
 			print_digest(ctx.digest);
 			ctx.use_uss = false;
+			ctx.from_flash = true;
 
 			state = FW_STATE_RUN;
 
 			break;
 
 		case FW_STATE_RUN:
-			run(&ctx);
+			run(&ctx, &part_table);
 			break; // This is never reached!
 
 		case FW_STATE_FAIL:
