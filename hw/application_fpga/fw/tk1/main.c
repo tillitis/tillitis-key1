@@ -301,8 +301,7 @@ static enum state loading_commands(const struct frame_header *hdr,
 			// And return the digest in final
 			// response
 			rsp[0] = STATUS_OK;
-			memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, &ctx->digest,
-				 32);
+			memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, ctx->digest, 32);
 			fwreply(*hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
 
 			state = FW_STATE_RUN;
@@ -418,7 +417,7 @@ int main(void)
 
 	print_hw_version();
 
-	// Let the app know the function adddress for blake2s()
+	// Let the app know the function address for blake2s()
 	*fw_blake2s_addr = (uint32_t)blake2s;
 
 	/*@-mustfreeonly@*/
