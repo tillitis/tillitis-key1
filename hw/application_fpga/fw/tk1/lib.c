@@ -5,7 +5,8 @@
 
 #include "lib.h"
 #include "assert.h"
-#include "types.h"
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef QEMU_CONSOLE
 struct {

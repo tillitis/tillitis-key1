@@ -106,7 +106,6 @@ PICORV32_SRCS = \
 
 FIRMWARE_DEPS = \
 	$(P)/fw/tk1_mem.h \
-	$(P)/fw/tk1/types.h \
 	$(P)/fw/tk1/lib.h \
 	$(P)/fw/tk1/proto.h \
 	$(P)/fw/tk1/assert.h \

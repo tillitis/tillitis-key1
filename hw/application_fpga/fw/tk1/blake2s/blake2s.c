@@ -6,9 +6,11 @@
 // A simple blake2s Reference Implementation.
 //======================================================================
 
-#include "../types.h"
 #include "../lib.h"
 #include "blake2s.h"
+
+#include <stdint.h>
+#include <stddef.h>
 
 // Dummy printf() for verbose mode
 static void printf(const char *format, ...)
