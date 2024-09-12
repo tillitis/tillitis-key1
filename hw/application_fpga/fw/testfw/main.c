@@ -6,8 +6,10 @@
 #include "../tk1/blake2s/blake2s.h"
 #include "../tk1/lib.h"
 #include "../tk1/proto.h"
-#include "../tk1/types.h"
 #include "../tk1_mem.h"
+
+#include <stddef.h>
+#include <stdint.h>
 
 // clang-format off
 volatile uint32_t *tk1name0         = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;

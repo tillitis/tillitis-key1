@@ -9,7 +9,10 @@
 #include "lib.h"
 #include "proto.h"
 #include "state.h"
-#include "types.h"
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -37,14 +40,14 @@ struct context {
 	uint32_t left;	    // Bytes left to receive
 	uint8_t digest[32]; // Program digest
 	uint8_t *loadaddr;  // Where we are currently loading a TKey program
-	uint8_t use_uss;    // Use USS?
+	bool use_uss;	    // Use USS?
 	uint8_t uss[32];    // User Supplied Secret, if any
 };
 
 static void print_hw_version(void);
 static void print_digest(uint8_t *md);
 static uint32_t rnd_word(void);
-static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
+static void compute_cdi(const uint8_t *digest, const bool use_uss,
 			const uint8_t *uss);
 static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word);
 static enum state initial_commands(const struct frame_header *hdr,
@@ -89,7 +92,7 @@ static uint32_t rnd_word(void)
 }
 
 // CDI = blake2s(uds, blake2s(app), uss)
-static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
+static void compute_cdi(const uint8_t *digest, const bool use_uss,
 			const uint8_t *uss)
 {
 	uint32_t local_uds[8] = {0};
@@ -121,7 +124,7 @@ static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 	blake2s_update(&secure_ctx, digest, 32);
 
 	// Possibly hash in the USS as well
-	if (use_uss != 0) {
+	if (use_uss) {
 		blake2s_update(&secure_ctx, uss, 32);
 	}
 
@@ -217,10 +220,10 @@ static enum state initial_commands(const struct frame_header *hdr,
 		// Do we have a USS at all?
 		if (cmd[5] != 0) {
 			// Yes
-			ctx->use_uss = TRUE;
+			ctx->use_uss = true;
 			memcpy_s(ctx->uss, 32, &cmd[6], 32);
 		} else {
-			ctx->use_uss = FALSE;
+			ctx->use_uss = false;
 		}
 
 		rsp[0] = STATUS_OK;
@@ -410,7 +413,7 @@ int main(void)
 	 */
 	ctx.loadaddr = (uint8_t *)TK1_RAM_BASE;
 	/*@+mustfreeonly@*/
-	ctx.use_uss = FALSE;
+	ctx.use_uss = false;
 
 	scramble_ram();
 
