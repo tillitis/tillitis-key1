@@ -6,7 +6,8 @@
 #ifndef LIB_H
 #define LIB_H
 
-#include "types.h"
+#include <stdint.h>
+#include <stddef.h>
 
 #ifdef QEMU_CONSOLE
 void htif_putc(char ch);
