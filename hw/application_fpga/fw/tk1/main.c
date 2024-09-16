@@ -420,6 +420,9 @@ int main(void)
 	/*@+mustfreeonly@*/
 	ctx.use_uss = FALSE;
 
+	uint8_t mode = 0;
+	uint8_t mode_bytes_left = 0;
+
 	scramble_ram();
 
 #if defined(SIMULATION)
@@ -429,7 +432,8 @@ int main(void)
 	for (;;) {
 		switch (state) {
 		case FW_STATE_INITIAL:
-			if (readcommand(&hdr, cmd, state) == -1) {
+			if (readcommand(&hdr, cmd, state, &mode,
+					&mode_bytes_left) == -1) {
 				state = FW_STATE_FAIL;
 				break;
 			}
@@ -438,7 +442,8 @@ int main(void)
 			break;
 
 		case FW_STATE_LOADING:
-			if (readcommand(&hdr, cmd, state) == -1) {
+			if (readcommand(&hdr, cmd, state, &mode,
+					&mode_bytes_left) == -1) {
 				state = FW_STATE_FAIL;
 				break;
 			}
