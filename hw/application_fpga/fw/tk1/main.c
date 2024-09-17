@@ -14,6 +14,7 @@
 #include "proto.h"
 #include "rng.h"
 #include "state.h"
+#include "syscall.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -419,7 +420,8 @@ int main(void)
 	print_hw_version();
 
 	// Let the app know the function address for blake2s()
-	*fw_blake2s_addr = (uint32_t)blake2s;
+	*fw_blake2s_addr = (uint32_t)syscall;
+	/**fw_blake2s_addr = (uint32_t)blake2s;*/
 
 	/*@-mustfreeonly@*/
 	/* Yes, splint, this points directly to RAM and we don't care
