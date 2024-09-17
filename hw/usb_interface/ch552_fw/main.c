@@ -997,19 +997,19 @@ void main()
                 FrameMode = UartRxBuf[UartRxBufOutputPointer];           // Extract frame mode
                 if ((FrameMode == MODE_CDC) ||
                     (FrameMode == MODE_HID)) {
-                    FrameLength = UartRxBuf[UartRxBufOutputPointer + 1]; // Extract frame length
+                    FrameLength = UartRxBuf[increment_pointer(UartRxBufOutputPointer, 1, UART_RX_BUF_SIZE)]; // Extract frame length
                     FrameStarted = 1;
                 } else {                                                 // Invalid mode
                     if (!Halted) {
                         printStr("Invalid header: 0x");
                         printNumHex(FrameMode);
                         printStr(", len = ");
-                        printNumU32(UartRxBuf[UartRxBufOutputPointer + 1]);
+                        printNumU32(UartRxBuf[increment_pointer(UartRxBufOutputPointer, 1, UART_RX_BUF_SIZE)]);
                         printStr("\n");
                         uint16_t i;
                         uint8_t print_char_count_out = 0;
                         for (i=0; i<UART_RX_BUF_SIZE; i++) {
-                            printNumHex(UartRxBuf[(UartRxBufOutputPointer + i) % UART_RX_BUF_SIZE]);
+                            printNumHex(UartRxBuf[increment_pointer(UartRxBufOutputPointer, i, UART_RX_BUF_SIZE)]);
                             print_char_count_out++;
                             if (print_char_count_out >= 16) {
                                 printStr("\n");
@@ -1040,7 +1040,7 @@ void main()
             if (FrameStarted) {
                 // Check if a complete frame has been received, include one mode byte and and one length byte
                 if (UartRxBufByteCount >= (FrameLength + 2)) {
-                    UartRxBufOutputPointer+=2; // Start at valid data so skip the mode and length byte
+                    UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer, 2, UART_RX_BUF_SIZE); // Start at valid data so skip the mode and length byte
                     if (FrameMode == MODE_CDC) {
                         circular_copy(CdcRxBuf + CdcRxBufLength,
                                       UartRxBuf,
