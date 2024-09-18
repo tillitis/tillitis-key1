@@ -5,8 +5,10 @@
 
 #include "lib.h"
 #include "assert.h"
+
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 void *memset(void *dest, int c, unsigned n)
 {
@@ -52,15 +54,15 @@ void wordcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 	}
 }
 
-int memeq(void *dest, const void *src, size_t n)
+bool memeq(void *dest, const void *src, size_t n)
 {
 	uint8_t *src_byte = (uint8_t *)src;
 	uint8_t *dest_byte = (uint8_t *)dest;
-	int res = -1;
+	bool res = true;
 
 	for (size_t i = 0; i < n; i++) {
 		if (dest_byte[i] != src_byte[i]) {
-			res = 0;
+			res = false;
 		}
 	}
 
