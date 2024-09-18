@@ -5,6 +5,7 @@
 #include "../tk1_mem.h"
 #include "flash.h"
 #include "lib.h"
+#include "mgmt_app.h"
 #include "partition_table.h"
 
 #include <stdbool.h>
@@ -50,6 +51,11 @@ int preload_store(partition_table_t *part_table)
 	// where to store.
 	//  Most likely needs to aggregate some data, before it writes to flash.
 
+	/* Check if we are allowed to deleted */
+	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
+		return -1;
+	}
+
 	/*Check for a valid app in flash, bale out if it already exists */
 	if (preload_check_valid_app(part_table)) {
 		return -1;
@@ -60,6 +66,11 @@ int preload_store(partition_table_t *part_table)
 
 int preload_delete(partition_table_t *part_table)
 {
+	/* Check if we are allowed to deleted */
+	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
+		return -1;
+	}
+
 	/*Check for a valid app in flash	*/
 	if (!preload_check_valid_app(part_table)) {
 		return 0;
