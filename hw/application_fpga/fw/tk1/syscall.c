@@ -35,7 +35,8 @@ int syscall(syscall_t *ctx)
 		break;
 
 	case PRELOAD_STORE:
-		return preload_store(&part_table);
+		return preload_store(&part_table, ctx->offset, ctx->data,
+				     ctx->size);
 		break;
 
 	case PRELOAD_DELETE:

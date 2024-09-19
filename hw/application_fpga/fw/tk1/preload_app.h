@@ -7,10 +7,11 @@
 #include "partition_table.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 bool preload_check_valid_app(partition_table_t *part_table);
 int preload_start(partition_table_t *part_table);
-int preload_store(partition_table_t *part_table);
+int preload_store(partition_table_t *part_table, uint32_t offset, uint8_t *data, size_t size);
 int preload_delete(partition_table_t *part_table);
 
 #endif

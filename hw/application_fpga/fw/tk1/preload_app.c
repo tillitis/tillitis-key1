@@ -7,8 +7,10 @@
 #include "lib.h"
 #include "mgmt_app.h"
 #include "partition_table.h"
+#include "htif.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 /* Returns non-zero if the app is valid */
@@ -45,21 +47,57 @@ int preload_start(partition_table_t *part_table)
 	return ret;
 }
 
-int preload_store(partition_table_t *part_table)
+/* Expects to receive chunks of data up to 4096 bytes to store into the
+ * preloaded area. The offset needs to be kept and updated between each call.
+ * Once done, call preload_store_finalize() with the last parameters.
+ * */
+int preload_store(partition_table_t *part_table, uint32_t offset, uint8_t *data,
+		  size_t size)
 {
-	// TODO: Can reuse the app loading context  in main, to keep track of
-	// where to store.
-	//  Most likely needs to aggregate some data, before it writes to flash.
-
-	/* Check if we are allowed to deleted */
+	/* Check if we are allowed to store */
 	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
 		return -1;
 	}
 
-	/*Check for a valid app in flash, bale out if it already exists */
+	/* Check for a valid app in flash, bale out if it already exists */
 	if (preload_check_valid_app(part_table)) {
 		return -1;
 	}
+
+	if ((offset + size) > SIZE_PRE_LOADED_APP ||
+	    size > 4096) {
+		/* Writing outside of area */
+		return -2;
+	}
+
+	uint32_t address = ADDR_PRE_LOADED_APP + offset;
+	
+	htif_puts("preload_store: write to addr: ");
+	htif_putinthex(address);
+	htif_lf();
+
+	return flash_write_data(address, data, size);
+}
+
+int preload_store_finalize(partition_table_t *part_table, bool use_uss,
+			  uint32_t *uss, size_t app_size)
+{
+	/* Check if we are allowed to store */
+	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
+		return -1;
+	}
+
+	/* Check for a valid app in flash, bale out if it already exists */
+	if (preload_check_valid_app(part_table)) {
+		return -1;
+	}
+
+	part_table->pre_app_data.size = app_size;
+	part_table->pre_app_data.status = 0x02; /* Stored but not yet authenticated */
+
+	part_table_write(part_table);
+
+	/* Force a restart to authenticate the stored app */
 
 	return 0;
 }
