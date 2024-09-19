@@ -32,7 +32,7 @@ TARGET_FREQ ?= 21
 
 # Size in 32-bit words, must be divisible by 256 (pairs of EBRs, because 16
 # bits wide; an EBR is 128 32-bits words)
-BRAM_FW_SIZE ?= 1536
+BRAM_FW_SIZE ?= 2048
 
 PIN_FILE ?= application_fpga_tk1.pcf
 
@@ -47,7 +47,7 @@ CFLAGS = \
 	-mabi=ilp32 \
 	-static \
 	-std=gnu99 \
-	-O2 \
+	-Os \
 	-ffast-math \
 	-fno-common \
 	-fno-builtin-printf \
