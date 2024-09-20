@@ -59,7 +59,7 @@ The derivation can also be combined with a User Supplied Secret
 (USS). This means that keys derived are both based on something the user
 has - the specific device, and something the user knows (the USS). And
 the derived can be trusted because of the measurement being used
-by the derivation, thereby verifying the intergrity of the application.
+by the derivation, thereby verifying the integrity of the application.
 
 ### Execution monitor
 
@@ -103,7 +103,7 @@ The TKey hardware includes a simple form of RAM memory protection. The
 purpose of the RAM memory protection is to make it somewhat harder and
 more time consuming to extract application assets by dumping the RAM
 contents from a TKey device. The memory protection is not based on
-encryption and should not be confused with real encryption. But the
+encryption and should not be confused with real encryption. The
 protection is randomised between power cycles. The randomisation
 should make it infeasible to improve asset extraction by observing
 multiple memory dumps from the same TKey device. The attack should
@@ -111,50 +111,43 @@ also not directly scale to multiple TKey devices.
 
 The memory protection is based on two separate mechanisms:
 
-1. Address Space Layout Randomisation (ASLR)
-2. Adress dependent data scrambling
+1. Address randomisation
+2. Address dependent data randomization 
 
-The ASLR is implemented by XORing the CPU address with the contents of
-the ADDR\_RAM\_ASLR register in the tk1 core. The result is used as the
-RAM address
+The address randomization is implemented by XORing the CPU address
+with the contents of the ADDR\_RAM\_ADDR\_RAND register in the tk1
+core. The result is used as the RAM address
 
-The data scrambling is implemented by XORing the data written to the
-RAM with the contents of the ADDR\_RAM\_SCRAMBLE register in the tk1
+The data randomization is implemented by XORing the data written to the
+RAM with the contents of the ADDR\_RAM\_DATA\_RAND register in the tk1
 core as well as XORing with the CPU address. This means that the same
 data written to two different addresses will be scrambled differently.
 The same pair or XOR operations is also performed on the data read out
 from the RAM.
 
 The memory protection is setup by the firmware. Access to the memory
-protection controls is disabled for applications. During boot the
-firmware perform the following steps to setup the memory protection:
+protection controls is disabled for applications. Before the memory
+protecetion is enabled, the RAM is filled with randomised data using
+Xorwow. So during boot the firmware perform the following steps to
+setup the memory protection:
 
-1. Write a random 32-bit value from the TRNG into the ADDR\_RAM\_ASLR
-   register.
-2. Write a random 32-bit value from the TRNG into the
-   ADDR\_RAM\_SCRAMBLE register.
-3. Get a random 32-bit value from the TRNG to use as data value.
-4. Get a random 32-bit value from the TRNG to use as accumulator
-   value.
-5. Fill the RAM with sequence of value by writing to all RAM addresses
-   in sequence. For each address add the accumulator value to the
-   current data value.
-6. Write a new random 32-bit value from the TRNG into the
-   ADDR\_RAM\_ASLR register.
-7. Write a new random 32-bit value from the TRNG into the
-   ADDR\_RAM\_SCRAMBLE register.
-8. Receive the application sent from the client and write it in
+1. Get a random 32-bit value from the TRNG to use as data state for
+   Xorwow.
+2. Get a random 32-bit value from the TRNG to use as accumulator
+   for Xorwow.
+3. Fill RAM with a random sequence of values by writing to all RAM
+   addresses. For each address use Xorwow to generate a new state,
+   using the accumulator.
+4. Write a random 32-bit value from the TRNG into the
+   ADDR\_RAM\_ADDR\_RAND register.
+5. Write a random 32-bit value from the TRNG into the
+   ADDR\_RAM\_DATA\_RAND register.
+6. Receive the application sent from the client and write it in
    sequence into RAM.
-
-This means that the RAM is pre-filled with somewhat randomised data.
-The application is then written into RAM using different ASLR and data
-scrambling than what was used to pre-fill the memory. This should make
-it harder to identify where in RAM the application was written, and
-how the application was scrambled.
 
 Future TKey devices may implement a more secure ASLR mechanism, and
 use real encryption (for example PRINCE) for memory content
-protection. From the application point of view such a change will
+protection. From the application point of view such a change will be
 transparent.
 
 ## Assets
@@ -330,6 +323,6 @@ libraries etc. Roughly these can be divided into:
 
 
 ## References
-More detailed information about the software running on the device
-(referred to firmware, SDK, and secure application), can be found in
-the [software document](software.md).
+More detailed information about the firmware running on the device can
+be found in the
+[hw/application_fpga/fw/README.md](hw/application_fpga/fw/README.md).
