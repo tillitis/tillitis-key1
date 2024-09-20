@@ -39,8 +39,8 @@ and hardware should be. This in itself makes it different, as other
 security tokens utilize at least some closed source hardware for its
 security-critical operations.
 
-![Tillitis Key 1 PCB, first implementation](doc/images/mta1-usb-v1.jpg)
-*The TK1 PCB, the first implementation of the TKey.*
+![Tillitis Key 1 PCB](doc/images/tkey-open-lid.png) *The TK1 PCB, also
+known as TKey.*
 
 
 ## Getting started
