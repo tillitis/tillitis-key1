@@ -3,9 +3,7 @@
 ## Main license
 
 Unless otherwise noted, the project sources are licensed under the
-terms and conditions of the "GNU General Public License v2.0 only" and
-hardware boards under "CERN Open Hardware Licence Version 2 - Strongly
-Reciprocal".
+terms and conditions of the "GNU General Public License v2.0 only".
 
 The `LICENSES/` directory contains copies of the license texts used by
 the sources included in the project source tree.

@@ -61,7 +61,7 @@ jobs:
         working-directory: hw/application_fpga
         run: make lint
 
-  build-other-firmwares:
+  build-usb-firmware:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/tillitis/tkey-builder:4
@@ -80,10 +80,6 @@ jobs:
       - name: compile ch552 firmware
         working-directory: hw/usb_interface/ch552_fw
         run: make
-
-      - name: compile tp1 firmware
-        working-directory: hw/boards/tp1/firmware
-        run: ./build.sh
 
   build-bitstream:
     outputs:

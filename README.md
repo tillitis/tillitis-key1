@@ -56,7 +56,7 @@ Specific documentation regarding implementation is kept close to the
 code/design in README files, typically in the same directory.
 
 ## Tkey Device Apps
-Offically supported apps can be found at
+Officially supported apps can be found at
 [tillitis.se](https://tillitis.se/download/)
 
 The source and other projects from us can be found here at our
@@ -65,13 +65,23 @@ The source and other projects from us can be found here at our
 Other known (but not all) projects can be found at
 [dev.tillitis.se](https://dev.tillitis.se/projects/).
 
-### Other noteworthy links
+## PCB and programmer
+
+The TKey PCB [KiCad](https://www.kicad.org/) design files are kept in
+a separate repository:
+
+https://github.com/tillitis/tk1-pcba
+
+The TP1 (TKey programmer 1) PCB design files and firmware are kept in:
+
+https://github.com/tillitis/tp1
+
+## Other noteworthy links
 
 * [Threat Model](doc/threat_model/threat_model.md)
 * [Release Notes](doc/release_notes.md)
 * [Quickstart for the DevKit](doc/quickstart.md). Initial programming
 if you have the "old" DevKit.
-
 
 Note that development is ongoing. To avoid unexpected changes of
 derived key material, please use a tagged release. Read the [Release
@@ -80,12 +90,13 @@ releases.
 
 ## About this repository
 
-This repository contains hardware, firmware and utilities written as
-part of the TKey. It is structured as monolithic repository, or
-"monorepo", where all components live in one repository.
+This repository contains the FPGA design, firmware/bootloader, and the
+USB controller firmware.
 
-Device and client applications, however, are kept in other
-repositories here at our [GitHub](https://github.com/tillitis).
+The PCB design files, device and client applications are kept in other
+repositories. See:
+
+https://github.com/tillitis
 
 ## Licensing
 

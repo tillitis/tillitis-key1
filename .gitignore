@@ -45,22 +45,3 @@ application_fpga_par.txt
 .*.swp
 *.sch-bak
 *.sim
-
-# Ignore list for KiCAD Projects
-*.000
-*.bak
-*.bck
-*.kicad_pcb-bak
-*.sch-bak
-_autosave-*
-*-backups
-\#auto_saved_files#
-*.tmp
-*-save.pro
-*-save.kicad_pcb
-fp-info-cache
-*.net
-*.dsn
-*.ses
-__pycache__
-MEM.TXT
