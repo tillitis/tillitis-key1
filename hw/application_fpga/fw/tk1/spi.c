@@ -64,7 +64,10 @@ static void _spi_read(uint8_t *buf, size_t size)
 	}
 }
 
-int spi_write(uint8_t *cmd, size_t cmd_size, uint8_t *data, size_t data_size)
+
+// Function to both read and write data to the connected SPI flash.
+int spi_transfer(uint8_t *cmd, size_t cmd_size, uint8_t *tx_buf, size_t tx_size,
+		 uint8_t *rx_buf, size_t rx_size)
 {
 	if (cmd == NULL || cmd_size == 0) {
 		return -1;
@@ -74,25 +77,9 @@ int spi_write(uint8_t *cmd, size_t cmd_size, uint8_t *data, size_t data_size)
 
 	_spi_write(cmd, cmd_size);
 
-	if (data != NULL && data_size != 0) {
-		_spi_write(data, data_size);
+	if (tx_buf != NULL || tx_size != 0) {
+		_spi_write(tx_buf, tx_size);
 	}
-
-	spi_disable();
-
-	return 0;
-}
-
-int spi_transfer(uint8_t *tx_buf, size_t tx_size, uint8_t *rx_buf,
-		 size_t rx_size)
-{
-	if (tx_buf == NULL || tx_size == 0) {
-		return -1;
-	}
-
-	spi_enable();
-
-	_spi_write(tx_buf, tx_size);
 
 	if (rx_buf != NULL && rx_size != 0) {
 		_spi_read(rx_buf, rx_size);

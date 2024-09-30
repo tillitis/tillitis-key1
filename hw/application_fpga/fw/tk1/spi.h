@@ -8,8 +8,7 @@
 #include <stdint.h>
 
 int spi_ready(void);
-int spi_write(uint8_t *cmd, size_t size_cmd, uint8_t *data, size_t size_data);
-int spi_transfer(uint8_t *tx_buf, size_t tx_size, uint8_t *rx_buf,
-		 size_t rx_size);
+int spi_transfer(uint8_t *cmd, size_t cmd_size, uint8_t *tx_buf, size_t tx_size,
+		 uint8_t *rx_buf, size_t rx_size);
 
 #endif
