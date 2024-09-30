@@ -7,7 +7,7 @@
 //
 //
 // Author: Claire Xenia Wolf
-// Copyright (C) 2023 - YosysHQ, Tillitis AB
+// Copyright (C) 2023 - Tillitis AB
 // SPDX-License-Identifier: GPL-2.0-only
 //
 //======================================================================
