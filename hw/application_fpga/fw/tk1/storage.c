@@ -102,7 +102,44 @@ int storage_deallocate_area(partition_table_t *part_table)
 	return 0;
 }
 
-/* Writes the specified data to the offset inside of the allocated area.
+/*  Erases sector. Offset of a sector to begin erasing, must be a multiple of
+ * the sector size. Size to erase in bytes, must be a multiple of the sector *
+ * size. Returns zero on success, negative error code on failure */
+int storage_erase_sector(partition_table_t *part_table, uint32_t offset,
+			 size_t size)
+{
+	int index = storage_get_area(part_table);
+	if (index == -1) {
+		/* No allocated area */
+		return -1;
+	}
+
+	/* Cannot erase less than one sector */
+	if (size < 4096 || size > part_table->app_storage[index].size ||
+	    size % 4096 != 0) {
+		return -2;
+	}
+
+	if ((offset) >= part_table->app_storage[index].size) {
+		return -2;
+	}
+
+	uint32_t address = part_table->app_storage[index].addr_start + offset;
+
+	htif_puts("storage: erase addr: ");
+	htif_putinthex(address);
+	htif_lf();
+
+	for (size_t i = 0; i < size; i += 4096) {
+		flash_sector_erase(address);
+		address += 4096;
+	}
+
+	return 0;
+}
+
+/* Writes the specified data to the offset inside of the
+ * allocated area. Assumes area has been erased before hand.
  * Currently only handles writes to one sector, hence max size of 4096 bytes.
  * Returns zero on success. */
 int storage_write_data(partition_table_t *part_table, uint32_t offset,
@@ -126,17 +163,12 @@ int storage_write_data(partition_table_t *part_table, uint32_t offset,
 	htif_putinthex(address);
 	htif_lf();
 
-	/* Erase area so we can write */
-	/* TODO: Currently only erases one sector, should probably handle sizes
-	 * up to storage size. */
-	flash_sector_erase(address);
-
 	return flash_write_data(address, data, size);
 }
 
-/* Reads size bytes of data at the specified offset inside of the allocated
- * area. Returns zero on success. Only read limit is the size of the allocated
- * area */
+/* Reads size bytes of data at the specified offset inside of
+ * the allocated area. Returns zero on success. Only read limit
+ * is the size of the allocated area */
 int storage_read_data(partition_table_t *part_table, uint32_t offset,
 		      uint8_t *data, size_t size)
 {
