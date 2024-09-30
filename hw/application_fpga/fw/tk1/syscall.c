@@ -34,6 +34,11 @@ int syscall(syscall_t *ctx)
 					  ctx->size);
 		break;
 
+	case ERASE_DATA:
+		return storage_erase_sector(&part_table, ctx->offset,
+					    ctx->size);
+		break;
+
 	case PRELOAD_STORE:
 		return preload_store(&part_table, ctx->offset, ctx->data,
 				     ctx->size);
