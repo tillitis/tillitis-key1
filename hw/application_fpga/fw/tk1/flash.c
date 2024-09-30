@@ -17,7 +17,7 @@ static volatile uint32_t *timer_ctrl		= (volatile uint32_t *)TK1_MMIO_TIMER_CTRL
 // clang-format on
 
 // CPU clock frequency in Hz
-#define CPUFREQ 18000000
+#define CPUFREQ 21000000
 #define PAGE_SIZE 256
 
 static void delay(int timeout_ms)
@@ -40,7 +40,7 @@ bool flash_is_busy(void)
 	uint8_t tx_buf = READ_STATUS_REG_1;
 	uint8_t rx_buf = {0x00};
 
-	spi_transfer(&tx_buf, sizeof(tx_buf), &rx_buf, sizeof(rx_buf));
+	spi_transfer(&tx_buf, sizeof(tx_buf), NULL, 0, &rx_buf, sizeof(rx_buf));
 
 	if (rx_buf & (1 << STATUS_REG_BUSY_BIT)) {
 		return true;
@@ -61,14 +61,14 @@ void flash_write_enable(void)
 {
 	uint8_t tx_buf = WRITE_ENABLE;
 
-	spi_write(&tx_buf, sizeof(tx_buf), NULL, 0);
+	spi_transfer(&tx_buf, sizeof(tx_buf), NULL, 0, NULL, 0);
 }
 
 void flash_write_disable(void)
 {
 	uint8_t tx_buf = WRITE_DISABLE;
 
-	spi_write(&tx_buf, sizeof(tx_buf), NULL, 0);
+	spi_transfer(&tx_buf, sizeof(tx_buf), NULL, 0, NULL, 0);
 }
 
 void flash_sector_erase(uint32_t address)
@@ -77,10 +77,10 @@ void flash_sector_erase(uint32_t address)
 	tx_buf[0] = SECTOR_ERASE;
 	tx_buf[1] = (address >> ADDR_BYTE_3_BIT) & 0xFF;
 	tx_buf[2] = (address >> ADDR_BYTE_2_BIT) & 0xFF;
-	tx_buf[3] = (address >> ADDR_BYTE_1_BIT) & 0xFF;
+	/* tx_buf[3] is within a sector, and hence does not make a difference */
 
 	flash_write_enable();
-	spi_write(tx_buf, sizeof(tx_buf), NULL, 0);
+	spi_transfer(tx_buf, sizeof(tx_buf), NULL, 0, NULL, 0);
 	flash_wait_busy();
 }
 
@@ -93,20 +93,21 @@ void flash_block_32_erase(uint32_t address)
 	tx_buf[3] = (address >> ADDR_BYTE_1_BIT) & 0xFF;
 
 	flash_write_enable();
-	spi_write(tx_buf, sizeof(tx_buf), NULL, 0);
+	spi_transfer(tx_buf, sizeof(tx_buf), NULL, 0, NULL, 0);
 	flash_wait_busy();
 }
 
+// 64 KiB block erase, only cares about address bits 16 and above.
 void flash_block_64_erase(uint32_t address)
 {
 	uint8_t tx_buf[4] = {0x00};
 	tx_buf[0] = BLOCK_ERASE_64K;
 	tx_buf[1] = (address >> ADDR_BYTE_3_BIT) & 0xFF;
-	tx_buf[2] = (address >> ADDR_BYTE_2_BIT) & 0xFF;
-	tx_buf[3] = (address >> ADDR_BYTE_1_BIT) & 0xFF;
+	/* tx_buf[2] and tx_buf[3] is within a block, and hence does not make a
+	 * difference */
 
 	flash_write_enable();
-	spi_write(tx_buf, sizeof(tx_buf), NULL, 0);
+	spi_transfer(tx_buf, sizeof(tx_buf), NULL, 0, NULL, 0);
 	flash_wait_busy();
 }
 
@@ -115,14 +116,14 @@ void flash_release_powerdown(void)
 	uint8_t tx_buf[4] = {0x00};
 	tx_buf[0] = RELEASE_POWER_DOWN;
 
-	spi_write(tx_buf, sizeof(tx_buf), NULL, 0);
+	spi_transfer(tx_buf, sizeof(tx_buf), NULL, 0, NULL, 0);
 }
 
 void flash_powerdown(void)
 {
 	uint8_t tx_buf = POWER_DOWN;
 
-	spi_write(&tx_buf, sizeof(tx_buf), NULL, 0);
+	spi_transfer(&tx_buf, sizeof(tx_buf), NULL, 0, NULL, 0);
 }
 
 void flash_read_manufacturer_device_id(uint8_t *device_id)
@@ -130,14 +131,14 @@ void flash_read_manufacturer_device_id(uint8_t *device_id)
 	uint8_t tx_buf[4] = {0x00};
 	tx_buf[0] = READ_MANUFACTURER_ID;
 
-	spi_transfer(tx_buf, sizeof(tx_buf), device_id, 2);
+	spi_transfer(tx_buf, sizeof(tx_buf), NULL, 0, device_id, 2);
 }
 
 void flash_read_jedec_id(uint8_t *jedec_id)
 {
 	uint8_t tx_buf = READ_JEDEC_ID;
 
-	spi_transfer(&tx_buf, sizeof(tx_buf), jedec_id, 3);
+	spi_transfer(&tx_buf, sizeof(tx_buf), NULL, 0, jedec_id, 3);
 }
 
 void flash_read_unique_id(uint8_t *unique_id)
@@ -145,17 +146,17 @@ void flash_read_unique_id(uint8_t *unique_id)
 	uint8_t tx_buf[5] = {0x00};
 	tx_buf[0] = READ_UNIQUE_ID;
 
-	spi_transfer(tx_buf, sizeof(tx_buf), unique_id, 8);
+	spi_transfer(tx_buf, sizeof(tx_buf), NULL, 0, unique_id, 8);
 }
 
 void flash_read_status(uint8_t *status_reg)
 {
 	uint8_t tx_buf = READ_STATUS_REG_1;
 
-	spi_transfer(&tx_buf, sizeof(tx_buf), status_reg, 1);
+	spi_transfer(&tx_buf, sizeof(tx_buf), NULL, 0, status_reg, 1);
 
 	tx_buf = READ_STATUS_REG_2;
-	spi_transfer(&tx_buf, sizeof(tx_buf), status_reg + 1, 1);
+	spi_transfer(&tx_buf, sizeof(tx_buf), NULL, 0, status_reg + 1, 1);
 }
 
 int flash_read_data(uint32_t address, uint8_t *dest_buf, size_t size)
@@ -166,7 +167,7 @@ int flash_read_data(uint32_t address, uint8_t *dest_buf, size_t size)
 	tx_buf[2] = (address >> ADDR_BYTE_2_BIT) & 0xFF;
 	tx_buf[3] = (address >> ADDR_BYTE_1_BIT) & 0xFF;
 
-	return spi_transfer(tx_buf, sizeof(tx_buf), dest_buf, size);
+	return spi_transfer(tx_buf, sizeof(tx_buf), NULL, 0, dest_buf, size);
 }
 
 // Only handles writes where the least significant byte of the start address is
@@ -197,7 +198,8 @@ int flash_write_data(uint32_t address, uint8_t *data, size_t size)
 
 		flash_write_enable();
 
-		if (spi_write(tx_buf, sizeof(tx_buf), p_data, n_bytes) != 0) {
+		if (spi_transfer(tx_buf, sizeof(tx_buf), p_data, n_bytes, NULL,
+				 0) != 0) {
 			return -1;
 		}
 
