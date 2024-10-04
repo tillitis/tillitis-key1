@@ -16,6 +16,7 @@ typedef struct {
 	uint8_t *data;
 	size_t size;
 	uint32_t *ctx;
+	int ret_value;
 } syscall_t;
 
 enum syscall_cmd {
@@ -32,6 +33,7 @@ enum syscall_cmd {
 	MGMT_APP_UNREGISTER,
 };
 
-int syscall(syscall_t *ctx);
+void syscall(volatile syscall_t *ctx);
+/*int syscall(syscall_t *ctx);*/
 
 #endif
