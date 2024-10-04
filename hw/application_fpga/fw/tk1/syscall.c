@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 #include "syscall.h"
+#include "htif.h"
 #include "mgmt_app.h"
 #include "partition_table.h"
 #include "preload_app.h"
@@ -9,61 +10,113 @@
 
 #include <stdint.h>
 
-int syscall(syscall_t *ctx)
+void inner_syscall(volatile syscall_t *ctx);
+
+void syscall(volatile syscall_t *ctx)
 {
 
-	partition_table_t part_table;
-	part_table_read(&part_table);
+	asm volatile("addi x5, sp, 0;"	  // Save current SP value in x5
+		     "li sp, 0xd0000800;" // Change SP to top of FW_RAM
+		     "addi sp, sp, -4;"	  // Adjust SP to make space
+		     "sw x5, 0(sp);"	  // Store originally saved SP value
+					  // in new stack
+		     "addi sp, sp, -4;"	  // Adjust SP to make space
+		     "sw a0, 0(sp);"	  // Store the address of *ctx on
+					  // new stack
+		     ::
+			 : "memory");
 
-	switch (ctx->syscall_no) {
+	syscall_t **ctx_local_p = (syscall_t **)0xd00007f8;
+	syscall_t *ctx_local = *ctx_local_p;
+
+	htif_puts("Syscall\n");
+	htif_putinthex((uint32_t)*ctx_local_p);
+	htif_lf();
+
+	htif_putinthex((uint32_t)ctx_local_p);
+	htif_lf();
+
+	htif_hexdump(ctx_local, sizeof(syscall_t));
+	htif_lf();
+
+	inner_syscall(ctx_local);
+
+	asm volatile("lui  t0, 0xd0000;"   // Load the upper 20 bits
+		     "addi t0, t0, 0x7fc;" // Add the lower 12 bits for full
+		     "lw t1, 0(t0);"  // Load the word at address in t0 to t1
+		     "addi sp,t1, 0;" // Copy the value from t1 to sp
+		     ::
+			 : "memory");
+
+	return;
+}
+
+void __attribute__((noinline)) inner_syscall(volatile syscall_t *ctx_local)
+{
+	partition_table_t part_table = {0x00};
+	htif_putinthex((uint32_t)&part_table);
+	htif_lf();
+
+	part_table_read(&part_table);
+	htif_hexdump(&part_table, sizeof(part_table));
+	htif_lf();
+
+	ctx_local->ret_value = -1;
+
+	switch (ctx_local->syscall_no) {
 	case ALLOC_AREA:
-		return storage_allocate_area(&part_table);
+		ctx_local->ret_value = storage_allocate_area(&part_table);
 		break;
 
 	case DEALLOC_AREA:
-		return storage_deallocate_area(&part_table);
+		ctx_local->ret_value = storage_deallocate_area(&part_table);
 		break;
 
 	case READ_DATA:
-		return storage_read_data(&part_table, ctx->offset, ctx->data,
-					 ctx->size);
+		ctx_local->ret_value =
+		    storage_read_data(&part_table, ctx_local->offset,
+				      ctx_local->data, ctx_local->size);
 		break;
 
 	case WRITE_DATA:
-		return storage_write_data(&part_table, ctx->offset, ctx->data,
-					  ctx->size);
+		ctx_local->ret_value =
+		    storage_write_data(&part_table, ctx_local->offset,
+				       ctx_local->data, ctx_local->size);
 		break;
 
 	case ERASE_DATA:
-		return storage_erase_sector(&part_table, ctx->offset,
-					    ctx->size);
+		ctx_local->ret_value = storage_erase_sector(
+		    &part_table, ctx_local->offset, ctx_local->size);
 		break;
 
 	case PRELOAD_STORE:
-		return preload_store(&part_table, ctx->offset, ctx->data,
-				     ctx->size);
+		ctx_local->ret_value =
+		    preload_store(&part_table, ctx_local->offset,
+				  ctx_local->data, ctx_local->size);
 		break;
 
 	case PRELOAD_STORE_FINALIZE:
-		return preload_store_finalize(&part_table, ctx->offset,
-					      ctx->data, ctx->size);
+		ctx_local->ret_value =
+		    preload_store_finalize(&part_table, ctx_local->offset,
+					   ctx_local->data, ctx_local->size);
 		break;
 
 	case PRELOAD_DELETE:
-		return preload_delete(&part_table);
+		ctx_local->ret_value = preload_delete(&part_table);
 		break;
 
 	case MGMT_APP_REGISTER:
-		return mgmt_app_register(&part_table);
+		ctx_local->ret_value = mgmt_app_register(&part_table);
 		break;
 
 	case MGMT_APP_UNREGISTER:
-		return mgmt_app_unregister(&part_table);
+		ctx_local->ret_value = mgmt_app_unregister(&part_table);
 		break;
 
 	default:
 		/* return -1 */
 		break;
 	}
-	return -1;
+
+	return;
 }
