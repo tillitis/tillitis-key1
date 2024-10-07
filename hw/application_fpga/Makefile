@@ -41,24 +41,46 @@ OBJCOPY ?= llvm-objcopy
 
 CC = clang
 
-CFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 \
-   -static -std=gnu99 -O2 -ffast-math -fno-common -fno-builtin-printf \
-   -fno-builtin-putchar -fno-builtin-memcpy -nostdlib -mno-relax -Wall \
-   -Wpedantic -Wno-language-extension-token -flto -g
+CFLAGS = \
+	-target riscv32-unknown-none-elf \
+	-march=rv32iczmmul \
+	-mabi=ilp32 \
+	-static \
+	-std=gnu99 \
+	-O2 \
+	-ffast-math \
+	-fno-common \
+	-fno-builtin-printf \
+	-fno-builtin-putchar \
+	-fno-builtin-memcpy \
+	-nostdlib \
+	-mno-relax \
+	-Wall \
+	-Wpedantic \
+	-Wno-language-extension-token \
+	-flto \
+	-g
 
 AS = clang
-ASFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 -mno-relax
+
+ASFLAGS = \
+	-target riscv32-unknown-none-elf \
+	-march=rv32iczmmul \
+	-mabi=ilp32 \
+	-mno-relax
 
 ICE40_SIM_CELLS = $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 
 # FPGA specific source files.
-FPGA_SRC = $(P)/rtl/application_fpga.v \
-	   $(P)/core/clk_reset_gen/rtl/clk_reset_gen.v
+FPGA_SRC = \
+	$(P)/rtl/application_fpga.v \
+	$(P)/core/clk_reset_gen/rtl/clk_reset_gen.v
 
 # Verilator simulation specific source files.
-VERILATOR_FPGA_SRC = $(P)/tb/application_fpga_vsim.v \
-		     $(P)/tb/reset_gen_vsim.v
+VERILATOR_FPGA_SRC = \
+	$(P)/tb/application_fpga_vsim.v \
+	$(P)/tb/reset_gen_vsim.v
 
 # Common verilog source files.
 VERILOG_SRCS = \
@@ -143,7 +165,7 @@ secret:
 # Firmware generation.
 # Included in the bitstream.
 #-------------------------------------------------------------------
-LDFLAGS=-T $(P)/fw/tk1/firmware.lds
+LDFLAGS = -T $(P)/fw/tk1/firmware.lds
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
@@ -161,7 +183,19 @@ check:
 
 .PHONY: splint
 splint:
-	splint -nolib -predboolint +boolint -nullpass -unrecog -infloops -initallelements -type -unreachable -unqualifiedtrans -fullinitblock $(FIRMWARE_SOURCES)
+	splint \
+		-nolib \
+		-predboolint \
+		+boolint \
+		-nullpass \
+		-unrecog \
+		-infloops \
+		-initallelements \
+		-type \
+		-unreachable \
+		-unqualifiedtrans \
+		-fullinitblock \
+		$(FIRMWARE_SOURCES)
 
 testfw.elf: $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@
@@ -189,16 +223,21 @@ check-binary-hashes:
 	$(OBJCOPY) --input-target=elf32-littleriscv --output-target=binary $< $@
 	chmod -x $@
 
-
 #-------------------------------------------------------------------
 # Source linting.
 #-------------------------------------------------------------------
-LINT=verilator
+LINT = verilator
 # For Verilator 5.019 -Wno-GENUNNAMED needs to be added to LINT_FLAGS for the
 # cell library.
-LINT_FLAGS = +1364-2005ext+ --lint-only \
-	-Wall -Wno-DECLFILENAME -Wno-WIDTHEXPAND -Wno-UNOPTFLAT \
-	--timescale 1ns/1ns -DNO_ICE40_DEFAULT_ASSIGNMENTS
+LINT_FLAGS = \
+	+1364-2005ext+ \
+	--lint-only \
+	-Wall \
+	-Wno-DECLFILENAME \
+	-Wno-WIDTHEXPAND \
+	-Wno-UNOPTFLAT \
+	--timescale 1ns/1ns \
+	-DNO_ICE40_DEFAULT_ASSIGNMENTS
 
 lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
 	$(LINT) $(LINT_FLAGS) \
@@ -213,20 +252,27 @@ lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
 	|| {   cat lint_issues.txt; exit 1; }
 .PHONY: lint
 
-
 #-------------------------------------------------------------------
 # Build Verilator compiled simulation for the design.
 #-------------------------------------------------------------------
 verilator: $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS) firmware.hex $(ICE40_SIM_CELLS) \
 		$(P)/tb/application_fpga_verilator.cc
-	verilator --timescale 1ns/1ns -DNO_ICE40_DEFAULT_ASSIGNMENTS \
-                  -Wall -Wno-COMBDLY -Wno-lint \
-		  -DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
-		  -DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
-		  -DUDS_HEX=\"$(P)/data/uds.hex\" \
-		  -DUDI_HEX=\"$(P)/data/udi.hex\" \
-		  --cc --exe --Mdir verilated --top-module application_fpga \
-		$(filter %.v, $^) $(filter %.cc, $^)
+	verilator \
+		--timescale 1ns/1ns \
+		-DNO_ICE40_DEFAULT_ASSIGNMENTS \
+		-Wall \
+		-Wno-COMBDLY \
+		-Wno-lint \
+		-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
+		-DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
+		-DUDS_HEX=\"$(P)/data/uds.hex\" \
+		-DUDI_HEX=\"$(P)/data/udi.hex\" \
+		--cc \
+		--exe \
+		--Mdir verilated \
+		--top-module application_fpga \
+		$(filter %.v, $^) \
+		$(filter %.cc, $^)
 	make -C verilated -f Vapplication_fpga.mk
 .PHONY: verilator
 
@@ -258,17 +304,38 @@ tb:
 YOSYS_FLAG ?=
 
 synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/udi.hex
-	$(YOSYS_PATH)yosys -v3 -l synth.log $(YOSYS_FLAG) -DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
+	$(YOSYS_PATH)yosys \
+		-v3 \
+		-l synth.txt \
+		$(YOSYS_FLAG) \
+		-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 		-DFIRMWARE_HEX=\"$(P)/bram_fw.hex\" \
 		-p 'synth_ice40 -dsp -top application_fpga -json $@; write_verilog -attr2comment synth.v' \
-		$(filter %.v, $^) |& tee $(patsubst %.json,%,$@).txt
+		$(filter %.v, $^)
 
 application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
-	$(NEXTPNR_PATH)nextpnr-ice40  --freq $(TARGET_FREQ) --ignore-loops --up5k --package sg48 --json $< \
-		--pcf $(P)/data/$(PIN_FILE) --write $@ |& tee $(patsubst %.json,%,$@).txt
+	$(NEXTPNR_PATH)nextpnr-ice40 \
+		-l application_fpga_par.txt \
+		--freq $(TARGET_FREQ) \
+		--ignore-loops \
+		--up5k \
+		--package sg48 \
+		--json $< \
+		--pcf $(P)/data/$(PIN_FILE) \
+		--write $@ \
+		&& {                                  exit 0; } \
+		|| { rm -f application_fpga_par.json; exit 1; }
 
 application_fpga.asc: application_fpga_par.json $(P)/data/uds.hex $(P)/data/udi.hex
-	UDS_HEX="$(P)/data/uds.hex" UDI_HEX="$(P)/data/udi.hex" OUT_ASC=$@ $(NEXTPNR_PATH)nextpnr-ice40 --up5k --package sg48 --ignore-loops --json $< --run tools/patch_uds_udi.py
+	UDS_HEX="$(P)/data/uds.hex" \
+	UDI_HEX="$(P)/data/udi.hex" \
+	OUT_ASC=$@ \
+	$(NEXTPNR_PATH)nextpnr-ice40 \
+		--up5k \
+		--package sg48 \
+		--ignore-loops \
+		--json $< \
+		--run tools/patch_uds_udi.py
 
 application_fpga.bin: application_fpga.asc bram_fw.hex firmware.hex
 	$(ICESTORM_PATH)icebram -v bram_fw.hex firmware.hex < $< > $<.tmp
@@ -284,8 +351,11 @@ application_fpga_testfw.bin: application_fpga.asc bram_fw.hex testfw.hex
 # post-synthesis functional simulation.
 #-------------------------------------------------------------------
 synth_tb.vvp: $(P)/tb/tb_application_fpga.v synth.json
-	iverilog -o $@ -s tb_application_fpga synth.v $(P)/tb/tb_application_fpga.v \
-		-DNO_ICE40_DEFAULT_ASSIGNMENTS $(ICE40_SIM_CELLS)
+	iverilog \
+		-o $@ \
+		-s tb_application_fpga synth.v $(P)/tb/tb_application_fpga.v \
+		-DNO_ICE40_DEFAULT_ASSIGNMENTS \
+		$(ICE40_SIM_CELLS)
 	chmod -x $@
 
 synth_sim: synth_tb.vvp
@@ -348,7 +418,7 @@ view: tb_application_fpga_vcd
 #-------------------------------------------------------------------
 clean: clean_fw
 	rm -f bram_fw.hex
-	rm -f synth.{log,v,json,txt} route.v application_fpga.{asc,bin,vcd} application_fpga_testfw.bin
+	rm -f synth.{v,json,txt} route.v application_fpga.{asc,bin,vcd} application_fpga_testfw.bin
 	rm -f tb_application_fpga.vvp synth_tb.vvp route_tb.vvp
 	rm -f application_fpga_par.{json,txt}
 	rm -f *.vcd

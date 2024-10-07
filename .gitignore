@@ -29,7 +29,6 @@
 /check.smt2
 /check.vcd
 synth.json
-synth.log
 synth.txt
 synth.v
 application_fpga_par.json
