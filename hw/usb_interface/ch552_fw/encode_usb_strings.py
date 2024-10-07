@@ -37,17 +37,17 @@ if __name__ == "__main__":
         f.write('#ifndef USB_STRINGS\n')
         f.write('#define USB_STRINGS\n')
     
-        f.write('unsigned char __code Prod_Des[]={{  // "{}"\n'.format(product))
+        f.write('unsigned char __code ProdDesc[]={{  // "{}"\n'.format(product))
         f.write('    ')
         f.write(', '.join(['0x{:02x}'.format(i) for i in string_to_descriptor(product)]))
         f.write('\n};\n\n')
         
-        f.write('unsigned char __code Manuf_Des[]={{  // "{}"\n'.format(manufacturer))
+        f.write('unsigned char __code ManufDesc[]={{  // "{}"\n'.format(manufacturer))
         f.write('    ')
         f.write(', '.join(['0x{:02x}'.format(i) for i in string_to_descriptor(manufacturer)]))
         f.write('\n};\n\n')
     
-        f.write('unsigned char __code SerDes[]={{  // "{}"\n'.format(serial))
+        f.write('unsigned char __code SerialDesc[]={{  // "{}"\n'.format(serial))
         f.write('    ')
         f.write(', '.join(['0x{:02x}'.format(i) for i in string_to_descriptor(serial)]))
         f.write('\n};\n\n')
