@@ -13,9 +13,9 @@ API.
 ### Access to device information
 
 ```
-	ADDR_NAME0:   0x00
-	ADDR_NAME1:   0x01
-	ADDR_VERSION: 0x02
+ADDR_NAME0:   0x00
+ADDR_NAME1:   0x01
+ADDR_VERSION: 0x02
 ```
 
 These addresses provide read only information about the name (type)
@@ -26,7 +26,7 @@ applications.
 ### Control of execution mode
 
 ```
-	ADDR_SYSTEM_MODE_CTRL: 0x08
+ADDR_SYSTEM_MODE_CTRL: 0x08
 ```
 
 This register controls if the device is executing in FW mode or in App
@@ -37,10 +37,10 @@ by FW. If set the device is in app mode.
 ### Control of RGB LED
 
 ```
-	ADDR_LED:  0x09
-	LED_B_BIT: 0
-	LED_G_BIT: 1
-	LED_R_BIT: 2
+ADDR_LED:  0x09
+LED_B_BIT: 0
+LED_G_BIT: 1
+LED_R_BIT: 2
 ```
 
 This register control the RGB LED on the TKey device. Setting a bit to
@@ -51,11 +51,11 @@ as well as by Apps.
 ### Control and status of GPIO
 
 ```
-	ADDR_GPIO: 0x0a
-	GPIO1_BIT: 0
-	GPIO2_BIT: 1
-	GPIO3_BIT: 2
-	GPIO4_BIT: 3
+ADDR_GPIO: 0x0a
+GPIO1_BIT: 0
+GPIO2_BIT: 1
+GPIO3_BIT: 2
+GPIO4_BIT: 3
 ```
 
 This register control and provide status access to the four GPIOs on
@@ -68,46 +68,48 @@ corresponding register is one or zero.
 ### Application introspection
 
 ```
-	ADDR_APP_START: 0x0c
-	ADDR_APP_SIZE:  0x0d
+ADDR_APP_START: 0x0c
+ADDR_APP_SIZE:  0x0d
 ```
 
 These registers provide read only information to the loaded app to
 itself - where it was loaded and its size. The values are written by
 FW as part of the loading of the app. The registers can't be written
-when the ADDR_SYSTEM_MODE_CTRL has been set.
+when the `ADDR_SYSTEM_MODE_CTRL` has been set.
 
 
 ### Access to Blake2s
 
 ```
-	ADDR_BLAKE2S: 0x10
+ADDR_BLAKE2S: 0x10
 ```
 
 This register provides the 32-bit function pointer address to the
 Blake2s hash function in the FW. It is written by FW during boot. The
-register can't be written to when the ADDR_SYSTEM_MODE_CTRL has been set.
+register can't be written to when the `ADDR_SYSTEM_MODE_CTRL` has been
+set.
 
 
 ### Access to CDI
 
 ```
-  ADDR_CDI_FIRST: 0x20
-  ADDR_CDI_LAST:  0x27
+ADDR_CDI_FIRST: 0x20
+ADDR_CDI_LAST:  0x27
 ```
 
 These registers provide access to the 256-bit compound device secret
 calculated by the FW as part of loading an application. The registers
 are written by the FW. The register can't be written to when the
-ADDR_SYSTEM_MODE_CTRL has been set. Apps can read the CDI and is it as base
-secret for any secrets it needs to perform its intended use case.
+`ADDR_SYSTEM_MODE_CTRL` has been set. The CDI is readable by apps,
+which can then use it as a base secret for any other secrets required
+to carry out their intended use case.
 
 
 ### Access to UDI
 
 ```
-  ADDR_UDI_FIRST: 0x30
-  ADDR_UDI_LAST:  0x31
+ADDR_UDI_FIRST: 0x30
+ADDR_UDI_LAST:  0x31
 ```
 
 These read-only registers provide access to the 64-bit Unique Device
@@ -119,12 +121,12 @@ instance for each bit in core read_data output bus.
 
 Each SB\_LUT4 MUX is able to store 16 bits of data, in total 512 bits.
 But since the UDI is 64 bits, we only use the two LSBs in each MUX.
-Note that only the LSB address of the SB_LUT4 instances are connected
+Note that only the LSB address of the SB\_LUT4 instances are connected
 to the CPU address. This means that only the two LSBs in each MUX can
 be addressed.
 
 During build of the FPGA design, the UDI is set to a known bit
-pattern, which means that the SB_LUT4 instantiations are initialized
+pattern, which means that the SB\_LUT4 instantiations are initialized
 to a fixed bit pattern.
 
 The tool 'patch\_uds\_udi.py' is used to replace the fixed bit pattern
@@ -136,8 +138,8 @@ bitstreams without having to do a full FPGA build.
 ### RAM memory protection
 
 ```
-  ADDR_RAM_ADDR_RAND: 0x40
-  ADDR_RAM_DATA_RAND: 0x41
+ADDR_RAM_ADDR_RAND: 0x40
+ADDR_RAM_DATA_RAND: 0x41
 ```
 
 These write only registers control how the data in the RAM is
@@ -145,8 +147,8 @@ randomized as a way of protecting the data. The randomization is
 implemented using a pseudo random number generator with a state
 initialized by a seed.
 
-The ADDR_RAM_ADDR_RAND store the seed for how the addresses are
-randomized over the memory space. The ADDR_RAM_DATA_RAND store the
+The `ADDR_RAM_ADDR_RAND` store the seed for how the addresses are
+randomized over the memory space. The `ADDR_RAM_DATA_RAND` store the
 seed for how the data itself is randomized. FW writes random seed
 values to these registers during boot.
 
@@ -154,28 +156,29 @@ values to these registers during boot.
 ### Security monitor
 
 ```
-  ADDR_CPU_MON_CTRL: 0x60
-  ADDR_CPU_MON_FIRST:0x61
-  ADDR_CPU_MON_LAST: 0x62
+ADDR_CPU_MON_CTRL: 0x60
+ADDR_CPU_MON_FIRST:0x61
+ADDR_CPU_MON_LAST: 0x62
 ```
 
 Monitors events and state changes in the SoC and handles security
 violations. Currently checks for:
 
-1. Trying to execute instructions in FW_RAM. *Always enabled.*
+1. Trying to execute instructions in FW\_RAM. *Always enabled.*
 2. Trying to access RAM outside of the physical memory. *Always enabled*
 3. Trying to execute instructions from a memory area in RAM defined by
    the application.
 
 Number 1 and 2 are always enabled. Number 3 is set and enabled by the
-device application. Once enabled, by writing to ADDR_CPU_MON_CTRL, the
-memory defined by ADDR_CPU_MON_FIRST and ADDR_CPU_MON_LAST will be
-protected against execution. Typically the application developer will
-set this protection to cover the application stack and/or heap.
+device application. Once enabled, by writing to `ADDR_CPU_MON_CTRL`,
+the memory defined by `ADDR_CPU_MON_FIRST` and `ADDR_CPU_MON_LAST`
+will be protected against execution. Typically the application
+developer will set this protection to cover the application stack
+and/or heap.
 
 An application can write to these registers to define the area and
 then enable the monitor. Once enabled the monitor can't be disabled,
-and the ADDR_CPU_MON_FIRST and ADDR_CPU_MON_LAST registers can't be
+and the `ADDR_CPU_MON_FIRST` and `ADDR_CPU_MON_LAST` registers can't be
 changed. This means that an application that wants to use the monitor
 must define the area first before enabling the monitor.
 
@@ -209,37 +212,37 @@ The SPI-master is controlled using a few API
 addresses:
 
 ```
-localparam ADDR_SPI_EN		= 8'h80;
-localparam ADDR_SPI_XFER	= 8'h81;
-localparam ADDR_SPI_DATA	= 8'h82;
+ADDR_SPI_EN:   0x80
+ADDR_SPI_XFER: 0x81
+ADDR_SPI_DATA: 0x82
 ```
 
-**ADDR_SPI_EN** enables and disabled the SPI-master. Writing a 0x01 will
+`ADDR_SPI_EN` enables and disabled the SPI-master. Writing a 0x01 will
 lower the SPI chip select to the memory. Writing a 0x00 will raise the
 chip select.
 
-Writing to the **ADDR_SPI_XFER** starts a byte transfer. Reading from
+Writing to the `ADDR_SPI_XFER` starts a byte transfer. Reading from
 the address returns the status for the SPI-master. If the return value
 is not zero, the SPI-master is ready to send a byte.
 
-**ADDR_SPI_DATA** is the address used to send and receive a byte.
-data. The least significant byte will be sent to the memory during a
+`ADDR_SPI_DATA` is the address used to send and receive a byte. data.
+The least significant byte will be sent to the memory during a
 transfer. The byte returned from the memory will be presented to SW if
 the address is read after a transfer has completed.
 
 The sequence of operations needed to perform is thus:
 
 1. Activate the SPI-master by writing a 0x00000001 to ADDR_SPI_EN
-2. Write a byte to ADDR_SPI_DATA
-3. Read ADDR_SPI_XFER to check status. Repeat until the read
+2. Write a byte to `ADDR_SPI_DATA`
+3. Read `ADDR_SPI_XFER` to check status. Repeat until the read
    operation returns non-zero value
-4. Write to ADDR_SPI_XFER
-5. Read ADDR_SPI_XFER to check status. Repeat until the read operation
+4. Write to `ADDR_SPI_XFER`
+5. Read `ADDR_SPI_XFER` to check status. Repeat until the read operation
    returns a non-zero value
-6. Read out the received byte from ADDR_SPI_DATA
+6. Read out the received byte from `ADDR_SPI_DATA`
 7. Repeat 2..6 as many times as needed to send a command and data to
    the memory and getting the expected status, data back.
-8. Deactivate the SPI-master by writing 0x00000000 to ADDR_SPI_EN
+8. Deactivate the SPI-master by writing 0x00000000 to `ADDR_SPI_EN`
 
 The SPI connected memory on the board is the Winbond W25Q80. For
 information about the memory including support commands and protocol,
@@ -270,7 +273,7 @@ The reset is controlled by the following API address. Note that
 any value written to the address will trigger the reset.
 
 ```
-localparam ADDR_SYSTEM_RESET  = 8'h70;
+ADDR_SYSTEM_RESET: 0x70
 ```
 
 
