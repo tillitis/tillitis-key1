@@ -23,7 +23,7 @@ static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 static int parseframe(uint8_t b, struct frame_header *hdr);
 static void write(uint8_t *buf, size_t nbytes);
 static int read(uint8_t *buf, size_t bufsize, size_t nbytes);
-static int bytelen(enum cmdlen cmdlen);
+static size_t bytelen(enum cmdlen cmdlen);
 
 static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 		      enum cmdlen len)
@@ -165,7 +165,7 @@ static int read(uint8_t *buf, size_t bufsize, size_t nbytes)
 }
 
 // bytelen returns the number of bytes a cmdlen takes
-static int bytelen(enum cmdlen cmdlen)
+static size_t bytelen(enum cmdlen cmdlen)
 {
 	int len = 0;
 
