@@ -47,7 +47,7 @@ enum status {
 struct frame_header {
 	uint8_t id;
 	enum endpoints endpoint;
-	enum cmdlen len;
+	size_t len;
 };
 
 /*@ -exportlocal @*/
