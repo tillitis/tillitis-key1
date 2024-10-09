@@ -34,6 +34,9 @@ module tb_timer();
   localparam ADDR_PRESCALER     = 8'h0a;
   localparam ADDR_TIMER         = 8'h0b;
 
+  localparam ADDR_FREE_RUNNING  = 8'h0c;
+  localparam FREE_RUNNING_BIT   = 0;
+
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -250,43 +253,162 @@ module tb_timer();
 
   //----------------------------------------------------------------
   // test1()
+  //
   // Set timer and scaler and then start the timer. Wait
-  // for the ready flag to be asserted again.
+  // for the reached flag to be asserted.
   //----------------------------------------------------------------
   task test1;
     begin : test1
       reg [31 : 0] time_start;
       reg [31 : 0] time_stop;
+      reg [31 : 0] time_expected;
+      reg [31 : 0] time_counted;
 
       tc_ctr = tc_ctr + 1;
       tb_monitor = 0;
 
       $display("");
       $display("--- test1: started.");
+      $display("--- test1: Count to a defined value.");
 
-      write_word(ADDR_PRESCALER, 8'h02);
-      write_word(ADDR_TIMER, 8'h10);
+      write_word(ADDR_PRESCALER, 32'h6);
+      write_word(ADDR_TIMER, 32'h9);
+      time_expected = 32'h6 * 32'h9;
 
+      // Start the timer.
+      write_word(ADDR_CTRL, 32'h1);
       time_start = cycle_ctr;
-      write_word(ADDR_CTRL, 8'h01);
 
-      #(2 * CLK_PERIOD);
+      #(CLK_PERIOD);
       read_word(ADDR_STATUS);
-      while (read_data) begin
+      while (read_data != 3) begin
 	read_word(ADDR_STATUS);
       end
-
       time_stop = cycle_ctr;
-      write_word(CTRL_START_BIT, 8'h02);
+      time_counted = time_stop - time_start;
 
-      $display("--- test1: Cycles between start and stop: %d", (time_stop - time_start));
-      #(CLK_PERIOD);
-      tb_monitor = 0;
+
+      if (time_counted == time_expected) begin
+	$display("--- test1: Correct number of cycles counted: %0d", time_counted);
+      end
+      else begin
+	$display("--- test1: Error, expected %0d cycles, counted cycles: %0d",
+		 time_expected, time_counted);
+	error_ctr = error_ctr + 1;
+      end
+
+      // Stop the timer.
+      write_word(ADDR_CTRL, 32'h2);
 
       $display("--- test1: completed.");
       $display("");
     end
-  endtask // tes1
+  endtask // test1
+
+
+  //----------------------------------------------------------------
+  // test2()
+  //
+  // Set free running mode and start the timer. Wait a numer of
+  // cycles and read out the current timer value.
+  //----------------------------------------------------------------
+  task test2;
+    begin : test2
+      reg [31 : 0] time_start;
+      reg [31 : 0] time_stop;
+      reg [31 : 0] time_expected;
+      reg [31 : 0] time_counted;
+
+      tc_ctr = tc_ctr + 1;
+      tb_monitor = 0;
+
+      $display("");
+      $display("--- test2: started.");
+      $display("--- test2: Free running counter in an expected number of cycles.");
+
+      write_word(ADDR_PRESCALER, 32'h1);
+      write_word(ADDR_TIMER, 32'h9);
+      write_word(ADDR_FREE_RUNNING, 32'h1);
+
+      write_word(ADDR_CTRL, 32'h1);
+      time_start = cycle_ctr;
+
+      #(1337 * CLK_PERIOD);
+      read_word(ADDR_TIMER);
+
+      time_expected = cycle_ctr - time_start;
+      time_counted = tb_read_data;
+
+      if (time_counted == time_expected) begin
+	$display("--- test2: Correct number of cycles counted: %0d", time_counted);
+      end
+      else begin
+	$display("--- test2: Error, expected %0d cycles, counted cycles: %0d",
+		 time_expected, time_counted);
+	error_ctr = error_ctr + 1;
+      end
+
+      // Stop the timer.
+      write_word(ADDR_CTRL, 32'h2);
+
+      $display("--- test2: completed.");
+      $display("");
+    end
+  endtask // test2
+
+
+  //----------------------------------------------------------------
+  // test3()
+  //
+  // Set free running mode, set the prescler to two and start the
+  // timer. Wait a numer of cycles and read out the current timer
+  // value. the counter value should be half of the number
+  // of cycles executed.
+  // ----------------------------------------------------------------
+  task test3;
+    begin : test3
+      reg [31 : 0] time_start;
+      reg [31 : 0] time_stop;
+      reg [31 : 0] time_expected;
+      reg [31 : 0] time_counted;
+
+      tc_ctr = tc_ctr + 1;
+      tb_monitor = 0;
+
+      $display("");
+      $display("--- test3: started.");
+      $display("--- test3: Free running counter with prescaler = 2 in an expected number of cycles.");
+
+      write_word(ADDR_PRESCALER, 32'h2);
+      write_word(ADDR_TIMER, 32'h9);
+      write_word(ADDR_FREE_RUNNING, 32'h1);
+
+      write_word(ADDR_CTRL, 32'h1);
+      time_start = cycle_ctr;
+
+      $display("--- test3: Waiting 2048 cycles.");
+      #(2048 * CLK_PERIOD);
+      read_word(ADDR_TIMER);
+
+      time_expected = (cycle_ctr - time_start) >> 1;
+      time_counted = tb_read_data;
+
+      if (time_counted == time_expected) begin
+	$display("--- test3: Correct number of cycles counted: %0d", time_counted);
+      end
+      else begin
+	$display("--- test3: Error, expected %0d cycles, counted cycles: %0d",
+		 time_expected, time_counted);
+	error_ctr = error_ctr + 1;
+      end
+
+      // Stop the timer.
+      write_word(ADDR_CTRL, 32'h2);
+
+      $display("--- test3: completed.");
+      $display("");
+    end
+  endtask // test3
 
 
   //----------------------------------------------------------------
@@ -302,13 +424,15 @@ module tb_timer();
       init_sim();
       reset_dut();
       test1();
+      test2();
+      test3();
 
       display_test_result();
       $display("");
       $display("   -= Testbench for timer completed =-");
       $display("     ===============================");
       $display("");
-      $finish;
+      $finish(error_ctr);
     end // timer_test
 endmodule // tb_timer
 

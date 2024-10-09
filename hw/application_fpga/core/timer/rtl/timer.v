@@ -30,15 +30,16 @@ module timer(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_CTRL          = 8'h08;
-  localparam CTRL_START_BIT     = 0;
-  localparam CTRL_STOP_BIT      = 1;
+  localparam ADDR_CTRL             = 8'h08;
+  localparam CTRL_START_BIT        = 0;
+  localparam CTRL_STOP_BIT         = 1;
 
-  localparam ADDR_STATUS        = 8'h09;
-  localparam STATUS_RUNNING_BIT = 0;
+  localparam ADDR_STATUS           = 8'h09;
+  localparam STATUS_RUNNING_BIT    = 0;
+  localparam STATUS_REACHED_BIT    = 1;
 
-  localparam ADDR_PRESCALER     = 8'h0a;
-  localparam ADDR_TIMER         = 8'h0b;
+  localparam ADDR_PRESCALER        = 8'h0a;
+  localparam ADDR_TIMER            = 8'h0b;
 
 
   //----------------------------------------------------------------
@@ -63,8 +64,9 @@ module timer(
   reg [31 : 0]  tmp_read_data;
   reg           tmp_ready;
 
-  wire          core_running;
   wire [31 : 0] core_curr_timer;
+  wire          core_reached;
+  wire          core_running;
 
 
   //----------------------------------------------------------------
@@ -87,6 +89,7 @@ module timer(
                   .stop(stop_reg),
 
 		  .curr_timer(core_curr_timer),
+		  .reached(core_reached),
                   .running(core_running)
                  );
 
@@ -97,10 +100,10 @@ module timer(
   always @ (posedge clk)
     begin : reg_update
       if (!reset_n) begin
-	start_reg     <= 1'h0;
-	stop_reg      <= 1'h0;
-	prescaler_reg <= 32'h0;
-	timer_reg     <= 32'h0;
+	start_reg        <= 1'h0;
+	stop_reg         <= 1'h0;
+	prescaler_reg    <= 32'h1;
+	timer_reg        <= 32'h1;
       end
       else begin
 	start_reg <= start_new;
@@ -124,12 +127,12 @@ module timer(
   //----------------------------------------------------------------
   always @*
     begin : api
-      start_new     = 1'h0;
-      stop_new      = 1'h0;
-      prescaler_we  = 1'h0;
-      timer_we      = 1'h0;
-      tmp_read_data = 32'h0;
-      tmp_ready     = 1'h0;
+      start_new       = 1'h0;
+      stop_new        = 1'h0;
+      prescaler_we    = 1'h0;
+      timer_we        = 1'h0;
+      tmp_read_data   = 32'h0;
+      tmp_ready       = 1'h0;
 
       if (cs) begin
 	tmp_ready = 1'h1;
@@ -148,12 +151,12 @@ module timer(
             if (address == ADDR_TIMER) begin
 	      timer_we = 1'h1;
 	    end
-	  end
-        end
+          end
+	end
 
         else begin
 	  if (address == ADDR_STATUS) begin
-	    tmp_read_data[STATUS_RUNNING_BIT] = core_running;
+	    tmp_read_data[1 : 0] =  {core_reached, core_running};
 	  end
 
 	  if (address == ADDR_PRESCALER) begin
