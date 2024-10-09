@@ -26,6 +26,9 @@ module tk1(
 	   output wire          force_trap,
 	   output               system_reset,
 
+	   output wire [31 : 0] syscall_instr,
+	   output wire          syscall,
+
 	   output wire [14 : 0] ram_addr_rand,
 	   output wire [31 : 0] ram_data_rand,
 
@@ -80,6 +83,9 @@ module tk1(
   localparam ADDR_APP_SIZE      = 8'h0d;
 
   localparam ADDR_BLAKE2S       = 8'h10;
+
+  localparam ADDR_SYSCALL_INSTR = 8'h12;
+  localparam ADDR_SYSCALL_START = 8'h13;
 
   localparam ADDR_CDI_FIRST     = 8'h20;
   localparam ADDR_CDI_LAST      = 8'h27;
@@ -138,6 +144,12 @@ module tk1(
   reg [31 : 0] blake2s_addr_reg;
   reg          blake2s_addr_we;
 
+  reg [31 : 0] syscall_instr_reg;
+  reg          syscall_instr_we;
+
+  reg          syscall_reg;
+  reg          syscall_new;
+
   reg [23 : 0] cpu_trap_ctr_reg;
   reg [23 : 0] cpu_trap_ctr_new;
   reg [2 : 0]  cpu_trap_led_reg;
@@ -175,6 +187,8 @@ module tk1(
 
   wire [31:0]  udi_rdata;
 
+  reg          start_syscall;
+
 `ifdef INCLUDE_SPI_MASTER
   reg          spi_enable;
   reg          spi_enable_vld;
@@ -203,6 +217,9 @@ module tk1(
   assign ram_data_rand = ram_data_rand_reg;
 
   assign system_reset = system_reset_reg;
+
+  assign syscall_instr = syscall_instr_reg;
+  assign syscall      = syscall_reg;
 
 
   //----------------------------------------------------------------
@@ -268,6 +285,8 @@ module tk1(
         app_start_reg     <= 32'h0;
         app_size_reg      <= 32'h0;
         blake2s_addr_reg  <= 32'h0;
+        syscall_instr_reg <= 32'h0;
+	syscall_reg       <= 1'h0;
 	cdi_mem[0]        <= 32'h0;
 	cdi_mem[1]        <= 32'h0;
 	cdi_mem[2]        <= 32'h0;
@@ -291,6 +310,7 @@ module tk1(
 	cpu_trap_ctr_reg <= cpu_trap_ctr_new;
 
 	system_reset_reg <= system_reset_new;
+	syscall_reg <= syscall_new;
 
         gpio1_reg[0] <= gpio1;
         gpio1_reg[1] <= gpio1_reg[0];
@@ -324,6 +344,10 @@ module tk1(
 
         if (blake2s_addr_we) begin
           blake2s_addr_reg <= write_data;
+        end
+
+        if (syscall_instr_we) begin
+          syscall_instr_reg <= write_data;
         end
 
 	if (cdi_mem_we) begin
@@ -436,6 +460,8 @@ module tk1(
       app_start_we     = 1'h0;
       app_size_we      = 1'h0;
       blake2s_addr_we  = 1'h0;
+      syscall_instr_we = 1'h0;
+      syscall_new      = 1'h0;
       cdi_mem_we       = 1'h0;
       cdi_mem_we       = 1'h0;
       ram_addr_rand_we = 1'h0;
@@ -493,6 +519,16 @@ module tk1(
 	    if (!switch_app_reg) begin
               blake2s_addr_we = 1'h1;
             end
+	  end
+
+          if (address == ADDR_SYSCALL_INSTR) begin
+	    if (!switch_app_reg) begin
+              syscall_instr_we = 1'h1;
+            end
+	  end
+
+          if (address == ADDR_SYSCALL_START) begin
+            syscall_new = 1'h1;
 	  end
 
 	  if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
