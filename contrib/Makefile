@@ -40,7 +40,7 @@ run-make-spi:
 
 run-tb:
 	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it \
-	 $(IMAGE) make tb
+	 $(IMAGE) make clean_tb tb
 
 run-make-testfw:
 	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it \

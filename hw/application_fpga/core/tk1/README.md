@@ -133,7 +133,7 @@ bitstream. This allows us to generate these device unique FPGA
 bitstreams without having to do a full FPGA build.
 
 
-### RAM memory protecion
+### RAM memory protection
 
 ```
   ADDR_RAM_ADDR_RAND: 0x40
@@ -143,7 +143,7 @@ bitstreams without having to do a full FPGA build.
 These write only registers control how the data in the RAM is
 randomized as a way of protecting the data. The randomization is
 implemented using a pseudo random number generator with a state
-initalized by a seed.
+initialized by a seed.
 
 The ADDR_RAM_ADDR_RAND store the seed for how the addresses are
 randomized over the memory space. The ADDR_RAM_DATA_RAND store the

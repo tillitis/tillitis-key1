@@ -83,8 +83,8 @@ module tb_tk1();
   reg           tb_cpu_valid;
   wire          tb_force_trap;
 
-  wire [14 : 0] tb_ram_aslr;
-  wire [31 : 0] tb_ram_scramble;
+  wire [14 : 0] tb_ram_addr_rand;
+  wire [31 : 0] tb_ram_data_rand;
 
   wire          tb_led_r;
   wire          tb_led_g;
@@ -129,8 +129,8 @@ module tb_tk1();
 	  .cpu_valid(tb_cpu_valid),
 	  .force_trap(tb_force_trap),
 
-	  .ram_aslr(tb_ram_aslr),
-	  .ram_scramble(tb_ram_scramble),
+	  .ram_addr_rand(tb_ram_addr_rand),
+	  .ram_data_rand(tb_ram_data_rand),
 
           .led_r(tb_led_r),
           .led_g(tb_led_g),
@@ -198,7 +198,7 @@ module tb_tk1();
 	$display("tb_cpu_trap: 0x%1x, fw_app_mode: 0x%1x", tb_cpu_trap, tb_fw_app_mode);
 	$display("cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x, force_tap: 0x%1x",
 		 tb_cpu_addr, tb_cpu_instr, tb_cpu_valid, tb_force_trap);
-	$display("ram_aslr: 0x%08x, ram_scramble: 0x%08x", tb_ram_aslr, tb_ram_scramble);
+	$display("ram_aslr: 0x%08x, ram_scramble: 0x%08x", tb_ram_addr_rand, tb_ram_data_rand);
 	$display("led_r: 0x%1x, led_g: 0x%1x, led_b: 0x%1x", tb_led_r, tb_led_g, tb_led_b);
 	$display("ready: 0x%1x, cs: 0x%1x, we: 0x%1x, address: 0x%02x", tb_ready, tb_cs, tb_we, tb_address);
 	$display("write_data: 0x%08x, read_data: 0x%08x", tb_write_data, tb_read_data);
@@ -564,7 +564,7 @@ module tb_tk1();
       write_word(ADDR_RAM_DATA_RAND, 32'h47114711);
 
       $display("--- test6: Check value in dut RAM ASLR and SCRAMBLE registers.");
-      $display("--- test6: ram_aslr_reg: 0x%04x, ram_scramble_reg: 0x%08x", dut.ram_aslr_reg, dut.ram_scramble_reg);
+      $display("--- test6: ram_aslr_reg: 0x%04x, ram_scramble_reg: 0x%08x", dut.ram_addr_rand, dut.ram_data_rand);
 
       $display("--- test6: Switch to app mode.");
       write_word(ADDR_SWITCH_APP, 32'hf000000);
@@ -574,7 +574,7 @@ module tb_tk1();
       write_word(ADDR_RAM_DATA_RAND, 32'hf00ff00f);
 
       $display("--- test6: Check value in dut RAM ASLR and SCRAMBLE registers.");
-      $display("--- test6: ram_aslr_reg: 0x%04x, ram_scramble_reg: 0x%08x", dut.ram_aslr_reg, dut.ram_scramble_reg);
+      $display("--- test6: ram_aslr_reg: 0x%04x, ram_scramble_reg: 0x%08x", dut.ram_addr_rand, dut.ram_data_rand);
 
       $display("--- test6: completed.");
       $display("");
