@@ -416,7 +416,7 @@ view: tb_application_fpga_vcd
 #-------------------------------------------------------------------
 # Cleanup.
 #-------------------------------------------------------------------
-clean: clean_fw
+clean: clean_fw clean_tb
 	rm -f bram_fw.hex
 	rm -f synth.{v,json,txt} route.v application_fpga.{asc,bin,vcd} application_fpga_testfw.bin
 	rm -f tb_application_fpga.vvp synth_tb.vvp route_tb.vvp
@@ -435,6 +435,15 @@ clean_fw:
 	rm -f $(TESTFW_OBJS)
 	rm -f qemu_firmware.elf
 .PHONY: clean_fw
+
+clean_tb:
+	make -C core/timer/toolruns clean
+	make -C core/tk1/toolruns clean
+	make -C core/touch_sense/toolruns clean
+	make -C core/trng/toolruns clean
+	make -C core/uart/toolruns clean
+	make -C core/uds/toolruns clean
+.PHONY: clean_tb
 
 #-------------------------------------------------------------------
 # Display info about targets.
@@ -458,6 +467,7 @@ help:
 	@echo "prog_flash_testfw  Program device flash as above, but with testfw."
 	@echo "clean              Delete all generated files."
 	@echo "clean_fw           Delete only generated files for firmware. Useful for fw devs."
+	@echo "clean_tb           Delete only generated files for testbenches."
 
 #=======================================================================
 # EOF Makefile
