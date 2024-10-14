@@ -99,10 +99,6 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: make production test gateware
-        working-directory: hw/production_test/application_fpga_test_gateware
-        run: make
-
       - name: make application FPGA gateware
         working-directory: hw/application_fpga
         run: make all
