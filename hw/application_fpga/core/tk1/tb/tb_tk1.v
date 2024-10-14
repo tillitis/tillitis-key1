@@ -61,6 +61,7 @@ module tb_tk1();
   localparam ADDR_SPI_EN        = 8'h80;
   localparam ADDR_SPI_XFER      = 8'h81;
   localparam ADDR_SPI_DATA      = 8'h82;
+  localparam ADDR_SPI_CMD       = 8'h83;
 
 
   //----------------------------------------------------------------
@@ -277,13 +278,13 @@ module tb_tk1();
       tb_cpu_valid    = 1'h0;
       tb_cpu_trap     = 1'h0;
 
-      tb_gpio1        = 1'h0;
-      tb_gpio2        = 1'h0;
+      tb_gpio1      = 1'h0;
+      tb_gpio2      = 1'h0;
 
-      tb_cs           = 1'h0;
-      tb_we           = 1'h0;
-      tb_address      = 8'h0;
-      tb_write_data   = 32'h0;
+      tb_cs         = 1'h0;
+      tb_we         = 1'h0;
+      tb_address    = 8'h0;
+      tb_write_data = 32'h0;
     end
   endtask // init_sim
 
@@ -298,8 +299,7 @@ module tb_tk1();
     begin
       if (DEBUG)
         begin
-          $display("--- Writing 0x%08x to 0x%02x.", word, address);
-          $display("");
+          $display("--- Write word: 0x%08x to 0x%02x.", word, address);
         end
 
       tb_address = address;
@@ -362,13 +362,11 @@ module tb_tk1();
       if (DEBUG)
         begin
 	  if (read_data == expected) begin
-            $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
+            $display("--- Read word: 0x%08x from 0x%02x.", read_data, address);
 	  end else begin
-            $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x",
-		     read_data, address, expected);
+            $display("--- Read word: Error. Got 0x%08x, expected 0x%08x", read_data, address, expected);
 	    error_ctr = error_ctr + 1;
 	  end
-          $display("");
         end
     end
   endtask // read_check_word
@@ -684,6 +682,13 @@ module tb_tk1();
       tb_monitor     = 0;
       tb_spi_monitor = 0;
 
+      // We need to enable SPI access before testing.
+      dut.spi_access_ctrl_new = 1'h1;
+      dut.spi_access_ctrl_we  = 1'h1;
+      #(CLK_PERIOD);
+      dut.spi_access_ctrl_new = 1'h0;
+      dut.spi_access_ctrl_we  = 1'h0;
+
       $display("");
       $display("--- test10: Loopback in SPI Master started.");
 
@@ -702,7 +707,7 @@ module tb_tk1();
       end
       $display("--- test10: Byte should have been sent.");
 
-      // 0x58 is the inverse of 0xa7.
+      // Read back data. 0x58 is the inverse of 0xa7.
       #(2 * CLK_PERIOD);
       read_check_word(ADDR_SPI_DATA, 32'h58);
       write_word(ADDR_SPI_EN, 32'h0);
@@ -714,6 +719,96 @@ module tb_tk1();
       $display("");
     end
   endtask // test10
+
+
+
+  //----------------------------------------------------------------
+  // test11()
+  // SPI access control test.
+  //----------------------------------------------------------------
+  task test11;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test11: SPI access control started.");
+
+      // Start by resetting and check if access is enabled.
+      $display("--- test11: Check that SPI access is disabled after reset.");
+      reset_dut();
+      read_word(ADDR_SPI_XFER, 32'h0);
+      $display("");
+
+      // Set the SPI command adress API to an address in ROM space.
+      // Read it back to check that it has been set.
+      $display("--- test11: Set and read SPI command address.");
+      write_word(ADDR_SPI_CMD, 32'h0000dead);
+      read_word(ADDR_SPI_CMD, 32'h0000dead);
+      $display("");
+
+      // Simulate CPU instruction read from the SPI command adress.
+      // And check that access has been enabled.
+      $display("--- test11: Perform CPU instruction read from SPI command address.");
+      $display("--- test11: Then check that SPI access is enabled.");
+      tb_cpu_addr  = 32'h0000dead;
+      tb_cpu_instr = 1'h1;
+      tb_cpu_valid = 1'h1;
+      #(CLK_PERIOD);
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+      read_word(ADDR_SPI_XFER, 32'h1);
+      $display("");
+
+      // Simulate CPU instruction read from a RAM address.
+      // And check that access has been disabled.
+      $display("--- test11: Perform CPU instruction read from a RAM address.");
+      $display("--- test11: Then check that SPI access has been disabled.");
+      tb_cpu_addr  = 32'h4000dead;
+      tb_cpu_instr = 1'h1;
+      tb_cpu_valid = 1'h1;
+      #(CLK_PERIOD);
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+      read_word(ADDR_SPI_XFER, 32'h0);
+      $display("");
+
+
+      // Move the SPI command adress API to a new address in ROM space.
+      // Read it back to check that it has been set.
+      $display("--- test11: Set SPI command address to a new address and read again.");
+      write_word(ADDR_SPI_CMD, 32'h0000cafe);
+      read_word(ADDR_SPI_CMD, 32'h0000cafe);
+      $display("");
+
+      // Simulate CPU instruction read from the old SPI command adress.
+      // And check that access is still been disabled.
+      $display("--- test11: Perform CPU instruction read from old SPI command address.");
+      $display("--- test11: Then check that SPI access is still disabled.");
+      tb_cpu_addr  = 32'h0000dead;
+      tb_cpu_instr = 1'h1;
+      tb_cpu_valid = 1'h1;
+      #(CLK_PERIOD);
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+      read_word(ADDR_SPI_XFER, 32'h0);
+      $display("");
+
+      // Simulate CPU instruction read from the new SPI command adress.
+      // And check that access is now enabled.
+      $display("--- test11: Perform CPU instruction read from new SPI command address.");
+      $display("--- test11: Then check that SPI access is now enabled.");
+      tb_cpu_addr  = 32'h0000cafe;
+      tb_cpu_instr = 1'h1;
+      tb_cpu_valid = 1'h1;
+      #(CLK_PERIOD);
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+      read_word(ADDR_SPI_XFER, 32'h1);
+
+      $display("--- test11: completed.");
+      $display("");
+    end
+  endtask // test11
 
 
   //----------------------------------------------------------------
@@ -740,6 +835,7 @@ module tb_tk1();
       test9();
       test9();
       test10();
+      test11();
 
       display_test_result();
       $display("");

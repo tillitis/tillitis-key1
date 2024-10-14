@@ -242,6 +242,7 @@ LINT_FLAGS = \
 lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
 	$(LINT) $(LINT_FLAGS) \
 	-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
+	-DINCLUDE_SPI_MASTER \
 	-DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
 	-DUDS_HEX=\"$(P)/data/uds.hex\" \
 	-DUDI_HEX=\"$(P)/data/udi.hex\" \
