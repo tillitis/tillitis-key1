@@ -44,6 +44,7 @@ CC = clang
 CFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 \
    -static -std=gnu99 -Os -ffast-math -fno-common -fno-builtin-printf \
    -fno-builtin-putchar -fno-builtin-memcpy -nostdlib -mno-relax -Wall \
+   -Wl,-mllvm,-mattr=+c,-mllvm,-mattr=+zmmul \
    -Wpedantic -Wno-language-extension-token -flto -g
 
 AS = clang
