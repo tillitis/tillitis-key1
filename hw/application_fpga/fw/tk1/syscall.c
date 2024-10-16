@@ -12,41 +12,27 @@
 
 void inner_syscall(volatile syscall_t *ctx);
 
-void syscall(volatile syscall_t *ctx)
+void syscall(syscall_t *ctx)
 {
 
 	asm volatile("addi x5, sp, 0;"	  // Save current SP value in x5
 		     "li sp, 0xd0000800;" // Change SP to top of FW_RAM
 		     "addi sp, sp, -4;"	  // Adjust SP to make space
 		     "sw x5, 0(sp);"	  // Store originally saved SP value
-					  // in new stack
-		     "addi sp, sp, -4;"	  // Adjust SP to make space
-		     "sw a0, 0(sp);"	  // Store the address of *ctx on
-					  // new stack
-		     ::
-			 : "memory");
+				     // in new stack
+		     :			// No outputs
+		     :			// No inputs
+		     : "x5", "memory"); // Clobbers
 
-	syscall_t **ctx_local_p = (syscall_t **)0xd00007f8;
-	syscall_t *ctx_local = *ctx_local_p;
-
-	htif_puts("Syscall\n");
-	htif_putinthex((uint32_t)*ctx_local_p);
-	htif_lf();
-
-	htif_putinthex((uint32_t)ctx_local_p);
-	htif_lf();
-
-	htif_hexdump(ctx_local, sizeof(syscall_t));
-	htif_lf();
-
-	inner_syscall(ctx_local);
+	inner_syscall(ctx);
 
 	asm volatile("lui  t0, 0xd0000;"   // Load the upper 20 bits
 		     "addi t0, t0, 0x7fc;" // Add the lower 12 bits for full
 		     "lw t1, 0(t0);"  // Load the word at address in t0 to t1
 		     "addi sp,t1, 0;" // Copy the value from t1 to sp
-		     ::
-			 : "memory");
+		     :		      // No outputs
+		     :		      // No inputs
+		     : "t0", "t1", "memory"); // Clobbers
 
 	return;
 }
