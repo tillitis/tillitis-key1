@@ -33,7 +33,7 @@ enum syscall_cmd {
 	MGMT_APP_UNREGISTER,
 };
 
-void syscall(volatile syscall_t *ctx);
+void syscall(syscall_t *ctx);
 /*int syscall(syscall_t *ctx);*/
 
 #endif
