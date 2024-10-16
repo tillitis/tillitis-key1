@@ -198,7 +198,11 @@ secret:
 # Firmware generation.
 # Included in the bitstream.
 #-------------------------------------------------------------------
-LDFLAGS = -T $(P)/fw/tk1/firmware.lds
+# -Wl,-mllvm,-mattr=+c,-mllvm,-mattr=+zmmul added as a workaround to be able to
+#  disassemble compressed RV32 instructions
+LDFLAGS = \
+	-T $(P)/fw/tk1/firmware.lds \
+	-Wl,-mllvm,-mattr=+c,-mllvm,-mattr=+zmmul
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
