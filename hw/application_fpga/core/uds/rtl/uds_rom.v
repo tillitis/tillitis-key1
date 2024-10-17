@@ -14,25 +14,27 @@
 
 `default_nettype none
 
-module uds_rom(
-	       input wire [2:0] addr,
-	       input wire re,
-	       output wire [31:0] data
-	      );
+module uds_rom (
+    input wire [2:0] addr,
+    input wire re,
+    output wire [31:0] data
+);
 
   generate
     genvar ii;
-    for (ii = 0; ii < 32; ii = ii + 1'b1) begin: luts
-    (* uds_rom_idx=ii, keep *) SB_LUT4
-      #(
-        .LUT_INIT({8'ha6 ^ ii[7:0], 8'h00})
+    for (ii = 0; ii < 32; ii = ii + 1'b1) begin : luts
+      (* uds_rom_idx=ii, keep *) SB_LUT4 #(
+          .LUT_INIT({8'ha6 ^ ii[7:0], 8'h00})
       ) lut_i (
-        .I0(addr[0]), .I1(addr[1]), .I2(addr[2]), .I3(re),
-        .O(data[ii])
+          .I0(addr[0]),
+          .I1(addr[1]),
+          .I2(addr[2]),
+          .I3(re),
+          .O (data[ii])
       );
     end
   endgenerate
-endmodule // uds_rom
+endmodule  // uds_rom
 
 //======================================================================
 // EOF uds_rom.v
