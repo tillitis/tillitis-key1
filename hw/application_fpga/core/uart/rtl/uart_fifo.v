@@ -36,51 +36,51 @@
 //
 //======================================================================
 
-module uart_fifo(
-		 input wire          clk,
-		 input wire          reset_n,
+module uart_fifo (
+    input wire clk,
+    input wire reset_n,
 
-		 input wire          in_syn,
-		 input wire [7 : 0]  in_data,
-		 output wire         in_ack,
+    input  wire         in_syn,
+    input  wire [7 : 0] in_data,
+    output wire         in_ack,
 
-		 output wire [8 : 0] fifo_bytes,
+    output wire [8 : 0] fifo_bytes,
 
-		 output wire         out_syn,
-		 output wire [7 : 0] out_data,
-		 input wire          out_ack
-		 );
+    output wire         out_syn,
+    output wire [7 : 0] out_data,
+    input  wire         out_ack
+);
 
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [7 : 0]  fifo_mem [0 : 511];
-  reg          fifo_mem_we;
+  reg [7 : 0] fifo_mem     [0 : 511];
+  reg         fifo_mem_we;
 
-  reg [8: 0]   in_ptr_reg;
-  reg [8: 0]   in_ptr_new;
-  reg          in_ptr_we;
+  reg [  8:0] in_ptr_reg;
+  reg [  8:0] in_ptr_new;
+  reg         in_ptr_we;
 
-  reg [8: 0]   out_ptr_reg;
-  reg [8: 0]   out_ptr_new;
-  reg          out_ptr_we;
+  reg [  8:0] out_ptr_reg;
+  reg [  8:0] out_ptr_new;
+  reg         out_ptr_we;
 
-  reg [8: 0]   byte_ctr_reg;
-  reg [8: 0]   byte_ctr_new;
-  reg          byte_ctr_inc;
-  reg          byte_ctr_dec;
-  reg          byte_ctr_we;
+  reg [  8:0] byte_ctr_reg;
+  reg [  8:0] byte_ctr_new;
+  reg         byte_ctr_inc;
+  reg         byte_ctr_dec;
+  reg         byte_ctr_we;
 
-  reg          in_ack_reg;
-  reg          in_ack_new;
+  reg         in_ack_reg;
+  reg         in_ack_new;
 
 
   //----------------------------------------------------------------
   // Wires
   //----------------------------------------------------------------
-  reg fifo_empty;
-  reg fifo_full;
+  reg         fifo_empty;
+  reg         fifo_full;
 
 
   //----------------------------------------------------------------
@@ -95,104 +95,100 @@ module uart_fifo(
   //----------------------------------------------------------------
   // reg_update
   //----------------------------------------------------------------
-  always @ (posedge clk)
-    begin: reg_update
-      if (!reset_n) begin
-	in_ptr_reg   <= 9'h0;
-	out_ptr_reg  <= 9'h0;
-	byte_ctr_reg <= 9'h0;
-	in_ack_reg   <= 1'h0;
+  always @(posedge clk) begin : reg_update
+    if (!reset_n) begin
+      in_ptr_reg   <= 9'h0;
+      out_ptr_reg  <= 9'h0;
+      byte_ctr_reg <= 9'h0;
+      in_ack_reg   <= 1'h0;
+    end
+    else begin
+      in_ack_reg <= in_ack_new;
+
+      if (fifo_mem_we) begin
+        fifo_mem[in_ptr_reg] <= in_data;
       end
-      else begin
-	in_ack_reg <= in_ack_new;
 
-        if (fifo_mem_we) begin
-          fifo_mem[in_ptr_reg] <= in_data;
-        end
-
-        if (in_ptr_we) begin
-          in_ptr_reg <= in_ptr_new;
-        end
-
-        if (out_ptr_we) begin
-          out_ptr_reg <= out_ptr_new;
-        end
-
-        if (byte_ctr_we) begin
-          byte_ctr_reg  <= byte_ctr_new;
-        end
+      if (in_ptr_we) begin
+        in_ptr_reg <= in_ptr_new;
       end
-    end // reg_update
+
+      if (out_ptr_we) begin
+        out_ptr_reg <= out_ptr_new;
+      end
+
+      if (byte_ctr_we) begin
+        byte_ctr_reg <= byte_ctr_new;
+      end
+    end
+  end  // reg_update
 
 
   //----------------------------------------------------------------
   // byte_ctr
   //----------------------------------------------------------------
-  always @*
-    begin : byte_ctr
-      fifo_empty   = 1'h0;
-      fifo_full    = 1'h0;
-      byte_ctr_new = 9'h0;
-      byte_ctr_we  = 1'h0;
+  always @* begin : byte_ctr
+    fifo_empty   = 1'h0;
+    fifo_full    = 1'h0;
+    byte_ctr_new = 9'h0;
+    byte_ctr_we  = 1'h0;
 
-      if (byte_ctr_reg == 9'h0) begin
-	fifo_empty = 1'h1;
-      end
-
-      if (byte_ctr_reg == 9'h1ff) begin
-	fifo_full = 1'h1;
-      end
-
-      if ((byte_ctr_inc) && (!byte_ctr_dec)) begin
-	byte_ctr_new = byte_ctr_reg + 1'h1;
-	byte_ctr_we = 1'h1;
-      end
-
-      else if ((!byte_ctr_inc) && (byte_ctr_dec)) begin
-	byte_ctr_new = byte_ctr_reg - 1'h1;
-	byte_ctr_we = 1'h1;
-      end
+    if (byte_ctr_reg == 9'h0) begin
+      fifo_empty = 1'h1;
     end
+
+    if (byte_ctr_reg == 9'h1ff) begin
+      fifo_full = 1'h1;
+    end
+
+    if ((byte_ctr_inc) && (!byte_ctr_dec)) begin
+      byte_ctr_new = byte_ctr_reg + 1'h1;
+      byte_ctr_we  = 1'h1;
+    end
+
+    else if ((!byte_ctr_inc) && (byte_ctr_dec)) begin
+      byte_ctr_new = byte_ctr_reg - 1'h1;
+      byte_ctr_we  = 1'h1;
+    end
+  end
 
 
   //----------------------------------------------------------------
   // in_logic
   //----------------------------------------------------------------
-  always @*
-    begin : in_logic
-      fifo_mem_we  = 1'h0;
-      in_ack_new   = 1'h0;
-      byte_ctr_inc = 1'h0;
-      in_ptr_we    = 1'h0;
+  always @* begin : in_logic
+    fifo_mem_we  = 1'h0;
+    in_ack_new   = 1'h0;
+    byte_ctr_inc = 1'h0;
+    in_ptr_we    = 1'h0;
 
-      in_ptr_new   = in_ptr_reg + 1'h1;
+    in_ptr_new   = in_ptr_reg + 1'h1;
 
-      if ((in_syn) && (!in_ack) && (!fifo_full)) begin
-	fifo_mem_we  = 1'h1;
-	in_ack_new   = 1'h1;
-	byte_ctr_inc = 1'h1;
-	in_ptr_we    = 1'h1;
-      end
+    if ((in_syn) && (!in_ack) && (!fifo_full)) begin
+      fifo_mem_we  = 1'h1;
+      in_ack_new   = 1'h1;
+      byte_ctr_inc = 1'h1;
+      in_ptr_we    = 1'h1;
     end
+  end
 
 
   //----------------------------------------------------------------
   // out_logic
   //----------------------------------------------------------------
-  always @*
-    begin : out_logic
-      byte_ctr_dec = 1'h0;
-      out_ptr_we   = 1'h0;
+  always @* begin : out_logic
+    byte_ctr_dec = 1'h0;
+    out_ptr_we   = 1'h0;
 
-      out_ptr_new  = out_ptr_reg + 1'h1;
+    out_ptr_new  = out_ptr_reg + 1'h1;
 
-      if ((out_ack) && (!fifo_empty)) begin
-	byte_ctr_dec = 1'h1;
-	out_ptr_we   = 1'h1;
-      end
+    if ((out_ack) && (!fifo_empty)) begin
+      byte_ctr_dec = 1'h1;
+      out_ptr_we   = 1'h1;
     end
+  end
 
-endmodule // uart_fifo
+endmodule  // uart_fifo
 
 //======================================================================
 // EOF uart_fifo.v

@@ -13,62 +13,62 @@
 
 `default_nettype none
 
-module tb_tk1();
+module tb_tk1 ();
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG     = 1;
+  parameter DEBUG = 1;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
 
-  localparam ADDR_NAME0         = 8'h00;
-  localparam ADDR_NAME1         = 8'h01;
-  localparam ADDR_VERSION       = 8'h02;
+  localparam ADDR_NAME0 = 8'h00;
+  localparam ADDR_NAME1 = 8'h01;
+  localparam ADDR_VERSION = 8'h02;
 
-  localparam ADDR_SWITCH_APP    = 8'h08;
+  localparam ADDR_SWITCH_APP = 8'h08;
 
-  localparam ADDR_LED           = 8'h09;
-  localparam LED_R_BIT          = 2;
-  localparam LED_G_BIT          = 1;
-  localparam LED_B_BIT          = 0;
+  localparam ADDR_LED = 8'h09;
+  localparam LED_R_BIT = 2;
+  localparam LED_G_BIT = 1;
+  localparam LED_B_BIT = 0;
 
-  localparam ADDR_GPIO          = 8'h0a;
-  localparam GPIO1_BIT          = 0;
-  localparam GPIO2_BIT          = 1;
-  localparam GPIO3_BIT          = 2;
-  localparam GPIO4_BIT          = 3;
+  localparam ADDR_GPIO = 8'h0a;
+  localparam GPIO1_BIT = 0;
+  localparam GPIO2_BIT = 1;
+  localparam GPIO3_BIT = 2;
+  localparam GPIO4_BIT = 3;
 
-  localparam ADDR_APP_START     = 8'h0c;
-  localparam ADDR_APP_SIZE      = 8'h0d;
+  localparam ADDR_APP_START = 8'h0c;
+  localparam ADDR_APP_SIZE = 8'h0d;
 
-  localparam ADDR_BLAKE2S       = 8'h10;
+  localparam ADDR_BLAKE2S = 8'h10;
 
-  localparam ADDR_CDI_FIRST     = 8'h20;
-  localparam ADDR_CDI_LAST      = 8'h27;
+  localparam ADDR_CDI_FIRST = 8'h20;
+  localparam ADDR_CDI_LAST = 8'h27;
 
-  localparam ADDR_UDI_FIRST     = 8'h30;
-  localparam ADDR_UDI_LAST      = 8'h31;
+  localparam ADDR_UDI_FIRST = 8'h30;
+  localparam ADDR_UDI_LAST = 8'h31;
 
   localparam ADDR_RAM_ADDR_RAND = 8'h40;
   localparam ADDR_RAM_DATA_RAND = 8'h41;
 
-  localparam ADDR_CPU_MON_CTRL  = 8'h60;
+  localparam ADDR_CPU_MON_CTRL = 8'h60;
   localparam ADDR_CPU_MON_FIRST = 8'h61;
-  localparam ADDR_CPU_MON_LAST  = 8'h62;
+  localparam ADDR_CPU_MON_LAST = 8'h62;
 
-  localparam ADDR_SPI_EN        = 8'h80;
-  localparam ADDR_SPI_XFER      = 8'h81;
-  localparam ADDR_SPI_DATA      = 8'h82;
+  localparam ADDR_SPI_EN = 8'h80;
+  localparam ADDR_SPI_XFER = 8'h81;
+  localparam ADDR_SPI_DATA = 8'h82;
 
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [31 : 0]  cycle_ctr;
-  reg [31 : 0]  error_ctr;
-  reg [31 : 0]  tc_ctr;
+  reg  [31 : 0] cycle_ctr;
+  reg  [31 : 0] error_ctr;
+  reg  [31 : 0] tc_ctr;
   reg           tb_monitor;
   reg           tb_main_monitor;
   reg           tb_spi_monitor;
@@ -102,7 +102,7 @@ module tb_tk1();
 
   reg           tb_cs;
   reg           tb_we;
-  reg [7 : 0]   tb_address;
+  reg  [ 7 : 0] tb_address;
   reg  [31 : 0] tb_write_data;
   wire [31 : 0] tb_read_data;
   wire          tb_ready;
@@ -117,42 +117,42 @@ module tb_tk1();
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  tk1 dut(
-          .clk(tb_clk),
-          .reset_n(tb_reset_n),
+  tk1 dut (
+      .clk(tb_clk),
+      .reset_n(tb_reset_n),
 
-	  .cpu_trap(tb_cpu_trap),
-	  .fw_app_mode(tb_fw_app_mode),
+      .cpu_trap(tb_cpu_trap),
+      .fw_app_mode(tb_fw_app_mode),
 
-	  .cpu_addr(tb_cpu_addr),
-	  .cpu_instr(tb_cpu_instr),
-	  .cpu_valid(tb_cpu_valid),
-	  .force_trap(tb_force_trap),
+      .cpu_addr  (tb_cpu_addr),
+      .cpu_instr (tb_cpu_instr),
+      .cpu_valid (tb_cpu_valid),
+      .force_trap(tb_force_trap),
 
-	  .ram_addr_rand(tb_ram_addr_rand),
-	  .ram_data_rand(tb_ram_data_rand),
+      .ram_addr_rand(tb_ram_addr_rand),
+      .ram_data_rand(tb_ram_data_rand),
 
-          .led_r(tb_led_r),
-          .led_g(tb_led_g),
-          .led_b(tb_led_b),
+      .led_r(tb_led_r),
+      .led_g(tb_led_g),
+      .led_b(tb_led_b),
 
-	  .gpio1(tb_gpio1),
-	  .gpio2(tb_gpio2),
-	  .gpio3(tb_gpio3),
-	  .gpio4(tb_gpio4),
+      .gpio1(tb_gpio1),
+      .gpio2(tb_gpio2),
+      .gpio3(tb_gpio3),
+      .gpio4(tb_gpio4),
 
-	  .spi_ss(tb_spi_ss),
-	  .spi_sck(tb_spi_sck),
-	  .spi_mosi(tb_spi_mosi),
-	  .spi_miso(tb_spi_miso),
+      .spi_ss  (tb_spi_ss),
+      .spi_sck (tb_spi_sck),
+      .spi_mosi(tb_spi_mosi),
+      .spi_miso(tb_spi_miso),
 
-          .cs(tb_cs),
-          .we(tb_we),
-          .address(tb_address),
-          .write_data(tb_write_data),
-          .read_data(tb_read_data),
-	  .ready(tb_ready)
-         );
+      .cs(tb_cs),
+      .we(tb_we),
+      .address(tb_address),
+      .write_data(tb_write_data),
+      .read_data(tb_read_data),
+      .ready(tb_ready)
+  );
 
 
   //----------------------------------------------------------------
@@ -160,11 +160,10 @@ module tb_tk1();
   //
   // Always running clock generator process.
   //----------------------------------------------------------------
-  always
-    begin : clk_gen
-      #CLK_HALF_PERIOD;
-      tb_clk = !tb_clk;
-    end // clk_gen
+  always begin : clk_gen
+    #CLK_HALF_PERIOD;
+    tb_clk = !tb_clk;
+  end  // clk_gen
 
 
   //----------------------------------------------------------------
@@ -173,15 +172,13 @@ module tb_tk1();
   // An always running process that creates a cycle counter and
   // conditionally displays information about the DUT.
   //----------------------------------------------------------------
-  always
-    begin : sys_monitor
-      cycle_ctr = cycle_ctr + 1;
-      #(CLK_PERIOD);
-      if (tb_monitor)
-        begin
-          dump_dut_state();
-        end
+  always begin : sys_monitor
+    cycle_ctr = cycle_ctr + 1;
+    #(CLK_PERIOD);
+    if (tb_monitor) begin
+      dump_dut_state();
     end
+  end
 
 
   //----------------------------------------------------------------
@@ -194,31 +191,33 @@ module tb_tk1();
       $display("State of DUT at cycle: %08d", cycle_ctr);
       $display("------------");
       if (tb_main_monitor) begin
-	$display("Inputs and outputs:");
-	$display("tb_cpu_trap: 0x%1x, fw_app_mode: 0x%1x", tb_cpu_trap, tb_fw_app_mode);
-	$display("cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x, force_tap: 0x%1x",
-		 tb_cpu_addr, tb_cpu_instr, tb_cpu_valid, tb_force_trap);
-	$display("ram_addr_rand: 0x%08x, ram_data_rand: 0x%08x", tb_ram_addr_rand, tb_ram_data_rand);
-	$display("led_r: 0x%1x, led_g: 0x%1x, led_b: 0x%1x", tb_led_r, tb_led_g, tb_led_b);
-	$display("ready: 0x%1x, cs: 0x%1x, we: 0x%1x, address: 0x%02x", tb_ready, tb_cs, tb_we, tb_address);
-	$display("write_data: 0x%08x, read_data: 0x%08x", tb_write_data, tb_read_data);
-	$display("");
+        $display("Inputs and outputs:");
+        $display("tb_cpu_trap: 0x%1x, fw_app_mode: 0x%1x", tb_cpu_trap, tb_fw_app_mode);
+        $display("cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x, force_tap: 0x%1x",
+                 tb_cpu_addr, tb_cpu_instr, tb_cpu_valid, tb_force_trap);
+        $display("ram_addr_rand: 0x%08x, ram_data_rand: 0x%08x", tb_ram_addr_rand,
+                 tb_ram_data_rand);
+        $display("led_r: 0x%1x, led_g: 0x%1x, led_b: 0x%1x", tb_led_r, tb_led_g, tb_led_b);
+        $display("ready: 0x%1x, cs: 0x%1x, we: 0x%1x, address: 0x%02x", tb_ready, tb_cs, tb_we,
+                 tb_address);
+        $display("write_data: 0x%08x, read_data: 0x%08x", tb_write_data, tb_read_data);
+        $display("");
 
-	$display("Internal state:");
-	$display("tmp_read_ready: 0x%1x, tmp_read_data: 0x%08x", dut.tmp_ready, dut.tmp_read_data);
-	$display("");
+        $display("Internal state:");
+        $display("tmp_read_ready: 0x%1x, tmp_read_data: 0x%08x", dut.tmp_ready, dut.tmp_read_data);
+        $display("");
       end
 
       if (tb_spi_monitor) begin
-	$display("SPI I/O and internal state:");
-	$display("spi_ss: 0x%1x, spi_sck: 0x%1x, spi_mosi: 0x%1x, spi_miso: 0x%1x",
-		 tb_spi_ss, tb_spi_sck, tb_spi_mosi, tb_spi_miso);
+        $display("SPI I/O and internal state:");
+        $display("spi_ss: 0x%1x, spi_sck: 0x%1x, spi_mosi: 0x%1x, spi_miso: 0x%1x", tb_spi_ss,
+                 tb_spi_sck, tb_spi_mosi, tb_spi_miso);
       end
 
       $display("");
       $display("");
     end
-  endtask // dump_dut_state
+  endtask  // dump_dut_state
 
 
   //----------------------------------------------------------------
@@ -233,7 +232,7 @@ module tb_tk1();
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
     end
-  endtask // reset_dut
+  endtask  // reset_dut
 
 
   //----------------------------------------------------------------
@@ -243,16 +242,14 @@ module tb_tk1();
   //----------------------------------------------------------------
   task display_test_result;
     begin
-      if (error_ctr == 0)
-        begin
-          $display("--- All %02d test cases completed successfully", tc_ctr);
-        end
-      else
-        begin
-          $display("--- %02d tests completed - %02d errors detected.", tc_ctr, error_ctr);
-        end
+      if (error_ctr == 0) begin
+        $display("--- All %02d test cases completed successfully", tc_ctr);
+      end
+      else begin
+        $display("--- %02d tests completed - %02d errors detected.", tc_ctr, error_ctr);
+      end
     end
-  endtask // display_test_result
+  endtask  // display_test_result
 
 
   //----------------------------------------------------------------
@@ -285,7 +282,7 @@ module tb_tk1();
       tb_address      = 8'h0;
       tb_write_data   = 32'h0;
     end
-  endtask // init_sim
+  endtask  // init_sim
 
 
   //----------------------------------------------------------------
@@ -293,14 +290,12 @@ module tb_tk1();
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_word(input [11 : 0] address,
-                  input [31 : 0] word);
+  task write_word(input [11 : 0] address, input [31 : 0] word);
     begin
-      if (DEBUG)
-        begin
-          $display("--- Writing 0x%08x to 0x%02x.", word, address);
-          $display("");
-        end
+      if (DEBUG) begin
+        $display("--- Writing 0x%08x to 0x%02x.", word, address);
+        $display("");
+      end
 
       tb_address = address;
       tb_write_data = word;
@@ -310,7 +305,7 @@ module tb_tk1();
       tb_cs = 0;
       tb_we = 0;
     end
-  endtask // write_word
+  endtask  // write_word
 
 
   //----------------------------------------------------------------
@@ -320,7 +315,7 @@ module tb_tk1();
   // the word read will be available in the global variable
   // tb_read_data.
   //----------------------------------------------------------------
-  task read_word(input [11 : 0]  address);
+  task read_word(input [11 : 0] address);
     begin : read_word
       reg [31 : 0] read_data;
 
@@ -333,7 +328,7 @@ module tb_tk1();
       #(CLK_PERIOD);
       tb_cs = 1'h0;
     end
-  endtask // read_word
+  endtask  // read_word
 
 
   //----------------------------------------------------------------
@@ -346,7 +341,7 @@ module tb_tk1();
   // The function also checks that the data read matches
   // the expected value or not.
   //----------------------------------------------------------------
-  task read_check_word(input [11 : 0]  address, input [31 : 0] expected);
+  task read_check_word(input [11 : 0] address, input [31 : 0] expected);
     begin : read_check_word
       reg [31 : 0] read_data;
 
@@ -359,19 +354,19 @@ module tb_tk1();
       #(CLK_PERIOD);
       tb_cs = 1'h0;
 
-      if (DEBUG)
-        begin
-	  if (read_data == expected) begin
-            $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
-	  end else begin
-            $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x",
-		     read_data, address, expected);
-	    error_ctr = error_ctr + 1;
-	  end
-          $display("");
+      if (DEBUG) begin
+        if (read_data == expected) begin
+          $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
         end
+        else begin
+          $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x", read_data,
+                   address, expected);
+          error_ctr = error_ctr + 1;
+        end
+        $display("");
+      end
     end
-  endtask // read_check_word
+  endtask  // read_check_word
 
 
   //----------------------------------------------------------------
@@ -392,7 +387,7 @@ module tb_tk1();
       $display("--- test1: completed.");
       $display("");
     end
-  endtask // test1
+  endtask  // test1
 
 
   //----------------------------------------------------------------
@@ -407,12 +402,12 @@ module tb_tk1();
       $display("--- test2: Read out UDI started.");
 
       read_check_word(ADDR_UDI_FIRST, 32'h00010203);
-      read_check_word(ADDR_UDI_LAST,  32'h04050607);
+      read_check_word(ADDR_UDI_LAST, 32'h04050607);
 
       $display("--- test2: completed.");
       $display("");
     end
-  endtask // test2
+  endtask  // test2
 
 
   //----------------------------------------------------------------
@@ -443,7 +438,7 @@ module tb_tk1();
       read_check_word(ADDR_CDI_FIRST + 4, 32'ha0a1a2a3);
       read_check_word(ADDR_CDI_FIRST + 5, 32'h90919293);
       read_check_word(ADDR_CDI_FIRST + 6, 32'h80818283);
-      read_check_word(ADDR_CDI_LAST  + 0, 32'h70717273);
+      read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
 
       $display("--- test3: Switch to app mode.");
       write_word(ADDR_SWITCH_APP, 32'hdeadbeef);
@@ -466,12 +461,12 @@ module tb_tk1();
       read_check_word(ADDR_CDI_FIRST + 4, 32'ha0a1a2a3);
       read_check_word(ADDR_CDI_FIRST + 5, 32'h90919293);
       read_check_word(ADDR_CDI_FIRST + 6, 32'h80818283);
-      read_check_word(ADDR_CDI_LAST  + 0, 32'h70717273);
+      read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
 
       $display("--- test3: completed.");
       $display("");
     end
-  endtask // test3
+  endtask  // test3
 
 
   //----------------------------------------------------------------
@@ -505,7 +500,7 @@ module tb_tk1();
       $display("--- test4: completed.");
       $display("");
     end
-  endtask // test4
+  endtask  // test4
 
 
   //----------------------------------------------------------------
@@ -543,7 +538,7 @@ module tb_tk1();
       $display("--- test5: completed.");
       $display("");
     end
-  endtask // test5
+  endtask  // test5
 
 
   //----------------------------------------------------------------
@@ -563,8 +558,10 @@ module tb_tk1();
       write_word(ADDR_RAM_ADDR_RAND, 32'h13371337);
       write_word(ADDR_RAM_DATA_RAND, 32'h47114711);
 
-      $display("--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
-      $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x", dut.ram_addr_rand, dut.ram_data_rand);
+      $display(
+          "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
+      $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
+               dut.ram_addr_rand, dut.ram_data_rand);
 
       $display("--- test6: Switch to app mode.");
       write_word(ADDR_SWITCH_APP, 32'hf000000);
@@ -573,13 +570,15 @@ module tb_tk1();
       write_word(ADDR_RAM_ADDR_RAND, 32'hdeadbeef);
       write_word(ADDR_RAM_DATA_RAND, 32'hf00ff00f);
 
-      $display("--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
-      $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x", dut.ram_addr_rand, dut.ram_data_rand);
+      $display(
+          "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
+      $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
+               dut.ram_addr_rand, dut.ram_data_rand);
 
       $display("--- test6: completed.");
       $display("");
     end
-  endtask // test6
+  endtask  // test6
 
 
   //----------------------------------------------------------------
@@ -601,7 +600,7 @@ module tb_tk1();
       $display("--- test7: completed.");
       $display("");
     end
-  endtask // test7
+  endtask  // test7
 
 
   //----------------------------------------------------------------
@@ -629,7 +628,7 @@ module tb_tk1();
       $display("--- test8: completed.");
       $display("");
     end
-  endtask // test8
+  endtask  // test8
 
 
   //----------------------------------------------------------------
@@ -649,29 +648,29 @@ module tb_tk1();
       write_word(ADDR_CPU_MON_CTRL, 32'h1);
 
       $display("--- test9: cpu_mon_first_reg: 0x%08x, cpu_mon_last_reg: 0x%08x",
-	       dut.cpu_mon_first_reg, dut.cpu_mon_last_reg);
+               dut.cpu_mon_first_reg, dut.cpu_mon_last_reg);
 
       $display("--- test9: Try to redefine memory area after enabling monitor.");
       write_word(ADDR_CPU_MON_FIRST, 32'hdeadbabe);
       write_word(ADDR_CPU_MON_LAST, 32'hdeadcafe);
       $display("--- test9: cpu_mon_first_reg: 0x%08x, cpu_mon_last_reg: 0x%08x",
-	       dut.cpu_mon_first_reg, dut.cpu_mon_last_reg);
+               dut.cpu_mon_first_reg, dut.cpu_mon_last_reg);
 
       $display("--- test9: force_trap before illegal access: 0x%1x", tb_force_trap);
       $display("--- test9: Creating an illegal access.");
 
-      tb_cpu_addr   = 32'h13371337;
-      tb_cpu_instr  = 1'h1;
-      tb_cpu_valid  = 1'h1;
+      tb_cpu_addr  = 32'h13371337;
+      tb_cpu_instr = 1'h1;
+      tb_cpu_valid = 1'h1;
       #(2 * CLK_PERIOD);
-      $display("--- test9: cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x",
-	       tb_cpu_addr, tb_cpu_instr, tb_cpu_valid);
+      $display("--- test9: cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x", tb_cpu_addr,
+               tb_cpu_instr, tb_cpu_valid);
       $display("--- test9: force_trap: 0x%1x", tb_force_trap);
 
       $display("--- test9: completed.");
       $display("");
     end
-  endtask // test9
+  endtask  // test9
 
 
   //----------------------------------------------------------------
@@ -680,7 +679,7 @@ module tb_tk1();
   //----------------------------------------------------------------
   task test10;
     begin
-      tc_ctr = tc_ctr + 1;
+      tc_ctr         = tc_ctr + 1;
       tb_monitor     = 0;
       tb_spi_monitor = 0;
 
@@ -698,7 +697,7 @@ module tb_tk1();
       // Ready ready flag in SPI until it is set.
       read_word(ADDR_SPI_XFER);
       while (!tb_read_data) begin
-	read_word(ADDR_SPI_XFER);
+        read_word(ADDR_SPI_XFER);
       end
       $display("--- test10: Byte should have been sent.");
 
@@ -713,42 +712,41 @@ module tb_tk1();
       $display("--- test10: completed.");
       $display("");
     end
-  endtask // test10
+  endtask  // test10
 
 
   //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
-  initial
-    begin : tk1_test
-      $display("");
-      $display("   -= Testbench for tk1 started =-");
-      $display("     ===========================");
-      $display("");
+  initial begin : tk1_test
+    $display("");
+    $display("   -= Testbench for tk1 started =-");
+    $display("     ===========================");
+    $display("");
 
-      init_sim();
-      reset_dut();
+    init_sim();
+    reset_dut();
 
-      test1();
-      test2();
-      test3();
-      test4();
-      test5();
-      test6();
-      test7();
-      test8();
-      test9();
-      test9();
-      test10();
+    test1();
+    test2();
+    test3();
+    test4();
+    test5();
+    test6();
+    test7();
+    test8();
+    test9();
+    test9();
+    test10();
 
-      display_test_result();
-      $display("");
-      $display("   -= Testbench for tk1 completed =-");
-      $display("     =============================");
-      $display("");
-      $finish;
-    end // tk1_test
-endmodule // tb_tk1
+    display_test_result();
+    $display("");
+    $display("   -= Testbench for tk1 completed =-");
+    $display("     =============================");
+    $display("");
+    $finish;
+  end  // tk1_test
+endmodule  // tb_tk1
 
 //======================================================================
 // EOF tb_tk1.v
