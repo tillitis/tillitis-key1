@@ -303,7 +303,8 @@ synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/
 		$(YOSYS_FLAG) \
 		-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 		-DFIRMWARE_HEX=\"$(P)/bram_fw.hex\" \
-		-p 'synth_ice40 -dsp -top application_fpga -json $@; write_verilog -attr2comment synth.v' \
+		-p 'synth_ice40 -abc2 -device u -dff -dsp -top application_fpga -json $@' \
+		-p 'write_verilog -attr2comment synth.v' \
 		$(filter %.v, $^)
 
 application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
