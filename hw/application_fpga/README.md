@@ -1,93 +1,116 @@
-# System Description
+# TKey hardware design
 
-**NOTE:** Documentation migrated to dev.tillitis.se, this is kept for
-history. This is likely to be outdated.
+![The Application FPGA block diagram](../../doc/images/application_fpga_block_diagram.png)
 
-## Purpose and Revision
+The application FPGA is implemented using a Lattice [iCE40 UltraPlus
+UP5K
+device](https://www.latticesemi.com/en/Products/FPGAandCPLD/iCE40UltraPlus).
+Only open tools are used in the toolchain.
 
-The purpose of this document is to provide a description of the
-Tillitis TKey. What it is, what is supposed to be used for, by whom,
-where and possible use cases. The document also provides a functional
-level description of features and components of the TKey.
+The design top level is in `rtl/application_fpga.v`. It contains
+instances of all cores as well as the memory system.
 
-Finally, the document acts as a requirement description. For the
-requirements, the document follows
-[RFC2119](https://datatracker.ietf.org/doc/html/rfc2119) to indicate
-requirement levels.
+The memory system allows the CPU to access cores in different ways
+given the current execution mode. There are two execution modes -
+firmware and application. Basically, in application mode the access is
+more restrictive.
 
-The described functionality and requirements applies to version 1 of
-the TKey (TK1)
+The rest of the components are under `cores`. They typically have
+their own `README.md` file documenting them and their API in detail.
 
-The intended users of this document are:
-- Implementors of the TKey hardware, firmware and SDKs
-- Developers of secure applications for the TKey
-- Technically skilled third parties that wants to understand the
-  TKey
+Hardware functions with APIs, assets, and input/output are memory
+mapped starting at base address `0xc000_0000`. For specific offsets
+and bitmasks, see the file `fw/tk1_mem.h`.
 
+Rough memory map:
 
-## Introduction
-The TKey is a USB-connected, RISC-V based application platform. The
-purpose of the TKey is to provide a secure environment for TKey device
-apps that provides some security functionality to the client as needed
-by the use case and device user. Some examples of such security
-functionality are:
+| *name*  | *prefix* |
+|---------|----------|
+| ROM     | 0x00     |
+| RAM     | 0x40     |
+| TRNG    | 0xc0     |
+| Timer   | 0xc1     |
+| UDS     | 0xc2     |
+| UART    | 0xc3     |
+| Touch   | 0xc4     |
+| FW\_RAM | 0xd0     |
+| TK1     | 0xff     |
 
-- TOTP token generators
-- Signing oracles
-- SSH login dongles
+## `clk_reset_gen`
 
+Generator for system clock and system reset.
 
-## TKey Security Features
+The device does not rely on external clock or reset. Instead the
+internal HFOSC oscillator combined with an internal PLL is used to
+generate the main clock. Currently the clock frequency driving the SoC
+is 21 MHz.
 
-### Measured Based Security
-The key, unique feature of the TKey is that it measures the secure
-application when the application is being loaded onto the device. The
-measurement (a hash digest), combined with a Unique Device Secret
-(UDS) is used to derive a base secret for the application.
+The device also generates its own reset.
 
-The consequence of this is that if the application is altered,
-the base secret derived will also change. Conversely, if the keys
-derived from the base secret are the same as the last time the
-application was loaded onto the same device, the application can
-be trusted not to have been altered.
+## `fw_ram`
 
-Note that since the UDS is per-device unique, the same application
-loaded onto another TKey device will derive a different set of keys.
-This ties keys to a specific device.
+Special firmware-only RAM. Unreachable from app mode.
 
-The derivation can also be combined with a User Supplied Secret
-(USS). This means that keys derived are both based on something the user
-has - the specific device, and something the user knows (the USS). And
-the derived can be trusted because of the measurement being used
-by the derivation, thereby verifying the integrity of the application.
+## `picorv32`
 
-### Execution monitor
+A softcore 32 bit RISC-V CPU from [upstreams
+PicoRV32](https://github.com/YosysHQ/picorv32).
 
-The purpose of the The Tillitis TKey execution monitor is to ensure
-that execution of instructions does not happen from memory areas
-containing application data och the stack.
+Configuration of optional CPU features like `ENABLE_FAST_MUL` et
+cetera are in `rtl/application_fpga.v`.
 
-The monitor continuously observes the address from which the CPU wants
-to fetch the next instruction. If that address falls within a defined
-address range from which execution is not allowed, the monitor will
-force the CPU to read an illegal instruction. This will cause the CPU
-to enter its trap state. There is no way out of this state, and the
-user must perform a power cycle of the TKey device.
+The instance enables the following features
 
-Currently the following rules are implemented by the execution monitor
-(future releases may add more rules):
+- Compressed ISA (C extension)
+- Fast multiplication. Two cycles for 32x32 multiplication
+- Barrel shifter
 
-- Execution from the firmware RAM (fw\_ram) is always blocked by the
-  monitor
-- Applications can define the area within RAM from which execution
-  should be blocked
+No other modification to the core has been done. No interrupts are
+used.
 
-The application can define its no execution area to the
-ADDR\_CPU\_MON\_FIRST and ADDR\_CPU\_MON\_LAST registers in the tk1 core.
-When the registers have been set the application can enable the
-monitor for the area by writing to the ADDR\_CPU\_MON\_CTRL register.
-Note that once the monitor has been enabled it can't be disabled and
-the addresses defining the area can't be changed.
+## `ram`
+
+The 128 KByte main RAM. The RAM is only used by applications.
+The memory is cleared by firmware before an application is loaded.
+
+The application RAM is available to use by firmware and applications.
+
+MC: Is the scrambling here now?
+
+## `rom`
+
+ROM for the firmware. The firmware.elf minus the ELF header is
+embedded here in the bitstream.
+
+After reset the CPU will initialize the program counter to start of
+ROM.
+
+## `timer`
+
+A general purpose 32 bit timer. The timer will count down from the
+initial value to one. In order to handle long time sequences (minutes,
+hours, days) there is also a 32 bit prescaler.
+
+The timer is available to use by firmware and applications.
+
+## `tk1`
+
+See [tk1 README](core/tk1/README.md) for details.
+
+Contains:
+
+- FPGA name and version.
+- Execution mode control: firmware mode/application mode.
+- RGB LED control.
+- General purpose input/output (GPIO) pin control.
+- Application introspection: start address and size of binary.
+- BLAKE2s function access.
+- Compound Device Identity (CDI).
+- Unique Device Identity (UDI).
+- RAM memory protection.
+- Security monitor.
+- SPI main.
+- System reset.
 
 ### Illegal instruction monitor
 
@@ -112,7 +135,7 @@ also not directly scale to multiple TKey devices.
 The memory protection is based on two separate mechanisms:
 
 1. Address randomisation
-2. Address dependent data randomization 
+2. Address dependent data randomization
 
 The address randomization is implemented by XORing the CPU address
 with the contents of the ADDR\_RAM\_ADDR\_RAND register in the tk1
@@ -150,177 +173,56 @@ use real encryption (for example PRINCE) for memory content
 protection. From the application point of view such a change will be
 transparent.
 
-## Assets
+## `touch_sense`
 
-The TKey store and use the following assets internally:
+Provide touch sensor events to software.
 
-- UDS - Unique Device Secret. 256 bits. Provisioned and stored during
-  device manufacturing. Never to be replaced during the life time of
-  a given device. Used to derive application secrets. Must never leave
-  the device. Tillitis will NOT store a copy of the UDS. Can be read
-  by firmware once between power cycling
+It is recommended that software start by acknowledge any stray events
+prior to signalling to the user that a touch event is expected and
+then start waiting for an event.
 
-- UDI - Unique Device ID. 64 bits. Provisioned and stored during
-  device manufacturing. Only accessible by FW. Never to be replaced or
-  altered during the life time of a given device. May be copied,
-  extracted, read from the device.
+The touch sensor is available to use by firmware and applications.
 
-- CDI - Compound Device Identity. Computed by the FW when an
-  application is loaded using the UDS and the application binary. Used
-  by the application to derive secrets, keys as needed. The CDI should
-  never be exposed.
+## `trng`
 
-Additionally the following asset could be provided from the host:
+Provide a True Random Number Generator to software.
 
-- USS - User Supplied Secret. May possibly be replaced many times.
-  Supplied from the host to the device. Should not be revealed to a
-  third party.
+The TRNG generates entropy with a fairly good quality. However for
+security related use cases, for example key generation, the TRNG
+should not be used directly. Instead use it to create a seed, and
+reseed as necessary, for a Digital Random Bit Generator (DRBG), also
+known as a Cryptographically Safe Pseudo Random Number Generator
+(CSPRNG). Examples of such generators are Hash\_DRGG, CTR\_DRBG, and
+HKDF.
 
-## Memory
+## `uart`
 
-Addressing:
+A simple universal asynchronous receiver/transmitter (UART) used for
+communication with the client through the USB controller.
 
-```
-31st bit                              0th bit
-v                                     v
-0000 0000 0000 0000 0000 0000 0000 0000
+The UART default speed is 62500 bps, but can be adjusted by the
+application. (Note that the host must set the same bitrate too.)
 
-- Bits [31 .. 30] (2 bits): Top level prefix (described below)
-- Bits [29 .. 24] (6 bits): Core select. We want to support at least 16 cores
-- Bits [23 ..  0] (24 bits): Memory/in-core address.
-```
+The UART contain a 512 but Rx-FIFO with status (data available).
 
-Assigned top level prefixes:
+The UART is available to use by firmware and applications.
 
-| *name*   | *prefix* | *address length*                     |
-|----------|----------|--------------------------------------|
-| ROM      | 0b00     | 30 bit address                       |
-| RAM      | 0b01     | 30 bit address                       |
-| reserved | 0b10     |                                      |
-| MMIO     | 0b11     | 6 bits for core select, 24 bits rest |
+## `uds`
 
-| *memory* | *first byte* | *last byte*                  |
-|----------|--------------|------------------------------|
-| ROM      | 0x0000\_0000 | 0x0000\_17ff                 |
-| RAM      | 0x4000\_0000 | 0x4001\_ffff                 |
-| MMIO     | 0xc000\_0000 | 0xffff\_ffff (last possible) |
+The Unique Device Secret. During build initial value is taken from
+`data/uds.hex`.
 
-### Memory mapped hardware functions
+However, with the finished bitstream you can patch in another UDS and
+UDI by using `tools/patch_uds_udi.py` with nextpnr.
 
-Hardware functions, assets, and input/output are memory mapped (MMIO)
-starting at base address `0xc000_0000`. For specific offsets/bitmasks,
-see the file [tk1_mem.h](../../hw/application_fpga/fw/tk1_mem.h) (in
-this repo).
+It's a 256 bit memory implemented using eight 32-bit registers. The
+registers can only be accessed once between power cycling. This means
+that the UDS **must** be read as u32. If read as u8, only the first
+byte from a given address will be correct, subsequent bytes will be
+zero.
 
-Assigned core prefixes:
-
-| *name* | *address prefix* |
-|--------|------------------|
-| TRNG   | 0xc0             |
-| TIMER  | 0xc1             |
-| UDS    | 0xc2             |
-| UART   | 0xc3             |
-| TOUCH  | 0xc4             |
-| FW_RAM | 0xd0             |
-| TK1    | 0xff             |
-
-*Nota bene*: MMIO accesses should be 32 bit wide, e.g use `lw` and
-`sw`. Exceptions are `UDS`, `FW_RAM` and `QEMU_DEBUG`.
-
-| *name*             | *fw*  | *app*     | *size* | *type*   | *content* | *description*                                                           |
-|--------------------|-------|-----------|--------|----------|-----------|-------------------------------------------------------------------------|
-| `TRNG_STATUS`      | r     | r         |        |          |           | TRNG_STATUS_READY_BIT is 1 when an entropy word is available.           |
-| `TRNG_ENTROPY`     | r     | r         | 4B     | u32      |           | Entropy word. Reading a word will clear status.                         |
-| `TIMER_CTRL`       | r/w   | r/w       |        |          |           | If TIMER_STATUS_RUNNING_BIT in TIMER_STATUS is 0, setting               |
-|                    |       |           |        |          |           | TIMER_CTRL_START_BIT here starts the timer.                             |
-|                    |       |           |        |          |           | If TIMER_STATUS_RUNNING_BIT in TIMER_STATUS is 1, setting               |
-|                    |       |           |        |          |           | TIMER_CTRL_STOP_BIT here stops the timer.                               |
-| `TIMER_STATUS`     | r     | r         |        |          |           | TIMER_STATUS_RUNNING_BIT is 1 when the timer is running.                |
-| `TIMER_PRESCALER`  | r/w   | r/w       | 4B     |          |           | Prescaler init value. Write blocked when running.                       |
-| `TIMER_TIMER`      | r/w   | r/w       | 4B     |          |           | Timer init or current value while running. Write blocked when running.  |
-| `UDS_FIRST`        | r[^3] | invisible | 4B     | u8[32]   |           | First word of Unique Device Secret key. Note: Read once per power up.   |
-| `UDS_LAST`         |       | invisible |        |          |           | The last word of the UDS. Note: Read once per power up.                 |
-| `UART_BITRATE`     | r/w   |           |        |          |           | TBD                                                                     |
-| `UART_DATABITS`    | r/w   |           |        |          |           | TBD                                                                     |
-| `UART_STOPBITS`    | r/w   |           |        |          |           | TBD                                                                     |
-| `UART_RX_STATUS`   | r     | r         | 1B     | u8       |           | Non-zero when there is data to read                                     |
-| `UART_RX_DATA`     | r     | r         | 1B     | u8       |           | Data to read. Only LSB contains data                                    |
-| `UART_RX_BYTES`    | r     | r         | 4B     | u32      |           | Number of bytes received from the host and not yet read by SW, FW.      |
-| `UART_TX_STATUS`   | r     | r         | 1B     | u8       |           | Non-zero when it's OK to write data to send.                            |
-| `UART_TX_DATA`     | w     | w         | 1B     | u8       |           | Data to send. Only LSB contains data                                    |
-| `TOUCH_STATUS`     | r/w   | r/w       |        |          |           | TOUCH_STATUS_EVENT_BIT is 1 when touched. After detecting a touch       |
-|                    |       |           |        |          |           | event (reading a 1), write anything here to acknowledge it.             |
-| `FW_RAM`           | r/w   | invisible | 2 kiB  | u8[2048] |           | Firmware-only RAM.                                                      |
-| `UDI`              | r     | invisible | 8B     | u64      |           | Unique Device ID (UDI).                                                 |
-| `QEMU_DEBUG`       | w     | w         |        | u8       |           | Debug console (only in QEMU)                                            |
-| `NAME0`            | r     | r         | 4B     | char[4]  | "tk1 "    | ID of core/stick                                                        |
-| `NAME1`            | r     | r         | 4B     | char[4]  | "mkdf"    | ID of core/stick                                                        |
-| `VERSION`          | r     | r         | 4B     | u32      | 1         | Current version.                                                        |
-| `SYSTEM_MODE_CTRL` | r/w   | r         | 1B     | u8       |           | Write anything here to trigger the switch to application mode. Reading  |
-|                    |       |           |        |          |           | returns 0 if device is in firmware mode, 0xffffffff if in app mode.     |
-| `LED`              | r/w   | r/w       | 1B     | u8       |           | Control of the color LEDs in RBG LED on the board.                      |
-|                    |       |           |        |          |           | Bit 0 is Blue, bit 1 is Green, and bit 2 is Red LED.                    |
-| `GPIO`             | r/w   | r/w       | 1B     | u8       |           | Bits 0 and 1 contain the input level of GPIO 1 and 2.                   |
-|                    |       |           |        | u8       |           | Bits 3 and 4 store the output level of GPIO 3 and 4.                    |
-| `APP_ADDR`         | r/w   | r         | 4B     | u32      |           | Firmware stores app load address here, so app can read its own location |
-| `APP_SIZE`         | r/w   | r         | 4B     | u32      |           | Firmware stores app app size here, so app can read its own size         |
-| `BLAKE2S`          | r/w   | r         | 4B     | u32      |           | Function pointer to a BLAKE2S function in the firmware                  |
-| `CDI_FIRST`        | r/w   | r         | 32B    | u8[32]   |           | Compound Device Identifier (CDI). UDS+measurement...                    |
-| `CDI_LAST`         |       | r         |        |          |           | Last word of CDI                                                        |
-| `RAM_ASLR`         | w     | invisible | 4B     | u32      |           | Address Space Randomization seed value for the RAM                      |
-| `RAM_SCRAMBLE`     | w     | invisible | 4B     | u32      |           | Data scrambling seed value for the RAM                                  |
-| `CPU_MON_CTRL`     | w     | w         | 4B     | u32      |           | Bit 0 enables CPU execution monitor. Can't be unset. Lock adresses      |
-| `CPU_MON_FIRST`    | w     | w         | 4B     | u32      |           | First address of the area monitored for execution attempts |
-| `CPU_MON_LAST`     | w     | w         | 4B     | u32      |           | Last address of the area monitored for execution attempts |
-
-[^3]: The UDS can only be read *once* per power-cycle.
-
-## Subsystems and Components
-
-The TKey as a project, system and secure application platform
-consists of a number of subsystems and components, modules, support
-libraries etc. Roughly these can be divided into:
-
-- TKey boards. PCB designs including schematics, Bill of Material
-  (BOM) and layout, as needed for development, production and and
-  general usage of the TKey devices
-
-- TKey programmer. SW, PCB designs including schematics, Bill of
-  Material (BOM) and layout, as needed for development, production
-  and and provisioning, programming general usage
-
-- USB to UART controller. FW for the MCU implementing the USB host
-  interface on the TKey
-
-- application\_fpga. FPGA design with cores including CPU and memory that
-  implements the secure application platform
-
-- application\_fpga FW. The base software running on the CPU as needed to
-  boot, load applications, measure applications, dderive base secret etc
-
-- One or more applications loaded onto the application\_fpga to provide
-  some functionality to the user of the host
-
-- host side application loader. Software that talks to the FW in the
-  application\_fpga to load a secure application
-
-- host side boot, management. Support software to boot, authenticate
-  the TKey device connected to a host
-
-- host side secure application. Software that communicates with the
-  secure application running in the application\_fpga as needed to solve
-  a security objective
-
-- application\_fpga FW SDK. Tools, libraries, documentation and examples
-  to support development of the application\_fpga firmware
-
-- secure application SDK. Tools, libraries, documentation and examples
-  to support development of the secure applications to be loaded onto
-  the application\_fpga
-
-- host side secure application SDK. Tools, libraries, documentation and
-  examples to support development of the host applications
-
+The UDS can only be read in firmware mode. Reading from the UDS in
+application mode will return all zeros.
 
 ## References
 More detailed information about the firmware running on the device can
