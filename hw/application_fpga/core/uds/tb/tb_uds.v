@@ -13,49 +13,49 @@
 
 `default_nettype none
 
-module tb_uds();
+module tb_uds ();
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG     = 1;
+  parameter DEBUG = 1;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
 
   localparam ADDR_UDS_FIRST = 8'h10;
-  localparam ADDR_UDS_LAST  = 8'h17;
+  localparam ADDR_UDS_LAST = 8'h17;
 
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [31 : 0]  cycle_ctr;
-  reg [31 : 0]  error_ctr;
-  reg [31 : 0]  tc_ctr;
+  reg  [31 : 0] cycle_ctr;
+  reg  [31 : 0] error_ctr;
+  reg  [31 : 0] tc_ctr;
   reg           tb_monitor;
 
   reg           tb_clk;
   reg           tb_reset_n;
   reg           tb_fw_app_mode;
   reg           tb_cs;
-  reg [7 : 0]   tb_address;
+  reg  [ 7 : 0] tb_address;
   wire [31 : 0] tb_read_data;
 
 
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  uds dut(
-          .clk(tb_clk),
-          .reset_n(tb_reset_n),
+  uds dut (
+      .clk(tb_clk),
+      .reset_n(tb_reset_n),
 
-	  .fw_app_mode(tb_fw_app_mode),
+      .fw_app_mode(tb_fw_app_mode),
 
-          .cs(tb_cs),
-          .address(tb_address),
-          .read_data(tb_read_data)
-         );
+      .cs(tb_cs),
+      .address(tb_address),
+      .read_data(tb_read_data)
+  );
 
 
   //----------------------------------------------------------------
@@ -63,11 +63,10 @@ module tb_uds();
   //
   // Always running clock generator process.
   //----------------------------------------------------------------
-  always
-    begin : clk_gen
-      #CLK_HALF_PERIOD;
-      tb_clk = !tb_clk;
-    end // clk_gen
+  always begin : clk_gen
+    #CLK_HALF_PERIOD;
+    tb_clk = !tb_clk;
+  end  // clk_gen
 
 
   //----------------------------------------------------------------
@@ -76,15 +75,13 @@ module tb_uds();
   // An always running process that creates a cycle counter and
   // conditionally displays information about the DUT.
   //----------------------------------------------------------------
-  always
-    begin : sys_monitor
-      cycle_ctr = cycle_ctr + 1;
-      #(CLK_PERIOD);
-      if (tb_monitor)
-        begin
-          dump_dut_state();
-        end
+  always begin : sys_monitor
+    cycle_ctr = cycle_ctr + 1;
+    #(CLK_PERIOD);
+    if (tb_monitor) begin
+      dump_dut_state();
     end
+  end
 
 
   //----------------------------------------------------------------
@@ -104,14 +101,15 @@ module tb_uds();
 
       $display("Internal state:");
       $display("tmp_read_ready: 0x%1x, tmp_read_data: 0x%08x", dut.tmp_ready, dut.tmp_read_data);
-      for (i = 0 ; i < 8 ; i = i + 1) begin
-        $display("uds_reg[%1d]: 0x%08x, uds_rd_reg[%1d]: 0x%1x", i, dut.uds_reg[i], i, dut.uds_rd_reg[i]);
+      for (i = 0; i < 8; i = i + 1) begin
+        $display("uds_reg[%1d]: 0x%08x, uds_rd_reg[%1d]: 0x%1x", i, dut.uds_reg[i], i,
+                 dut.uds_rd_reg[i]);
       end
 
       $display("");
       $display("");
     end
-  endtask // dump_dut_state
+  endtask  // dump_dut_state
 
 
   //----------------------------------------------------------------
@@ -126,7 +124,7 @@ module tb_uds();
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
     end
-  endtask // reset_dut
+  endtask  // reset_dut
 
 
   //----------------------------------------------------------------
@@ -136,17 +134,15 @@ module tb_uds();
   //----------------------------------------------------------------
   task display_test_result;
     begin
-      if (error_ctr == 0)
-        begin
-          $display("--- All %02d test cases completed successfully", tc_ctr);
-        end
-      else
-        begin
-          $display("--- %02d tests completed - %02d test cases did not complete successfully.",
-                   tc_ctr, error_ctr);
-        end
+      if (error_ctr == 0) begin
+        $display("--- All %02d test cases completed successfully", tc_ctr);
+      end
+      else begin
+        $display("--- %02d tests completed - %02d test cases did not complete successfully.",
+                 tc_ctr, error_ctr);
+      end
     end
-  endtask // display_test_result
+  endtask  // display_test_result
 
 
   //----------------------------------------------------------------
@@ -157,10 +153,10 @@ module tb_uds();
   //----------------------------------------------------------------
   task init_sim;
     begin
-      cycle_ctr  = 0;
-      error_ctr  = 0;
-      tc_ctr     = 0;
-      tb_monitor = 0;
+      cycle_ctr      = 0;
+      error_ctr      = 0;
+      tc_ctr         = 0;
+      tb_monitor     = 0;
 
       tb_clk         = 1'h0;
       tb_reset_n     = 1'h1;
@@ -168,7 +164,7 @@ module tb_uds();
       tb_cs          = 1'h0;
       tb_address     = 8'h0;
     end
-  endtask // init_sim
+  endtask  // init_sim
 
 
   //----------------------------------------------------------------
@@ -178,32 +174,32 @@ module tb_uds();
   // the word read will be available in the global variable
   // read_data.
   //----------------------------------------------------------------
-  task read_word(input [11 : 0]  address, input [31 : 0] expected);
+  task read_word(input [11 : 0] address, input [31 : 0] expected);
     begin : read_word
       reg [31 : 0] read_data;
 
-      tb_address   = address;
-      tb_cs        = 1'h1;
+      tb_address = address;
+      tb_cs      = 1'h1;
 
       #(CLK_HALF_PERIOD);
       read_data = tb_read_data;
 
       #(CLK_HALF_PERIOD);
-      tb_cs        = 1'h0;
+      tb_cs = 1'h0;
 
-      if (DEBUG)
-        begin
-	  if (read_data == expected) begin
-            $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
-	  end else begin
-            $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x",
-		     read_data, address, expected);
-	    error_ctr = error_ctr + 1;
-	  end
-          $display("");
+      if (DEBUG) begin
+        if (read_data == expected) begin
+          $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
         end
+        else begin
+          $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x", read_data,
+                   address, expected);
+          error_ctr = error_ctr + 1;
+        end
+        $display("");
+      end
     end
-  endtask // read_word
+  endtask  // read_word
 
 
   //----------------------------------------------------------------
@@ -300,31 +296,30 @@ module tb_uds();
       $display("--- test1: completed.");
       $display("");
     end
-  endtask // test1
+  endtask  // test1
 
 
   //----------------------------------------------------------------
   // uds_test
   //----------------------------------------------------------------
-  initial
-    begin : uds_test
-      $display("");
-      $display("   -= Testbench for uds started =-");
-      $display("     ===========================");
-      $display("");
+  initial begin : uds_test
+    $display("");
+    $display("   -= Testbench for uds started =-");
+    $display("     ===========================");
+    $display("");
 
-      init_sim();
-      reset_dut();
-      test1();
+    init_sim();
+    reset_dut();
+    test1();
 
-      display_test_result();
-      $display("");
-      $display("   -= Testbench for uds completed =-");
-      $display("     =============================");
-      $display("");
-      $finish;
-    end // uds_test
-endmodule // tb_uds
+    display_test_result();
+    $display("");
+    $display("   -= Testbench for uds completed =-");
+    $display("     =============================");
+    $display("");
+    $finish;
+  end  // uds_test
+endmodule  // tb_uds
 
 //======================================================================
 // EOF tb_uds.v

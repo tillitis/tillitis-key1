@@ -16,33 +16,34 @@
 
 `default_nettype none
 
-module clk_reset_gen #(parameter RESET_CYCLES = 200)
-  (
-   input wire sys_reset,
+module clk_reset_gen #(
+    parameter RESET_CYCLES = 200
+) (
+    input wire sys_reset,
 
-   output wire clk,
-   output wire rst_n
-   );
+    output wire clk,
+    output wire rst_n
+);
 
 
   //----------------------------------------------------------------
   // Registers with associated wires.
   //----------------------------------------------------------------
-  reg [7 : 0] rst_ctr_reg = 8'h0;
-  reg [7 : 0] rst_ctr_new;
-  reg         rst_ctr_we;
+  reg  [7 : 0] rst_ctr_reg = 8'h0;
+  reg  [7 : 0] rst_ctr_new;
+  reg          rst_ctr_we;
 
-  reg         rst_n_reg = 1'h0;
-  reg         rst_n_new;
+  reg          rst_n_reg = 1'h0;
+  reg          rst_n_new;
 
-  reg         sys_reset_reg;
+  reg          sys_reset_reg;
 
 
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire        hfosc_clk;
-  wire        pll_clk;
+  wire         hfosc_clk;
+  wire         pll_clk;
 
 
   //----------------------------------------------------------------
@@ -58,8 +59,13 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
 
   // Use the FPGA internal High Frequency OSCillator as clock source.
   // 00: 48MHz, 01: 24MHz, 10: 12MHz, 11: 6MHz
-  SB_HFOSC #(.CLKHF_DIV("0b10")
-	     ) hfosc_inst (.CLKHFPU(1'b1),.CLKHFEN(1'b1),.CLKHF(hfosc_clk));
+  SB_HFOSC #(
+      .CLKHF_DIV("0b10")
+  ) hfosc_inst (
+      .CLKHFPU(1'b1),
+      .CLKHFEN(1'b1),
+      .CLKHF  (hfosc_clk)
+  );
 
 
   // Use a PLL to generate a new clock frequency based on the HFOSC clock.
@@ -74,24 +80,24 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
   //
   // (12000000 * (55 + 1)) / (2^5 * (0 + 1)) = 21000000
   SB_PLL40_CORE #(
-		  .FEEDBACK_PATH("SIMPLE"),
-		  .DIVR(4'd0),	// DIVR =  0
-		  .DIVF(7'd55),	// DIVF = 55
-		  .DIVQ(3'd5),	// DIVQ =  5
-		  .FILTER_RANGE(3'b001)	// FILTER_RANGE = 1
-		  ) pll_inst (
-			 .RESETB(1'b1),
-			 .BYPASS(1'b0),
-			 .REFERENCECLK(hfosc_clk),
-			 .PLLOUTCORE(pll_clk)
-			 );
+      .FEEDBACK_PATH("SIMPLE"),
+      .DIVR(4'd0),  // DIVR =  0
+      .DIVF(7'd55),  // DIVF = 55
+      .DIVQ(3'd5),  // DIVQ =  5
+      .FILTER_RANGE(3'b001)  // FILTER_RANGE = 1
+  ) pll_inst (
+      .RESETB(1'b1),
+      .BYPASS(1'b0),
+      .REFERENCECLK(hfosc_clk),
+      .PLLOUTCORE(pll_clk)
+  );
 
 
   // Use a Global Buffer to distribute the clock.
   SB_GB gb_inst (
-		 .USER_SIGNAL_TO_GLOBAL_BUFFER (pll_clk),
-		 .GLOBAL_BUFFER_OUTPUT (clk)
-		 );
+      .USER_SIGNAL_TO_GLOBAL_BUFFER(pll_clk),
+      .GLOBAL_BUFFER_OUTPUT(clk)
+  );
 
   /* verilator lint_on PINMISSING */
 
@@ -99,38 +105,35 @@ module clk_reset_gen #(parameter RESET_CYCLES = 200)
   //----------------------------------------------------------------
   // reg_update.
   //----------------------------------------------------------------
-    always @(posedge clk)
-      begin : reg_update
-        rst_n_reg     <= rst_n_new;
-	sys_reset_reg <= sys_reset;
+  always @(posedge clk) begin : reg_update
+    rst_n_reg     <= rst_n_new;
+    sys_reset_reg <= sys_reset;
 
-        if (rst_ctr_we)
-          rst_ctr_reg <= rst_ctr_new;
-      end
+    if (rst_ctr_we) rst_ctr_reg <= rst_ctr_new;
+  end
 
 
   //----------------------------------------------------------------
   // rst_logic.
   //----------------------------------------------------------------
-  always @*
-    begin : rst_logic
-      rst_n_new   = 1'h1;
+  always @* begin : rst_logic
+    rst_n_new   = 1'h1;
+    rst_ctr_new = 8'h0;
+    rst_ctr_we  = 1'h0;
+
+    if (sys_reset_reg) begin
       rst_ctr_new = 8'h0;
-      rst_ctr_we  = 1'h0;
-
-      if (sys_reset_reg) begin
-	rst_ctr_new = 8'h0;
-	rst_ctr_we  = 1'h1;
-      end
-
-      else if (rst_ctr_reg < RESET_CYCLES) begin
-        rst_n_new   = 1'h0;
-        rst_ctr_new = rst_ctr_reg + 1'h1;
-        rst_ctr_we  = 1'h1;
-      end
+      rst_ctr_we  = 1'h1;
     end
 
-endmodule // reset_gen
+    else if (rst_ctr_reg < RESET_CYCLES) begin
+      rst_n_new   = 1'h0;
+      rst_ctr_new = rst_ctr_reg + 1'h1;
+      rst_ctr_we  = 1'h1;
+    end
+  end
+
+endmodule  // reset_gen
 
 //======================================================================
 // EOF reset_gen.v
