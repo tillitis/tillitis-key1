@@ -78,7 +78,6 @@ https://github.com/tillitis/tp1
 
 ## Other noteworthy links
 
-
 * [Threat Model](doc/threat_model/threat_model.md)
 * [Release Notes](doc/release_notes.md)
 * [Quickstart for the DevKit](doc/quickstart.md). Initial programming
