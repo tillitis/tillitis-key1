@@ -31,12 +31,14 @@ module touch_sense(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_STATUS      = 8'h09;
-  localparam STATUS_EVENT_BIT = 0;
+  localparam ADDR_STATUS        = 8'h09;
+  localparam STATUS_EVENT_BIT   = 0;
+  localparam ADDR_PRESENT       = 8'h0a;
+  localparam FINGER_PRESENT_BIT = 0;
 
-  localparam CTRL_IDLE        = 2'h0;
-  localparam CTRL_EVENT       = 2'h1;
-  localparam CTRL_WAIT        = 2'h2;
+  localparam CTRL_IDLE          = 2'h0;
+  localparam CTRL_EVENT         = 2'h1;
+  localparam CTRL_WAIT          = 2'h2;
 
 
   //----------------------------------------------------------------
@@ -119,6 +121,10 @@ module touch_sense(
         else begin
 	  if (address == ADDR_STATUS) begin
 	    tmp_read_data[STATUS_EVENT_BIT] = touch_event_reg;
+	  end
+
+	  if (address == ADDR_PRESENT) begin
+	    tmp_read_data[FINGER_PRESENT_BIT] = touch_event_sample1_reg;
 	  end
         end
       end
