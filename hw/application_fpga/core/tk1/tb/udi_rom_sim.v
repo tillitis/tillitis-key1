@@ -12,24 +12,23 @@
 //======================================================================
 
 module udi_rom (
-		input wire [0:0] addr,
-		output wire [31:0] data
-		);
+    input  wire [ 0:0] addr,
+    output wire [31:0] data
+);
 
   reg [31 : 0] tmp_data;
   assign data = tmp_data;
 
-  always @*
-    begin : addr_mux
-      if (addr) begin
-	tmp_data = 32'h04050607;
-      end
-      else begin
-	tmp_data = 32'h00010203;
-      end
+  always @* begin : addr_mux
+    if (addr) begin
+      tmp_data = 32'h04050607;
     end
+    else begin
+      tmp_data = 32'h00010203;
+    end
+  end
 
-endmodule // udi_rom
+endmodule  // udi_rom
 
 //======================================================================
 // EOF udi_rom_sim.v

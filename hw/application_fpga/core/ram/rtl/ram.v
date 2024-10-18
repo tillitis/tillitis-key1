@@ -18,20 +18,20 @@
 
 `default_nettype none
 
-module ram(
-	   input   wire          clk,
-	   input   wire          reset_n,
+module ram (
+    input wire clk,
+    input wire reset_n,
 
-	   input wire [14 : 0]   ram_addr_rand,
-	   input wire [31 : 0]   ram_data_rand,
+    input wire [14 : 0] ram_addr_rand,
+    input wire [31 : 0] ram_data_rand,
 
-           input   wire          cs,
-	   input   wire [03 : 0] we,
-	   input   wire [15 : 0] address,
-	   input   wire [31 : 0] write_data,
-	   output  wire [31 : 0] read_data,
-	   output  wire          ready
-          );
+    input  wire          cs,
+    input  wire [ 3 : 0] we,
+    input  wire [15 : 0] address,
+    input  wire [31 : 0] write_data,
+    output wire [31 : 0] read_data,
+    output wire          ready
+);
 
 
   //----------------------------------------------------------------
@@ -60,58 +60,58 @@ module ram(
   //----------------------------------------------------------------
   // SPRAM instances.
   //----------------------------------------------------------------
-  SB_SPRAM256KA spram0(
-		       .ADDRESS(scrambled_ram_addr[13:0]),
-		       .DATAIN(scrambled_write_data[15:0]),
-		       .MASKWREN({we[1], we[1], we[0], we[0]}),
-		       .WREN(we[1] | we[0]),
-		       .CHIPSELECT(cs0),
-		       .CLOCK(clk),
-		       .STANDBY(1'b0),
-		       .SLEEP(1'b0),
-		       .POWEROFF(1'b1),
-		       .DATAOUT(read_data0[15:0])
-	              );
+  SB_SPRAM256KA spram0 (
+      .ADDRESS(scrambled_ram_addr[13:0]),
+      .DATAIN(scrambled_write_data[15:0]),
+      .MASKWREN({we[1], we[1], we[0], we[0]}),
+      .WREN(we[1] | we[0]),
+      .CHIPSELECT(cs0),
+      .CLOCK(clk),
+      .STANDBY(1'b0),
+      .SLEEP(1'b0),
+      .POWEROFF(1'b1),
+      .DATAOUT(read_data0[15:0])
+  );
 
-  SB_SPRAM256KA spram1(
-		       .ADDRESS(scrambled_ram_addr[13:0]),
-		       .DATAIN(scrambled_write_data[31:16]),
-		       .MASKWREN({we[3], we[3], we[2], we[2]}),
-		       .WREN(we[3] | we[2]),
-		       .CHIPSELECT(cs0),
-		       .CLOCK(clk),
-		       .STANDBY(1'b0),
-		       .SLEEP(1'b0),
-		       .POWEROFF(1'b1),
-		       .DATAOUT(read_data0[31:16])
-	              );
+  SB_SPRAM256KA spram1 (
+      .ADDRESS(scrambled_ram_addr[13:0]),
+      .DATAIN(scrambled_write_data[31:16]),
+      .MASKWREN({we[3], we[3], we[2], we[2]}),
+      .WREN(we[3] | we[2]),
+      .CHIPSELECT(cs0),
+      .CLOCK(clk),
+      .STANDBY(1'b0),
+      .SLEEP(1'b0),
+      .POWEROFF(1'b1),
+      .DATAOUT(read_data0[31:16])
+  );
 
 
-  SB_SPRAM256KA spram2(
-		       .ADDRESS(scrambled_ram_addr[13:0]),
-		       .DATAIN(scrambled_write_data[15:0]),
-		       .MASKWREN({we[1], we[1], we[0], we[0]}),
-		       .WREN(we[1] | we[0]),
-		       .CHIPSELECT(cs1),
-		       .CLOCK(clk),
-		       .STANDBY(1'b0),
-		       .SLEEP(1'b0),
-		       .POWEROFF(1'b1),
-		       .DATAOUT(read_data1[15:0])
-	              );
+  SB_SPRAM256KA spram2 (
+      .ADDRESS(scrambled_ram_addr[13:0]),
+      .DATAIN(scrambled_write_data[15:0]),
+      .MASKWREN({we[1], we[1], we[0], we[0]}),
+      .WREN(we[1] | we[0]),
+      .CHIPSELECT(cs1),
+      .CLOCK(clk),
+      .STANDBY(1'b0),
+      .SLEEP(1'b0),
+      .POWEROFF(1'b1),
+      .DATAOUT(read_data1[15:0])
+  );
 
-  SB_SPRAM256KA spram3(
-		       .ADDRESS(scrambled_ram_addr[13:0]),
-		       .DATAIN(scrambled_write_data[31:16]),
-		       .MASKWREN({we[3], we[3], we[2], we[2]}),
-		       .WREN(we[3] | we[2]),
-		       .CHIPSELECT(cs1),
-		       .CLOCK(clk),
-		       .STANDBY(1'b0),
-		       .SLEEP(1'b0),
-		       .POWEROFF(1'b1),
-		       .DATAOUT(read_data1[31:16])
-	              );
+  SB_SPRAM256KA spram3 (
+      .ADDRESS(scrambled_ram_addr[13:0]),
+      .DATAIN(scrambled_write_data[31:16]),
+      .MASKWREN({we[3], we[3], we[2], we[2]}),
+      .WREN(we[3] | we[2]),
+      .CHIPSELECT(cs1),
+      .CLOCK(clk),
+      .STANDBY(1'b0),
+      .SLEEP(1'b0),
+      .POWEROFF(1'b1),
+      .DATAOUT(read_data1[31:16])
+  );
 
 
   //----------------------------------------------------------------
@@ -121,15 +121,14 @@ module ram(
   // This simply creates a one cycle access latency to match
   // the latency of the spram blocks.
   //----------------------------------------------------------------
-  always @(posedge clk)
-    begin : reg_update
-      if (!reset_n) begin
-        ready_reg <= 1'h0;
-      end
-      else begin
-        ready_reg <= cs;
-      end
+  always @(posedge clk) begin : reg_update
+    if (!reset_n) begin
+      ready_reg <= 1'h0;
     end
+    else begin
+      ready_reg <= cs;
+    end
+  end
 
 
   //----------------------------------------------------------------
@@ -138,12 +137,11 @@ module ram(
   // Scramble address and write data, and descramble read data using
   // the ram_addr_rand and ram_data_rand seeds.
   //----------------------------------------------------------------
-  always @*
-    begin: scramble_descramble
-      scrambled_ram_addr    = address[14 : 0]  ^ ram_addr_rand;
-      scrambled_write_data  = write_data ^ ram_data_rand ^ {2{address}};
-      descrambled_read_data = muxed_read_data ^ ram_data_rand ^ {2{address}};
-    end
+  always @* begin : scramble_descramble
+    scrambled_ram_addr    = address[14 : 0]  ^ ram_addr_rand;
+    scrambled_write_data  = write_data ^ ram_data_rand ^ {2{address}};
+    descrambled_read_data = muxed_read_data ^ ram_data_rand ^ {2{address}};
+  end
 
 
   //----------------------------------------------------------------
@@ -152,19 +150,19 @@ module ram(
   // Select which of the data read from the banks should be
   // returned during a read access.
   //----------------------------------------------------------------
-  always @*
-    begin : mem_mux
-      cs0 = ~scrambled_ram_addr[14] & cs;
-      cs1 = scrambled_ram_addr[14] & cs;
+  always @* begin : mem_mux
+    cs0 = ~scrambled_ram_addr[14] & cs;
+    cs1 = scrambled_ram_addr[14] & cs;
 
-      if (scrambled_ram_addr[14]) begin
-        muxed_read_data = read_data1;
-      end else begin
-        muxed_read_data = read_data0;
-      end
+    if (scrambled_ram_addr[14]) begin
+      muxed_read_data = read_data1;
     end
+    else begin
+      muxed_read_data = read_data0;
+    end
+  end
 
-endmodule // ram
+endmodule  // ram
 
 //======================================================================
 // EOF ram.v
