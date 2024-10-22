@@ -53,7 +53,7 @@ flash:
 	podman run --rm \
 	--device /dev/bus/usb/$(lsusb | grep -m 1 1209:8886 | awk '{ printf "%s/%s", $2, substr($4,1,3) }') \
 	--mount type=bind,source="`pwd`/../hw/application_fpga",target=/build \
-	-w /build/hw/application_fpga \
+	-w /build \
 	-it $(IMAGE) tillitis-iceprog /build/application_fpga.bin
 
 
