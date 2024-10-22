@@ -87,7 +87,6 @@ VERILOG_SRCS = \
 	$(P)/core/ram/rtl/ram.v \
 	$(P)/core/rom/rtl/rom.v \
 	$(P)/core/fw_ram/rtl/fw_ram.v \
-	$(P)/core/picorv32/rtl/picorv32.v \
 	$(P)/core/timer/rtl/timer_core.v \
 	$(P)/core/timer/rtl/timer.v \
 	$(P)/core/uds/rtl/uds.v \
@@ -100,6 +99,10 @@ VERILOG_SRCS = \
 	$(P)/core/uart/rtl/uart_fifo.v \
 	$(P)/core/uart/rtl/uart.v \
 	$(P)/core/trng/rtl/rosc.v
+
+# PicoRV32 verilog source file
+PICORV32_SRCS = \
+	$(P)/core/picorv32/rtl/picorv32.v
 
 FIRMWARE_DEPS = \
 	$(P)/fw/tk1_mem.h \
@@ -239,7 +242,7 @@ LINT_FLAGS = \
 	--timescale 1ns/1ns \
 	-DNO_ICE40_DEFAULT_ASSIGNMENTS
 
-lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
+lint: $(FPGA_SRC) $(VERILOG_SRCS) $(PICORV32_SRCS) $(ICE40_SIM_CELLS)
 	$(LINT) $(LINT_FLAGS) \
 	-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 	-DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
@@ -253,9 +256,37 @@ lint: $(FPGA_SRC) $(VERILOG_SRCS) $(ICE40_SIM_CELLS)
 .PHONY: lint
 
 #-------------------------------------------------------------------
+# Source formatting.
+#-------------------------------------------------------------------
+FORMAT = verible-verilog-format
+
+FORMAT_FLAGS = \
+	--indentation_spaces=2 \
+	--wrap_end_else_clauses=true \
+	--inplace
+
+CHECK_FORMAT_FLAGS = \
+	--indentation_spaces=2 \
+	--wrap_end_else_clauses=true \
+	--inplace \
+	--verify
+
+fmt: $(FPGA_SRC) $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS)
+	$(FORMAT) $(FORMAT_FLAGS) $^
+.PHONY: fmt
+
+# Temporary fix using grep, since the verible with --verify flag only returns
+# error if the last file is malformatted.
+checkfmt: $(FPGA_SRC) $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS)
+	$(FORMAT) $(CHECK_FORMAT_FLAGS) $^ 2>&1 | \
+		grep "Needs formatting" && exit 1 || true
+.PHONY: checkfmt
+
+#-------------------------------------------------------------------
 # Build Verilator compiled simulation for the design.
 #-------------------------------------------------------------------
-verilator: $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS) firmware.hex $(ICE40_SIM_CELLS) \
+verilator: $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS) $(PICORV32_SRCS) \
+		firmware.hex $(ICE40_SIM_CELLS) \
 		$(P)/tb/application_fpga_verilator.cc
 	verilator \
 		--timescale 1ns/1ns \
@@ -296,7 +327,8 @@ tb:
 
 YOSYS_FLAG ?=
 
-synth.json: $(FPGA_SRC) $(VERILOG_SRCS) bram_fw.hex $(P)/data/uds.hex $(P)/data/udi.hex
+synth.json: $(FPGA_SRC) $(VERILOG_SRCS) $(PICORV32_SRCS) bram_fw.hex \
+		$(P)/data/uds.hex $(P)/data/udi.hex
 	$(YOSYS_PATH)yosys \
 		-v3 \
 		-l synth.txt \
