@@ -180,6 +180,13 @@ qemu_firmware.elf: CFLAGS += -DQEMU_CONSOLE
 qemu_firmware.elf: firmware.elf
 	mv firmware.elf qemu_firmware.elf
 
+# Create compile_commands.json for clangd and LSP
+.PHONY: clangd
+clangd: compile_commands.json
+compile_commands.json:
+	$(MAKE) clean
+	bear -- make qemu_firmware.elf
+
 .PHONY: check
 check:
 	clang-tidy -header-filter=.* -checks=cert-* $(FIRMWARE_SOURCES) -- $(CFLAGS)
