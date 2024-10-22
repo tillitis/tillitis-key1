@@ -46,103 +46,103 @@
 //
 //======================================================================
 
-module uart_core(
-                 input wire          clk,
-                 input wire          reset_n,
+module uart_core (
+    input wire clk,
+    input wire reset_n,
 
-                 // Configuration parameters
-                 input wire [15 : 0] bit_rate,
-                 input wire [3 : 0]  data_bits,
-                 input wire [1 : 0]  stop_bits,
+    // Configuration parameters
+    input wire [15 : 0] bit_rate,
+    input wire [ 3 : 0] data_bits,
+    input wire [ 1 : 0] stop_bits,
 
-                 // External data interface
-                 input wire          rxd,
-                 output wire         txd,
+    // External data interface
+    input  wire rxd,
+    output wire txd,
 
-                 // Internal receive interface.
-                 output wire         rxd_syn,
-                 output wire [7 : 0] rxd_data,
-                 input wire          rxd_ack,
+    // Internal receive interface.
+    output wire         rxd_syn,
+    output wire [7 : 0] rxd_data,
+    input  wire         rxd_ack,
 
-                 // Internal transmit interface.
-                 input wire          txd_syn,
-                 input wire [7 : 0]  txd_data,
-                 output wire         txd_ready
-                );
+    // Internal transmit interface.
+    input  wire         txd_syn,
+    input  wire [7 : 0] txd_data,
+    output wire         txd_ready
+);
 
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter ERX_IDLE  = 0;
+  parameter ERX_IDLE = 0;
   parameter ERX_START = 1;
-  parameter ERX_BITS  = 2;
-  parameter ERX_STOP  = 3;
-  parameter ERX_SYN   = 4;
+  parameter ERX_BITS = 2;
+  parameter ERX_STOP = 3;
+  parameter ERX_SYN = 4;
 
-  parameter ETX_IDLE  = 0;
-  parameter ETX_ACK   = 1;
+  parameter ETX_IDLE = 0;
+  parameter ETX_ACK = 1;
   parameter ETX_START = 2;
-  parameter ETX_BITS  = 3;
-  parameter ETX_STOP  = 4;
+  parameter ETX_BITS = 3;
+  parameter ETX_STOP = 4;
 
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg          rxd0_reg;
-  reg          rxd_reg;
+  reg           rxd0_reg;
+  reg           rxd_reg;
 
-  reg [7 : 0]  rxd_byte_reg;
-  reg          rxd_byte_we;
+  reg  [ 7 : 0] rxd_byte_reg;
+  reg           rxd_byte_we;
 
-  reg [3 : 0]  rxd_bit_ctr_reg;
-  reg [3 : 0]  rxd_bit_ctr_new;
-  reg          rxd_bit_ctr_we;
-  reg          rxd_bit_ctr_rst;
-  reg          rxd_bit_ctr_inc;
+  reg  [ 3 : 0] rxd_bit_ctr_reg;
+  reg  [ 3 : 0] rxd_bit_ctr_new;
+  reg           rxd_bit_ctr_we;
+  reg           rxd_bit_ctr_rst;
+  reg           rxd_bit_ctr_inc;
 
-  reg [15 : 0] rxd_bitrate_ctr_reg;
-  reg [15 : 0] rxd_bitrate_ctr_new;
-  reg          rxd_bitrate_ctr_we;
-  reg          rxd_bitrate_ctr_rst;
-  reg          rxd_bitrate_ctr_inc;
+  reg  [15 : 0] rxd_bitrate_ctr_reg;
+  reg  [15 : 0] rxd_bitrate_ctr_new;
+  reg           rxd_bitrate_ctr_we;
+  reg           rxd_bitrate_ctr_rst;
+  reg           rxd_bitrate_ctr_inc;
 
-  reg          rxd_syn_reg;
-  reg          rxd_syn_new;
-  reg          rxd_syn_we;
+  reg           rxd_syn_reg;
+  reg           rxd_syn_new;
+  reg           rxd_syn_we;
 
-  reg [2 : 0]  erx_ctrl_reg;
-  reg [2 : 0]  erx_ctrl_new;
-  reg          erx_ctrl_we;
+  reg  [ 2 : 0] erx_ctrl_reg;
+  reg  [ 2 : 0] erx_ctrl_new;
+  reg           erx_ctrl_we;
 
-  reg          txd_reg;
-  reg          txd_new;
-  reg          txd_we;
+  reg           txd_reg;
+  reg           txd_new;
+  reg           txd_we;
 
-  reg [7 : 0]  txd_byte_reg;
-  reg [7 : 0]  txd_byte_new;
-  reg          txd_byte_we;
+  reg  [ 7 : 0] txd_byte_reg;
+  reg  [ 7 : 0] txd_byte_new;
+  reg           txd_byte_we;
 
-  reg [3 : 0]  txd_bit_ctr_reg;
-  reg [3 : 0]  txd_bit_ctr_new;
-  reg          txd_bit_ctr_we;
-  reg          txd_bit_ctr_rst;
-  reg          txd_bit_ctr_inc;
+  reg  [ 3 : 0] txd_bit_ctr_reg;
+  reg  [ 3 : 0] txd_bit_ctr_new;
+  reg           txd_bit_ctr_we;
+  reg           txd_bit_ctr_rst;
+  reg           txd_bit_ctr_inc;
 
-  reg [15 : 0] txd_bitrate_ctr_reg;
-  reg [15 : 0] txd_bitrate_ctr_new;
-  reg          txd_bitrate_ctr_we;
-  reg          txd_bitrate_ctr_rst;
-  reg          txd_bitrate_ctr_inc;
+  reg  [15 : 0] txd_bitrate_ctr_reg;
+  reg  [15 : 0] txd_bitrate_ctr_new;
+  reg           txd_bitrate_ctr_we;
+  reg           txd_bitrate_ctr_rst;
+  reg           txd_bitrate_ctr_inc;
 
-  reg          txd_ready_reg;
-  reg          txd_ready_new;
-  reg          txd_ready_we;
+  reg           txd_ready_reg;
+  reg           txd_ready_new;
+  reg           txd_ready_we;
 
-  reg [2 : 0]  etx_ctrl_reg;
-  reg [2 : 0]  etx_ctrl_new;
-  reg          etx_ctrl_we;
+  reg  [ 2 : 0] etx_ctrl_reg;
+  reg  [ 2 : 0] etx_ctrl_new;
+  reg           etx_ctrl_we;
 
 
   //----------------------------------------------------------------
@@ -154,10 +154,10 @@ module uart_core(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign txd      = txd_reg;
-  assign rxd_syn  = rxd_syn_reg;
-  assign rxd_data = rxd_byte_reg;
-  assign txd_ready  = txd_ready_reg;
+  assign txd           = txd_reg;
+  assign rxd_syn       = rxd_syn_reg;
+  assign rxd_data      = rxd_byte_reg;
+  assign txd_ready     = txd_ready_reg;
 
   assign half_bit_rate = {1'b0, bit_rate[15 : 1]};
 
@@ -169,74 +169,73 @@ module uart_core(
   // All registers are positive edge triggered with
   // synchronous active low reset.
   //----------------------------------------------------------------
-  always @ (posedge clk)
-    begin: reg_update
-      if (!reset_n) begin
-        rxd0_reg            <= 1'b0;
-        rxd_reg             <= 1'b0;
-        rxd_byte_reg        <= 8'h0;
-        rxd_bit_ctr_reg     <= 4'h0;
-        rxd_bitrate_ctr_reg <= 16'h0;
-        rxd_syn_reg         <= 0;
-        erx_ctrl_reg        <= ERX_IDLE;
+  always @(posedge clk) begin : reg_update
+    if (!reset_n) begin
+      rxd0_reg            <= 1'b0;
+      rxd_reg             <= 1'b0;
+      rxd_byte_reg        <= 8'h0;
+      rxd_bit_ctr_reg     <= 4'h0;
+      rxd_bitrate_ctr_reg <= 16'h0;
+      rxd_syn_reg         <= 0;
+      erx_ctrl_reg        <= ERX_IDLE;
 
-        txd_reg             <= 1'b1;
-        txd_byte_reg        <= 8'h0;
-        txd_bit_ctr_reg     <= 4'h0;
-        txd_bitrate_ctr_reg <= 16'h0;
-        txd_ready_reg       <= 1'b1;
-        etx_ctrl_reg        <= ETX_IDLE;
+      txd_reg             <= 1'b1;
+      txd_byte_reg        <= 8'h0;
+      txd_bit_ctr_reg     <= 4'h0;
+      txd_bitrate_ctr_reg <= 16'h0;
+      txd_ready_reg       <= 1'b1;
+      etx_ctrl_reg        <= ETX_IDLE;
+    end
+
+    else begin
+      rxd0_reg <= rxd;
+      rxd_reg  <= rxd0_reg;
+
+      if (rxd_byte_we) begin
+        rxd_byte_reg <= {rxd_reg, rxd_byte_reg[7 : 1]};
       end
 
-      else begin
-        rxd0_reg <= rxd;
-        rxd_reg  <= rxd0_reg;
-
-        if (rxd_byte_we) begin
-          rxd_byte_reg <= {rxd_reg, rxd_byte_reg[7 : 1]};
-        end
-
-        if (rxd_bit_ctr_we) begin
-          rxd_bit_ctr_reg <= rxd_bit_ctr_new;
-        end
-
-        if (rxd_bitrate_ctr_we) begin
-          rxd_bitrate_ctr_reg <= rxd_bitrate_ctr_new;
-        end
-
-        if (rxd_syn_we) begin
-          rxd_syn_reg <= rxd_syn_new;
-        end
-
-        if (erx_ctrl_we) begin
-          erx_ctrl_reg <= erx_ctrl_new;
-        end
-
-        if (txd_we) begin
-          txd_reg <= txd_new;
-        end
-
-        if (txd_byte_we) begin
-          txd_byte_reg <= txd_byte_new;
-        end
-
-        if (txd_bit_ctr_we) begin
-          txd_bit_ctr_reg <= txd_bit_ctr_new;
-        end
-
-        if (txd_bitrate_ctr_we) begin
-          txd_bitrate_ctr_reg <= txd_bitrate_ctr_new;
-        end
-
-        if (txd_ready_we) begin
-          txd_ready_reg <= txd_ready_new;
-        end
-
-        if (etx_ctrl_we) begin
-          etx_ctrl_reg <= etx_ctrl_new;
-        end
+      if (rxd_bit_ctr_we) begin
+        rxd_bit_ctr_reg <= rxd_bit_ctr_new;
       end
-    end // reg_update
+
+      if (rxd_bitrate_ctr_we) begin
+        rxd_bitrate_ctr_reg <= rxd_bitrate_ctr_new;
+      end
+
+      if (rxd_syn_we) begin
+        rxd_syn_reg <= rxd_syn_new;
+      end
+
+      if (erx_ctrl_we) begin
+        erx_ctrl_reg <= erx_ctrl_new;
+      end
+
+      if (txd_we) begin
+        txd_reg <= txd_new;
+      end
+
+      if (txd_byte_we) begin
+        txd_byte_reg <= txd_byte_new;
+      end
+
+      if (txd_bit_ctr_we) begin
+        txd_bit_ctr_reg <= txd_bit_ctr_new;
+      end
+
+      if (txd_bitrate_ctr_we) begin
+        txd_bitrate_ctr_reg <= txd_bitrate_ctr_new;
+      end
+
+      if (txd_ready_we) begin
+        txd_ready_reg <= txd_ready_new;
+      end
+
+      if (etx_ctrl_we) begin
+        etx_ctrl_reg <= etx_ctrl_new;
+      end
+    end
+  end  // reg_update
 
 
   //----------------------------------------------------------------
@@ -245,21 +244,20 @@ module uart_core(
   // Bit counter for receiving data on the external
   // serial interface.
   //----------------------------------------------------------------
-  always @*
-    begin: rxd_bit_ctr
+  always @* begin : rxd_bit_ctr
+    rxd_bit_ctr_new = 4'h0;
+    rxd_bit_ctr_we  = 1'b0;
+
+    if (rxd_bit_ctr_rst) begin
       rxd_bit_ctr_new = 4'h0;
-      rxd_bit_ctr_we  = 1'b0;
+      rxd_bit_ctr_we  = 1'b1;
+    end
 
-      if (rxd_bit_ctr_rst) begin
-        rxd_bit_ctr_new = 4'h0;
-        rxd_bit_ctr_we  = 1'b1;
-      end
-
-      else if (rxd_bit_ctr_inc) begin
-        rxd_bit_ctr_new = rxd_bit_ctr_reg + 1'h1;
-        rxd_bit_ctr_we  = 1'b1;
-      end
-    end // rxd_bit_ctr
+    else if (rxd_bit_ctr_inc) begin
+      rxd_bit_ctr_new = rxd_bit_ctr_reg + 1'h1;
+      rxd_bit_ctr_we  = 1'b1;
+    end
+  end  // rxd_bit_ctr
 
 
   //----------------------------------------------------------------
@@ -268,21 +266,20 @@ module uart_core(
   // Bitrate counter for receiving data on the external
   // serial interface.
   //----------------------------------------------------------------
-  always @*
-    begin: rxd_bitrate_ctr
+  always @* begin : rxd_bitrate_ctr
+    rxd_bitrate_ctr_new = 16'h0;
+    rxd_bitrate_ctr_we  = 1'h0;
+
+    if (rxd_bitrate_ctr_rst) begin
       rxd_bitrate_ctr_new = 16'h0;
-      rxd_bitrate_ctr_we  = 1'h0;
+      rxd_bitrate_ctr_we  = 1'b1;
+    end
 
-      if (rxd_bitrate_ctr_rst) begin
-        rxd_bitrate_ctr_new = 16'h0;
-        rxd_bitrate_ctr_we  = 1'b1;
-      end
-
-      else if (rxd_bitrate_ctr_inc) begin
-        rxd_bitrate_ctr_new = rxd_bitrate_ctr_reg + 1'h1;
-        rxd_bitrate_ctr_we  = 1'b1;
-      end
-    end // rxd_bitrate_ctr
+    else if (rxd_bitrate_ctr_inc) begin
+      rxd_bitrate_ctr_new = rxd_bitrate_ctr_reg + 1'h1;
+      rxd_bitrate_ctr_we  = 1'b1;
+    end
+  end  // rxd_bitrate_ctr
 
 
 
@@ -292,21 +289,20 @@ module uart_core(
   // Bit counter for transmitting data on the external
   // serial interface.
   //----------------------------------------------------------------
-  always @*
-    begin: txd_bit_ctr
+  always @* begin : txd_bit_ctr
+    txd_bit_ctr_new = 4'h0;
+    txd_bit_ctr_we  = 1'h0;
+
+    if (txd_bit_ctr_rst) begin
       txd_bit_ctr_new = 4'h0;
-      txd_bit_ctr_we  = 1'h0;
+      txd_bit_ctr_we  = 1'h1;
+    end
 
-      if (txd_bit_ctr_rst) begin
-        txd_bit_ctr_new = 4'h0;
-        txd_bit_ctr_we  = 1'h1;
-      end
-
-      else if (txd_bit_ctr_inc) begin
-        txd_bit_ctr_new = txd_bit_ctr_reg + 1'h1;
-        txd_bit_ctr_we  = 1'b1;
-      end
-    end // txd_bit_ctr
+    else if (txd_bit_ctr_inc) begin
+      txd_bit_ctr_new = txd_bit_ctr_reg + 1'h1;
+      txd_bit_ctr_we  = 1'b1;
+    end
+  end  // txd_bit_ctr
 
 
   //----------------------------------------------------------------
@@ -315,21 +311,20 @@ module uart_core(
   // Bitrate counter for transmitting data on the external
   // serial interface.
   //----------------------------------------------------------------
-  always @*
-    begin: txd_bitrate_ctr
+  always @* begin : txd_bitrate_ctr
+    txd_bitrate_ctr_new = 16'h0;
+    txd_bitrate_ctr_we  = 0;
+
+    if (txd_bitrate_ctr_rst) begin
       txd_bitrate_ctr_new = 16'h0;
-      txd_bitrate_ctr_we  = 0;
+      txd_bitrate_ctr_we  = 1;
+    end
 
-      if (txd_bitrate_ctr_rst) begin
-        txd_bitrate_ctr_new = 16'h0;
-        txd_bitrate_ctr_we  = 1;
-      end
-
-      else if (txd_bitrate_ctr_inc) begin
-        txd_bitrate_ctr_new = txd_bitrate_ctr_reg + 1'h1;
-        txd_bitrate_ctr_we  = 1;
-      end
-    end // txd_bitrate_ctr
+    else if (txd_bitrate_ctr_inc) begin
+      txd_bitrate_ctr_new = txd_bitrate_ctr_reg + 1'h1;
+      txd_bitrate_ctr_we  = 1;
+    end
+  end  // txd_bitrate_ctr
 
 
   //----------------------------------------------------------------
@@ -340,90 +335,89 @@ module uart_core(
   // if required checks parity and store correct data into
   // the rx buffer.
   //----------------------------------------------------------------
-  always @*
-    begin: external_rx_engine
-      rxd_bit_ctr_rst     = 0;
-      rxd_bit_ctr_inc     = 0;
-      rxd_bitrate_ctr_rst = 0;
-      rxd_bitrate_ctr_inc = 0;
-      rxd_byte_we         = 0;
-      rxd_syn_new         = 0;
-      rxd_syn_we          = 0;
-      erx_ctrl_new        = ERX_IDLE;
-      erx_ctrl_we         = 0;
+  always @* begin : external_rx_engine
+    rxd_bit_ctr_rst     = 0;
+    rxd_bit_ctr_inc     = 0;
+    rxd_bitrate_ctr_rst = 0;
+    rxd_bitrate_ctr_inc = 0;
+    rxd_byte_we         = 0;
+    rxd_syn_new         = 0;
+    rxd_syn_we          = 0;
+    erx_ctrl_new        = ERX_IDLE;
+    erx_ctrl_we         = 0;
 
-      case (erx_ctrl_reg)
-        ERX_IDLE: begin
-          if (!rxd_reg) begin
-            // Possible start bit detected.
+    case (erx_ctrl_reg)
+      ERX_IDLE: begin
+        if (!rxd_reg) begin
+          // Possible start bit detected.
+          rxd_bitrate_ctr_rst = 1;
+          erx_ctrl_new        = ERX_START;
+          erx_ctrl_we         = 1;
+        end
+      end
+
+      ERX_START: begin
+        rxd_bitrate_ctr_inc = 1;
+        if (rxd_reg) begin
+          // Just a glitch.
+          erx_ctrl_new = ERX_IDLE;
+          erx_ctrl_we  = 1;
+        end
+
+        else begin
+          if (rxd_bitrate_ctr_reg == half_bit_rate) begin
+            // start bit assumed. We start sampling data.
+            rxd_bit_ctr_rst     = 1;
             rxd_bitrate_ctr_rst = 1;
-            erx_ctrl_new        = ERX_START;
+            erx_ctrl_new        = ERX_BITS;
             erx_ctrl_we         = 1;
           end
         end
+      end
 
-        ERX_START: begin
+
+      ERX_BITS: begin
+        if (rxd_bitrate_ctr_reg < bit_rate) begin
           rxd_bitrate_ctr_inc = 1;
-          if (rxd_reg) begin
-            // Just a glitch.
-            erx_ctrl_new = ERX_IDLE;
-            erx_ctrl_we  = 1;
-          end
-
-          else begin
-            if (rxd_bitrate_ctr_reg == half_bit_rate) begin
-              // start bit assumed. We start sampling data.
-              rxd_bit_ctr_rst     = 1;
-              rxd_bitrate_ctr_rst = 1;
-              erx_ctrl_new        = ERX_BITS;
-              erx_ctrl_we         = 1;
-            end
-          end
         end
 
-
-        ERX_BITS: begin
-          if (rxd_bitrate_ctr_reg < bit_rate) begin
-            rxd_bitrate_ctr_inc = 1;
-          end
-
-          else begin
-            rxd_byte_we         = 1;
-            rxd_bit_ctr_inc     = 1;
-            rxd_bitrate_ctr_rst = 1;
-            if (rxd_bit_ctr_reg == (data_bits - 1)) begin
-              erx_ctrl_new = ERX_STOP;
-              erx_ctrl_we  = 1;
-            end
-          end
-        end
-
-
-        ERX_STOP: begin
-          rxd_bitrate_ctr_inc = 1;
-          if (rxd_bitrate_ctr_reg == bit_rate * stop_bits) begin
-            rxd_syn_new  = 1;
-            rxd_syn_we   = 1;
-            erx_ctrl_new = ERX_SYN;
+        else begin
+          rxd_byte_we         = 1;
+          rxd_bit_ctr_inc     = 1;
+          rxd_bitrate_ctr_rst = 1;
+          if (rxd_bit_ctr_reg == (data_bits - 1)) begin
+            erx_ctrl_new = ERX_STOP;
             erx_ctrl_we  = 1;
           end
         end
+      end
 
 
-        ERX_SYN: begin
-          if (rxd_ack) begin
-            rxd_syn_new  = 0;
-            rxd_syn_we   = 1;
-            erx_ctrl_new = ERX_IDLE;
-            erx_ctrl_we  = 1;
-            end
+      ERX_STOP: begin
+        rxd_bitrate_ctr_inc = 1;
+        if (rxd_bitrate_ctr_reg == bit_rate * stop_bits) begin
+          rxd_syn_new  = 1;
+          rxd_syn_we   = 1;
+          erx_ctrl_new = ERX_SYN;
+          erx_ctrl_we  = 1;
         end
+      end
 
-        default: begin
+
+      ERX_SYN: begin
+        if (rxd_ack) begin
+          rxd_syn_new  = 0;
+          rxd_syn_we   = 1;
+          erx_ctrl_new = ERX_IDLE;
+          erx_ctrl_we  = 1;
         end
+      end
 
-      endcase // case (erx_ctrl_reg)
-    end // external_rx_engine
+      default: begin
+      end
+
+    endcase  // case (erx_ctrl_reg)
+  end  // external_rx_engine
 
 
   //----------------------------------------------------------------
@@ -432,100 +426,99 @@ module uart_core(
   // Logic that implements the transmit engine towards
   // the external interface.
   //----------------------------------------------------------------
-  always @*
-    begin: external_tx_engine
-      txd_new             = 0;
-      txd_we              = 0;
-      txd_byte_new        = 0;
-      txd_byte_we         = 0;
-      txd_bit_ctr_rst     = 0;
-      txd_bit_ctr_inc     = 0;
-      txd_bitrate_ctr_rst = 0;
-      txd_bitrate_ctr_inc = 0;
-      txd_ready_new       = 0;
-      txd_ready_we        = 0;
-      etx_ctrl_new        = ETX_IDLE;
-      etx_ctrl_we         = 0;
+  always @* begin : external_tx_engine
+    txd_new             = 0;
+    txd_we              = 0;
+    txd_byte_new        = 0;
+    txd_byte_we         = 0;
+    txd_bit_ctr_rst     = 0;
+    txd_bit_ctr_inc     = 0;
+    txd_bitrate_ctr_rst = 0;
+    txd_bitrate_ctr_inc = 0;
+    txd_ready_new       = 0;
+    txd_ready_we        = 0;
+    etx_ctrl_new        = ETX_IDLE;
+    etx_ctrl_we         = 0;
 
-      case (etx_ctrl_reg)
-        ETX_IDLE: begin
-          txd_new = 1;
-          txd_we  = 1;
-          if (txd_syn) begin
-            txd_byte_new        = txd_data;
-            txd_byte_we         = 1;
-            txd_ready_new       = 0;
-            txd_ready_we        = 1;
-            txd_bitrate_ctr_rst = 1;
-            etx_ctrl_new        = ETX_ACK;
-            etx_ctrl_we         = 1;
-          end
+    case (etx_ctrl_reg)
+      ETX_IDLE: begin
+        txd_new = 1;
+        txd_we  = 1;
+        if (txd_syn) begin
+          txd_byte_new        = txd_data;
+          txd_byte_we         = 1;
+          txd_ready_new       = 0;
+          txd_ready_we        = 1;
+          txd_bitrate_ctr_rst = 1;
+          etx_ctrl_new        = ETX_ACK;
+          etx_ctrl_we         = 1;
+        end
+      end
+
+
+      ETX_ACK: begin
+        if (!txd_syn) begin
+          txd_new      = 0;
+          txd_we       = 1;
+          etx_ctrl_new = ETX_START;
+          etx_ctrl_we  = 1;
+        end
+      end
+
+
+      ETX_START: begin
+        if (txd_bitrate_ctr_reg == bit_rate) begin
+          txd_bit_ctr_rst = 1;
+          etx_ctrl_new    = ETX_BITS;
+          etx_ctrl_we     = 1;
         end
 
+        else begin
+          txd_bitrate_ctr_inc = 1;
+        end
+      end
 
-        ETX_ACK: begin
-          if (!txd_syn) begin
-            txd_new      = 0;
+
+      ETX_BITS: begin
+        if (txd_bitrate_ctr_reg < bit_rate) begin
+          txd_bitrate_ctr_inc = 1;
+        end
+
+        else begin
+          txd_bitrate_ctr_rst = 1;
+          if (txd_bit_ctr_reg == data_bits) begin
+            txd_new      = 1;
             txd_we       = 1;
-            etx_ctrl_new = ETX_START;
+            etx_ctrl_new = ETX_STOP;
             etx_ctrl_we  = 1;
           end
-        end
-
-
-        ETX_START: begin
-          if (txd_bitrate_ctr_reg == bit_rate) begin
-            txd_bit_ctr_rst     = 1;
-            etx_ctrl_new        = ETX_BITS;
-            etx_ctrl_we         = 1;
-          end
 
           else begin
-            txd_bitrate_ctr_inc = 1;
+            txd_new         = txd_byte_reg[txd_bit_ctr_reg[2 : 0]];
+            txd_we          = 1;
+            txd_bit_ctr_inc = 1;
           end
         end
+      end
 
 
-        ETX_BITS: begin
-          if (txd_bitrate_ctr_reg < bit_rate) begin
-            txd_bitrate_ctr_inc = 1;
-          end
-
-          else begin
-            txd_bitrate_ctr_rst = 1;
-            if (txd_bit_ctr_reg == data_bits) begin
-              txd_new      = 1;
-              txd_we       = 1;
-              etx_ctrl_new = ETX_STOP;
-              etx_ctrl_we  = 1;
-            end
-
-            else begin
-              txd_new         = txd_byte_reg[txd_bit_ctr_reg[2 : 0]];
-              txd_we          = 1;
-              txd_bit_ctr_inc = 1;
-            end
-          end
+      ETX_STOP: begin
+        txd_bitrate_ctr_inc = 1;
+        if (txd_bitrate_ctr_reg == bit_rate * stop_bits) begin
+          txd_ready_new = 1;
+          txd_ready_we  = 1;
+          etx_ctrl_new  = ETX_IDLE;
+          etx_ctrl_we   = 1;
         end
+      end
 
+      default: begin
+      end
 
-        ETX_STOP: begin
-          txd_bitrate_ctr_inc = 1;
-          if (txd_bitrate_ctr_reg == bit_rate * stop_bits) begin
-            txd_ready_new = 1;
-            txd_ready_we  = 1;
-            etx_ctrl_new  = ETX_IDLE;
-            etx_ctrl_we   = 1;
-          end
-        end
+    endcase  // case (etx_ctrl_reg)
+  end  // external_tx_engine
 
-        default: begin
-        end
-
-      endcase // case (etx_ctrl_reg)
-    end // external_tx_engine
-
-endmodule // uart
+endmodule  // uart
 
 //======================================================================
 // EOF uart.v

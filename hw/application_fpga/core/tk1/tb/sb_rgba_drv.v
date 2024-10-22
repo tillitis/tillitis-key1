@@ -16,19 +16,19 @@
 `default_nettype none
 
 module SB_RGBA_DRV (
-                    input wire RGBLEDEN,
-                    input wire RGB0PWM,
-                    input wire RGB1PWM,
-                    input wire RGB2PWM,
+    input wire RGBLEDEN,
+    input wire RGB0PWM,
+    input wire RGB1PWM,
+    input wire RGB2PWM,
 
-		    /* verilator lint_off UNUSEDSIGNAL */
-                    input wire CURREN,
-		    /* verilator lint_on UNUSEDSIGNAL */
+    /* verilator lint_off UNUSEDSIGNAL */
+    input wire CURREN,
+    /* verilator lint_on UNUSEDSIGNAL */
 
-                    output wire RGB0,
-                    output wire RGB1,
-                    output wire RGB2
-		   );
+    output wire RGB0,
+    output wire RGB1,
+    output wire RGB2
+);
 
   /* verilator lint_off UNUSEDPARAM */
   parameter CURRENT_MODE = 1;
@@ -41,7 +41,7 @@ module SB_RGBA_DRV (
   assign RGB1 = RGB1PWM & RGBLEDEN;
   assign RGB2 = RGB2PWM & RGBLEDEN;
 
-endmodule // SB_RGBA_DRV
+endmodule  // SB_RGBA_DRV
 
 //======================================================================
 // EOF SB_RGBA_DRV.v

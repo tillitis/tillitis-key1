@@ -36,24 +36,24 @@
 //
 //======================================================================
 
-module tb_uart();
+module tb_uart ();
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG           = 0;
-  parameter VERBOSE         = 0;
+  parameter DEBUG = 0;
+  parameter VERBOSE = 0;
 
   parameter CLK_HALF_PERIOD = 1;
-  parameter CLK_PERIOD      = CLK_HALF_PERIOD * 2;
+  parameter CLK_PERIOD = CLK_HALF_PERIOD * 2;
 
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [31 : 0] cycle_ctr;
-  reg [31 : 0] error_ctr;
-  reg [31 : 0] tc_ctr;
+  reg  [31 : 0] cycle_ctr;
+  reg  [31 : 0] error_ctr;
+  reg  [31 : 0] tc_ctr;
 
   reg           tb_clk;
   reg           tb_reset_n;
@@ -61,32 +61,32 @@ module tb_uart();
   wire          tb_txd;
   reg           tb_cs;
   reg           tb_we;
-  reg [7 : 0]   tb_address;
-  reg [31 : 0]  tb_write_data;
+  reg  [ 7 : 0] tb_address;
+  reg  [31 : 0] tb_write_data;
   wire [31 : 0] tb_read_data;
   wire          tb_ready;
 
-  reg          txd_state;
+  reg           txd_state;
 
 
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  uart dut(
-           .clk(tb_clk),
-           .reset_n(tb_reset_n),
+  uart dut (
+      .clk(tb_clk),
+      .reset_n(tb_reset_n),
 
-           .rxd(tb_rxd),
-           .txd(tb_txd),
+      .rxd(tb_rxd),
+      .txd(tb_txd),
 
-            // API interface.
-            .cs(tb_cs),
-            .we(tb_we),
-            .address(tb_address),
-            .write_data(tb_write_data),
-            .read_data(tb_read_data),
-            .ready(tb_ready)
-          );
+      // API interface.
+      .cs(tb_cs),
+      .we(tb_we),
+      .address(tb_address),
+      .write_data(tb_write_data),
+      .read_data(tb_read_data),
+      .ready(tb_ready)
+  );
 
 
   //----------------------------------------------------------------
@@ -99,30 +99,26 @@ module tb_uart();
   //
   // Clock generator process.
   //----------------------------------------------------------------
-  always
-    begin : clk_gen
-      #CLK_HALF_PERIOD tb_clk = !tb_clk;
-    end // clk_gen
+  always begin : clk_gen
+    #CLK_HALF_PERIOD tb_clk = !tb_clk;
+  end  // clk_gen
 
 
   //----------------------------------------------------------------
   // sys_monitor
   //----------------------------------------------------------------
-  always
-    begin : sys_monitor
-      #(CLK_PERIOD);
-      if (DEBUG)
-        begin
-          dump_rx_state();
-          dump_tx_state();
-          $display("");
-        end
-      if (VERBOSE)
-        begin
-          $display("cycle: 0x%016x", cycle_ctr);
-        end
-      cycle_ctr = cycle_ctr + 1;
+  always begin : sys_monitor
+    #(CLK_PERIOD);
+    if (DEBUG) begin
+      dump_rx_state();
+      dump_tx_state();
+      $display("");
     end
+    if (VERBOSE) begin
+      $display("cycle: 0x%016x", cycle_ctr);
+    end
+    cycle_ctr = cycle_ctr + 1;
+  end
 
 
   //----------------------------------------------------------------
@@ -130,20 +126,17 @@ module tb_uart();
   //
   // Observes what happens on the dut tx port and reports it.
   //----------------------------------------------------------------
-  always @*
-    begin : tx_monitor
-      if ((!tb_txd) && txd_state)
-        begin
-          $display("txd going low.");
-          txd_state = 0;
-        end
-
-      if (tb_txd && (!txd_state))
-        begin
-          $display("txd going high");
-          txd_state = 1;
-        end
+  always @* begin : tx_monitor
+    if ((!tb_txd) && txd_state) begin
+      $display("txd going low.");
+      txd_state = 0;
     end
+
+    if (tb_txd && (!txd_state)) begin
+      $display("txd going high");
+      txd_state = 1;
+    end
+  end
 
 
   //----------------------------------------------------------------
@@ -156,27 +149,24 @@ module tb_uart();
       $display("State of DUT");
       $display("------------");
       $display("Inputs and outputs:");
-      $display("rxd = 0x%01x, txd = 0x%01x,",
-               dut.core.rxd, dut.core.txd);
+      $display("rxd = 0x%01x, txd = 0x%01x,", dut.core.rxd, dut.core.txd);
       $display("");
 
       $display("Sample and data registers:");
-      $display("rxd_reg = 0x%01x, rxd_byte_reg = 0x%01x",
-               dut.core.rxd_reg, dut.core.rxd_byte_reg);
+      $display("rxd_reg = 0x%01x, rxd_byte_reg = 0x%01x", dut.core.rxd_reg, dut.core.rxd_byte_reg);
       $display("");
 
       $display("Counters:");
-      $display("rxd_bit_ctr_reg = 0x%01x, rxd_bitrate_ctr_reg = 0x%02x",
-               dut.core.rxd_bit_ctr_reg, dut.core.rxd_bitrate_ctr_reg);
+      $display("rxd_bit_ctr_reg = 0x%01x, rxd_bitrate_ctr_reg = 0x%02x", dut.core.rxd_bit_ctr_reg,
+               dut.core.rxd_bitrate_ctr_reg);
       $display("");
 
 
       $display("Control signals and FSM state:");
-      $display("erx_ctrl_reg = 0x%02x",
-               dut.core.erx_ctrl_reg);
+      $display("erx_ctrl_reg = 0x%02x", dut.core.erx_ctrl_reg);
       $display("");
     end
-  endtask // dump_dut_state
+  endtask  // dump_dut_state
 
 
 
@@ -187,11 +177,12 @@ module tb_uart();
   //----------------------------------------------------------------
   task dump_rx_state;
     begin
-      $display("rxd = 0x%01x, rxd_reg = 0x%01x, rxd_byte_reg = 0x%01x, rxd_bit_ctr_reg = 0x%01x, rxd_bitrate_ctr_reg = 0x%02x, rxd_syn = 0x%01x, erx_ctrl_reg = 0x%02x",
-               dut.core.rxd, dut.core.rxd_reg, dut.core.rxd_byte_reg, dut.core.rxd_bit_ctr_reg,
-               dut.core.rxd_bitrate_ctr_reg, dut.core.rxd_syn, dut.core.erx_ctrl_reg);
+      $display(
+          "rxd = 0x%01x, rxd_reg = 0x%01x, rxd_byte_reg = 0x%01x, rxd_bit_ctr_reg = 0x%01x, rxd_bitrate_ctr_reg = 0x%02x, rxd_syn = 0x%01x, erx_ctrl_reg = 0x%02x",
+          dut.core.rxd, dut.core.rxd_reg, dut.core.rxd_byte_reg, dut.core.rxd_bit_ctr_reg,
+          dut.core.rxd_bitrate_ctr_reg, dut.core.rxd_syn, dut.core.erx_ctrl_reg);
     end
-  endtask // dump_dut_state
+  endtask  // dump_dut_state
 
 
 
@@ -203,7 +194,7 @@ module tb_uart();
   task dump_tx_state;
     begin
     end
-  endtask // dump_dut_state
+  endtask  // dump_dut_state
 
 
   //----------------------------------------------------------------
@@ -216,7 +207,7 @@ module tb_uart();
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
     end
-  endtask // reset_dut
+  endtask  // reset_dut
 
 
   //----------------------------------------------------------------
@@ -241,7 +232,7 @@ module tb_uart();
 
       txd_state     = 1;
     end
-  endtask // init_sim
+  endtask  // init_sim
 
 
   //----------------------------------------------------------------
@@ -262,12 +253,11 @@ module tb_uart();
       #(CLK_PERIOD * dut.DEFAULT_BIT_RATE);
 
       // Send the bits LSB first.
-      for (i = 0 ; i < 8 ; i = i + 1)
-        begin
-          $display("*** Transmitting data[%1d] = 0x%01x.", i, data[i]);
-          tb_rxd = data[i];
-          #(CLK_PERIOD * dut.DEFAULT_BIT_RATE);
-        end
+      for (i = 0; i < 8; i = i + 1) begin
+        $display("*** Transmitting data[%1d] = 0x%01x.", i, data[i]);
+        tb_rxd = data[i];
+        #(CLK_PERIOD * dut.DEFAULT_BIT_RATE);
+      end
 
       // Send two stop bits. I.e. two bit times high (mark) value.
       $display("*** Transmitting two stop bits.");
@@ -275,7 +265,7 @@ module tb_uart();
       #(2 * CLK_PERIOD * dut.DEFAULT_BIT_RATE * dut.DEFAULT_STOP_BITS);
       $display("*** End of transmission.");
     end
-  endtask // transmit_byte
+  endtask  // transmit_byte
 
 
   //----------------------------------------------------------------
@@ -290,19 +280,16 @@ module tb_uart();
 
       transmit_byte(data);
 
-      if (dut.core.rxd_byte_reg == data)
-        begin
-          $display("*** Correct data: 0x%01x captured by the dut.",
-                   dut.core.rxd_byte_reg);
-        end
-      else
-        begin
-          $display("*** Incorrect data: 0x%01x captured by the dut Should be: 0x%01x.",
-                   dut.core.rxd_byte_reg, data);
-          error_ctr = error_ctr + 1;
-        end
+      if (dut.core.rxd_byte_reg == data) begin
+        $display("*** Correct data: 0x%01x captured by the dut.", dut.core.rxd_byte_reg);
+      end
+      else begin
+        $display("*** Incorrect data: 0x%01x captured by the dut Should be: 0x%01x.",
+                 dut.core.rxd_byte_reg, data);
+        error_ctr = error_ctr + 1;
+      end
     end
-  endtask // check_transmit
+  endtask  // check_transmit
 
 
   //----------------------------------------------------------------
@@ -317,7 +304,7 @@ module tb_uart();
       check_transmit(8'hde);
       check_transmit(8'had);
     end
-  endtask // test_transmit
+  endtask  // test_transmit
 
 
   //----------------------------------------------------------------
@@ -327,38 +314,35 @@ module tb_uart();
   //----------------------------------------------------------------
   task display_test_result;
     begin
-      if (error_ctr == 0)
-        begin
-          $display("*** All %02d test cases completed successfully", tc_ctr);
-        end
-      else
-        begin
-          $display("*** %02d test cases did not complete successfully.", error_ctr);
-        end
+      if (error_ctr == 0) begin
+        $display("*** All %02d test cases completed successfully", tc_ctr);
+      end
+      else begin
+        $display("*** %02d test cases did not complete successfully.", error_ctr);
+      end
     end
-  endtask // display_test_result
+  endtask  // display_test_result
 
 
   //----------------------------------------------------------------
   // uart_test
   // The main test functionality.
   //----------------------------------------------------------------
-  initial
-    begin : uart_test
-      $display("   -- Testbench for uart core started --");
+  initial begin : uart_test
+    $display("   -- Testbench for uart core started --");
 
-      init_sim();
-      dump_dut_state();
-      reset_dut();
-      dump_dut_state();
+    init_sim();
+    dump_dut_state();
+    reset_dut();
+    dump_dut_state();
 
-      test_transmit();
+    test_transmit();
 
-      display_test_result();
-      $display("*** Simulation done.");
-      $finish;
-    end // uart_test
-endmodule // tb_uart
+    display_test_result();
+    $display("*** Simulation done.");
+    $finish;
+  end  // uart_test
+endmodule  // tb_uart
 
 //======================================================================
 // EOF tb_uart.v

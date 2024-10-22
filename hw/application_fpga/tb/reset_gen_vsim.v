@@ -13,11 +13,12 @@
 
 `default_nettype none
 
-module reset_gen #(parameter RESET_CYCLES = 200)
-                 (
-	          input wire  clk,
-                  output wire rst_n
-                 );
+module reset_gen #(
+    parameter RESET_CYCLES = 200
+) (
+    input  wire clk,
+    output wire rst_n
+);
 
 
   //----------------------------------------------------------------
@@ -40,32 +41,29 @@ module reset_gen #(parameter RESET_CYCLES = 200)
   //----------------------------------------------------------------
   // reg_update.
   //----------------------------------------------------------------
-    always @(posedge clk)
-      begin : reg_update
-        rst_n_reg <= rst_n_new;
+  always @(posedge clk) begin : reg_update
+    rst_n_reg <= rst_n_new;
 
-        if (rst_ctr_we)
-          rst_ctr_reg <= rst_ctr_new;
-      end
+    if (rst_ctr_we) rst_ctr_reg <= rst_ctr_new;
+  end
 
 
   //----------------------------------------------------------------
   // rst_logic.
   //----------------------------------------------------------------
-  always @*
-    begin : rst_logic
-      rst_n_new   = 1'h1;
-      rst_ctr_new = 8'h0;
-      rst_ctr_we  = 1'h0;
+  always @* begin : rst_logic
+    rst_n_new   = 1'h1;
+    rst_ctr_new = 8'h0;
+    rst_ctr_we  = 1'h0;
 
-      if (rst_ctr_reg < RESET_CYCLES) begin
-        rst_n_new   = 1'h0;
-        rst_ctr_new = rst_ctr_reg + 1'h1;
-        rst_ctr_we  = 1'h1;
-      end
+    if (rst_ctr_reg < RESET_CYCLES) begin
+      rst_n_new   = 1'h0;
+      rst_ctr_new = rst_ctr_reg + 1'h1;
+      rst_ctr_we  = 1'h1;
     end
+  end
 
-endmodule // reset_gen
+endmodule  // reset_gen
 
 //======================================================================
 // EOF reset_gen.v

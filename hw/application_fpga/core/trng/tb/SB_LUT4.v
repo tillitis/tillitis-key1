@@ -14,15 +14,15 @@
 `default_nettype none
 
 module SB_LUT4 (
-		input wire I0,
-		output wire O
-		);
+    input  wire I0,
+    output wire O
+);
 
   parameter LUT_INIT = 16'h0;
 
   assign O = ~I0;
 
-endmodule // SB_LUT4
+endmodule  // SB_LUT4
 
 //======================================================================
 // EOF SB_LUT4.v
