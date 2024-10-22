@@ -343,6 +343,7 @@ application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
 	$(NEXTPNR_PATH)nextpnr-ice40 \
 		-l application_fpga_par.txt \
 		--freq $(TARGET_FREQ) \
+		--seed 16124898615009538779 \
 		--ignore-loops \
 		--up5k \
 		--package sg48 \
