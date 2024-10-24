@@ -83,10 +83,10 @@ module uart (
   // The default bit rate is based on target clock frequency
   // divided by the bit rate times in order to hit the
   // center of the bits. I.e.
-  // Clock: 21 MHz, 62500 bps
-  // Divisor = 21E6 / 62500 = 336
+  // Clock: 24 MHz, 62500 bps
+  // Divisor = 24E6 / 62500 = 384
   // This also satisfies 1E6 % bps == 0 for the CH552 MCU used for USB-serial
-  localparam DEFAULT_BIT_RATE = 16'd336;
+  localparam DEFAULT_BIT_RATE = 16'd384;
   localparam DEFAULT_DATA_BITS = 4'h8;
   localparam DEFAULT_STOP_BITS = 2'h1;
 
