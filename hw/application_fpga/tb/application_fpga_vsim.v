@@ -152,7 +152,7 @@ module application_fpga (
   reg  [31 : 0] tk1_write_data;
   wire [31 : 0] tk1_read_data;
   wire          tk1_ready;
-  wire          fw_app_mode;
+  wire          system_mode;
 
 
   //----------------------------------------------------------------
@@ -304,7 +304,7 @@ module application_fpga (
       .clk(clk),
       .reset_n(reset_n),
 
-      .fw_app_mode(fw_app_mode),
+      .system_mode(system_mode),
 
       .led_r(led_r),
       .led_g(led_g),

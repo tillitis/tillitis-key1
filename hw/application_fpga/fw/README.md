@@ -188,7 +188,7 @@ Typical expected use scenario:
      more automatic variables.
 
   8. Firmware starts the application by first switching to from
-     firmware mode to application mode by writing to the `SWITCH_APP`
+     firmware mode to application mode by writing to the `SYSTEM_MODE_CTRL`
      register. In this mode the MMIO region is restricted, e.g. some
      registers are removed (`UDS`), and some are switched from
      read/write to read-only (see [the memory

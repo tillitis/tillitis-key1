@@ -26,7 +26,7 @@ applications.
 ### Control of execution mode
 
 ```
-	ADDR_SWITCH_APP: 0x08
+	ADDR_SYSTEM_MODE_CTRL: 0x08
 ```
 
 This register controls if the device is executing in FW mode or in App
@@ -75,7 +75,7 @@ corresponding register is one or zero.
 These registers provide read only information to the loaded app to
 itself - where it was loaded and its size. The values are written by
 FW as part of the loading of the app. The registers can't be written
-when the ADDR_SWITCH_APP has been set.
+when the ADDR_SYSTEM_MODE_CTRL has been set.
 
 
 ### Access to Blake2s
@@ -86,7 +86,7 @@ when the ADDR_SWITCH_APP has been set.
 
 This register provides the 32-bit function pointer address to the
 Blake2s hash function in the FW. It is written by FW during boot. The
-register can't be written to when the ADDR_SWITCH_APP has been set.
+register can't be written to when the ADDR_SYSTEM_MODE_CTRL has been set.
 
 
 ### Access to CDI
@@ -99,7 +99,7 @@ register can't be written to when the ADDR_SWITCH_APP has been set.
 These registers provide access to the 256-bit compound device secret
 calculated by the FW as part of loading an application. The registers
 are written by the FW. The register can't be written to when the
-ADDR_SWITCH_APP has been set. Apps can read the CDI and is it as base
+ADDR_SYSTEM_MODE_CTRL has been set. Apps can read the CDI and is it as base
 secret for any secrets it needs to perform its intended use case.
 
 

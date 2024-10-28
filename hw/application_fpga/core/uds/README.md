@@ -6,7 +6,7 @@ Unique Device Secret core
 
 This core store and protect the Unique Device Secret (UDS) asset. The
 UDS can be accessed as eight separate 32-bit words. The words can only
-be accessed as long as the fw_app_mode input is low, implying that the
+be accessed as long as the system_mode input is low, implying that the
 CPU is executing the FW.
 
 The UDS words can be accessed in any order, but a given word can only

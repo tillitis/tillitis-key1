@@ -10,20 +10,20 @@
 #include "../tk1_mem.h"
 
 // clang-format off
-volatile uint32_t *tk1name0        = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
-volatile uint32_t *tk1name1        = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
-volatile uint32_t *uds             = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
-volatile uint32_t *cdi             = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
-volatile uint32_t *udi             = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
-volatile uint32_t *switch_app      = (volatile uint32_t *)TK1_MMIO_TK1_SWITCH_APP;
-volatile uint8_t  *fw_ram          = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
-volatile uint32_t *timer           = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
-volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
-volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
-volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
-volatile uint32_t *trng_status     = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
-volatile uint32_t *trng_entropy    = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
-volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
+volatile uint32_t *tk1name0         = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
+volatile uint32_t *tk1name1         = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
+volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
+volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
+volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
+volatile uint32_t *system_mode_ctrl = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_MODE_CTRL;
+volatile uint8_t  *fw_ram           = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
+volatile uint32_t *timer            = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
+volatile uint32_t *timer_prescaler  = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
+volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
+volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
+volatile uint32_t *trng_status      = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
+volatile uint32_t *trng_entropy     = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
+volatile uint32_t *fw_blake2s_addr  = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
 // clang-format on
 
 #define UDS_WORDS 8
@@ -257,9 +257,9 @@ int main(void)
 		}
 	}
 
-	uint32_t sw = *switch_app;
+	uint32_t sw = *system_mode_ctrl;
 	if (sw != 0) {
-		failmsg("switch_app is not 0 in fw mode");
+		failmsg("system_mode_ctrl is not 0 in fw mode");
 		anyfailed = 1;
 	}
 
@@ -269,11 +269,11 @@ int main(void)
 	// Turn on application mode.
 	// -------------------------
 
-	*switch_app = 1;
+	*system_mode_ctrl = 1;
 
-	sw = *switch_app;
+	sw = *system_mode_ctrl;
 	if (sw != 0xffffffff) {
-		failmsg("switch_app is not 0xffffffff in app mode");
+		failmsg("system_mode_ctrl is not 0xffffffff in app mode");
 		anyfailed = 1;
 	}
 
