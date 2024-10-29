@@ -212,9 +212,9 @@ module tk1 (
       .RGB1(led_g),
       .RGB2(led_b),
       .RGBLEDEN(1'h1),
-      .RGB0PWM(muxed_led[LED_R_BIT]),
+      .RGB0PWM(muxed_led[LED_B_BIT]),
       .RGB1PWM(muxed_led[LED_G_BIT]),
-      .RGB2PWM(muxed_led[LED_B_BIT]),
+      .RGB2PWM(muxed_led[LED_R_BIT]),
       .CURREN(1'b1)
   );
   /* verilator lint_on PINMISSING */
