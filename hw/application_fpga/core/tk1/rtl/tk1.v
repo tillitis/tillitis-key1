@@ -80,6 +80,7 @@ module tk1 #(
   localparam ADDR_APP_SIZE = 8'h0d;
 
   localparam ADDR_BLAKE2S = 8'h10;
+  localparam ADDR_SYSCALL = 8'h12;
 
   localparam ADDR_CDI_FIRST = 8'h20;
   localparam ADDR_CDI_LAST = 8'h27;
@@ -108,6 +109,10 @@ module tk1 #(
   localparam FW_RAM_LAST = 32'hd00007ff;
 
 
+  // ILLEGAL_ADDR is outside of the physical memory, and will trap in
+  // the security monitor if accessed.
+  localparam ILLEGAL_ADDR = 32'h4f000000;
+
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
@@ -135,6 +140,9 @@ module tk1 #(
 
   reg  [31 : 0] blake2s_addr_reg;
   reg           blake2s_addr_we;
+
+  reg  [31 : 0] syscall_addr_reg;
+  reg           syscall_addr_we;
 
   reg  [23 : 0] cpu_trap_ctr_reg;
   reg  [23 : 0] cpu_trap_ctr_new;
@@ -259,6 +267,7 @@ module tk1 #(
       app_start_reg     <= 32'h0;
       app_size_reg      <= APP_SIZE;
       blake2s_addr_reg  <= 32'h0;
+      syscall_addr_reg  <= ILLEGAL_ADDR;
       cdi_mem[0]        <= 32'h0;
       cdi_mem[1]        <= 32'h0;
       cdi_mem[2]        <= 32'h0;
@@ -315,6 +324,10 @@ module tk1 #(
 
       if (blake2s_addr_we) begin
         blake2s_addr_reg <= write_data;
+      end
+
+      if (syscall_addr_we) begin
+        syscall_addr_reg <= write_data;
       end
 
       if (cdi_mem_we) begin
@@ -423,6 +436,7 @@ module tk1 #(
     app_start_we     = 1'h0;
     app_size_we      = 1'h0;
     blake2s_addr_we  = 1'h0;
+    syscall_addr_we  = 1'h0;
     cdi_mem_we       = 1'h0;
     ram_addr_rand_we = 1'h0;
     ram_data_rand_we = 1'h0;
@@ -475,6 +489,12 @@ module tk1 #(
         if (address == ADDR_BLAKE2S) begin
           if (!system_mode_reg) begin
             blake2s_addr_we = 1'h1;
+          end
+        end
+
+        if (address == ADDR_SYSCALL) begin
+          if (!system_mode_reg) begin
+            syscall_addr_we = 1'h1;
           end
         end
 
@@ -560,6 +580,10 @@ module tk1 #(
 
         if (address == ADDR_BLAKE2S) begin
           tmp_read_data = blake2s_addr_reg;
+        end
+
+        if (address == ADDR_SYSCALL) begin
+          tmp_read_data = syscall_addr_reg;
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
