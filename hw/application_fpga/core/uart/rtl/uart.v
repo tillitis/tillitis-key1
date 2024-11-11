@@ -69,10 +69,6 @@ module uart (
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam ADDR_BIT_RATE = 8'h10;
-  localparam ADDR_DATA_BITS = 8'h11;
-  localparam ADDR_STOP_BITS = 8'h12;
-
   localparam ADDR_RX_STATUS = 8'h20;
   localparam ADDR_RX_DATA = 8'h21;
   localparam ADDR_RX_BYTES = 8'h22;
@@ -94,15 +90,6 @@ module uart (
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg  [15 : 0] bit_rate_reg;
-  reg           bit_rate_we;
-
-  reg  [ 3 : 0] data_bits_reg;
-  reg           data_bits_we;
-
-  reg  [ 1 : 0] stop_bits_reg;
-  reg           stop_bits_we;
-
 
   //----------------------------------------------------------------
   // Wires.
@@ -139,9 +126,9 @@ module uart (
       .reset_n(reset_n),
 
       // Configuration parameters
-      .bit_rate (bit_rate_reg),
-      .data_bits(data_bits_reg),
-      .stop_bits(stop_bits_reg),
+      .bit_rate (DEFAULT_BIT_RATE),
+      .data_bits(DEFAULT_DATA_BITS),
+      .stop_bits(DEFAULT_STOP_BITS),
 
       // External data interface
       .rxd(rxd),
@@ -174,36 +161,6 @@ module uart (
       .out_ack (fifo_out_ack)
   );
 
-
-  //----------------------------------------------------------------
-  // reg_update
-  //
-  // Update functionality for all registers in the core.
-  // All registers are positive edge triggered with synchronous
-  // active low reset.
-  //----------------------------------------------------------------
-  always @(posedge clk) begin : reg_update
-    if (!reset_n) begin
-      bit_rate_reg  <= DEFAULT_BIT_RATE;
-      data_bits_reg <= DEFAULT_DATA_BITS;
-      stop_bits_reg <= DEFAULT_STOP_BITS;
-    end
-    else begin
-      if (bit_rate_we) begin
-        bit_rate_reg <= write_data[15 : 0];
-      end
-
-      if (data_bits_we) begin
-        data_bits_reg <= write_data[3 : 0];
-      end
-
-      if (stop_bits_we) begin
-        stop_bits_reg <= write_data[1 : 0];
-      end
-    end
-  end  // reg_update
-
-
   //----------------------------------------------------------------
   // api
   //
@@ -212,9 +169,6 @@ module uart (
   //----------------------------------------------------------------
   always @* begin : api
     // Default assignments.
-    bit_rate_we   = 1'h0;
-    data_bits_we  = 1'h0;
-    stop_bits_we  = 1'h0;
     core_txd_syn  = 1'h0;
     fifo_out_ack  = 1'h0;
     tmp_read_data = 32'h0;
@@ -227,18 +181,6 @@ module uart (
 
       if (we) begin
         case (address)
-          ADDR_BIT_RATE: begin
-            bit_rate_we = 1;
-          end
-
-          ADDR_DATA_BITS: begin
-            data_bits_we = 1;
-          end
-
-          ADDR_STOP_BITS: begin
-            stop_bits_we = 1;
-          end
-
           ADDR_TX_DATA: begin
             if (core_txd_ready) begin
               core_txd_syn = 1'h1;
@@ -252,18 +194,6 @@ module uart (
 
       else begin
         case (address)
-          ADDR_BIT_RATE: begin
-            tmp_read_data = {16'h0, bit_rate_reg};
-          end
-
-          ADDR_DATA_BITS: begin
-            tmp_read_data = {28'h0, data_bits_reg};
-          end
-
-          ADDR_STOP_BITS: begin
-            tmp_read_data = {30'h0, stop_bits_reg};
-          end
-
           ADDR_RX_STATUS: begin
             tmp_read_data = {31'h0, fifo_out_syn};
           end

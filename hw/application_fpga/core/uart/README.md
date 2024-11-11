@@ -15,26 +15,24 @@ have to wait for bytes and poll them as soon as they are received. The
 number of bytes in the FIFO is also exposed to the SW through the
 ADDR_RX_BYTES address.
 
-The number of data and data bits can be set by SW. The default is
-eight data bits and one stop bit.
+The number of data and stop bits can be configured prior to building
+the core.
 
-The default bit rate is based on target clock frequency divided by the
-bit rate times in order to hit the center of the bits. I.e.  Clock: 18
-MHz, 62500 bps Divisor = 18E6 / 62500 = 288
+The bit rate can also be configured prior to building the core. It
+should be based on the target clock frequency divided by the bit rate
+in order to hit the center of the bits. For example, a clock of 18 MHz
+and a target bit rate of 62500 bps yields:
+Divisor = 18E6 / 62500 = 288
 
 ## API
 
 ```
-  ADDR_BIT_RATE:  0x10
-  ADDR_DATA_BITS: 0x11
-  ADDR_STOP_BITS: 0x12
+ADDR_RX_STATUS: 0x20
+ADDR_RX_DATA:   0x21
+ADDR_RX_BYTES:  0x22
 
-  ADDR_RX_STATUS: 0x20
-  ADDR_RX_DATA:   0x21
-  ADDR_RX_BYTES:  0x22
-
-  ADDR_TX_STATUS: 0x40
-  ADDR_TX_DATA:   0x41
+ADDR_TX_STATUS: 0x40
+ADDR_TX_DATA:   0x41
 ```
 
 ## Implementation notes.

@@ -184,10 +184,7 @@ HKDF.
 A simple universal asynchronous receiver/transmitter (UART) used for
 communication with the client through the USB controller.
 
-The UART default speed is 62500 bps, but can be adjusted by the
-application. (Note that the host must set the same bitrate too.)
-
-The UART contain a 512 but Rx-FIFO with status (data available).
+The UART contain a 512-byte Rx-FIFO with status (data available).
 
 The UART is available to use by firmware and applications.
 
