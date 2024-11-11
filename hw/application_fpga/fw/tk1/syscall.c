@@ -10,11 +10,14 @@
 
 #include <stdint.h>
 
+#define NO_FW_RAM
+
 void inner_syscall(volatile syscall_t *ctx);
 
 void syscall(syscall_t *ctx)
 {
 
+#ifdef NO_FW_RAM
 	asm volatile("addi x5, sp, 0;"	  // Save current SP value in x5
 		     "li sp, 0xd0000800;" // Change SP to top of FW_RAM
 		     "addi sp, sp, -4;"	  // Adjust SP to make space
@@ -23,9 +26,11 @@ void syscall(syscall_t *ctx)
 		     :			// No outputs
 		     :			// No inputs
 		     : "x5", "memory"); // Clobbers
+#endif //NO_FW_RAM
 
 	inner_syscall(ctx);
 
+#ifdef NO_FW_RAM
 	asm volatile("lui  t0, 0xd0000;"   // Load the upper 20 bits
 		     "addi t0, t0, 0x7fc;" // Add the lower 12 bits for full
 		     "lw t1, 0(t0);"  // Load the word at address in t0 to t1
@@ -33,6 +38,7 @@ void syscall(syscall_t *ctx)
 		     :		      // No outputs
 		     :		      // No inputs
 		     : "t0", "t1", "memory"); // Clobbers
+#endif //NO_FW_RAM
 
 	return;
 }
