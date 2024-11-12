@@ -1,6 +1,6 @@
 //======================================================================
 //
-// reset_gen_vsim.v
+// reset_gen_sim.v
 // ----------------
 // Reset generator Verilator simulation of the application_fpga.
 //

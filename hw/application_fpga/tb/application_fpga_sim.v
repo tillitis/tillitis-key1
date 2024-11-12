@@ -1,10 +1,10 @@
 //======================================================================
 //
-// application_fpga.v
-// ------------------
+// application_fpga_sim.v
+// ----------------------
 // Top level module of the application FPGA.
 // The design exposes a UART interface to allow a host to
-// send commands and receive resposes as needed load, execute and
+// send commands and receive responses as needed load, execute and
 // communicate with applications.
 //
 //

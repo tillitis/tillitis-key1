@@ -79,8 +79,8 @@ FPGA_SRC = \
 
 # Verilator simulation specific source files.
 VERILATOR_FPGA_SRC = \
-	$(P)/tb/application_fpga_vsim.v \
-	$(P)/tb/reset_gen_vsim.v
+	$(P)/tb/application_fpga_sim.v \
+	$(P)/tb/reset_gen_sim.v
 
 # Common verilog source files.
 VERILOG_SRCS = \
