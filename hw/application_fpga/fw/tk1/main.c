@@ -21,22 +21,23 @@
 #include <stdint.h>
 
 // clang-format off
-static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
-static volatile uint32_t *system_mode_ctrl = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_MODE_CTRL;
-static volatile uint32_t *name0            = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
-static volatile uint32_t *name1            = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
-static volatile uint32_t *ver              = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
-static volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
-static volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
-static volatile uint32_t *app_addr         = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
-static volatile uint32_t *app_size         = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
-static volatile uint32_t *fw_blake2s_addr  = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
-static volatile uint32_t *timer            = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
-static volatile uint32_t *timer_prescaler  = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
-static volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
-static volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
-static volatile uint32_t *ram_addr_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
-static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
+static volatile uint32_t *uds             = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
+/*static volatile uint32_t *system_mode_ctrl = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_MODE_CTRL;*/
+static volatile uint32_t *name0           = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
+static volatile uint32_t *name1           = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
+static volatile uint32_t *ver             = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
+static volatile uint32_t *udi             = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
+static volatile uint32_t *cdi             = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
+static volatile uint32_t *app_addr        = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
+static volatile uint32_t *app_size        = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
+static volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
+static volatile uint32_t *syscall_addr    = (volatile uint32_t *)TK1_MMIO_TK1_SYSCALL;
+static volatile uint32_t *timer           = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
+static volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
+static volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
+static volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
+static volatile uint32_t *ram_addr_rand   = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
+static volatile uint32_t *ram_data_rand   = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
 // clang-format on
 
 // Context for the loading of a TKey program
@@ -367,7 +368,7 @@ static void run(const struct context *ctx, partition_table_t *part_table)
 	// clang-format on
 
 	// Flip over to application mode
-	*system_mode_ctrl = 1;
+	/**system_mode_ctrl = 1;*/
 
 	// XXX Firmware stack now no longer available
 	// Don't use any function calls!
@@ -419,8 +420,9 @@ int main(void)
 	print_hw_version();
 
 	// Let the app know the function address for blake2s()
-	*fw_blake2s_addr = (uint32_t)syscall;
-	/**fw_blake2s_addr = (uint32_t)blake2s;*/
+	*fw_blake2s_addr = (uint32_t)blake2s;
+	// Let the app know the function address for syscall()
+	*syscall_addr = (uint32_t)syscall;
 
 	/*@-mustfreeonly@*/
 	/* Yes, splint, this points directly to RAM and we don't care

@@ -14,7 +14,12 @@
 
 void inner_syscall(volatile syscall_t *ctx);
 
-void syscall(syscall_t *ctx)
+/*
+ * Syscall need to be word aligned (4 bytes) since the CPU only reads
+ * instructions from word aligned addresses. This is not guaranteed with 16-bits
+ * instructions.
+ */
+void __attribute__((aligned(4))) syscall(syscall_t *ctx)
 {
 
 #ifdef USE_FW_RAM_IN_SYSCALL
