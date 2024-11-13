@@ -422,14 +422,12 @@ module tk1 (
     app_size_we      = 1'h0;
     blake2s_addr_we  = 1'h0;
     cdi_mem_we       = 1'h0;
-    cdi_mem_we       = 1'h0;
     ram_addr_rand_we = 1'h0;
     ram_data_rand_we = 1'h0;
     system_reset_new = 1'h0;
     cpu_mon_en_we    = 1'h0;
     cpu_mon_first_we = 1'h0;
     cpu_mon_last_we  = 1'h0;
-    cpu_mon_en_we    = 1'h0;
     tmp_read_data    = 32'h0;
     tmp_ready        = 1'h0;
 
