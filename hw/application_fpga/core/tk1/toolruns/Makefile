@@ -16,8 +16,8 @@ TB_SPI_SRC =../tb/tb_tk1_spi_master.v
 MEM_MODEL_SRC =../tb/W25Q80DL.v
 
 TOP_SRC=../rtl/tk1.v $(SPI_SRC)
-TB_TOP_SRC =../tb/tb_tk1.v ../tb/sb_rgba_drv.v ../tb/udi_rom_sim.v
-LINT_SRC=$(TOP_SRC) ../tb/sb_rgba_drv.v ../tb/udi_rom_sim.v
+TB_TOP_SRC =../tb/tb_tk1.v ../tb/sb_rgba_drv_sim.v ../tb/udi_rom_sim.v
+LINT_SRC=$(TOP_SRC) ../tb/sb_rgba_drv_sim.v ../tb/udi_rom_sim.v
 
 CC = iverilog
 CC_FLAGS = -Wall

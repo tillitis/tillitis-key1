@@ -1,6 +1,6 @@
 //======================================================================
 //
-// SB_RGBA_DRV.v
+// sb_rgba_drv_sim.v
 // -------------
 // Dummy version of the SB_RGBA_DRV hard macro in Lattice iCE40 UP
 // devices. This is just to be able to build the testbench. The only
@@ -44,5 +44,5 @@ module SB_RGBA_DRV (
 endmodule  // SB_RGBA_DRV
 
 //======================================================================
-// EOF SB_RGBA_DRV.v
+// EOF sb_rgba_drv_sim.v
 //======================================================================
