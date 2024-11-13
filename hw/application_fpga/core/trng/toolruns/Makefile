@@ -11,7 +11,7 @@
 #
 #===================================================================
 
-TOP_SRC=../rtl/rosc.v
+TOP_SRC=../rtl/trng.v
 TB_TOP_SRC =../tb/tb_trng.v ../tb/SB_LUT4.v
 
 CC = iverilog
