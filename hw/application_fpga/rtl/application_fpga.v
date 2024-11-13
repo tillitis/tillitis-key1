@@ -248,7 +248,7 @@ module application_fpga (
   );
 
 
-  rosc trng_inst (
+  trng trng_inst (
       .clk(clk),
       .reset_n(reset_n),
       .cs(trng_cs),
