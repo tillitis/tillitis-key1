@@ -110,6 +110,7 @@ jobs:
             hw/application_fpga/application_fpga.bin
             hw/application_fpga/firmware.bin
           key: build-${{ github.run_number }}-${{ github.sha }}-${{ github.run_attempt }}
+          enableCrossOsArchive: true
 
   check-hashes:
     needs: build-bitstream
@@ -128,6 +129,7 @@ jobs:
             hw/application_fpga/firmware.bin
           key: build-${{ github.run_number }}-${{ needs.build-bitstream.outputs.commit_sha }}-${{ github.run_attempt }}
           fail-on-cache-miss: true
+          enableCrossOsArchive: true
 
       - name: check matching hashes for firmware.bin & application_fpga.bin
         working-directory: hw/application_fpga
