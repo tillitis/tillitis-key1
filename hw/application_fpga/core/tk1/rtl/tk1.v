@@ -521,8 +521,8 @@ module tk1 #(
     spi_start        = 1'h0;
     spi_tx_data_vld  = 1'h0;
 
-    spi_enable       = write_data[0];
-    spi_tx_data      = write_data[7 : 0];
+    spi_enable       = write_data[0] & !app_mode;
+    spi_tx_data      = write_data[7 : 0] & {8{!app_mode}};
 
     if (cs) begin
       tmp_ready = 1'h1;
@@ -587,15 +587,21 @@ module tk1 #(
         end
 
         if (address == ADDR_SPI_EN) begin
-          spi_enable_vld = 1'h1;
+          if (!app_mode) begin
+            spi_enable_vld = 1'h1;
+          end
         end
 
         if (address == ADDR_SPI_XFER) begin
-          spi_start = 1'h1;
+          if (!app_mode) begin
+            spi_start = 1'h1;
+          end
         end
 
         if (address == ADDR_SPI_DATA) begin
-          spi_tx_data_vld = 1'h1;
+          if (!app_mode) begin
+            spi_tx_data_vld = 1'h1;
+          end
         end
 
       end
@@ -643,11 +649,15 @@ module tk1 #(
         end
 
         if (address == ADDR_SPI_XFER) begin
-          tmp_read_data[0] = spi_ready;
+          if (!app_mode) begin
+            tmp_read_data[0] = spi_ready;
+          end
         end
 
         if (address == ADDR_SPI_DATA) begin
-          tmp_read_data[7 : 0] = spi_rx_data;
+          if (!app_mode) begin
+            tmp_read_data[7 : 0] = spi_rx_data;
+          end
         end
 
       end
