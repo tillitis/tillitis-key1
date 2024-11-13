@@ -109,7 +109,7 @@ jobs:
           path: |
             hw/application_fpga/application_fpga.bin
             hw/application_fpga/firmware.bin
-          key: build-${{ github.run_number }}-${{ github.sha }}-${{ github.run_attempt }}
+          key: cross-os-build-${{ github.sha }}
           enableCrossOsArchive: true
 
   check-hashes:
@@ -127,7 +127,7 @@ jobs:
           path: |
             hw/application_fpga/application_fpga.bin
             hw/application_fpga/firmware.bin
-          key: build-${{ github.run_number }}-${{ needs.build-bitstream.outputs.commit_sha }}-${{ github.run_attempt }}
+          key: cross-os-build-${{ needs.build-bitstream.outputs.commit_sha }}
           fail-on-cache-miss: true
           enableCrossOsArchive: true
 
