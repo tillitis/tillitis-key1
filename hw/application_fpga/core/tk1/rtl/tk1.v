@@ -182,6 +182,7 @@ module tk1 #(
   reg           spi_tx_data_vld;
   wire          spi_ready;
   wire [ 7 : 0] spi_rx_data;
+  wire          spi_access_en;
 
   wire          rom_exec_en;
 
@@ -205,6 +206,7 @@ module tk1 #(
 
   assign rom_exec_en   = !system_mode | access_level_med | access_level_hi;
   assign fw_ram_en     = !system_mode | access_level_hi;
+  assign spi_access_en = !system_mode | access_level_hi;
 
   //----------------------------------------------------------------
   // Module instance.
@@ -522,8 +524,8 @@ module tk1 #(
     spi_start        = 1'h0;
     spi_tx_data_vld  = 1'h0;
 
-    spi_enable       = write_data[0];
-    spi_tx_data      = write_data[7 : 0];
+    spi_enable       = write_data[0] & spi_access_en;
+    spi_tx_data      = write_data[7 : 0] & {8{spi_access_en}};
 
     if (cs) begin
       tmp_ready = 1'h1;
@@ -588,15 +590,21 @@ module tk1 #(
         end
 
         if (address == ADDR_SPI_EN) begin
-          spi_enable_vld = 1'h1;
+          if (spi_access_en) begin
+            spi_enable_vld = 1'h1;
+          end
         end
 
         if (address == ADDR_SPI_XFER) begin
-          spi_start = 1'h1;
+          if (spi_access_en) begin
+            spi_start = 1'h1;
+          end
         end
 
         if (address == ADDR_SPI_DATA) begin
-          spi_tx_data_vld = 1'h1;
+          if (spi_access_en) begin
+            spi_tx_data_vld = 1'h1;
+          end
         end
 
       end
@@ -644,11 +652,15 @@ module tk1 #(
         end
 
         if (address == ADDR_SPI_XFER) begin
-          tmp_read_data[0] = spi_ready;
+          if (spi_access_en) begin
+            tmp_read_data[0] = spi_ready;
+          end
         end
 
         if (address == ADDR_SPI_DATA) begin
-          tmp_read_data[7 : 0] = spi_rx_data;
+          if (spi_access_en) begin
+            tmp_read_data[7 : 0] = spi_rx_data;
+          end
         end
 
       end
