@@ -55,7 +55,7 @@ module tb_trng ();
       .reset_n(tb_reset_n),
 
       .cs(tb_cs),
-      .we(tb_cs),
+      .we(tb_we),
       .address(tb_address),
       .write_data(tb_write_data),
       .read_data(tb_read_data),
@@ -163,7 +163,7 @@ module tb_trng ();
       tb_clk        = 1'h0;
       tb_reset_n    = 1'h1;
       tb_cs         = 1'h0;
-      tb_cs         = 1'h0;
+      tb_we         = 1'h0;
       tb_address    = 8'h0;
       tb_write_data = 32'h0;
     end
@@ -177,7 +177,7 @@ module tb_trng ();
   // the word read will be available in the global variable
   // read_data.
   //----------------------------------------------------------------
-  task read_word(input [11 : 0] address, input [31 : 0] expected);
+  task read_word(input [ 7 : 0] address, input [31 : 0] expected);
     begin : read_word
       reg [31 : 0] read_data;
 
