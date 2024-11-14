@@ -107,6 +107,7 @@ module tk1 #(
   localparam FW_RAM_FIRST = 32'hd0000000;
   localparam FW_RAM_LAST = 32'hd00007ff;
 
+  localparam FW_ROM_LAST = 32'h00001fff;
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -115,6 +116,7 @@ module tk1 #(
   reg           cdi_mem_we;
 
   reg           system_mode_reg;
+  reg           system_mode_new;
   reg           system_mode_we;
 
   reg  [ 2 : 0] led_reg;
@@ -291,7 +293,7 @@ module tk1 #(
       gpio2_reg[1] <= gpio2_reg[0];
 
       if (system_mode_we) begin
-        system_mode_reg <= 1'h1;
+        system_mode_reg <= system_mode_new;
       end
 
       if (led_we) begin
@@ -412,12 +414,27 @@ module tk1 #(
     end
   end
 
+  //----------------------------------------------------------------
+  // system_mode_ctrl
+  //
+  // Automatically lower privilege when executing above ROM.
+  // ----------------------------------------------------------------
+  always @* begin : system_mode_ctrl
+    system_mode_new = 1'h0;
+    system_mode_we  = 1'h0;
+
+    if (cpu_valid & cpu_instr) begin
+      if (cpu_addr > FW_ROM_LAST) begin
+        system_mode_new = 1'h1;
+        system_mode_we  = 1'h1;
+      end
+    end
+  end
 
   //----------------------------------------------------------------
   // api
   //----------------------------------------------------------------
   always @* begin : api
-    system_mode_we   = 1'h0;
     led_we           = 1'h0;
     gpio3_we         = 1'h0;
     gpio4_we         = 1'h0;
@@ -444,10 +461,6 @@ module tk1 #(
     if (cs) begin
       tmp_ready = 1'h1;
       if (we) begin
-        if (address == ADDR_SYSTEM_MODE_CTRL) begin
-          system_mode_we = 1'h1;
-        end
-
         if (address == ADDR_LED) begin
           led_we = 1'h1;
         end
