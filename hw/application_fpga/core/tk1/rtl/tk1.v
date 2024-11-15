@@ -117,12 +117,16 @@ module tk1 #(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg  [31 : 0] cdi_mem           [0 : 7];
+  reg  [31 : 0] cdi_mem            [0 : 7];
   reg           cdi_mem_we;
 
   reg           system_mode_reg;
   reg           system_mode_new;
   reg           system_mode_we;
+
+  reg           rom_executable_reg;
+  reg           rom_executable_new;
+  reg           rom_executable_we;
 
   reg  [ 2 : 0] led_reg;
   reg           led_we;
@@ -260,33 +264,34 @@ module tk1 #(
   //----------------------------------------------------------------
   always @(posedge clk) begin : reg_update
     if (!reset_n) begin
-      system_mode_reg   <= 1'h0;
-      led_reg           <= 3'h6;
-      gpio1_reg         <= 2'h0;
-      gpio2_reg         <= 2'h0;
-      gpio3_reg         <= 1'h0;
-      gpio4_reg         <= 1'h0;
-      app_start_reg     <= 32'h0;
-      app_size_reg      <= APP_SIZE;
-      blake2s_addr_reg  <= 32'h0;
-      syscall_addr_reg  <= ILLEGAL_ADDR;
-      cdi_mem[0]        <= 32'h0;
-      cdi_mem[1]        <= 32'h0;
-      cdi_mem[2]        <= 32'h0;
-      cdi_mem[3]        <= 32'h0;
-      cdi_mem[4]        <= 32'h0;
-      cdi_mem[5]        <= 32'h0;
-      cdi_mem[6]        <= 32'h0;
-      cdi_mem[7]        <= 32'h0;
-      cpu_trap_ctr_reg  <= 24'h0;
-      cpu_trap_led_reg  <= 3'h0;
-      cpu_mon_en_reg    <= 1'h0;
-      cpu_mon_first_reg <= 32'h0;
-      cpu_mon_last_reg  <= 32'h0;
-      ram_addr_rand_reg <= 15'h0;
-      ram_data_rand_reg <= 32'h0;
-      force_trap_reg    <= 1'h0;
-      system_reset_reg  <= 1'h0;
+      system_mode_reg    <= 1'h0;
+      rom_executable_reg <= 1'h1;
+      led_reg            <= 3'h6;
+      gpio1_reg          <= 2'h0;
+      gpio2_reg          <= 2'h0;
+      gpio3_reg          <= 1'h0;
+      gpio4_reg          <= 1'h0;
+      app_start_reg      <= 32'h0;
+      app_size_reg       <= APP_SIZE;
+      blake2s_addr_reg   <= ILLEGAL_ADDR;
+      syscall_addr_reg   <= ILLEGAL_ADDR;
+      cdi_mem[0]         <= 32'h0;
+      cdi_mem[1]         <= 32'h0;
+      cdi_mem[2]         <= 32'h0;
+      cdi_mem[3]         <= 32'h0;
+      cdi_mem[4]         <= 32'h0;
+      cdi_mem[5]         <= 32'h0;
+      cdi_mem[6]         <= 32'h0;
+      cdi_mem[7]         <= 32'h0;
+      cpu_trap_ctr_reg   <= 24'h0;
+      cpu_trap_led_reg   <= 3'h0;
+      cpu_mon_en_reg     <= 1'h0;
+      cpu_mon_first_reg  <= 32'h0;
+      cpu_mon_last_reg   <= 32'h0;
+      ram_addr_rand_reg  <= 15'h0;
+      ram_data_rand_reg  <= 32'h0;
+      force_trap_reg     <= 1'h0;
+      system_reset_reg   <= 1'h0;
     end
 
     else begin
@@ -302,6 +307,10 @@ module tk1 #(
 
       if (system_mode_we) begin
         system_mode_reg <= system_mode_new;
+      end
+
+      if (rom_executable_we) begin
+        rom_executable_reg <= rom_executable_new;
       end
 
       if (led_we) begin
@@ -400,6 +409,13 @@ module tk1 #(
   //
   // Trying to execute instructions in FW-RAM.
   //
+  // Executing instructions in ROM, while ROM is marked as not
+  // executable. Note that there is an exception, if the cpu_addr is
+  // the first instruction in either functions set in syscall_addr_reg
+  // or blake2s_addr_reg, it is allowed. For the next instruction ROM
+  // will be marked as executable.
+  // Note that the address to the functions needs to be 4-bytes aligned.
+  //
   // Trying to execute code in mem area set to be data access only.
   // This requires execution monitor to have been setup and
   // enabled.
@@ -417,6 +433,14 @@ module tk1 #(
           force_trap_set = 1'h1;
         end
 
+        if (!rom_executable_reg) begin
+          if ((cpu_addr != syscall_addr_reg) && (cpu_addr != blake2s_addr_reg)) begin
+            if (cpu_addr <= FW_ROM_LAST) begin  // Only valid as long as ROM starts at address 0x00.
+              force_trap_set = 1'h1;
+            end
+          end
+        end
+
         if (cpu_mon_en_reg) begin
           if ((cpu_addr >= cpu_mon_first_reg) && (cpu_addr <= cpu_mon_last_reg)) begin
             force_trap_set = 1'h1;
@@ -427,24 +451,43 @@ module tk1 #(
   end
 
   //----------------------------------------------------------------
-  // system_mode_ctrl will raise the privilege when the function in
-  // `syscall_addr_reg` is called.
+  // system_mode_ctrl dynamically sets the system mode and if ROM is
+  // executable depending on where we are currently executing.
   //
-  // Automatically lowers the privilege when executing above ROM
+  // If the function in `syscall_addr_reg` is called system_mode will
+  // be set to firmware mode, and ROM will be marked as executable.
+  //
+  // If the function in `blake2s_addr_reg` is called only ROM will be
+  // marked as executable.
+  //
+  // Automatically lowers the privilege and removes ROM execution when
+  // executing above ROM.
+  //
+  // Note that the address to the functions needs to be 4-bytes aligned.
   // ----------------------------------------------------------------
   always @* begin : system_mode_ctrl
-    system_mode_new = 1'h0;
-    system_mode_we  = 1'h0;
+    system_mode_new    = 1'h0;
+    system_mode_we     = 1'h0;
+    rom_executable_new = 1'h0;
+    rom_executable_we  = 1'h0;
 
     if (cpu_valid & cpu_instr) begin
       if (cpu_addr == syscall_addr_reg) begin
-        system_mode_new = 1'h0;
-        system_mode_we  = 1'h1;
+        system_mode_new    = 1'h0;
+        system_mode_we     = 1'h1;
+        rom_executable_new = 1'h1;
+        rom_executable_we  = 1'h1;
+      end
+      if (cpu_addr == blake2s_addr_reg) begin
+        rom_executable_new = 1'h1;
+        rom_executable_we  = 1'h1;
       end
 
       if (cpu_addr > FW_ROM_LAST) begin
-        system_mode_new = 1'h1;
-        system_mode_we  = 1'h1;
+        system_mode_new    = 1'h1;
+        system_mode_we     = 1'h1;
+        rom_executable_new = 1'h0;
+        rom_executable_we  = 1'h1;
       end
     end
   end
