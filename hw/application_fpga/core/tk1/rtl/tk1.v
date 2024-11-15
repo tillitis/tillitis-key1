@@ -126,6 +126,8 @@ module tk1 (
   reg           rom_executable_new;
   reg           rom_executable_we;
 
+  reg           rw_locked_reg;
+
   reg  [ 2 : 0] led_reg;
   reg           led_we;
 
@@ -264,6 +266,7 @@ module tk1 (
     if (!reset_n) begin
       system_mode_reg    <= 1'h0;
       rom_executable_reg <= 1'h1;
+      rw_locked_reg      <= 1'h0;
       led_reg            <= 3'h6;
       gpio1_reg          <= 2'h0;
       gpio2_reg          <= 2'h0;
@@ -305,6 +308,10 @@ module tk1 (
 
       if (system_mode_we) begin
         system_mode_reg <= system_mode_new;
+
+        if (system_mode_new) begin
+          rw_locked_reg <= 1'h1;
+        end
       end
 
       if (rom_executable_we) begin
@@ -531,13 +538,13 @@ module tk1 (
         end
 
         if (address == ADDR_APP_START) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             app_start_we = 1'h1;
           end
         end
 
         if (address == ADDR_APP_SIZE) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             app_size_we = 1'h1;
           end
         end
@@ -547,31 +554,31 @@ module tk1 (
         end
 
         if (address == ADDR_BLAKE2S) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             blake2s_addr_we = 1'h1;
           end
         end
 
         if (address == ADDR_SYSCALL) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             syscall_addr_we = 1'h1;
           end
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             cdi_mem_we = 1'h1;
           end
         end
 
         if (address == ADDR_RAM_ADDR_RAND) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             ram_addr_rand_we = 1'h1;
           end
         end
 
         if (address == ADDR_RAM_DATA_RAND) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             ram_data_rand_we = 1'h1;
           end
         end
@@ -657,7 +664,7 @@ module tk1 (
         end
 
         if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             tmp_read_data = udi_rdata;
           end
         end
