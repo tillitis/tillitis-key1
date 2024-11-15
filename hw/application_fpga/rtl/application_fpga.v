@@ -154,7 +154,7 @@ module application_fpga (
   reg  [31 : 0] tk1_write_data;
   wire [31 : 0] tk1_read_data;
   wire          tk1_ready;
-  wire          system_mode;
+  wire          rw_locked;
   wire          force_trap;
   wire [14 : 0] ram_addr_rand;
   wire [31 : 0] ram_data_rand;
@@ -256,7 +256,6 @@ module application_fpga (
       .reset_n(reset_n),
 
       .en(fw_ram_en),
-
       .cs(fw_ram_cs),
       .we(fw_ram_we),
       .address(fw_ram_address),
@@ -295,7 +294,7 @@ module application_fpga (
       .clk(clk),
       .reset_n(reset_n),
 
-      .system_mode(system_mode),
+      .en(~rw_locked),
 
       .cs(uds_cs),
       .address(uds_address),
@@ -341,7 +340,7 @@ module application_fpga (
       .clk(clk),
       .reset_n(reset_n),
 
-      .system_mode(system_mode),
+      .rw_locked(rw_locked),
 
       .cpu_addr  (cpu_addr),
       .cpu_instr (cpu_instr),

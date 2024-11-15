@@ -132,17 +132,36 @@ Interrupts can be enabled/disabled using the PicoRV32 specific
 The following table shows resource availablility for each execution
 mode:
 
-| *Execution Mode*    | *ROM*  | *FW RAM* | *SPI* |
-|---------------------|--------|----------|-------|
-| Firmware mode       | r/x    | r/w      | r/w   |
-| IRQ_SYSCALL         | r/x    | r/w      | r/w   |
-| Application mode    | r      | i        | i     |
+| *Execution Mode* | *ROM*  | *FW RAM* | *SPI* | *Sensitive assets* |
+|------------------|--------|----------|-------|--------------------|
+| Firmware mode    | r/x    | r/w      | r/w   | r/w*               |
+| IRQ_SYSCALL      | r/x    | r/w      | r/w   | r*                 |
+| Application mode | r      | i        | i     | r*                 |
 
 Legend:
 r = readable
 w = writeable
 x = executable
 i = invisible
+* = read-/writeability varies, see below
+
+These sensitive assets are only readable and/or writeable in firmware
+mode:
+- APP_START
+- APP_SIZE
+- CDI_FIRST
+- CDI_LAST
+- RAM_ADDR_RAND
+- RAM_DATA_RAND
+- UDI_FIRST
+- UDI_LAST
+- UDS_FIRST
+- UDS_LAST
+
+Note that these assets have different properties, some are read-only
+and some are write-only. The list above only shows if they are
+restricted in app mode. See each individual API to find out more about
+their properties.
 
 ## `tk1`
 
