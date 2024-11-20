@@ -75,7 +75,10 @@ The memory is cleared by firmware before an application is loaded.
 
 The application RAM is available to use by firmware and applications.
 
-MC: Is the scrambling here now?
+The RAM core also implements (from the view of the CPU) transparent
+RAM address and data scrambling. This scrambling is applied to make it
+harder to extract application and application data from a memory dump
+directly from the memory cores.
 
 ## `rom`
 
@@ -132,21 +135,7 @@ should make it infeasible to improve asset extraction by observing
 multiple memory dumps from the same TKey device. The attack should
 also not directly scale to multiple TKey devices.
 
-The memory protection is based on two separate mechanisms:
-
-1. Address randomisation
-2. Address dependent data randomization
-
-The address randomization is implemented by XORing the CPU address
-with the contents of the ADDR\_RAM\_ADDR\_RAND register in the tk1
-core. The result is used as the RAM address
-
-The data randomization is implemented by XORing the data written to the
-RAM with the contents of the ADDR\_RAM\_DATA\_RAND register in the tk1
-core as well as XORing with the CPU address. This means that the same
-data written to two different addresses will be scrambled differently.
-The same pair or XOR operations is also performed on the data read out
-from the RAM.
+The RAM address and data scrambling is done in de RAM core.
 
 The memory protection is setup by the firmware. Access to the memory
 protection controls is disabled for applications. Before the memory
@@ -167,11 +156,6 @@ setup the memory protection:
    ADDR\_RAM\_DATA\_RAND register.
 6. Receive the application sent from the client and write it in
    sequence into RAM.
-
-Future TKey devices may implement a more secure ASLR mechanism, and
-use real encryption (for example PRINCE) for memory content
-protection. From the application point of view such a change will be
-transparent.
 
 ## `touch_sense`
 
