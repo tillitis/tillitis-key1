@@ -207,6 +207,43 @@ module tb_touch_sense ();
 
 
   //----------------------------------------------------------------
+  // read_check_word()
+  //
+  // Read a data word from the given address in the DUT.
+  // the word read will be available in the global variable
+  // read_data.
+  //
+  // The function also checks that the data read matches
+  // the expected value or not.
+  //----------------------------------------------------------------
+  task read_check_word(input [7 : 0] address, input [31 : 0] expected);
+    begin : read_check_word
+
+      tb_address = address;
+      tb_cs      = 1'h1;
+
+      #(CLK_PERIOD);
+      read_data = tb_read_data;
+
+      #(CLK_PERIOD);
+      tb_cs = 1'h0;
+
+      if (DEBUG) begin
+        if (read_data == expected) begin
+          $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
+        end
+        else begin
+          $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x", read_data,
+                   address, expected);
+          error_ctr = error_ctr + 1;
+        end
+        $display("");
+      end
+    end
+  endtask  // read_check_word
+
+
+  //----------------------------------------------------------------
   // wait_ready()
   //
   // Wait for the ready flag to be set in dut.
@@ -242,7 +279,7 @@ module tb_touch_sense ();
 
       // Check status.
       #(CLK_PERIOD);
-      read_word(8'h09);
+      read_check_word(ADDR_STATUS, 32'h00);
 
       // Set touch event input to high.
       $display("--- test1: Creating a touch event.");
@@ -250,27 +287,44 @@ module tb_touch_sense ();
 
       $display("--- test1: Waiting for the event to be caught.");
       wait_ready();
+      read_check_word(ADDR_STATUS, 32'h01);
 
       $display("--- test1: Event has been seen.");
-
       $display("--- test1: Dropping the event input.");
       tb_touch_event = 1'h0;
       #(CLK_PERIOD);
       $display("--- test1: Clearing the event.");
-      write_word(8'h09, 32'h0);
+      write_word(ADDR_STATUS, 32'h0);
       #(CLK_PERIOD);
 
       // Check that the event is now removed.
-      read_word(8'h09);
+      read_check_word(ADDR_STATUS, 32'h00);
       #(CLK_PERIOD);
       $display("--- test1: Event has been cleared.");
-      read_word(8'h09);
+      read_check_word(ADDR_STATUS, 32'h00);
       #(CLK_PERIOD);
 
       $display("--- test1: completed.");
       $display("");
     end
   endtask  // test1
+
+
+  //----------------------------------------------------------------
+  // exit_with_error_code()
+  //
+  // Exit with the right error code
+  //----------------------------------------------------------------
+  task exit_with_error_code;
+    begin
+      if (error_ctr == 0) begin
+        $finish(0);
+      end
+      else begin
+        $fatal(1);
+      end
+    end
+  endtask  // exit_with_error_code
 
 
   //----------------------------------------------------------------
@@ -292,7 +346,7 @@ module tb_touch_sense ();
     $display("   -= Testbench for touch_sense completed =-");
     $display("     ======================================");
     $display("");
-    $finish;
+    exit_with_error_code();
   end  // touch_sense_test
 endmodule  // tb_touch_sense
 
