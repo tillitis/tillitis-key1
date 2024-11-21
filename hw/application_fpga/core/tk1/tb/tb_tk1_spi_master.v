@@ -395,6 +395,21 @@ module tb_tk1_spi_master ();
     end
   endtask  // read_status
 
+  //----------------------------------------------------------------
+  // check_byte()
+  //
+  // The function checks that the input_data byte matches with the expected.
+  //----------------------------------------------------------------
+  task check_byte(input [7 : 0] input_data, input [7 : 0] expected);
+    begin : check_byte
+      if (input_data != expected) begin
+        $display("--- Error: Got 0x%02x, expected 0x%02x", input_data, expected);
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask  // check_byte
+
+
 
   //----------------------------------------------------------------
   // tc_get_device_id()
@@ -474,10 +489,15 @@ module tb_tk1_spi_master ();
       // Send dummy bytes and get response back.
       xfer_byte(8'h00, rx_byte);
       $display("--- tc_get_jedec_id: Got manufacture ID 0x%02x", rx_byte);
+      check_byte(rx_byte, 8'hef);
+
       xfer_byte(8'h00, rx_byte);
       $display("--- tc_get_jedec_id: Got memory type 0x%02x", rx_byte);
+      check_byte(rx_byte, 8'h40);
+
       xfer_byte(8'h00, rx_byte);
       $display("--- tc_get_jedec_id: Got memory capacity 0x%02x", rx_byte);
+      check_byte(rx_byte, 8'h14);
 
       disable_spi();
       #(2 * CLK_PERIOD);
@@ -498,11 +518,21 @@ module tb_tk1_spi_master ();
   //----------------------------------------------------------------
   task tc_get_unique_device_id;
     begin : tc_get_id
+      reg [7 : 0] expected[0 : 7];
       reg [7 : 0] rx_byte;
       integer i;
-      tc_ctr  = tc_ctr + 1;
+      tc_ctr = tc_ctr + 1;
       monitor = 0;
       verbose = 0;
+
+      expected[0] = 8'hdc;
+      expected[1] = 8'h02;
+      expected[2] = 8'h03;
+      expected[3] = 8'h04;
+      expected[4] = 8'h05;
+      expected[5] = 8'h06;
+      expected[6] = 8'h07;
+      expected[7] = 8'h08;
 
       $display("");
       $display("--- tc_get_unique_device_id: Read out unique id from the memory");
@@ -527,6 +557,7 @@ module tb_tk1_spi_master ();
       for (i = 0; i < 8; i = i + 1) begin
         xfer_byte(8'h00, rx_byte);
         $display("--- tc_get_unique_device_id: 0x%02x", rx_byte);
+        check_byte(rx_byte, expected[i]);
       end
 
       disable_spi();
@@ -592,11 +623,29 @@ module tb_tk1_spi_master ();
   //----------------------------------------------------------------
   task tc_read_mem;
     begin : tc_get_id
+      reg [7 : 0] expected[0 : 15];
       reg [7 : 0] rx_byte;
       integer i;
-      tc_ctr  = tc_ctr + 1;
+      tc_ctr = tc_ctr + 1;
       monitor = 0;
       verbose = 0;
+
+      expected[0] = 8'hde;
+      expected[1] = 8'had;
+      expected[2] = 8'hbe;
+      expected[3] = 8'hef;
+      expected[4] = 8'hde;
+      expected[5] = 8'had;
+      expected[6] = 8'hbe;
+      expected[7] = 8'hef;
+      expected[8] = 8'hde;
+      expected[9] = 8'had;
+      expected[10] = 8'hbe;
+      expected[11] = 8'hef;
+      expected[12] = 8'hde;
+      expected[13] = 8'had;
+      expected[14] = 8'hbe;
+      expected[15] = 8'hef;
 
       $display("");
       $display("--- tc_read_mem: Read out the first 16 bytes from the memory.");
@@ -609,7 +658,7 @@ module tb_tk1_spi_master ();
       $display("--- tc_read_mem: Sending 0x03 command.");
       xfer_byte(8'h03, rx_byte);
 
-      // Send adress 0x000000.
+      // Send address 0x000000.
       $display("--- tc_read_mem: Sending 24 bit address 0x000000.");
       xfer_byte(8'h00, rx_byte);
       xfer_byte(8'h00, rx_byte);
@@ -620,6 +669,7 @@ module tb_tk1_spi_master ();
       for (i = 1; i < 17; i = i + 1) begin
         xfer_byte(8'h00, rx_byte);
         $display("--- tc_read_mem: Byte %d: 0x%02x", i, rx_byte);
+        check_byte(rx_byte, expected[i-1]);
       end
 
       disable_spi();
@@ -684,6 +734,21 @@ module tb_tk1_spi_master ();
     end
   endtask  // tc_rmr_mem
 
+  //----------------------------------------------------------------
+  // exit_with_error_code()
+  //
+  // Exit with the right error code
+  //----------------------------------------------------------------
+  task exit_with_error_code;
+    begin
+      if (error_ctr == 0) begin
+        $finish(0);
+      end
+      else begin
+        $fatal(1);
+      end
+    end
+  endtask  // exit_with_error_code
 
   //----------------------------------------------------------------
   // tk1_spi_master_test
@@ -712,7 +777,7 @@ module tb_tk1_spi_master ();
     $display("   -= Testbench for tk1_spi_master completed =-");
     $display("     =========================================");
     $display("");
-    $finish;
+    exit_with_error_code();
   end  // tk1_spi_master_test
 endmodule  // tb_tk1_spi_master
 
