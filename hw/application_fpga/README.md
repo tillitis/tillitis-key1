@@ -108,12 +108,21 @@ Contains:
 - General purpose input/output (GPIO) pin control.
 - Application introspection: start address and size of binary.
 - BLAKE2s function access.
+- Syscall function access.
 - Compound Device Identity (CDI).
 - Unique Device Identity (UDI).
 - RAM memory protection.
 - Security monitor.
 - SPI main.
 - System reset.
+
+### Execution mode control
+
+The execution mode consists of two modes, firmware mode and
+application mode. These modes have certain privileges, and in general
+protects sensitive assets against access when in application mode. The
+execution mode is dynamically controlled in the hardware, depending on
+current location of execution.
 
 ### Illegal instruction monitor
 
