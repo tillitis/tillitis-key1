@@ -714,6 +714,22 @@ module tb_tk1 ();
     end
   endtask  // test10
 
+  //----------------------------------------------------------------
+  // exit_with_error_code()
+  //
+  // Exit with the right error code
+  //----------------------------------------------------------------
+  task exit_with_error_code;
+    begin
+      if (error_ctr == 0) begin
+        $finish(0);
+      end
+      else begin
+        $fatal(1);
+      end
+    end
+  endtask  // exit_with_error_code
+
 
   //----------------------------------------------------------------
   // tk1_test
@@ -744,7 +760,7 @@ module tb_tk1 ();
     $display("   -= Testbench for tk1 completed =-");
     $display("     =============================");
     $display("");
-    $finish;
+    exit_with_error_code();
   end  // tk1_test
 endmodule  // tb_tk1
 
