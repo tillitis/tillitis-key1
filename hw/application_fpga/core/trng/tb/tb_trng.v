@@ -221,6 +221,22 @@ module tb_trng ();
     end
   endtask  // test1
 
+  //----------------------------------------------------------------
+  // exit_with_error_code()
+  //
+  // Exit with the right error code
+  //----------------------------------------------------------------
+  task exit_with_error_code;
+    begin
+      if (error_ctr == 0) begin
+        $finish(0);
+      end
+      else begin
+        $fatal(1);
+      end
+    end
+  endtask  // exit_with_error_code
+
 
   //----------------------------------------------------------------
   // trng_test
@@ -240,7 +256,7 @@ module tb_trng ();
     $display("   -= Testbench for trng completed =-");
     $display("     ==============================");
     $display("");
-    $finish;
+    exit_with_error_code();
   end  // trng_test
 endmodule  // tb_trng
 
