@@ -27,8 +27,6 @@ module tb_tk1 ();
   localparam ADDR_NAME1 = 8'h01;
   localparam ADDR_VERSION = 8'h02;
 
-  localparam ADDR_SYSTEM_MODE_CTRL = 8'h08;
-
   localparam ADDR_LED = 8'h09;
   localparam LED_R_BIT = 2;
   localparam LED_G_BIT = 1;
@@ -62,6 +60,7 @@ module tb_tk1 ();
   localparam ADDR_SPI_XFER = 8'h81;
   localparam ADDR_SPI_DATA = 8'h82;
 
+  localparam APP_RAM_START = 32'h40000000;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -370,6 +369,38 @@ module tb_tk1 ();
 
 
   //----------------------------------------------------------------
+  // `check_equal()
+  //
+  // Check that two values are equal
+  //----------------------------------------------------------------
+  `define check_equal(_value, _expected) \
+  begin \
+    if ((_value) != (_expected)) begin \
+      $display("--- Error: (%s) != (%s)\n               0x%x != 0x%x", `"_value`", `"_expected`", (_value), (_expected)); \
+      error_ctr = error_ctr + 1; \
+    end \
+  end  // `check_equal
+
+
+  //----------------------------------------------------------------
+  // fetch_instruction()
+  //
+  // Simulate fetch of an instruction at specified address.
+  //----------------------------------------------------------------
+  task fetch_instruction(input [31:0] address);
+    begin : fetch_instruction
+      tb_cpu_addr  = address;
+      tb_cpu_instr = 1'h1;
+      tb_cpu_valid = 1'h1;
+      #(CLK_PERIOD);
+      tb_cpu_addr  = 32'h0;
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+    end
+  endtask  // fetch_instruction
+
+
+  //----------------------------------------------------------------
   // test1()
   // Read out name and version.
   //----------------------------------------------------------------
@@ -440,8 +471,8 @@ module tb_tk1 ();
       read_check_word(ADDR_CDI_FIRST + 6, 32'h80818283);
       read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
 
-      $display("--- test3: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hdeadbeef);
+      $display("--- test3: Fetch instruction from app RAM.");
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test3: Try to write CDI again.");
       write_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
@@ -488,8 +519,8 @@ module tb_tk1 ();
       $display("--- test4: Read Blake2s entry point.");
       read_check_word(ADDR_BLAKE2S, 32'hcafebabe);
 
-      $display("--- test4: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hf00ff00f);
+      $display("--- test4: Fetch instruction from app RAM.");
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test4: Write Blake2s entry point again.");
       write_word(ADDR_BLAKE2S, 32'hdeadbeef);
@@ -524,8 +555,8 @@ module tb_tk1 ();
       read_check_word(ADDR_APP_START, 32'h13371337);
       read_check_word(ADDR_APP_SIZE, 32'h47114711);
 
-      $display("--- test5: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hf000000);
+      $display("--- test5: Fetch instruction from app RAM.");
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test5: Write app start address and size again.");
       write_word(ADDR_APP_START, 32'hdeadbeef);
@@ -562,9 +593,11 @@ module tb_tk1 ();
           "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
       $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
                dut.ram_addr_rand, dut.ram_data_rand);
+      `check_equal(dut.ram_addr_rand, 32'h13371337 & {15{1'b1}});
+      `check_equal(dut.ram_data_rand, 32'h47114711);
 
-      $display("--- test6: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hf000000);
+      $display("--- test6: Fetch instruction from app RAM.");
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test6: Write to ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND again.");
       write_word(ADDR_RAM_ADDR_RAND, 32'hdeadbeef);
@@ -574,6 +607,8 @@ module tb_tk1 ();
           "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
       $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
                dut.ram_addr_rand, dut.ram_data_rand);
+      `check_equal(dut.ram_addr_rand, 32'h13371337 & {15{1'b1}});
+      `check_equal(dut.ram_data_rand, 32'h47114711);
 
       $display("--- test6: completed.");
       $display("");
@@ -666,6 +701,12 @@ module tb_tk1 ();
       $display("--- test9: cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x", tb_cpu_addr,
                tb_cpu_instr, tb_cpu_valid);
       $display("--- test9: force_trap: 0x%1x", tb_force_trap);
+      `check_equal(tb_force_trap, 1);
+
+      $display("--- test9: restore CPU mem interface.");
+      tb_cpu_addr  = 32'h0;
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
 
       $display("--- test9: completed.");
       $display("");
@@ -685,6 +726,8 @@ module tb_tk1 ();
 
       $display("");
       $display("--- test10: Loopback in SPI Master started.");
+      $display("--- test10: Reset DUT to switch to fw mode.");
+      reset_dut();
 
       #(CLK_PERIOD);
 
