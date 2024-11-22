@@ -42,6 +42,7 @@ module tb_tk1 ();
   localparam ADDR_APP_SIZE = 8'h0d;
 
   localparam ADDR_BLAKE2S = 8'h10;
+  localparam ADDR_SYSCALL = 8'h12;
 
   localparam ADDR_CDI_FIRST = 8'h20;
   localparam ADDR_CDI_LAST = 8'h27;
@@ -379,6 +380,20 @@ module tb_tk1 ();
       error_ctr = error_ctr + 1; \
     end \
   end  // `check_equal
+
+
+  //----------------------------------------------------------------
+  // `check_not_equal()
+  //
+  // Check that two values are not equal
+  //----------------------------------------------------------------
+  `define check_not_equal(_value, _not_expected) \
+  begin \
+    if ((_value) == (_not_expected)) begin \
+      $display("--- Error: (%s) == (%s)\n               0x%x == 0x%x", `"_value`", `"_not_expected`", (_value), (_not_expected)); \
+      error_ctr = error_ctr + 1; \
+    end \
+  end  // `check_not_equal
 
 
   //----------------------------------------------------------------
@@ -758,6 +773,387 @@ module tb_tk1 ();
 
 
   //----------------------------------------------------------------
+  // test11()
+  //
+  // Syscall and blake2s registers should be set to trapping address on reset
+  //----------------------------------------------------------------
+  task test11;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display(
+          "--- test11: Syscall and blake2s registers should be set to trapping address on reset started.");
+      reset_dut();
+
+      read_check_word(ADDR_BLAKE2S, 32'h4f000000);
+      read_check_word(ADDR_SYSCALL, 32'h4f000000);
+
+      $display("--- test11: completed.");
+      $display("");
+    end
+  endtask  // test11
+
+
+  //----------------------------------------------------------------
+  // test12()
+  //
+  // Sensitive registers can be accessed from firmware after reset
+  //----------------------------------------------------------------
+  task test12;
+    begin : test12
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test12: Sensitive registers can be accessed from firmware after reset");
+      reset_dut();
+
+      $display("--- test12: Write registers.");
+      write_word(ADDR_APP_SIZE, 32'h1000);
+      write_word(ADDR_APP_START, APP_RAM_START);
+      write_word(ADDR_BLAKE2S, 32'h100);
+      write_word(ADDR_SYSCALL, 32'h200);
+      write_word(ADDR_CDI_FIRST + 0, 32'h1);
+      write_word(ADDR_CDI_FIRST + 1, 32'h2);
+      write_word(ADDR_CDI_FIRST + 2, 32'h3);
+      write_word(ADDR_CDI_FIRST + 3, 32'h4);
+      write_word(ADDR_CDI_FIRST + 4, 32'h5);
+      write_word(ADDR_CDI_FIRST + 5, 32'h6);
+      write_word(ADDR_CDI_FIRST + 6, 32'h7);
+      write_word(ADDR_CDI_FIRST + 7, 32'h8);
+      write_word(ADDR_RAM_ADDR_RAND, 32'h20);
+      write_word(ADDR_RAM_DATA_RAND, 32'h21);
+
+      read_check_word(ADDR_APP_SIZE, 32'h1000);
+      read_check_word(ADDR_APP_START, APP_RAM_START);
+      read_check_word(ADDR_BLAKE2S, 32'h100);
+      read_check_word(ADDR_SYSCALL, 32'h200);
+      read_check_word(ADDR_CDI_FIRST + 0, 32'h1);
+      read_check_word(ADDR_CDI_FIRST + 1, 32'h2);
+      read_check_word(ADDR_CDI_FIRST + 2, 32'h3);
+      read_check_word(ADDR_CDI_FIRST + 3, 32'h4);
+      read_check_word(ADDR_CDI_FIRST + 4, 32'h5);
+      read_check_word(ADDR_CDI_FIRST + 5, 32'h6);
+      read_check_word(ADDR_CDI_FIRST + 6, 32'h7);
+      read_check_word(ADDR_CDI_FIRST + 7, 32'h8);
+      read_check_word(ADDR_UDI_FIRST, 32'h00010203);
+      read_check_word(ADDR_UDI_LAST, 32'h04050607);
+      `check_equal(dut.ram_addr_rand, 32'h20);
+      `check_equal(dut.ram_data_rand, 32'h21);
+
+      $display("--- test12: completed.");
+      $display("");
+    end
+  endtask  // test12
+
+
+  //----------------------------------------------------------------
+  // test13()
+  //
+  // Sensitive registers can not be accessed after leaving firmware
+  // mode for the first time.
+  //----------------------------------------------------------------
+  task test13;
+    begin : test13
+      localparam [31 : 0] BLAKE2S_FUNC_IN_ROM = 32'h300;
+      localparam [31 : 0] SYSCALL_FUNC_IN_ROM = 32'h400;
+
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display(
+          "--- test13: Sensitive registers can not be accessed after leaving firmware ROM for the first time.");
+      reset_dut();
+
+      $display("--- test13: Register blake2s and syscall functions.");
+      write_word(ADDR_BLAKE2S, BLAKE2S_FUNC_IN_ROM);
+      write_word(ADDR_SYSCALL, SYSCALL_FUNC_IN_ROM);
+
+      $display("--- test13: Fetch instruction from app RAM.");
+      fetch_instruction(APP_RAM_START);
+
+      $display("--- test13: Write registers from app mode.");
+      write_word(ADDR_APP_SIZE, 32'h1000);
+      write_word(ADDR_APP_START, APP_RAM_START);
+      write_word(ADDR_BLAKE2S, 32'h100);
+      write_word(ADDR_SYSCALL, 32'h200);
+      write_word(ADDR_CDI_FIRST + 0, 32'h1);
+      write_word(ADDR_CDI_FIRST + 1, 32'h2);
+      write_word(ADDR_CDI_FIRST + 2, 32'h3);
+      write_word(ADDR_CDI_FIRST + 3, 32'h4);
+      write_word(ADDR_CDI_FIRST + 4, 32'h5);
+      write_word(ADDR_CDI_FIRST + 5, 32'h6);
+      write_word(ADDR_CDI_FIRST + 6, 32'h7);
+      write_word(ADDR_CDI_FIRST + 7, 32'h8);
+      write_word(ADDR_RAM_ADDR_RAND, 32'h20);
+      write_word(ADDR_RAM_DATA_RAND, 32'h21);
+
+      $display("--- test13: Check that registers have not changed.");
+      read_check_word(ADDR_APP_SIZE, 32'h0);
+      read_check_word(ADDR_APP_START, 32'h0);
+      read_check_word(ADDR_BLAKE2S, BLAKE2S_FUNC_IN_ROM);
+      read_check_word(ADDR_SYSCALL, SYSCALL_FUNC_IN_ROM);
+      read_check_word(ADDR_CDI_FIRST + 0, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 1, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 2, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 3, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 4, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 5, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 6, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 7, 32'h0);
+      read_check_word(ADDR_UDI_FIRST, 32'h0);
+      read_check_word(ADDR_UDI_LAST, 32'h0);
+      read_check_word(ADDR_RAM_ADDR_RAND, 32'h0);
+      read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
+      `check_equal(dut.ram_addr_rand, 32'h0);
+      `check_equal(dut.ram_data_rand, 32'h0);
+
+      $display("--- test13: Fetch instruction from blake2s address.");
+      fetch_instruction(BLAKE2S_FUNC_IN_ROM);
+
+      $display("--- test13: Write registers from blake2s function.");
+      write_word(ADDR_APP_SIZE, 32'h1000);
+      write_word(ADDR_APP_START, APP_RAM_START);
+      write_word(ADDR_BLAKE2S, 32'h100);
+      write_word(ADDR_SYSCALL, 32'h200);
+      write_word(ADDR_CDI_FIRST + 0, 32'h1);
+      write_word(ADDR_CDI_FIRST + 1, 32'h2);
+      write_word(ADDR_CDI_FIRST + 2, 32'h3);
+      write_word(ADDR_CDI_FIRST + 3, 32'h4);
+      write_word(ADDR_CDI_FIRST + 4, 32'h5);
+      write_word(ADDR_CDI_FIRST + 5, 32'h6);
+      write_word(ADDR_CDI_FIRST + 6, 32'h7);
+      write_word(ADDR_CDI_FIRST + 7, 32'h8);
+      write_word(ADDR_RAM_ADDR_RAND, 32'h20);
+      write_word(ADDR_RAM_DATA_RAND, 32'h21);
+
+      $display("--- test13: Check that registers have not changed.");
+      read_check_word(ADDR_APP_SIZE, 32'h0);
+      read_check_word(ADDR_APP_START, 32'h0);
+      read_check_word(ADDR_BLAKE2S, BLAKE2S_FUNC_IN_ROM);
+      read_check_word(ADDR_SYSCALL, SYSCALL_FUNC_IN_ROM);
+      read_check_word(ADDR_CDI_FIRST + 0, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 1, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 2, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 3, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 4, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 5, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 6, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 7, 32'h0);
+      read_check_word(ADDR_UDI_FIRST, 32'h0);
+      read_check_word(ADDR_UDI_LAST, 32'h0);
+      read_check_word(ADDR_RAM_ADDR_RAND, 32'h0);
+      read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
+      `check_equal(dut.ram_addr_rand, 32'h0);
+      `check_equal(dut.ram_data_rand, 32'h0);
+
+      $display("--- test13: Fetch instruction from syscall address.");
+      fetch_instruction(SYSCALL_FUNC_IN_ROM);
+
+      $display("--- test13: Write registers from syscall function.");
+      write_word(ADDR_APP_SIZE, 32'h1000);
+      write_word(ADDR_APP_START, APP_RAM_START);
+      write_word(ADDR_BLAKE2S, 32'h100);
+      write_word(ADDR_SYSCALL, 32'h200);
+      write_word(ADDR_CDI_FIRST + 0, 32'h1);
+      write_word(ADDR_CDI_FIRST + 1, 32'h2);
+      write_word(ADDR_CDI_FIRST + 2, 32'h3);
+      write_word(ADDR_CDI_FIRST + 3, 32'h4);
+      write_word(ADDR_CDI_FIRST + 4, 32'h5);
+      write_word(ADDR_CDI_FIRST + 5, 32'h6);
+      write_word(ADDR_CDI_FIRST + 6, 32'h7);
+      write_word(ADDR_CDI_FIRST + 7, 32'h8);
+      write_word(ADDR_RAM_ADDR_RAND, 32'h20);
+      write_word(ADDR_RAM_DATA_RAND, 32'h21);
+
+      $display("--- test13: Check that registers have not changed.");
+      read_check_word(ADDR_APP_SIZE, 32'h0);
+      read_check_word(ADDR_APP_START, 32'h0);
+      read_check_word(ADDR_BLAKE2S, BLAKE2S_FUNC_IN_ROM);
+      read_check_word(ADDR_SYSCALL, SYSCALL_FUNC_IN_ROM);
+      read_check_word(ADDR_CDI_FIRST + 0, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 1, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 2, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 3, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 4, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 5, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 6, 32'h0);
+      read_check_word(ADDR_CDI_FIRST + 7, 32'h0);
+      read_check_word(ADDR_RAM_ADDR_RAND, 32'h0);
+      read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
+      `check_equal(dut.ram_addr_rand, 32'h0);
+      `check_equal(dut.ram_data_rand, 32'h0);
+
+      $display("--- test13: completed.");
+      $display("");
+    end
+  endtask  // test13
+
+
+  //----------------------------------------------------------------
+  // test14()
+  //
+  // Should trap when jumping from app RAM to non-blessed address in
+  // firmware ROM.
+  //----------------------------------------------------------------
+  task test14;
+    begin : test14
+      localparam [31 : 0] FIRMWARE_SIZE = 32'h2000;
+      localparam [31 : 0] BLAKE2S_FUNC_IN_ROM = 32'h1ffc;
+      localparam [31 : 0] SYSCALL_FUNC_IN_ROM = 32'h1ff8;
+
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display(
+          "--- test14: Should trap when jumping from app RAM to non-blessed address in firmware ROM started.");
+      reset_dut();
+
+      $display("--- test14: Register blake2s and syscall functions.");
+      write_word(ADDR_BLAKE2S, BLAKE2S_FUNC_IN_ROM);
+      write_word(ADDR_SYSCALL, SYSCALL_FUNC_IN_ROM);
+
+      $display("--- test14: Fetch instruction from app RAM.");
+      fetch_instruction(APP_RAM_START);
+      `check_equal(tb_force_trap, 0);
+
+      $display("--- test14: Fetch instruction from non-blessed FW ROM address.");
+      fetch_instruction(32'h00000f00);
+      `check_equal(tb_force_trap, 1);
+
+      $display("--- test14: completed.");
+      $display("");
+    end
+  endtask  // test14
+
+
+  //----------------------------------------------------------------
+  // test15()
+  //
+  // Should not trap when jumping from app RAM to blessed address in
+  // firmware ROM.
+  //----------------------------------------------------------------
+  task test15;
+    begin : test15
+      localparam [31 : 0] FIRMWARE_SIZE = 32'h2000;
+      localparam [31 : 0] BLAKE2S_FUNC_IN_ROM = 32'h1000;
+      localparam [31 : 0] SYSCALL_FUNC_IN_ROM = 32'h1200;
+
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display(
+          "--- test15: Should not trap when jumping from app RAM to blessed address in firmware ROM started.");
+      reset_dut();
+
+      $display("--- test15: Register blake2s and syscall functions.");
+      write_word(ADDR_BLAKE2S, BLAKE2S_FUNC_IN_ROM);
+      write_word(ADDR_SYSCALL, SYSCALL_FUNC_IN_ROM);
+
+      $display("--- test15: Fetch instruction from app RAM.");
+      fetch_instruction(APP_RAM_START);
+      `check_equal(tb_force_trap, 0);
+
+      $display("--- test15: Fetch instruction from blessed FW ROM address (blake2s).");
+      fetch_instruction(BLAKE2S_FUNC_IN_ROM);
+      `check_equal(tb_force_trap, 0);
+
+      $display("--- test15: Fetch blessed instruction from firmware ROM (syscall).");
+      fetch_instruction(SYSCALL_FUNC_IN_ROM);
+      `check_equal(tb_force_trap, 0);
+
+      $display("--- test15: completed.");
+      $display("");
+    end
+  endtask  // test15
+
+
+  //----------------------------------------------------------------
+  // test16()
+  //
+  // SPI access
+  //----------------------------------------------------------------
+  task test16;
+    begin : test16
+      localparam [31 : 0] BLAKE2S_FUNC_IN_ROM = 32'h1000;
+      localparam [31 : 0] SYSCALL_FUNC_IN_ROM = 32'h1200;
+
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test16: SPI access.");
+      reset_dut();
+
+      $display("--- test16: Register blake2s and syscall functions.");
+      write_word(ADDR_BLAKE2S, BLAKE2S_FUNC_IN_ROM);
+      write_word(ADDR_SYSCALL, SYSCALL_FUNC_IN_ROM);
+
+
+      $display("--- test16: Write to SPI registers from firmware after reset.");
+      write_word(ADDR_SPI_EN, 32'h1);
+      write_word(ADDR_SPI_DATA, 32'ha7);
+      write_word(ADDR_SPI_XFER, 32'h1);
+
+      $display("--- test16: Check SPI transfer started.");
+      `check_not_equal(dut.spi_master.spi_ctrl_reg, dut.spi_master.CTRL_IDLE);
+
+      $display("--- test16: Wait until transfer is done.");
+      while (dut.spi_master.spi_ctrl_reg != dut.spi_master.CTRL_IDLE) begin
+        #(CLK_PERIOD);
+      end
+
+
+      $display("--- test16: Fetch instruction from app RAM.");
+      fetch_instruction(APP_RAM_START);
+
+      $display("--- test16: Write to SPI registers from firmware after reset.");
+      write_word(ADDR_SPI_EN, 32'h1);
+      write_word(ADDR_SPI_DATA, 32'ha7);
+      write_word(ADDR_SPI_XFER, 32'h1);
+
+      $display("--- test16: Check that SPI transfer did not start.");
+      `check_equal(dut.spi_master.spi_ctrl_reg, dut.spi_master.CTRL_IDLE);
+
+
+      $display("--- test16: Fetch instruction from blessed syscall address.");
+      fetch_instruction(SYSCALL_FUNC_IN_ROM);
+
+      $display("--- test16: Write to SPI registers from syscall.");
+      write_word(ADDR_SPI_EN, 32'h1);
+      write_word(ADDR_SPI_DATA, 32'ha7);
+      write_word(ADDR_SPI_XFER, 32'h1);
+
+      $display("--- test16: Check that SPI transfer started.");
+      `check_not_equal(dut.spi_master.spi_ctrl_reg, dut.spi_master.CTRL_IDLE);
+
+      $display("--- test16: Wait until transfer is done.");
+      while (dut.spi_master.spi_ctrl_reg != dut.spi_master.CTRL_IDLE) begin
+        #(CLK_PERIOD);
+      end
+
+
+      $display("--- test16: Fetch instruction from app RAM.");
+      fetch_instruction(APP_RAM_START);
+
+      $display("--- test16: Fetch instruction from blessed blake2s address.");
+      fetch_instruction(BLAKE2S_FUNC_IN_ROM);
+
+      $display("--- test16: Write to SPI registers from blake2s.");
+      write_word(ADDR_SPI_EN, 32'h1);
+      write_word(ADDR_SPI_DATA, 32'ha7);
+      write_word(ADDR_SPI_XFER, 32'h1);
+
+      $display("--- test16: Check that SPI transfer did not start.");
+      `check_equal(dut.spi_master.spi_ctrl_reg, dut.spi_master.CTRL_IDLE);
+
+
+      $display("--- test16: completed.");
+      $display("");
+    end
+  endtask  // test16
+
+
+  //----------------------------------------------------------------
   // tk1_test
   //----------------------------------------------------------------
   initial begin : tk1_test
@@ -780,6 +1176,12 @@ module tb_tk1 ();
     test9();
     test9();
     test10();
+    test11();
+    test12();
+    test13();
+    test14();
+    test15();
+    test16();
 
     display_test_result();
     $display("");
