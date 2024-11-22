@@ -72,8 +72,8 @@ RUN git clone --depth=1 https://github.com/YosysHQ/icestorm /src
 WORKDIR /src
 RUN git checkout 738af822905fdcf0466e9dd784b9ae4b0b34987f \
     && make -j$(nproc --ignore=2) \
-    && make install
-RUN git describe --all --always --long --dirty > /usr/local/repo-commit-icestorm
+    && make install \
+    && git describe --all --always --long --dirty > /usr/local/repo-commit-icestorm
 WORKDIR /
 RUN rm -rf /src
 
@@ -81,8 +81,8 @@ RUN rm -rf /src
 RUN git clone -b interfaces --depth=1 https://github.com/tillitis/icestorm /src
 WORKDIR /src/iceprog
 RUN make -j$(nproc --ignore=2) \
-    && make PROGRAM_PREFIX=tillitis- install
-RUN git describe --all --always --long --dirty > /usr/local/repo-commit-tillitis--icestorm
+    && make PROGRAM_PREFIX=tillitis- install \
+    && git describe --all --always --long --dirty > /usr/local/repo-commit-tillitis--icestorm
 WORKDIR /
 RUN rm -rf /src
 
@@ -90,8 +90,8 @@ RUN git clone -b 0.45 --depth=1 https://github.com/YosysHQ/yosys /src
 WORKDIR /src
 RUN git submodule update --init \
     && make -j$(nproc --ignore=2) \
-    && make install
-RUN git describe --all --always --long --dirty > /usr/local/repo-commit-yosys
+    && make install \
+    && git describe --all --always --long --dirty > /usr/local/repo-commit-yosys
 WORKDIR /
 RUN rm -rf /src
 
@@ -104,8 +104,8 @@ RUN sed -i 's/if (do_route) {/if (do_route \&\& !had_nonfatal_error) {/' common/
 RUN sed -i 's/bool warn_on_failure = false/bool warn_on_failure = true/' common/kernel/timing.h
 RUN cmake -DARCH=ice40 . \
     && make -j$(nproc --ignore=2) \
-    && make install
-RUN git describe --all --always --long --dirty > /usr/local/repo-commit-nextpnr
+    && make install \
+    && git describe --all --always --long --dirty > /usr/local/repo-commit-nextpnr
 WORKDIR /
 RUN rm -rf /src
 
@@ -114,8 +114,8 @@ WORKDIR /src
 RUN sh autoconf.sh \
     && ./configure \
     && make -j$(nproc --ignore=2) \
-    && make install
-RUN git describe --all --always --long --dirty > /usr/local/repo-commit-iverilog
+    && make install \
+    && git describe --all --always --long --dirty > /usr/local/repo-commit-iverilog
 WORKDIR /
 RUN rm -rf /src
 
@@ -125,8 +125,8 @@ RUN autoconf \
     && ./configure \
     && make -j$(nproc --ignore=2) \
     && make test \
-    && make install
-RUN git describe --all --always --long --dirty > /usr/local/repo-commit-verilator
+    && make install \
+    && git describe --all --always --long --dirty > /usr/local/repo-commit-verilator
 WORKDIR /
 RUN rm -rf /src
 
@@ -140,8 +140,8 @@ RUN rm -rf /src
 
 RUN git clone -b v1.9.1 https://github.com/cocotb/cocotb.git /src
 WORKDIR /src
-RUN pip install . --break-system-packages
-RUN git describe --all --always --long --dirty > /usr/local/repo-commit-cocotb
+RUN pip install . --break-system-packages \
+    && git describe --all --always --long --dirty > /usr/local/repo-commit-cocotb
 WORKDIR /
 RUN rm -rf /src
 
