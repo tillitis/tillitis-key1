@@ -300,7 +300,7 @@ module tb_tk1 ();
       tb_write_data = word;
       tb_cs = 1;
       tb_we = 1;
-      #(2 * CLK_PERIOD);
+      #(CLK_PERIOD);
       tb_cs = 0;
       tb_we = 0;
     end
