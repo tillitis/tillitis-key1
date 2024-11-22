@@ -18,7 +18,7 @@ module tb_tk1 ();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG = 1;
+  parameter DEBUG = 0;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
@@ -354,16 +354,15 @@ module tb_tk1 ();
       #(CLK_PERIOD);
       tb_cs = 1'h0;
 
-      if (DEBUG) begin
-        if (read_data == expected) begin
+      if (read_data == expected) begin
+        if (DEBUG) begin
           $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
         end
-        else begin
-          $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x", read_data,
-                   address, expected);
-          error_ctr = error_ctr + 1;
-        end
-        $display("");
+      end
+      else begin
+        $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x", read_data,
+                 address, expected);
+        error_ctr = error_ctr + 1;
       end
     end
   endtask  // read_check_word
