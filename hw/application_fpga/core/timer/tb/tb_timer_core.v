@@ -182,6 +182,9 @@ module tb_timer_core ();
 
   //----------------------------------------------------------------
   // test1()
+  //
+  // Set prescaler and timer and count until the timer returns expired.
+  // Check so the clock cycles passed adds up to timer * prescaler.
   //----------------------------------------------------------------
   task test1;
     begin
