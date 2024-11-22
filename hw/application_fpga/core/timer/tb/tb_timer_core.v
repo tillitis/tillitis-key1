@@ -122,14 +122,18 @@ module tb_timer_core ();
   //----------------------------------------------------------------
   task reset_dut;
     begin
-      $display("--- DUT before reset:");
-      dump_dut_state();
+      if (tb_monitor) begin
+        $display("--- DUT before reset:");
+        dump_dut_state();
+      end
       $display("--- Toggling reset.");
       tb_reset_n = 0;
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
-      $display("--- DUT after reset:");
-      dump_dut_state();
+      if (tb_monitor) begin
+        $display("--- DUT after reset:");
+        dump_dut_state();
+      end
     end
   endtask  // reset_dut
 
@@ -187,25 +191,66 @@ module tb_timer_core ();
   // Check so the clock cycles passed adds up to timer * prescaler.
   //----------------------------------------------------------------
   task test1;
-    begin
-      tc_ctr = tc_ctr + 1;
-      tb_monitor = 1;
+    begin : test1
+      reg [31 : 0] test1_cycle_ctr_start;
+      reg [31 : 0] test1_counted_num_cycles;
+      reg [31 : 0] test1_expected_num_cycles;
 
-      $display("--- test1 started.");
-      dump_dut_state();
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test1: Run timer to set value started.");
+      $display("--- test1: prescaler: 6, timer: 9. Should take 6*9 = 54 cycles..");
+
       tb_prescaler_init = 32'h6;
-      tb_timer_init     = 32'h9;
+      tb_timer_init = 32'h9;
+      test1_expected_num_cycles = tb_prescaler_init * tb_timer_init;
+
       #(CLK_PERIOD);
       tb_start = 1'h1;
       #(CLK_PERIOD);
+      test1_cycle_ctr_start = cycle_ctr;
+
       tb_start = 1'h0;
-      wait_done();
       #(CLK_PERIOD);
-      tb_monitor = 0;
-      $display("--- test1 completed.");
+
+      while (tb_running) begin
+        #(CLK_PERIOD);
+      end
+      test1_counted_num_cycles = cycle_ctr - test1_cycle_ctr_start;
+
+
+      if (test1_counted_num_cycles == test1_expected_num_cycles) begin
+        $display("--- test1: Correct number of cycles counted: %0d", test1_counted_num_cycles);
+      end
+      else begin
+        $display("--- test1: Error, expected %0d cycles, counted cycles: %0d",
+                 test1_expected_num_cycles, test1_counted_num_cycles);
+        error_ctr = error_ctr + 1;
+      end
+
+
+
+      $display("--- test1: Completed.");
       $display("");
     end
   endtask  // test1
+
+  //----------------------------------------------------------------
+  // exit_with_error_code()
+  //
+  // Exit with the right error code
+  //----------------------------------------------------------------
+  task exit_with_error_code;
+    begin
+      if (error_ctr == 0) begin
+        $finish(0);
+      end
+      else begin
+        $fatal(1);
+      end
+    end
+  endtask  // exit_with_error_code
 
 
   //----------------------------------------------------------------
@@ -214,7 +259,9 @@ module tb_timer_core ();
   // Test vectors from:
   //----------------------------------------------------------------
   initial begin : timer_core_test
-    $display("--- Simulation of timer core started.");
+    $display("");
+    $display("   -= Simulation of timer core started =-");
+    $display("     ===============================");
     $display("");
 
     init_sim();
@@ -223,8 +270,10 @@ module tb_timer_core ();
     test1();
 
     $display("");
-    $display("--- Simulation of timer core completed.");
-    $finish;
+    $display("   -= Simulation of timer core completed =-");
+    $display("     ===============================");
+    $display("");
+    exit_with_error_code();
   end  // timer_core_test
 endmodule  // tb_timer_core
 
