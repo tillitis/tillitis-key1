@@ -197,7 +197,7 @@ module tb_timer ();
       tb_write_data = word;
       tb_cs = 1;
       tb_we = 1;
-      #(2 * CLK_PERIOD);
+      #(CLK_PERIOD);
       tb_cs = 0;
       tb_we = 0;
     end
@@ -250,36 +250,63 @@ module tb_timer ();
     begin : test1
       reg [31 : 0] time_start;
       reg [31 : 0] time_stop;
+      reg [31 : 0] time_expected;
+      reg [31 : 0] time_counted;
 
       tc_ctr = tc_ctr + 1;
       tb_monitor = 0;
 
       $display("");
       $display("--- test1: started.");
+      time_expected = 32'h6 * 32'h9 + 1;
+      // One extra clock cycle for the API
 
-      write_word(ADDR_PRESCALER, 8'h02);
-      write_word(ADDR_TIMER, 8'h10);
+      write_word(ADDR_PRESCALER, 32'h6);
+      write_word(ADDR_TIMER, 32'h9);
+      #(CLK_PERIOD);
 
+      write_word(ADDR_CTRL, 32'h1);
       time_start = cycle_ctr;
-      write_word(ADDR_CTRL, 8'h01);
 
-      #(2 * CLK_PERIOD);
+      #(CLK_PERIOD);
       read_word(ADDR_STATUS);
       while (read_data) begin
         read_word(ADDR_STATUS);
       end
 
       time_stop = cycle_ctr;
-      write_word(CTRL_START_BIT, 8'h02);
+      time_counted = time_stop - time_start;
 
-      $display("--- test1: Cycles between start and stop: %d", (time_stop - time_start));
-      #(CLK_PERIOD);
-      tb_monitor = 0;
+      if (time_counted == time_expected) begin
+        $display("--- test1: Correct number of cycles counted: %0d", time_counted);
+      end
+      else begin
+        $display("--- test1: Error, expected %0d cycles, counted cycles: %0d", time_expected,
+                 time_counted);
+        error_ctr = error_ctr + 1;
+      end
+
 
       $display("--- test1: completed.");
       $display("");
     end
   endtask  // tes1
+
+  //----------------------------------------------------------------
+  // exit_with_error_code()
+  //
+  // Exit with the right error code
+  //----------------------------------------------------------------
+  task exit_with_error_code;
+    begin
+      if (error_ctr == 0) begin
+        $finish(0);
+      end
+      else begin
+        $fatal(1);
+      end
+    end
+  endtask  // exit_with_error_code
 
 
   //----------------------------------------------------------------
@@ -300,7 +327,7 @@ module tb_timer ();
     $display("   -= Testbench for timer completed =-");
     $display("     ===============================");
     $display("");
-    $finish;
+    exit_with_error_code();
   end  // timer_test
 endmodule  // tb_timer
 
