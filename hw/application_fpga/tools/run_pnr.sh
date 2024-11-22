@@ -67,6 +67,7 @@ start_thread() {
                 --log $LOG_FILE \
                 --randomize-seed \
                 --freq $FREQ \
+                --exit-on-failed-target-frequency \
                 --ignore-loops \
                 --up5k \
                 --package $PACKAGE \

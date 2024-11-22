@@ -100,8 +100,24 @@ WORKDIR /src
 # Add "Fix handling of RNG seed" #1369
 RUN git cherry-pick --no-commit 6ca64526bb18ace8690872b09ca1251567c116de
 # Add early exit if place fails on timing
-RUN sed -i 's/if (do_route) {/if (do_route \&\& !had_nonfatal_error) {/' common/kernel/command.cc
-RUN sed -i 's/bool warn_on_failure = false/bool warn_on_failure = true/' common/kernel/timing.h
+RUN sed -i \
+    '345i \ \ \ \ general.add_options()("exit-on-failed-target-frequency",' \
+    common/kernel/command.cc
+RUN sed -i \
+    '346i \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "exit if target frequency is not achieved (use together with "' \
+    common/kernel/command.cc
+RUN sed -i \
+    '347i \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ "--randomize-seed option)");' \
+    common/kernel/command.cc
+RUN sed -i \
+    '348i \\' \
+    common/kernel/command.cc
+RUN sed -i \
+    '662s/if (do_route) {/if (do_route \&\& (vm.count("exit-on-failed-target-frequency") ? !had_nonfatal_error : true)) {/' \
+    common/kernel/command.cc
+RUN sed -i \
+    '244s/bool warn_on_failure = false/bool warn_on_failure = true/' \
+    common/kernel/timing.h
 RUN cmake -DARCH=ice40 . \
     && make -j$(nproc --ignore=2) \
     && make install \
