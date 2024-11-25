@@ -13,7 +13,9 @@
 
 `default_nettype none
 
-module tk1 (
+module tk1 #(
+    parameter [31:0] APP_SIZE = 32'h0
+) (
     input wire clk,
     input wire reset_n,
 
@@ -255,7 +257,7 @@ module tk1 (
       gpio3_reg         <= 1'h0;
       gpio4_reg         <= 1'h0;
       app_start_reg     <= 32'h0;
-      app_size_reg      <= 32'h0;
+      app_size_reg      <= APP_SIZE;
       blake2s_addr_reg  <= 32'h0;
       cdi_mem[0]        <= 32'h0;
       cdi_mem[1]        <= 32'h0;
