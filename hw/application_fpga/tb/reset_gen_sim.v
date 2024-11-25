@@ -1,8 +1,8 @@
 //======================================================================
 //
 // reset_gen_sim.v
-// ----------------
-// Reset generator Verilator simulation of the application_fpga.
+// ---------------
+// Reset generator simulation of the application_fpga.
 //
 //
 // Author: Joachim Strombergson
@@ -13,7 +13,7 @@
 
 `default_nettype none
 
-module reset_gen #(
+module reset_gen_sim #(
     parameter RESET_CYCLES = 200
 ) (
     input  wire clk,
@@ -63,8 +63,8 @@ module reset_gen #(
     end
   end
 
-endmodule  // reset_gen
+endmodule  // reset_gen_sim
 
 //======================================================================
-// EOF reset_gen.v
+// EOF reset_gen_sim.v
 //======================================================================
