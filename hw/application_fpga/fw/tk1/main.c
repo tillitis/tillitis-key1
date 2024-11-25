@@ -54,7 +54,9 @@ static enum state loading_commands(const struct frame_header *hdr,
 				   const uint8_t *cmd, enum state state,
 				   struct context *ctx);
 static void run(const struct context *ctx);
+#if !defined(SIMULATION)
 static uint32_t xorwow(uint32_t state, uint32_t acc);
+#endif
 static void scramble_ram(void);
 
 static void print_hw_version(void)
@@ -364,6 +366,7 @@ static void run(const struct context *ctx)
 	__builtin_unreachable();
 }
 
+#if !defined(SIMULATION)
 static uint32_t xorwow(uint32_t state, uint32_t acc)
 {
 	state ^= state << 13;
@@ -372,9 +375,13 @@ static uint32_t xorwow(uint32_t state, uint32_t acc)
 	state += acc;
 	return state;
 }
+#endif
 
 static void scramble_ram(void)
 {
+	// Can't fill RAM if we are simulating, data has already been loaded
+	// into RAM.
+#if !defined(SIMULATION)
 	uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
 
 	// Fill RAM with random data
@@ -386,6 +393,7 @@ static void scramble_ram(void)
 		data_state = xorwow(data_state, data_acc);
 		ram[w] = data_state;
 	}
+#endif
 
 	// Set RAM address and data scrambling parameters
 	*ram_addr_rand = rnd_word();
@@ -413,6 +421,10 @@ int main(void)
 	ctx.use_uss = FALSE;
 
 	scramble_ram();
+
+#if defined(SIMULATION)
+	run(&ctx);
+#endif
 
 	for (;;) {
 		switch (state) {
