@@ -23,6 +23,10 @@
 `define verbose(debug_command)
 `endif
 
+`ifndef APP_SIZE
+`define APP_SIZE 0
+`endif
+
 module application_fpga_sim (
     input wire clk,
 
