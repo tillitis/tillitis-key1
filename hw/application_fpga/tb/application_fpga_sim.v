@@ -23,19 +23,16 @@
 `define verbose(debug_command)
 `endif
 
-
-module application_fpga (
+module application_fpga_sim (
     input wire clk,
-
-    output wire          valid,
-    output wire [03 : 0] wstrb,
-    output wire [31 : 0] addr,
-    output wire [31 : 0] wdata,
-    output wire [31 : 0] rdata,
-    output wire          ready,
 
     output wire interface_rx,
     input  wire interface_tx,
+
+    output wire spi_ss,
+    output wire spi_sck,
+    output wire spi_mosi,
+    input  wire spi_miso,
 
     input wire touch_event,
 
@@ -59,13 +56,17 @@ module application_fpga (
   localparam RESERVED_PREFIX = 2'h2;
   localparam MMIO_PREFIX = 2'h3;
 
-  // MMIO core mem sub-prefixes.
+  // MMIO core sub-prefixes.
   localparam TRNG_PREFIX = 6'h00;
   localparam TIMER_PREFIX = 6'h01;
   localparam UDS_PREFIX = 6'h02;
   localparam UART_PREFIX = 6'h03;
   localparam TOUCH_SENSE_PREFIX = 6'h04;
+  localparam FW_RAM_PREFIX = 6'h10;
   localparam TK1_PREFIX = 6'h3f;
+
+  // Instruction used to cause a trap.
+  localparam ILLEGAL_INSTRUCTION = 32'h0;
 
 
   //----------------------------------------------------------------
@@ -83,93 +84,84 @@ module application_fpga (
   //----------------------------------------------------------------
   wire          reset_n;
 
+  /* verilator lint_off UNOPTFLAT */
+  wire          cpu_trap;
   wire          cpu_valid;
-  wire [03 : 0] cpu_wstrb;
+  wire          cpu_instr;
+  wire [ 3 : 0] cpu_wstrb;
+  /* verilator lint_off UNUSED */
   wire [31 : 0] cpu_addr;
   wire [31 : 0] cpu_wdata;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           rom_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg  [11 : 0] rom_address;
   wire [31 : 0] rom_read_data;
   wire          rom_ready;
 
   reg           ram_cs;
   reg  [ 3 : 0] ram_we;
-  reg  [14 : 0] ram_address;
+  reg  [15 : 0] ram_address;
   reg  [31 : 0] ram_write_data;
   wire [31 : 0] ram_read_data;
   wire          ram_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           trng_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg           trng_we;
   reg  [ 7 : 0] trng_address;
   reg  [31 : 0] trng_write_data;
   wire [31 : 0] trng_read_data;
   wire          trng_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           timer_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg           timer_we;
   reg  [ 7 : 0] timer_address;
   reg  [31 : 0] timer_write_data;
   wire [31 : 0] timer_read_data;
   wire          timer_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           uds_cs;
-  /* verilator lint_on UNOPTFLAT */
-  reg  [ 7 : 0] uds_address;
+  reg  [ 2 : 0] uds_address;
   wire [31 : 0] uds_read_data;
   wire          uds_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           uart_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg           uart_we;
   reg  [ 7 : 0] uart_address;
   reg  [31 : 0] uart_write_data;
   wire [31 : 0] uart_read_data;
   wire          uart_ready;
 
-  /* verilator lint_off UNOPTFLAT */
+  reg           fw_ram_cs;
+  reg  [ 3 : 0] fw_ram_we;
+  reg  [ 8 : 0] fw_ram_address;
+  reg  [31 : 0] fw_ram_write_data;
+  wire [31 : 0] fw_ram_read_data;
+  wire          fw_ram_ready;
+
   reg           touch_sense_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg           touch_sense_we;
   reg  [ 7 : 0] touch_sense_address;
   wire [31 : 0] touch_sense_read_data;
   wire          touch_sense_ready;
 
-  /* verilator lint_off UNOPTFLAT */
   reg           tk1_cs;
-  /* verilator lint_on UNOPTFLAT */
   reg           tk1_we;
   reg  [ 7 : 0] tk1_address;
   reg  [31 : 0] tk1_write_data;
   wire [31 : 0] tk1_read_data;
   wire          tk1_ready;
   wire          system_mode;
-
-
-  //----------------------------------------------------------------
-  // Concurrent assignments.
-  //----------------------------------------------------------------
-  assign valid = cpu_valid;
-  assign wstrb = cpu_wstrb;
-  assign addr  = cpu_addr;
-  assign wdata = cpu_wdata;
-  assign rdata = muxed_rdata_reg;
-  assign ready = muxed_ready_reg;
+  wire          force_trap;
+  wire [14 : 0] ram_addr_rand;
+  wire [31 : 0] ram_data_rand;
+  wire          tk1_system_reset;
+  /* verilator lint_on UNOPTFLAT */
 
 
   //----------------------------------------------------------------
   // Module instantiations.
   //----------------------------------------------------------------
-  reset_gen #(
+  reset_gen_sim #(
       .RESET_CYCLES(200)
   ) reset_gen_inst (
       .clk  (clk),
@@ -179,35 +171,31 @@ module application_fpga (
 
   picorv32 #(
       .ENABLE_COUNTERS(0),
-      .LATCHED_MEM_RDATA(0),
       .TWO_STAGE_SHIFT(0),
-      .TWO_CYCLE_ALU(0),
-      .CATCH_MISALIGN(0),
-      .CATCH_ILLINSN(0),
-      .COMPRESSED_ISA(1),
-      .ENABLE_MUL(1),
-      .ENABLE_DIV(0),
-      .BARREL_SHIFTER(0)
+      .CATCH_MISALIGN (0),
+      .COMPRESSED_ISA (1),
+      .ENABLE_FAST_MUL(1),
+      .BARREL_SHIFTER (1)
   ) cpu (
       .clk(clk),
       .resetn(reset_n),
+      .trap(cpu_trap),
 
       .mem_valid(cpu_valid),
+      .mem_ready(muxed_ready_reg),
       .mem_addr (cpu_addr),
       .mem_wdata(cpu_wdata),
       .mem_wstrb(cpu_wstrb),
       .mem_rdata(muxed_rdata_reg),
-      .mem_ready(muxed_ready_reg),
+      .mem_instr(cpu_instr),
 
-      // Defined unsed ports. Makes lint happy,
-      // but still needs to help lint with empty ports.
+      // Defined unused ports. Makes lint happy. But
+      // we still needs to help lint with empty ports.
       /* verilator lint_off PINCONNECTEMPTY */
       .irq(32'h0),
       .eoi(),
-      .trap(),
       .trace_valid(),
       .trace_data(),
-      .mem_instr(),
       .mem_la_read(),
       .mem_la_write(),
       .mem_la_addr(),
@@ -226,6 +214,9 @@ module application_fpga (
 
 
   rom rom_inst (
+      .clk(clk),
+      .reset_n(reset_n),
+
       .cs(rom_cs),
       .address(rom_address),
       .read_data(rom_read_data),
@@ -237,12 +228,42 @@ module application_fpga (
       .clk(clk),
       .reset_n(reset_n),
 
+      .ram_addr_rand(ram_addr_rand),
+      .ram_data_rand(ram_data_rand),
+
       .cs(ram_cs),
       .we(ram_we),
       .address(ram_address),
       .write_data(ram_write_data),
       .read_data(ram_read_data),
       .ready(ram_ready)
+  );
+
+
+  fw_ram fw_ram_inst (
+      .clk(clk),
+      .reset_n(reset_n),
+
+      .system_mode(system_mode),
+
+      .cs(fw_ram_cs),
+      .we(fw_ram_we),
+      .address(fw_ram_address),
+      .write_data(fw_ram_write_data),
+      .read_data(fw_ram_read_data),
+      .ready(fw_ram_ready)
+  );
+
+
+  trng_sim trng_inst (
+      .clk(clk),
+      .reset_n(reset_n),
+      .cs(trng_cs),
+      .we(trng_we),
+      .address(trng_address),
+      .write_data(trng_write_data),
+      .read_data(trng_read_data),
+      .ready(trng_ready)
   );
 
 
@@ -262,6 +283,8 @@ module application_fpga (
   uds uds_inst (
       .clk(clk),
       .reset_n(reset_n),
+
+      .system_mode(system_mode),
 
       .cs(uds_cs),
       .address(uds_address),
@@ -300,11 +323,29 @@ module application_fpga (
   );
 
 
-  tk1 tk1_inst (
+  tk1 #(
+      .APP_SIZE(`APP_SIZE)
+  ) tk1_inst (
       .clk(clk),
       .reset_n(reset_n),
 
       .system_mode(system_mode),
+
+      .cpu_addr  (cpu_addr),
+      .cpu_instr (cpu_instr),
+      .cpu_valid (cpu_valid),
+      .cpu_trap  (cpu_trap),
+      .force_trap(force_trap),
+
+      .system_reset(tk1_system_reset),
+
+      .ram_addr_rand(ram_addr_rand),
+      .ram_data_rand(ram_data_rand),
+
+      .spi_ss  (spi_ss),
+      .spi_sck (spi_sck),
+      .spi_mosi(spi_mosi),
+      .spi_miso(spi_miso),
 
       .led_r(led_r),
       .led_g(led_g),
@@ -330,13 +371,12 @@ module application_fpga (
   //----------------------------------------------------------------
   always @(posedge clk) begin : reg_update
     if (!reset_n) begin
-      muxed_ready_reg <= 1'h0;
       muxed_rdata_reg <= 32'h0;
+      muxed_ready_reg <= 1'h0;
     end
-
     else begin
-      muxed_ready_reg <= muxed_ready_new;
       muxed_rdata_reg <= muxed_rdata_new;
+      muxed_ready_reg <= muxed_ready_new;
     end
   end
 
@@ -348,7 +388,9 @@ module application_fpga (
   always @* begin : cpu_mem_ctrl
     reg [1 : 0] area_prefix;
     reg [5 : 0] core_prefix;
+    reg [255:0] ascii_state;
 
+    ascii_state         = "";
     area_prefix         = cpu_addr[31 : 30];
     core_prefix         = cpu_addr[29 : 24];
 
@@ -359,9 +401,14 @@ module application_fpga (
     rom_address         = cpu_addr[13 : 2];
 
     ram_cs              = 1'h0;
-    ram_we              = cpu_wstrb;
-    ram_address         = cpu_addr[16 : 2];
+    ram_we              = 4'h0;
+    ram_address         = cpu_addr[17 : 2];
     ram_write_data      = cpu_wdata;
+
+    fw_ram_cs           = 1'h0;
+    fw_ram_we           = cpu_wstrb;
+    fw_ram_address      = cpu_addr[10 : 2];
+    fw_ram_write_data   = cpu_wdata;
 
     trng_cs             = 1'h0;
     trng_we             = |cpu_wstrb;
@@ -374,7 +421,7 @@ module application_fpga (
     timer_write_data    = cpu_wdata;
 
     uds_cs              = 1'h0;
-    uds_address         = cpu_addr[9 : 2];
+    uds_address         = cpu_addr[4 : 2];
 
     uart_cs             = 1'h0;
     uart_we             = |cpu_wstrb;
@@ -390,92 +437,123 @@ module application_fpga (
     tk1_address         = cpu_addr[9 : 2];
     tk1_write_data      = cpu_wdata;
 
+    // Two stage mux implementing read and
+    // write access performed based on the address
+    // from the CPU.
     if (cpu_valid && !muxed_ready_reg) begin
-      case (area_prefix)
-        ROM_PREFIX: begin
-          `verbose($display("Access to ROM area");)
-          rom_cs          = 1'h1;
-          muxed_rdata_new = rom_read_data;
-          muxed_ready_new = rom_ready;
-        end
+      if (force_trap) begin
+        `verbose($display("Force trap");)
+        ascii_state     = "Force trap";
+        muxed_rdata_new = ILLEGAL_INSTRUCTION;
+        muxed_ready_new = 1'h1;
+      end
+      else begin
+        case (area_prefix)
+          ROM_PREFIX: begin
+            `verbose($display("Access to ROM area");)
+            ascii_state     = "ROM area";
+            rom_cs          = 1'h1;
+            muxed_rdata_new = rom_read_data;
+            muxed_ready_new = rom_ready;
+          end
 
-        RAM_PREFIX: begin
-          `verbose($display("Access to RAM area");)
-          ram_cs          = 1'h1;
-          muxed_rdata_new = ram_read_data;
-          muxed_ready_new = ram_ready;
-        end
+          RAM_PREFIX: begin
+            `verbose($display("Access to RAM area");)
+            ascii_state     = "RAM area";
+            ram_cs          = 1'h1;
+            ram_we          = cpu_wstrb;
+            muxed_rdata_new = ram_read_data;
+            muxed_ready_new = ram_ready;
+          end
 
-        RESERVED_PREFIX: begin
-          `verbose($display("Access to RESERVED area");)
-          muxed_rdata_new = 32'h00000000;
-          muxed_ready_new = 1'h1;
-        end
+          RESERVED_PREFIX: begin
+            `verbose($display("Access to RESERVED area");)
+            ascii_state     = "RESERVED area";
+            muxed_rdata_new = 32'h0;
+            muxed_ready_new = 1'h1;
+          end
 
-        MMIO_PREFIX: begin
-          `verbose($display("Access to MMIO area");)
-          case (core_prefix)
-            TRNG_PREFIX: begin
-              `verbose($display("Access to TRNG core");)
-              trng_cs         = 1'h1;
-              muxed_rdata_new = trng_read_data;
-              muxed_ready_new = trng_ready;
-            end
+          MMIO_PREFIX: begin
+            `verbose($display("Access to MMIO area");)
+            case (core_prefix)
+              TRNG_PREFIX: begin
+                `verbose($display("Access to TRNG core");)
+                ascii_state     = "TRNG core";
+                trng_cs         = 1'h1;
+                muxed_rdata_new = trng_read_data;
+                muxed_ready_new = trng_ready;
+              end
 
-            TIMER_PREFIX: begin
-              `verbose($display("Access to TIMER core");)
-              timer_cs        = 1'h1;
-              muxed_rdata_new = timer_read_data;
-              muxed_ready_new = timer_ready;
-            end
+              TIMER_PREFIX: begin
+                `verbose($display("Access to TIMER core");)
+                ascii_state     = "TIMER core";
+                timer_cs        = 1'h1;
+                muxed_rdata_new = timer_read_data;
+                muxed_ready_new = timer_ready;
+              end
 
-            UDS_PREFIX: begin
-              `verbose($display("Access to UDS core");)
-              uds_cs          = 1'h1;
-              muxed_rdata_new = uds_read_data;
-              muxed_ready_new = uds_ready;
-            end
+              UDS_PREFIX: begin
+                `verbose($display("Access to UDS core");)
+                ascii_state     = "UDS core";
+                uds_cs          = 1'h1;
+                muxed_rdata_new = uds_read_data;
+                muxed_ready_new = uds_ready;
+              end
 
-            UART_PREFIX: begin
-              `verbose($display("Access to UART core");)
-              uart_cs         = 1'h1;
-              muxed_rdata_new = uart_read_data;
-              muxed_ready_new = uart_ready;
-            end
+              UART_PREFIX: begin
+                `verbose($display("Access to UART core");)
+                ascii_state     = "UART core";
+                uart_cs         = 1'h1;
+                muxed_rdata_new = uart_read_data;
+                muxed_ready_new = uart_ready;
+              end
 
-            TOUCH_SENSE_PREFIX: begin
-              `verbose($display("Access to TOUCH_SENSE core");)
-              touch_sense_cs  = 1'h1;
-              muxed_rdata_new = touch_sense_read_data;
-              muxed_ready_new = touch_sense_ready;
-            end
+              TOUCH_SENSE_PREFIX: begin
+                `verbose($display("Access to TOUCH_SENSE core");)
+                ascii_state     = "TOUCH_SENSE core";
+                touch_sense_cs  = 1'h1;
+                muxed_rdata_new = touch_sense_read_data;
+                muxed_ready_new = touch_sense_ready;
+              end
 
-            TK1_PREFIX: begin
-              `verbose($display("Access to TK1 core");)
-              tk1_cs          = 1'h1;
-              muxed_rdata_new = tk1_read_data;
-              muxed_ready_new = tk1_ready;
-            end
+              FW_RAM_PREFIX: begin
+                `verbose($display("Access to FW_RAM core");)
+                ascii_state     = "FW_RAM core";
+                fw_ram_cs       = 1'h1;
+                muxed_rdata_new = fw_ram_read_data;
+                muxed_ready_new = fw_ram_ready;
+              end
 
-            default: begin
-              `verbose($display("UNDEFINED MMIO");)
-              muxed_rdata_new = 32'h00000000;
-              muxed_ready_new = 1'h1;
-            end
-          endcase  // case (core_prefix)
-        end  // case: MMIO_PREFIX
+              TK1_PREFIX: begin
+                `verbose($display("Access to TK1 core");)
+                ascii_state     = "TK1 core";
+                tk1_cs          = 1'h1;
+                muxed_rdata_new = tk1_read_data;
+                muxed_ready_new = tk1_ready;
+              end
 
-        default: begin
-          `verbose($display("UNDEFINED AREA");)
-          muxed_rdata_new = 32'h0;
-          muxed_ready_new = 1'h1;
-        end
-      endcase  // case (area_prefix)
-    end
+              default: begin
+                `verbose($display("UNDEFINED MMIO");)
+                ascii_state     = "UNDEFINED MMIO";
+                muxed_rdata_new = 32'h0;
+                muxed_ready_new = 1'h1;
+              end
+            endcase  // case (core_prefix)
+          end  // case: MMIO_PREFIX
+
+          default: begin
+            `verbose($display("UNDEFINED AREA");)
+            ascii_state     = "UNDEFINED AREA";
+            muxed_rdata_new = 32'h0;
+            muxed_ready_new = 1'h1;
+          end
+        endcase  // case (area_prefix)
+      end  // if (force_trap) begin end else begin
+    end  // if (cpu_valid && !muxed_ready_reg) begin
   end
 
 endmodule  // application_fpga
 
 //======================================================================
-// EOF application_fpga.v
+// EOF application_fpga_sim.v
 //======================================================================
