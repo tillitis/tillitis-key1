@@ -73,14 +73,23 @@ ICE40_SIM_CELLS = $(shell yosys-config --datdir/ice40/cells_sim.v)
 
 
 # FPGA specific source files.
-FPGA_SRC = \
+FPGA_VERILOG_SRCS = \
 	$(P)/rtl/application_fpga.v \
-	$(P)/core/clk_reset_gen/rtl/clk_reset_gen.v
+	$(P)/core/clk_reset_gen/rtl/clk_reset_gen.v \
+	$(P)/core/trng/rtl/trng.v
+
+# Testbench simulation specific source files.
+SIM_VERILOG_SRCS = \
+	$(P)/tb/tb_application_fpga_sim.v \
+	$(P)/tb/application_fpga_sim.v \
+	$(P)/tb/reset_gen_sim.v \
+	$(P)/tb/trng_sim.v
 
 # Verilator simulation specific source files.
-VERILATOR_FPGA_SRC = \
+VERILATOR_VERILOG_SRCS = \
 	$(P)/tb/application_fpga_sim.v \
-	$(P)/tb/reset_gen_sim.v
+	$(P)/tb/reset_gen_sim.v \
+	$(P)/tb/trng_sim.v
 
 # Common verilog source files.
 VERILOG_SRCS = \
@@ -97,8 +106,7 @@ VERILOG_SRCS = \
 	$(P)/core/tk1/rtl/udi_rom.v \
 	$(P)/core/uart/rtl/uart_core.v \
 	$(P)/core/uart/rtl/uart_fifo.v \
-	$(P)/core/uart/rtl/uart.v \
-	$(P)/core/trng/rtl/trng.v
+	$(P)/core/uart/rtl/uart.v
 
 # PicoRV32 verilog source file
 PICORV32_SRCS = \
@@ -176,6 +184,10 @@ $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
 
+simfirmware.elf: CFLAGS += -DSIMULATION
+simfirmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
+	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
+
 qemu_firmware.elf: CFLAGS += -DQEMU_CONSOLE
 qemu_firmware.elf: firmware.elf
 	mv firmware.elf qemu_firmware.elf
@@ -216,6 +228,8 @@ bram_fw.hex:
 
 firmware.hex: firmware.bin firmware_size_mismatch
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
+simfirmware.hex: simfirmware.bin simfirmware_size_mismatch
+	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
 testfw.hex: testfw.bin testfw_size_mismatch
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
 
@@ -249,7 +263,11 @@ LINT_FLAGS = \
 	--timescale 1ns/1ns \
 	-DNO_ICE40_DEFAULT_ASSIGNMENTS
 
-lint: $(FPGA_SRC) $(VERILOG_SRCS) $(PICORV32_SRCS) $(ICE40_SIM_CELLS)
+lint: $(FPGA_VERILOG_SRCS) \
+		$(SIM_VERILOG_SRCS) \
+		$(VERILOG_SRCS) \
+		$(PICORV32_SRCS) \
+		$(ICE40_SIM_CELLS)
 	$(LINT) $(LINT_FLAGS) \
 	-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 	-DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
@@ -278,13 +296,13 @@ CHECK_FORMAT_FLAGS = \
 	--inplace \
 	--verify
 
-fmt: $(FPGA_SRC) $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS)
+fmt: $(FPGA_VERILOG_SRCS) $(SIM_VERILOG_SRCS) $(VERILATOR_VERILOG_SRCS) $(VERILOG_SRCS)
 	$(FORMAT) $(FORMAT_FLAGS) $^
 .PHONY: fmt
 
 # Temporary fix using grep, since the verible with --verify flag only returns
 # error if the last file is malformatted.
-checkfmt: $(FPGA_SRC) $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS)
+checkfmt: $(FPGA_VERILOG_SRCS) $(SIM_VERILOG_SRCS) $(VERILATOR_VERILOG_SRCS) $(VERILOG_SRCS)
 	$(FORMAT) $(CHECK_FORMAT_FLAGS) $^ 2>&1 | \
 		grep "Needs formatting" && exit 1 || true
 .PHONY: checkfmt
@@ -292,7 +310,7 @@ checkfmt: $(FPGA_SRC) $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS)
 #-------------------------------------------------------------------
 # Build Verilator compiled simulation for the design.
 #-------------------------------------------------------------------
-verilator: $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS) $(PICORV32_SRCS) \
+verilator: $(VERILATOR_VERILOG_SRCS) $(VERILOG_SRCS) $(PICORV32_SRCS) \
 		firmware.hex $(ICE40_SIM_CELLS) \
 		$(P)/tb/application_fpga_verilator.cc
 	verilator \
@@ -301,6 +319,7 @@ verilator: $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS) $(PICORV32_SRCS) \
 		-Wall \
 		-Wno-COMBDLY \
 		-Wno-lint \
+		-Wno-UNOPTFLAT \
 		-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 		-DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
 		-DUDS_HEX=\"$(P)/data/uds.hex\" \
@@ -308,10 +327,10 @@ verilator: $(VERILATOR_FPGA_SRC) $(VERILOG_SRCS) $(PICORV32_SRCS) \
 		--cc \
 		--exe \
 		--Mdir verilated \
-		--top-module application_fpga \
+		--top-module application_fpga_sim \
 		$(filter %.v, $^) \
 		$(filter %.cc, $^)
-	make -C verilated -f Vapplication_fpga.mk
+	make -C verilated -f Vapplication_fpga_sim.mk
 .PHONY: verilator
 
 #-------------------------------------------------------------------
@@ -334,7 +353,7 @@ tb:
 
 YOSYS_FLAG ?=
 
-synth.json: $(FPGA_SRC) $(VERILOG_SRCS) $(PICORV32_SRCS) bram_fw.hex \
+synth.json: $(FPGA_VERILOG_SRCS) $(VERILOG_SRCS) $(PICORV32_SRCS) bram_fw.hex \
 		$(P)/data/uds.hex $(P)/data/udi.hex
 	$(YOSYS_PATH)yosys \
 		-v3 \
@@ -380,6 +399,44 @@ application_fpga_testfw.bin: application_fpga.asc bram_fw.hex testfw.hex
 	$(ICESTORM_PATH)icepack $<.tmp $@
 	@-$(RM) $<.tmp
 
+#-------------------------------------------------------------------
+# Build testbench simulation for the design
+#-------------------------------------------------------------------
+tb_application_fpga: $(SIM_VERILOG_SRCS) \
+			$(VERILOG_SRCS) \
+			$(PICORV32_SRCS) \
+			$(ICE40_SIM_CELLS) \
+			simfirmware.hex
+	python3 ./tools/app_bin_to_spram_hex.py \
+			./tb/app.bin \
+			./tb/output_spram0.hex \
+			./tb/output_spram1.hex \
+			./tb/output_spram2.hex \
+			./tb/output_spram3.hex \
+			|| { echo -e "\n -- Put your app.bin to simulate in the \"tb\" directory\n"; false; }
+	verilator \
+		-j $(shell nproc --ignore=1) \
+		--binary \
+		--cc \
+		--exe \
+		--Mdir tb_verilated \
+		--trace-fst \
+		--trace-structs \
+		--top-module tb_application_fpga_sim \
+		--timescale 1ns/1ns \
+		--timing \
+		-Wno-WIDTHEXPAND \
+		-Wno-UNOPTFLAT \
+		-DNO_ICE40_DEFAULT_ASSIGNMENTS \
+		-DAPP_SIZE=$(shell ls -l tb/app.bin| awk '{print $$5}') \
+		-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
+		-DFIRMWARE_HEX=\"$(P)/simfirmware.hex\" \
+		-DUDS_HEX=\"$(P)/data/uds.hex\" \
+		-DUDI_HEX=\"$(P)/data/udi.hex\" \
+		$(filter %.v, $^)
+	make -C tb_verilated -f Vtb_application_fpga_sim.mk
+	./tb_verilated/Vtb_application_fpga_sim \
+		&& { echo -e "\n -- Wave simulation saved to tb_application_fpga_sim.fst\n"; true; }
 
 #-------------------------------------------------------------------
 # FPGA device programming.
@@ -413,12 +470,11 @@ view: tb_application_fpga_vcd
 #-------------------------------------------------------------------
 # Cleanup.
 #-------------------------------------------------------------------
-clean: clean_fw clean_tb
+clean: clean_sim clean_fw clean_tb
 	rm -f bram_fw.hex
 	rm -f synth.{v,json,txt} application_fpga.{asc,bin} application_fpga_testfw.bin
 	rm -f application_fpga_par.{json,txt}
 	rm -f lint_issues.txt
-	rm -rf verilated
 	rm -f tools/tpt/*.hex
 	rm -rf tools/tpt/__pycache__
 .PHONY: clean
@@ -430,6 +486,15 @@ clean_fw:
 	rm -f $(TESTFW_OBJS)
 	rm -f qemu_firmware.elf
 .PHONY: clean_fw
+
+clean_sim:
+	rm -f simfirmware.{elf,elf.map,bin,hex}
+	rm -f tb_application_fpga_sim.fst
+	rm -f tb_application_fpga_sim.fst.hier
+	rm -f tb/output_spram*.hex
+	rm -rf tb_verilated
+	rm -rf verilated
+.PHONY: clean_sim
 
 clean_tb:
 	make -C core/timer/toolruns clean
@@ -449,20 +514,21 @@ help:
 	@echo ""
 	@echo "Supported targets:"
 	@echo "------------------"
-	@echo "all                Build all targets."
-	@echo "check              Run static analysis on firmware."
-	@echo "splint             Run splint static analysis on firmware."
-	@echo "firmware.elf       Build firmware ELF file."
-	@echo "firmware.hex       Build firmware converted to hex, to be included in bitstream."
-	@echo "bram_fw.hex        Build a fake BRAM file that will be filled in later after place-n-route."
-	@echo "verilator          Build Verilator simulation program"
-	@echo "lint               Run lint on Verilog source files."
-	@echo "tb                 Run all testbenches"
-	@echo "prog_flash         Program device flash with FGPA bitstream including firmware (using the RPi Pico-based programmer)."
-	@echo "prog_flash_testfw  Program device flash as above, but with testfw."
-	@echo "clean              Delete all generated files."
-	@echo "clean_fw           Delete only generated files for firmware. Useful for fw devs."
-	@echo "clean_tb           Delete only generated files for testbenches."
+	@echo "all                  Build all targets."
+	@echo "check                Run static analysis on firmware."
+	@echo "splint               Run splint static analysis on firmware."
+	@echo "firmware.elf         Build firmware ELF file."
+	@echo "firmware.hex         Build firmware converted to hex, to be included in bitstream."
+	@echo "bram_fw.hex          Build a fake BRAM file that will be filled in later after place-n-route."
+	@echo "verilator            Build Verilator simulation program"
+	@echo "tb_application_fpga  Build testbench simulation for the design"
+	@echo "lint                 Run lint on Verilog source files."
+	@echo "tb                   Run all testbenches"
+	@echo "prog_flash           Program device flash with FGPA bitstream including firmware (using the RPi Pico-based programmer)."
+	@echo "prog_flash_testfw    Program device flash as above, but with testfw."
+	@echo "clean                Delete all generated files."
+	@echo "clean_fw             Delete only generated files for firmware. Useful for fw devs."
+	@echo "clean_tb             Delete only generated files for testbenches."
 
 #=======================================================================
 # EOF Makefile

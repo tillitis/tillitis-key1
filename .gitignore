@@ -33,6 +33,10 @@ synth.txt
 synth.v
 application_fpga_par.json
 application_fpga_par.txt
+tb_application_fpga_sim.fst
+tb_application_fpga_sim.fst.hier
+tb_verilated/
+verilated/
 *.o
 *.asc
 *.bin
