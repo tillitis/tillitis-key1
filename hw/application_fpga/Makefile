@@ -380,42 +380,6 @@ application_fpga_testfw.bin: application_fpga.asc bram_fw.hex testfw.hex
 	$(ICESTORM_PATH)icepack $<.tmp $@
 	@-$(RM) $<.tmp
 
-#-------------------------------------------------------------------
-# post-synthesis functional simulation.
-#-------------------------------------------------------------------
-synth_tb.vvp: $(P)/tb/tb_application_fpga.v synth.json
-	iverilog \
-		-o $@ \
-		-s tb_application_fpga synth.v $(P)/tb/tb_application_fpga.v \
-		-DNO_ICE40_DEFAULT_ASSIGNMENTS \
-		$(ICE40_SIM_CELLS)
-	chmod -x $@
-
-synth_sim: synth_tb.vvp
-	vvp -N $<
-.PHONY: synth_sim
-
-synth_sim_vcd: synth_tb.vvp
-	vvp -N $< +vcd
-.PHONY: synth_sim_vcd
-
-#-------------------------------------------------------------------
-# post-place and route functional simulation.
-#-------------------------------------------------------------------
-route.v: application_fpga.asc  $(P)/data/$(PIN_FILE)
-	icebox_vlog -L -n application_fpga -sp  $(P)/data/$(PIN_FILE) $< > $@
-
-route_tb.vvp: route.v tb/tb_application_fpga.v
-	iverilog -o $@ -s tb_application_fpga $^ $(ICE40_SIM_CELLS)
-	chmod -x $@
-
-route_sim: route_tb.vvp
-	vvp -N $<
-.PHONY: route_sim
-
-route_sim_vcd: route_tb.vvp
-	vvp -N $< +vcd
-.PHONY: route_sim_vcd
 
 #-------------------------------------------------------------------
 # FPGA device programming.
@@ -451,10 +415,8 @@ view: tb_application_fpga_vcd
 #-------------------------------------------------------------------
 clean: clean_fw clean_tb
 	rm -f bram_fw.hex
-	rm -f synth.{v,json,txt} route.v application_fpga.{asc,bin,vcd} application_fpga_testfw.bin
-	rm -f tb_application_fpga.vvp synth_tb.vvp route_tb.vvp
+	rm -f synth.{v,json,txt} application_fpga.{asc,bin} application_fpga_testfw.bin
 	rm -f application_fpga_par.{json,txt}
-	rm -f *.vcd
 	rm -f lint_issues.txt
 	rm -rf verilated
 	rm -f tools/tpt/*.hex
