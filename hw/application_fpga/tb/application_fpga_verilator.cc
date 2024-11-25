@@ -21,12 +21,15 @@
 #include <signal.h>
 #include <sys/types.h>
 
-#include "Vapplication_fpga.h"
+#include "Vapplication_fpga_sim.h"
 #include "verilated.h"
 
-// Clock: 18 MHz, 62500 bps
-// Divisor = 18E6 / 62500 = 288
-#define BIT_DIV 288
+// Clock: 21 MHz, 62500 bps
+// Divisor = 21E6 / 62500 = 336
+#define CPU_CLOCK 21000000
+#define BAUD_RATE 62500
+#define BIT_DIV (CPU_CLOCK/BAUD_RATE)
+
 
 struct uart {
 	int bit_div;
@@ -294,13 +297,15 @@ int main(int argc, char **argv, char **env)
 {
 	Verilated::commandArgs(argc, argv);
 	int r = 0, g = 0, b = 0;
-	Vapplication_fpga top;
+	Vapplication_fpga_sim top;
 	struct uart u;
 	struct pty p;
 	int err;
 
 	if (signal(SIGUSR1, sighandler) == SIG_ERR)
 		return -1;
+	printf("cpu clock: %d\n", CPU_CLOCK);
+	printf("baud rate: %d\n", BAUD_RATE);
 	printf("generate touch event: \"$ kill -USR1 %d\"\n", (int)getpid());
 
 	err = pty_init(&p);
