@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include "types.h"
+#include <stddef.h>
+#include <stdint.h>
 
 #ifndef PROTO_H
 #define PROTO_H
@@ -36,6 +37,8 @@ enum fwcmd {
 	FW_CMD_GET_UDI			= 0x08,
 	FW_RSP_GET_UDI			= 0x09,
 	FW_CMD_MAX                      = 0x0a,
+	FW_CMD_LOAD_APP_FLASH		= 0xF0,
+	FW_RSP_LOAD_APP_FLASH		= 0xF1,
 };
 // clang-format on
 
@@ -55,4 +58,5 @@ void writebyte(uint8_t b);
 uint8_t readbyte(void);
 void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf);
 int readcommand(struct frame_header *hdr, uint8_t *cmd, int state);
+void write(uint8_t *buf, size_t nbytes);
 #endif

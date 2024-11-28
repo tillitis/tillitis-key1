@@ -5,31 +5,39 @@
 
 #include "../tk1_mem.h"
 #include "assert.h"
+#include "auth_app.h"
 #include "blake2s/blake2s.h"
+#include "htif.h"
 #include "lib.h"
+#include "partition_table.h"
+#include "preload_app.h"
 #include "proto.h"
+#include "rng.h"
 #include "state.h"
-#include "types.h"
+#include "syscall.h"
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 // clang-format off
-static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
-static volatile uint32_t *system_mode_ctrl = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_MODE_CTRL;
-static volatile uint32_t *name0            = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
-static volatile uint32_t *name1            = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
-static volatile uint32_t *ver              = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
-static volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
-static volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
-static volatile uint32_t *app_addr         = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
-static volatile uint32_t *app_size         = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
-static volatile uint32_t *fw_blake2s_addr  = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
-static volatile uint32_t *trng_status      = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
-static volatile uint32_t *trng_entropy     = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
-static volatile uint32_t *timer            = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
-static volatile uint32_t *timer_prescaler  = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
-static volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
-static volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
-static volatile uint32_t *ram_addr_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
-static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
+static volatile uint32_t *uds             = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
+/*static volatile uint32_t *system_mode_ctrl = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_MODE_CTRL;*/
+static volatile uint32_t *name0           = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
+static volatile uint32_t *name1           = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
+static volatile uint32_t *ver             = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
+static volatile uint32_t *udi             = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
+static volatile uint32_t *cdi             = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
+static volatile uint32_t *app_addr        = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
+static volatile uint32_t *app_size        = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
+static volatile uint32_t *fw_blake2s_addr = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
+static volatile uint32_t *syscall_addr    = (volatile uint32_t *)TK1_MMIO_TK1_SYSCALL;
+static volatile uint32_t *timer           = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
+static volatile uint32_t *timer_prescaler = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
+static volatile uint32_t *timer_status    = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
+static volatile uint32_t *timer_ctrl      = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
+static volatile uint32_t *ram_addr_rand   = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
+static volatile uint32_t *ram_data_rand   = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
 // clang-format on
 
 // Context for the loading of a TKey program
@@ -37,14 +45,15 @@ struct context {
 	uint32_t left;	    // Bytes left to receive
 	uint8_t digest[32]; // Program digest
 	uint8_t *loadaddr;  // Where we are currently loading a TKey program
-	uint8_t use_uss;    // Use USS?
+	bool use_uss;	    // Use USS?
 	uint8_t uss[32];    // User Supplied Secret, if any
+	bool from_flash;
 };
 
 static void print_hw_version(void);
 static void print_digest(uint8_t *md);
-static uint32_t rnd_word(void);
-static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
+static int compute_app_digest(uint8_t *digest);
+static void compute_cdi(const uint8_t *digest, const bool use_uss,
 			const uint8_t *uss);
 static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word);
 static enum state initial_commands(const struct frame_header *hdr,
@@ -53,8 +62,7 @@ static enum state initial_commands(const struct frame_header *hdr,
 static enum state loading_commands(const struct frame_header *hdr,
 				   const uint8_t *cmd, enum state state,
 				   struct context *ctx);
-static void run(const struct context *ctx);
-static uint32_t xorwow(uint32_t state, uint32_t acc);
+static void run(const struct context *ctx, partition_table_t *part_table);
 static void scramble_ram(void);
 
 static void print_hw_version(void)
@@ -81,15 +89,16 @@ static void print_digest(uint8_t *md)
 	htif_lf();
 }
 
-static uint32_t rnd_word(void)
+/* Computes the blake2s digest of the app loaded into RAM */
+static int compute_app_digest(uint8_t *digest)
 {
-	while ((*trng_status & (1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
-	}
-	return *trng_entropy;
+	blake2s_ctx b2s_ctx = {0};
+	return blake2s(digest, 32, NULL, 0, (const void *)TK1_RAM_BASE,
+		       *app_size, &b2s_ctx);
 }
 
 // CDI = blake2s(uds, blake2s(app), uss)
-static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
+static void compute_cdi(const uint8_t *digest, const bool use_uss,
 			const uint8_t *uss)
 {
 	uint32_t local_uds[8] = {0};
@@ -100,7 +109,7 @@ static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 
 	// Prepare to sleep a random number of cycles before reading out UDS
 	*timer_prescaler = 1;
-	rnd_sleep = rnd_word();
+	rnd_sleep = rng_get_word();
 	// Up to 65536 cycles
 	rnd_sleep &= 0xffff;
 	*timer = (uint32_t)(rnd_sleep == 0 ? 1 : rnd_sleep);
@@ -121,7 +130,7 @@ static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 	blake2s_update(&secure_ctx, digest, 32);
 
 	// Possibly hash in the USS as well
-	if (use_uss != 0) {
+	if (use_uss) {
 		blake2s_update(&secure_ctx, uss, 32);
 	}
 
@@ -217,10 +226,10 @@ static enum state initial_commands(const struct frame_header *hdr,
 		// Do we have a USS at all?
 		if (cmd[5] != 0) {
 			// Yes
-			ctx->use_uss = TRUE;
+			ctx->use_uss = true;
 			memcpy_s(ctx->uss, 32, &cmd[6], 32);
 		} else {
-			ctx->use_uss = FALSE;
+			ctx->use_uss = false;
 		}
 
 		rsp[0] = STATUS_OK;
@@ -234,6 +243,13 @@ static enum state initial_commands(const struct frame_header *hdr,
 		state = FW_STATE_LOADING;
 		break;
 	}
+
+	case FW_CMD_LOAD_APP_FLASH:
+		rsp[0] = STATUS_OK;
+		fwreply(*hdr, FW_RSP_LOAD_APP_FLASH, rsp);
+
+		state = FW_STATE_LOAD_APP_FLASH;
+		break;
 
 	default:
 		htif_puts("Got unknown firmware cmd: 0x");
@@ -274,26 +290,20 @@ static enum state loading_commands(const struct frame_header *hdr,
 		ctx->left -= nbytes;
 
 		if (ctx->left == 0) {
-			blake2s_ctx b2s_ctx = {0};
-			int blake2err = 0;
-
 			htif_puts("Fully loaded ");
 			htif_putinthex(*app_size);
 			htif_lf();
 
 			// Compute Blake2S digest of the app,
 			// storing it for FW_STATE_RUN
-			blake2err = blake2s(&ctx->digest, 32, NULL, 0,
-					    (const void *)TK1_RAM_BASE,
-					    *app_size, &b2s_ctx);
-			assert(blake2err == 0);
+			int digest_err = compute_app_digest(ctx->digest);
+			assert(digest_err == 0);
 			print_digest(ctx->digest);
 
 			// And return the digest in final
 			// response
 			rsp[0] = STATUS_OK;
-			memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, &ctx->digest,
-				 32);
+			memcpy_s(&rsp[1], CMDLEN_MAXBYTES - 1, ctx->digest, 32);
 			fwreply(*hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
 
 			state = FW_STATE_RUN;
@@ -316,12 +326,27 @@ static enum state loading_commands(const struct frame_header *hdr,
 	return state;
 }
 
-static void run(const struct context *ctx)
+static void run(const struct context *ctx, partition_table_t *part_table)
 {
+	/* At this point we expect an app to be loaded into RAM */
 	*app_addr = TK1_RAM_BASE;
 
 	// CDI = hash(uds, hash(app), uss)
 	compute_cdi(ctx->digest, ctx->use_uss, ctx->uss);
+
+	if (ctx->from_flash) {
+		if (part_table->pre_app_data.status == 0x02) {
+			htif_puts("Create auth\n");
+			auth_app_create(&part_table->pre_app_data.auth);
+			part_table->pre_app_data.status = 0x01;
+			part_table_write(part_table);
+		}
+
+		if (!auth_app_authenticate(&part_table->pre_app_data.auth)) {
+			htif_puts("!Authenticated\n");
+			assert(1 == 2);
+		}
+	}
 
 	htif_puts("Flipping to app mode!\n");
 	htif_puts("Jumping to ");
@@ -343,7 +368,7 @@ static void run(const struct context *ctx)
 	// clang-format on
 
 	// Flip over to application mode
-	*system_mode_ctrl = 1;
+	/**system_mode_ctrl = 1;*/
 
 	// XXX Firmware stack now no longer available
 	// Don't use any function calls!
@@ -364,32 +389,23 @@ static void run(const struct context *ctx)
 	__builtin_unreachable();
 }
 
-static uint32_t xorwow(uint32_t state, uint32_t acc)
-{
-	state ^= state << 13;
-	state ^= state >> 17;
-	state ^= state << 5;
-	state += acc;
-	return state;
-}
-
 static void scramble_ram(void)
 {
 	uint32_t *ram = (uint32_t *)(TK1_RAM_BASE);
 
 	// Fill RAM with random data
 	// Get random state and accumulator seeds.
-	uint32_t data_state = rnd_word();
-	uint32_t data_acc = rnd_word();
+	uint32_t data_state = rng_get_word();
+	uint32_t data_acc = rng_get_word();
 
 	for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
-		data_state = xorwow(data_state, data_acc);
+		data_state = rng_xorwow(data_state, data_acc);
 		ram[w] = data_state;
 	}
 
 	// Set RAM address and data scrambling parameters
-	*ram_addr_rand = rnd_word();
-	*ram_data_rand = rnd_word();
+	*ram_addr_rand = rng_get_word();
+	*ram_data_rand = rng_get_word();
 }
 
 int main(void)
@@ -398,11 +414,15 @@ int main(void)
 	struct frame_header hdr = {0};
 	uint8_t cmd[CMDLEN_MAXBYTES] = {0};
 	enum state state = FW_STATE_INITIAL;
+	partition_table_t part_table;
+	ctx.from_flash = false;
 
 	print_hw_version();
 
-	// Let the app know the function adddress for blake2s()
+	// Let the app know the function address for blake2s()
 	*fw_blake2s_addr = (uint32_t)blake2s;
+	// Let the app know the function address for syscall()
+	*syscall_addr = (uint32_t)syscall;
 
 	/*@-mustfreeonly@*/
 	/* Yes, splint, this points directly to RAM and we don't care
@@ -410,9 +430,18 @@ int main(void)
 	 */
 	ctx.loadaddr = (uint8_t *)TK1_RAM_BASE;
 	/*@+mustfreeonly@*/
-	ctx.use_uss = FALSE;
+	ctx.use_uss = false;
 
 	scramble_ram();
+
+	part_table_read(&part_table);
+
+	/* Force a preloaded app to start, to create the authentication digest
+	 */
+	if (preload_check_valid_app(&part_table) &&
+	    part_table.pre_app_data.status == 0x02) {
+		state = FW_STATE_LOAD_APP_FLASH;
+	}
 
 	for (;;) {
 		switch (state) {
@@ -434,8 +463,27 @@ int main(void)
 			state = loading_commands(&hdr, cmd, state, &ctx);
 			break;
 
+		case FW_STATE_LOAD_APP_FLASH:
+			if (preload_start(&part_table) == -1) {
+				state = FW_STATE_FAIL;
+				break;
+			}
+
+			*app_size = part_table.pre_app_data.size;
+			assert(*app_size <= TK1_APP_MAX_SIZE);
+
+			int digest_err = compute_app_digest(ctx.digest);
+			assert(digest_err == 0);
+			print_digest(ctx.digest);
+			ctx.use_uss = false;
+			ctx.from_flash = true;
+
+			state = FW_STATE_RUN;
+
+			break;
+
 		case FW_STATE_RUN:
-			run(&ctx);
+			run(&ctx, &part_table);
 			break; // This is never reached!
 
 		case FW_STATE_FAIL:

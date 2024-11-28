@@ -6,10 +6,13 @@
 #include "proto.h"
 #include "../tk1_mem.h"
 #include "assert.h"
+#include "htif.h"
 #include "led.h"
 #include "lib.h"
 #include "state.h"
-#include "types.h"
+
+#include <stddef.h>
+#include <stdint.h>
 
 // clang-format off
 static volatile uint32_t *can_rx = (volatile uint32_t *)TK1_MMIO_UART_RX_STATUS;
@@ -21,7 +24,6 @@ static volatile uint32_t *tx =     (volatile uint32_t *)TK1_MMIO_UART_TX_DATA;
 static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 		      enum cmdlen len);
 static int parseframe(uint8_t b, struct frame_header *hdr);
-static void write(uint8_t *buf, size_t nbytes);
 static int read(uint8_t *buf, size_t bufsize, size_t nbytes);
 static size_t bytelen(enum cmdlen cmdlen);
 
@@ -106,6 +108,10 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 		len = LEN_32;
 		break;
 
+	case FW_RSP_LOAD_APP_FLASH:
+		len = LEN_1;
+		break;
+
 	default:
 		htif_puts("fwreply(): Unknown response code: 0x");
 		htif_puthex(rspcode);
@@ -135,7 +141,7 @@ void writebyte(uint8_t b)
 	}
 }
 
-static void write(uint8_t *buf, size_t nbytes)
+void write(uint8_t *buf, size_t nbytes)
 {
 	for (int i = 0; i < nbytes; i++) {
 		writebyte(buf[i]);

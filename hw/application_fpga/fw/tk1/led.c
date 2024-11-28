@@ -5,7 +5,7 @@
 
 #include "led.h"
 #include "../tk1_mem.h"
-#include "types.h"
+#include <stdint.h>
 
 static volatile uint32_t *led = (volatile uint32_t *)TK1_MMIO_TK1_LED;
 

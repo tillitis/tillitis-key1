@@ -32,7 +32,7 @@ TARGET_FREQ ?= 21
 
 # Size in 32-bit words, must be divisible by 256 (pairs of EBRs, because 16
 # bits wide; an EBR is 128 32-bits words)
-BRAM_FW_SIZE ?= 1536
+BRAM_FW_SIZE ?= 2048
 
 PIN_FILE ?= application_fpga_tk1.pcf
 
@@ -47,7 +47,7 @@ CFLAGS = \
 	-mabi=ilp32 \
 	-static \
 	-std=gnu99 \
-	-O2 \
+	-Os \
 	-ffast-math \
 	-fno-common \
 	-fno-builtin-printf \
@@ -106,11 +106,21 @@ PICORV32_SRCS = \
 
 FIRMWARE_DEPS = \
 	$(P)/fw/tk1_mem.h \
-	$(P)/fw/tk1/types.h \
 	$(P)/fw/tk1/lib.h \
 	$(P)/fw/tk1/proto.h \
 	$(P)/fw/tk1/assert.h \
-	$(P)/fw/tk1/led.h
+	$(P)/fw/tk1/led.h \
+	$(P)/fw/tk1/blake2s/blake2s.h \
+	$(P)/fw/tk1/spi.h \
+	$(P)/fw/tk1/flash.h \
+	$(P)/fw/tk1/partition_table.h \
+	$(P)/fw/tk1/preload_app.h \
+	$(P)/fw/tk1/auth_app.h \
+	$(P)/fw/tk1/htif.h \
+	$(P)/fw/tk1/rng.h \
+	$(P)/fw/tk1/mgmt_app.h \
+	$(P)/fw/tk1/storage.h \
+	$(P)/fw/tk1/syscall.h
 
 FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
@@ -119,7 +129,17 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/lib.o \
 	$(P)/fw/tk1/assert.o \
 	$(P)/fw/tk1/led.o \
-	$(P)/fw/tk1/blake2s/blake2s.o
+	$(P)/fw/tk1/blake2s/blake2s.o \
+	$(P)/fw/tk1/spi.o \
+	$(P)/fw/tk1/flash.o \
+	$(P)/fw/tk1/partition_table.o \
+	$(P)/fw/tk1/preload_app.o \
+	$(P)/fw/tk1/auth_app.o \
+	$(P)/fw/tk1/htif.o \
+	$(P)/fw/tk1/rng.o \
+	$(P)/fw/tk1/mgmt_app.o \
+	$(P)/fw/tk1/storage.o \
+	$(P)/fw/tk1/syscall.o
 
 FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/main.c \
@@ -127,7 +147,17 @@ FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/lib.c \
 	$(P)/fw/tk1/assert.c \
 	$(P)/fw/tk1/led.c \
-	$(P)/fw/tk1/blake2s/blake2s.c
+	$(P)/fw/tk1/blake2s/blake2s.c \
+	$(P)/fw/tk1/spi.c \
+	$(P)/fw/tk1/flash.c \
+	$(P)/fw/tk1/partition_table.c \
+	$(P)/fw/tk1/preload_app.c \
+	$(P)/fw/tk1/auth_app.c \
+	$(P)/fw/tk1/htif.c \
+	$(P)/fw/tk1/rng.c \
+	$(P)/fw/tk1/mgmt_app.c \
+	$(P)/fw/tk1/storage.c \
+	$(P)/fw/tk1/syscall.c
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
@@ -168,7 +198,11 @@ secret:
 # Firmware generation.
 # Included in the bitstream.
 #-------------------------------------------------------------------
-LDFLAGS = -T $(P)/fw/tk1/firmware.lds
+# -Wl,-mllvm,-mattr=+c,-mllvm,-mattr=+zmmul added as a workaround to be able to
+#  disassemble compressed RV32 instructions
+LDFLAGS = \
+	-T $(P)/fw/tk1/firmware.lds \
+	-Wl,-mllvm,-mattr=+c,-mllvm,-mattr=+zmmul
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
@@ -332,7 +366,7 @@ tb:
 # Synthesis. Place & Route. Bitstream generation.
 #-------------------------------------------------------------------
 
-YOSYS_FLAG ?=
+YOSYS_FLAG ?=-DINCLUDE_SPI_MASTER
 
 synth.json: $(FPGA_SRC) $(VERILOG_SRCS) $(PICORV32_SRCS) bram_fw.hex \
 		$(P)/data/uds.hex $(P)/data/udi.hex
