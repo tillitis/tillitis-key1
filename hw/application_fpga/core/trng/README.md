@@ -81,9 +81,9 @@ the implementation:
 - 16 oscillators in each group
 - 64 bits collected before setting the ready flag
 
-With the TKey device running at 18 MHz this means that we sample bits
-at 4.3 kbps. Since we sample twice to produce a single bit, the
-effective raw bitrate is 2.1 kbps.
+With the TKey device running at 24 MHz this means that we sample bits
+at 5.8 kbps. Since we sample twice to produce a single bit, the
+effective raw bitrate is 2.9 kbps.
 
 The 64 bits collected means that there is a separation of at least 32
 collected entropy bits between bits in the words read out.
