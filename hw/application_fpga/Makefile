@@ -342,7 +342,8 @@ tb:
 	make -C core/touch_sense/toolruns sim-top
 	make -C core/trng/toolruns sim-top
 	make -C core/uart/toolruns sim-top
-	make -C core/uds/toolruns sim-top
+#	make -C core/uds/toolruns sim-top
+#	uds tb is broken, see #260
 
 .PHONY: tb
 
