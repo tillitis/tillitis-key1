@@ -144,6 +144,10 @@ TESTFW_OBJS = \
 	$(P)/fw/tk1/lib.o \
 	$(P)/fw/tk1/blake2s/blake2s.o
 
+IRQPOC_OBJS = \
+	$(P)/fw/irqpoc/main.o \
+	$(P)/fw/irqpoc/start.o
+
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
 #-------------------------------------------------------------------
@@ -180,6 +184,7 @@ LDFLAGS = -T $(P)/fw/tk1/firmware.lds
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
+$(IRQPOC_OBJS): $(FIRMWARE_DEPS)
 
 firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
@@ -222,6 +227,9 @@ splint:
 testfw.elf: $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@
 
+irqpoc.elf: $(IRQPOC_OBJS) $(P)/fw/tk1/firmware.lds
+	$(CC) $(CFLAGS) $(IRQPOC_OBJS) $(LDFLAGS) -o $@
+
 # Generate a fake BRAM file that will be filled in later after place-n-route
 bram_fw.hex:
 	$(ICESTORM_PATH)icebram -v -g 32 $(BRAM_FW_SIZE) > $@
@@ -231,6 +239,8 @@ firmware.hex: firmware.bin firmware_size_mismatch
 simfirmware.hex: simfirmware.bin simfirmware_size_mismatch
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
 testfw.hex: testfw.bin testfw_size_mismatch
+	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
+irqpoc.hex: irqpoc.bin
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
 
 .PHONY: check-binary-hashes
@@ -402,11 +412,13 @@ application_fpga_testfw.bin: application_fpga.asc bram_fw.hex testfw.hex
 #-------------------------------------------------------------------
 # Build testbench simulation for the design
 #-------------------------------------------------------------------
+SIMFIRMWARE = simfirmware.hex
+
 tb_application_fpga: $(SIM_VERILOG_SRCS) \
 			$(VERILOG_SRCS) \
 			$(PICORV32_SRCS) \
 			$(ICE40_SIM_CELLS) \
-			simfirmware.hex
+			$(SIMFIRMWARE)
 	python3 ./tools/app_bin_to_spram_hex.py \
 			./tb/app.bin \
 			./tb/output_spram0.hex \
@@ -430,13 +442,22 @@ tb_application_fpga: $(SIM_VERILOG_SRCS) \
 		-DNO_ICE40_DEFAULT_ASSIGNMENTS \
 		-DAPP_SIZE=$(shell ls -l tb/app.bin| awk '{print $$5}') \
 		-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
-		-DFIRMWARE_HEX=\"$(P)/simfirmware.hex\" \
+		-DFIRMWARE_HEX=\"$(P)/$(SIMFIRMWARE)\" \
 		-DUDS_HEX=\"$(P)/data/uds.hex\" \
 		-DUDI_HEX=\"$(P)/data/udi.hex\" \
 		$(filter %.v, $^)
 	make -C tb_verilated -f Vtb_application_fpga_sim.mk
 	./tb_verilated/Vtb_application_fpga_sim \
 		&& { echo -e "\n -- Wave simulation saved to tb_application_fpga_sim.fst\n"; true; }
+
+.PHONY: emptyapp
+emptyapp:
+	dd if=/dev/zero of=tb/app.bin bs=1024 count=128
+
+.PHONY: tb_application_fpga_irqpoc
+tb_application_fpga_irqpoc: SIMFIRMWARE=irqpoc.hex
+tb_application_fpga_irqpoc: irqpoc.hex emptyapp tb_application_fpga
+
 
 #-------------------------------------------------------------------
 # FPGA device programming.
@@ -484,6 +505,7 @@ clean_fw:
 	rm -f $(FIRMWARE_OBJS)
 	rm -f testfw.{elf,elf.map,bin,hex}
 	rm -f $(TESTFW_OBJS)
+	rm -f $(IRQPOC_OBJS)
 	rm -f qemu_firmware.elf
 .PHONY: clean_fw
 
