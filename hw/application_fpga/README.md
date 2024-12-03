@@ -24,17 +24,19 @@ and bitmasks, see the file `fw/tk1_mem.h`.
 
 Rough memory map:
 
-| *name*  | *prefix* |
-|---------|----------|
-| ROM     | 0x00     |
-| RAM     | 0x40     |
-| TRNG    | 0xc0     |
-| Timer   | 0xc1     |
-| UDS     | 0xc2     |
-| UART    | 0xc3     |
-| Touch   | 0xc4     |
-| FW\_RAM | 0xd0     |
-| TK1     | 0xff     |
+| *name*     | *prefix* |
+|------------|----------|
+| ROM        | 0x00     |
+| RAM        | 0x40     |
+| TRNG       | 0xc0     |
+| Timer      | 0xc1     |
+| UDS        | 0xc2     |
+| UART       | 0xc3     |
+| Touch      | 0xc4     |
+| FW\_RAM    | 0xd0     |
+| IRQ30\_SET | 0xe0     |
+| IRQ31\_SET | 0xe1     |
+| TK1        | 0xff     |
 
 ## `clk_reset_gen`
 
@@ -96,6 +98,16 @@ hours, days) there is also a 32 bit prescaler.
 
 The timer is available to use by firmware and applications.
 
+## `irq30_set`
+
+Interrupt 30 trigger area. A 32-bit write to the IRQ30\_SET memory
+area will trigger interrupt 30.
+
+## `irq31_set`
+
+Interrupt 31 trigger area. A 32-bit write to the IRQ31\_SET memory
+area will trigger interrupt 31.
+
 ## `tk1`
 
 See [tk1 README](core/tk1/README.md) for details.
@@ -114,6 +126,31 @@ Contains:
 - Security monitor.
 - SPI main.
 - System reset.
+
+### Interrupts
+
+Triggering an interrupt will cause the CPU to execute the interrupt
+handler att address 0x10.
+
+The interrupt handler is shared by IRQ30 and IRQ31. Register `x4` can
+be inspected to determine the interrupt source. Each interrupt source
+is assigned one bit in x4. Triggered interrupts have their bit set to
+`1`.
+
+| *Interrupt source* | *x4 bit* |
+|--------------------|----------|
+| IRQ30\_SET         | 30       |
+| IRQ31\_SET         | 31       |
+
+The return address is located in register `x3`. Calling the PicoRV32
+specific instruction `retirq` exits the interrupt handler and clears
+the interrupt source.
+
+No registers are stored/restored when entering/exiting the interrupt
+handler. It is up to the software to store/restore as necessary.
+
+Interrupts can be enabled/disabled using the PicoRV32 specific
+`maskirq` instruction.
 
 ### Illegal instruction monitor
 
