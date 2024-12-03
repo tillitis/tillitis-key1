@@ -878,6 +878,17 @@ module tb_tk1 ();
       // Unused      trap range: 0xd1000000-0xfeffffff
       $display("--- test11: Unused");
       cpu_read_check_range_should_trap(32'hd1000000, 32'hd100000f);
+      cpu_read_check_range_should_trap(32'he0fffff0, 32'he0ffffff);
+
+      // SYSCALL     trap range. 0xe1000004-0xe1ffffff
+      $display("--- test11: SYSCALL");
+      cpu_read_check_range_should_not_trap(32'he1000000, 32'he1000003);
+      cpu_read_check_range_should_trap(32'he1000004, 32'he100000f);
+      cpu_read_check_range_should_trap(32'he1fffff0, 32'he1ffffff);
+
+      // Unused      trap range: 0xe2000000-0xfeffffff
+      $display("--- test11: Unused");
+      cpu_read_check_range_should_trap(32'he2000000, 32'he200000f);
       cpu_read_check_range_should_trap(32'hfefffff0, 32'hfeffffff);
 
       // TK1         trap range: 0xff000400-0xffffffff

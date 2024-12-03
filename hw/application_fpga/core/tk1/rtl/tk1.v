@@ -45,6 +45,8 @@ module tk1 #(
     output wire gpio3,
     output wire gpio4,
 
+    input wire syscall,
+
     input  wire          cs,
     input  wire          we,
     input  wire [ 7 : 0] address,
@@ -448,7 +450,17 @@ module tk1 #(
         end
 
         // In unused space
-        if ((cpu_addr[29 : 24] > 6'h10) && (cpu_addr[29 : 24] < 6'h3f)) begin
+        if ((cpu_addr[29 : 24] > 6'h10) && (cpu_addr[29 : 24] < 6'h21)) begin
+          force_trap_set = 1'h1;
+        end
+
+        // Outside SYSCALL
+        if (cpu_addr[29 : 24] == 6'h21 & |cpu_addr[23 : 2]) begin
+          force_trap_set = 1'h1;
+        end
+
+        // In unused space
+        if ((cpu_addr[29 : 24] > 6'h21) && (cpu_addr[29 : 24] < 6'h3f)) begin
           force_trap_set = 1'h1;
         end
 

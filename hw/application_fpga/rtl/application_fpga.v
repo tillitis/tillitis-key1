@@ -57,11 +57,13 @@ module application_fpga (
   localparam UART_PREFIX = 6'h03;
   localparam TOUCH_SENSE_PREFIX = 6'h04;
   localparam FW_RAM_PREFIX = 6'h10;
+  localparam SYSCALL_PREFIX = 6'h21;
   localparam TK1_PREFIX = 6'h3f;
 
   // Instruction used to cause a trap.
   localparam ILLEGAL_INSTRUCTION = 32'h0;
 
+  localparam IRQ31_IRQ_MASK = 2 ** 31;
 
   //----------------------------------------------------------------
   // Registers, memories with associated wires.
@@ -80,11 +82,13 @@ module application_fpga (
   wire          reset_n;
 
   /* verilator lint_off UNOPTFLAT */
+  reg  [31 : 0] cpu_irq;
   wire          cpu_trap;
   wire          cpu_valid;
   wire          cpu_instr;
   wire [03 : 0] cpu_wstrb;
   /* verilator lint_off UNUSED */
+  wire [31 : 0] cpu_eoi;
   wire [31 : 0] cpu_addr;
   wire [31 : 0] cpu_wdata;
 
@@ -139,6 +143,10 @@ module application_fpga (
   wire [31 : 0] touch_sense_read_data;
   wire          touch_sense_ready;
 
+  reg           irq31_cs;
+  reg           irq31_we;
+  reg           irq31_eoi;
+
   reg           tk1_cs;
   reg           tk1_we;
   reg  [ 7 : 0] tk1_address;
@@ -166,12 +174,17 @@ module application_fpga (
 
 
   picorv32 #(
-      .ENABLE_COUNTERS(0),
-      .TWO_STAGE_SHIFT(0),
-      .CATCH_MISALIGN (0),
-      .COMPRESSED_ISA (1),
-      .ENABLE_FAST_MUL(1),
-      .BARREL_SHIFTER (1)
+      .ENABLE_COUNTERS (0),
+      .TWO_STAGE_SHIFT (0),
+      .CATCH_MISALIGN  (0),
+      .COMPRESSED_ISA  (1),
+      .ENABLE_FAST_MUL (1),
+      .BARREL_SHIFTER  (1),
+      .ENABLE_IRQ      (1),
+      .ENABLE_IRQ_QREGS(0),
+      .ENABLE_IRQ_TIMER(0),
+      .MASKED_IRQ      (~IRQ31_IRQ_MASK),
+      .LATCHED_IRQ     (IRQ31_IRQ_MASK)
   ) cpu (
       .clk(clk),
       .resetn(reset_n),
@@ -185,11 +198,12 @@ module application_fpga (
       .mem_rdata(muxed_rdata_reg),
       .mem_instr(cpu_instr),
 
+      .irq(cpu_irq),
+      .eoi(cpu_eoi),
+
       // Defined unused ports. Makes lint happy. But
       // we still needs to help lint with empty ports.
       /* verilator lint_off PINCONNECTEMPTY */
-      .irq(32'h0),
-      .eoi(),
       .trace_valid(),
       .trace_data(),
       .mem_la_read(),
@@ -353,6 +367,8 @@ module application_fpga (
       .gpio3(app_gpio3),
       .gpio4(app_gpio4),
 
+      .syscall(irq31_eoi),
+
       .cs(tk1_cs),
       .we(tk1_we),
       .address(tk1_address),
@@ -376,6 +392,20 @@ module application_fpga (
       muxed_rdata_reg <= muxed_rdata_new;
       muxed_ready_reg <= muxed_ready_new;
     end
+  end
+
+
+  //----------------------------------------------------------------
+  // irq_ctrl
+  // Interrupt logic
+  //----------------------------------------------------------------
+  always @* begin : irq_ctrl
+    reg irq31_set;
+
+    irq31_set = irq31_cs & irq31_we;
+    cpu_irq   = {irq31_set, 31'h0};
+
+    irq31_eoi = cpu_eoi[31];
   end
 
 
@@ -427,6 +457,9 @@ module application_fpga (
     touch_sense_cs      = 1'h0;
     touch_sense_we      = |cpu_wstrb;
     touch_sense_address = cpu_addr[9 : 2];
+
+    irq31_cs            = 1'h0;
+    irq31_we            = |cpu_wstrb;
 
     tk1_cs              = 1'h0;
     tk1_we              = |cpu_wstrb;
@@ -498,6 +531,11 @@ module application_fpga (
                 fw_ram_cs       = 1'h1;
                 muxed_rdata_new = fw_ram_read_data;
                 muxed_ready_new = fw_ram_ready;
+              end
+
+              SYSCALL_PREFIX: begin
+                irq31_cs        = 1'h1;
+                muxed_ready_new = 1'h1;
               end
 
               TK1_PREFIX: begin
