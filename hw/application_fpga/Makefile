@@ -148,6 +148,10 @@ IRQPOC_OBJS = \
 	$(P)/fw/irqpoc/main.o \
 	$(P)/fw/irqpoc/start.o \
 
+IRQPOC_LED_TOGGLE_OBJS = \
+	$(P)/fw/irqpoc_led_toggle/main.o \
+	$(P)/fw/irqpoc_led_toggle/start.o \
+
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
 #-------------------------------------------------------------------
@@ -185,6 +189,7 @@ LDFLAGS = -T $(P)/fw/tk1/firmware.lds
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 $(IRQPOC_OBJS): $(FIRMWARE_DEPS)
+$(IRQPOC_LED_TOGGLE_OBJS): $(FIRMWARE_DEPS)
 
 firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
@@ -229,6 +234,9 @@ testfw.elf: $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
 
 irqpoc.elf: $(IRQPOC_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(IRQPOC_OBJS) $(LDFLAGS) -o $@
+
+irqpoc_led_toggle.elf: $(IRQPOC_LED_TOGGLE_OBJS) $(P)/fw/tk1/firmware.lds
+	$(CC) $(CFLAGS) $(IRQPOC_LED_TOGGLE_OBJS) $(LDFLAGS) -o $@
 
 # Generate a fake BRAM file that will be filled in later after place-n-route
 bram_fw.hex:
@@ -506,6 +514,7 @@ clean_fw:
 	rm -f testfw.{elf,elf.map,bin,hex}
 	rm -f $(TESTFW_OBJS)
 	rm -f $(IRQPOC_OBJS)
+	rm -f $(IRQPOC_LED_TOGGLE_OBJS)
 	rm -f qemu_firmware.elf
 .PHONY: clean_fw
 
