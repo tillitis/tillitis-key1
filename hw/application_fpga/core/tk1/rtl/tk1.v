@@ -48,6 +48,8 @@ module tk1 #(
     input wire access_level_hi,
     input wire access_level_med,
 
+    output wire fw_ram_en,
+
     input  wire          cs,
     input  wire          we,
     input  wire [ 7 : 0] address,
@@ -202,6 +204,7 @@ module tk1 #(
   assign system_reset  = system_reset_reg;
 
   assign rom_exec_en   = !system_mode | access_level_med | access_level_hi;
+  assign fw_ram_en     = !system_mode | access_level_hi;
 
   //----------------------------------------------------------------
   // Module instance.

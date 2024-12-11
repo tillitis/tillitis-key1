@@ -138,6 +138,7 @@ module application_fpga (
   reg  [31 : 0] fw_ram_write_data;
   wire [31 : 0] fw_ram_read_data;
   wire          fw_ram_ready;
+  wire          fw_ram_en;
 
   reg           touch_sense_cs;
   reg           touch_sense_we;
@@ -260,7 +261,7 @@ module application_fpga (
       .clk(clk),
       .reset_n(reset_n),
 
-      .system_mode(system_mode),
+      .en(fw_ram_en),
 
       .cs(fw_ram_cs),
       .we(fw_ram_we),
@@ -375,6 +376,8 @@ module application_fpga (
 
       .access_level_hi (irq31_eoi),
       .access_level_med(irq30_eoi),
+
+      .fw_ram_en(fw_ram_en),
 
       .cs(tk1_cs),
       .we(tk1_we),
