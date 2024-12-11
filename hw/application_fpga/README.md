@@ -24,17 +24,19 @@ and bitmasks, see the file `fw/tk1_mem.h`.
 
 Rough memory map:
 
-| *name*  | *prefix* |
-|---------|----------|
-| ROM     | 0x00     |
-| RAM     | 0x40     |
-| TRNG    | 0xc0     |
-| Timer   | 0xc1     |
-| UDS     | 0xc2     |
-| UART    | 0xc3     |
-| Touch   | 0xc4     |
-| FW\_RAM | 0xd0     |
-| TK1     | 0xff     |
+| *name*     | *prefix* |
+|------------|----------|
+| ROM        | 0x00     |
+| RAM        | 0x40     |
+| TRNG       | 0xc0     |
+| Timer      | 0xc1     |
+| UDS        | 0xc2     |
+| UART       | 0xc3     |
+| Touch      | 0xc4     |
+| FW\_RAM    | 0xd0     |
+| IRQ30\_SET | 0xe0     |
+| IRQ31\_SET | 0xe1     |
+| TK1        | 0xff     |
 
 ## `clk_reset_gen`
 
@@ -96,6 +98,59 @@ hours, days) there is also a 32 bit prescaler.
 
 The timer is available to use by firmware and applications.
 
+## `irq30_set`
+
+Interrupt 30 trigger area. A 32-bit write to the IRQ30\_SET memory
+area will trigger interrupt 30.
+
+## `irq31_set`
+
+Interrupt 31 trigger area. A 32-bit write to the IRQ31\_SET memory
+area will trigger interrupt 31.
+
+## Interrupts
+
+Triggering an interrupt will cause the CPU to execute the interrupt
+handler att address 0x10.
+
+The interrupt handler is shared by IRQ30 and IRQ31. Register `x4` can
+be inspected to determine the interrupt source. Each interrupt source
+is assigned one bit in x4. Triggered interrupts have their bit set to
+`1`.
+
+| *Interrupt Name* | *Source*   | *x4 Bit* |
+|------------------|------------|----------|
+| IRQ_SYSCALL_LO   | IRQ30\_SET | 30       |
+| IRQ_SYSCALL_HI   | IRQ31\_SET | 31       |
+
+The return address is located in register `x3`. Calling the PicoRV32
+specific instruction `retirq` exits the interrupt handler and clears
+the interrupt source.
+
+No registers are stored/restored when entering/exiting the interrupt
+handler. It is up to the software to store/restore as necessary.
+
+Interrupts can be enabled/disabled using the PicoRV32 specific
+`maskirq` instruction.
+
+## Restricted resources
+
+The following table shows resource availablility for each execution
+context:
+
+| *Execution Context* | *ROM*  | *FW RAM* |
+|---------------------|--------|----------|
+| Firmware mode       | r/x    | r/w      |
+| App mode            | r      | i        |
+| IRQ_SYSCALL_LO      | r/x    | i        |
+| IRQ_SYSCALL_HI      | r/x    | r/w      |
+
+Legend:
+r = readable
+w = writeable
+x = executable
+i = invisible
+
 ## `tk1`
 
 See [tk1 README](core/tk1/README.md) for details.
@@ -107,7 +162,6 @@ Contains:
 - RGB LED control.
 - General purpose input/output (GPIO) pin control.
 - Application introspection: start address and size of binary.
-- BLAKE2s function access.
 - Compound Device Identity (CDI).
 - Unique Device Identity (UDI).
 - RAM memory protection.

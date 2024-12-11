@@ -45,6 +45,11 @@ module tk1 #(
     output wire gpio3,
     output wire gpio4,
 
+    input wire access_level_hi,
+    input wire access_level_med,
+
+    output wire fw_ram_en,
+
     input  wire          cs,
     input  wire          we,
     input  wire [ 7 : 0] address,
@@ -79,8 +84,6 @@ module tk1 #(
   localparam ADDR_APP_START = 8'h0c;
   localparam ADDR_APP_SIZE = 8'h0d;
 
-  localparam ADDR_BLAKE2S = 8'h10;
-
   localparam ADDR_CDI_FIRST = 8'h20;
   localparam ADDR_CDI_LAST = 8'h27;
 
@@ -107,6 +110,7 @@ module tk1 #(
   localparam FW_RAM_FIRST = 32'hd0000000;
   localparam FW_RAM_LAST = 32'hd00007ff;
 
+  localparam FW_ROM_LAST = 32'h00001fff;
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -115,6 +119,7 @@ module tk1 #(
   reg           cdi_mem_we;
 
   reg           system_mode_reg;
+  reg           system_mode_new;
   reg           system_mode_we;
 
   reg  [ 2 : 0] led_reg;
@@ -132,9 +137,6 @@ module tk1 #(
 
   reg  [31 : 0] app_size_reg;
   reg           app_size_we;
-
-  reg  [31 : 0] blake2s_addr_reg;
-  reg           blake2s_addr_we;
 
   reg  [23 : 0] cpu_trap_ctr_reg;
   reg  [23 : 0] cpu_trap_ctr_new;
@@ -181,6 +183,8 @@ module tk1 #(
   wire          spi_ready;
   wire [ 7 : 0] spi_rx_data;
 
+  wire          rom_exec_en;
+
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
@@ -199,6 +203,8 @@ module tk1 #(
 
   assign system_reset  = system_reset_reg;
 
+  assign rom_exec_en   = !system_mode | access_level_med | access_level_hi;
+  assign fw_ram_en     = !system_mode | access_level_hi;
 
   //----------------------------------------------------------------
   // Module instance.
@@ -258,7 +264,6 @@ module tk1 #(
       gpio4_reg         <= 1'h0;
       app_start_reg     <= 32'h0;
       app_size_reg      <= APP_SIZE;
-      blake2s_addr_reg  <= 32'h0;
       cdi_mem[0]        <= 32'h0;
       cdi_mem[1]        <= 32'h0;
       cdi_mem[2]        <= 32'h0;
@@ -290,7 +295,7 @@ module tk1 #(
       gpio2_reg[1] <= gpio2_reg[0];
 
       if (system_mode_we) begin
-        system_mode_reg <= 1'h1;
+        system_mode_reg <= system_mode_new;
       end
 
       if (led_we) begin
@@ -311,10 +316,6 @@ module tk1 #(
 
       if (app_size_we) begin
         app_size_reg <= write_data;
-      end
-
-      if (blake2s_addr_we) begin
-        blake2s_addr_reg <= write_data;
       end
 
       if (cdi_mem_we) begin
@@ -385,6 +386,9 @@ module tk1 #(
   //
   // Trying to execute instructions in FW-RAM.
   //
+  // Executing instructions in ROM, while ROM is marked as not
+  // executable.
+  //
   // Trying to execute code in mem area set to be data access only.
   // This requires execution monitor to have been setup and
   // enabled.
@@ -402,6 +406,12 @@ module tk1 #(
           force_trap_set = 1'h1;
         end
 
+        if (!rom_exec_en) begin
+          if (cpu_addr <= FW_ROM_LAST) begin  // Only valid as long as ROM starts at address 0x00.
+            force_trap_set = 1'h1;
+          end
+        end
+
         if (cpu_mon_en_reg) begin
           if ((cpu_addr >= cpu_mon_first_reg) && (cpu_addr <= cpu_mon_last_reg)) begin
             force_trap_set = 1'h1;
@@ -411,18 +421,32 @@ module tk1 #(
     end
   end
 
+  //----------------------------------------------------------------
+  // system_mode_ctrl
+  //
+  // Automatically lower privilege when executing above ROM.
+  // ----------------------------------------------------------------
+  always @* begin : system_mode_ctrl
+    system_mode_new = 1'h0;
+    system_mode_we  = 1'h0;
+
+    if (cpu_valid & cpu_instr) begin
+      if (cpu_addr > FW_ROM_LAST) begin
+        system_mode_new = 1'h1;
+        system_mode_we  = 1'h1;
+      end
+    end
+  end
 
   //----------------------------------------------------------------
   // api
   //----------------------------------------------------------------
   always @* begin : api
-    system_mode_we   = 1'h0;
     led_we           = 1'h0;
     gpio3_we         = 1'h0;
     gpio4_we         = 1'h0;
     app_start_we     = 1'h0;
     app_size_we      = 1'h0;
-    blake2s_addr_we  = 1'h0;
     cdi_mem_we       = 1'h0;
     ram_addr_rand_we = 1'h0;
     ram_data_rand_we = 1'h0;
@@ -443,10 +467,6 @@ module tk1 #(
     if (cs) begin
       tmp_ready = 1'h1;
       if (we) begin
-        if (address == ADDR_SYSTEM_MODE_CTRL) begin
-          system_mode_we = 1'h1;
-        end
-
         if (address == ADDR_LED) begin
           led_we = 1'h1;
         end
@@ -470,12 +490,6 @@ module tk1 #(
 
         if (address == ADDR_SYSTEM_RESET) begin
           system_reset_new = 1'h1;
-        end
-
-        if (address == ADDR_BLAKE2S) begin
-          if (!system_mode_reg) begin
-            blake2s_addr_we = 1'h1;
-          end
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
@@ -556,10 +570,6 @@ module tk1 #(
 
         if (address == ADDR_APP_SIZE) begin
           tmp_read_data = app_size_reg;
-        end
-
-        if (address == ADDR_BLAKE2S) begin
-          tmp_read_data = blake2s_addr_reg;
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
