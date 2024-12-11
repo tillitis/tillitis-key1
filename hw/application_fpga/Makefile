@@ -152,6 +152,10 @@ IRQPOC_LED_TOGGLE_OBJS = \
 	$(P)/fw/irqpoc_led_toggle/main.o \
 	$(P)/fw/irqpoc_led_toggle/start.o \
 
+IRQPOC_WITH_APP_OBJS = \
+	$(P)/fw/irqpoc_with_app/main.o \
+	$(P)/fw/irqpoc_with_app/start.o \
+
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
 #-------------------------------------------------------------------
@@ -190,6 +194,7 @@ $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 $(IRQPOC_OBJS): $(FIRMWARE_DEPS)
 $(IRQPOC_LED_TOGGLE_OBJS): $(FIRMWARE_DEPS)
+$(IRQPOC_WITH_APP_OBJS): $(FIRMWARE_DEPS)
 
 firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
@@ -238,6 +243,9 @@ irqpoc.elf: $(IRQPOC_OBJS) $(P)/fw/tk1/firmware.lds
 irqpoc_led_toggle.elf: $(IRQPOC_LED_TOGGLE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(IRQPOC_LED_TOGGLE_OBJS) $(LDFLAGS) -o $@
 
+irqpoc_with_app.elf: $(IRQPOC_WITH_APP_OBJS) $(P)/fw/tk1/firmware.lds
+	$(CC) $(CFLAGS) $(IRQPOC_WITH_APP_OBJS) $(LDFLAGS) -o $@
+
 # Generate a fake BRAM file that will be filled in later after place-n-route
 bram_fw.hex:
 	$(ICESTORM_PATH)icebram -v -g 32 $(BRAM_FW_SIZE) > $@
@@ -250,6 +258,9 @@ testfw.hex: testfw.bin testfw_size_mismatch
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
 irqpoc.hex: irqpoc.bin
 	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
+irqpoc_with_app.hex: irqpoc_with_app.bin
+	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
+
 
 .PHONY: check-binary-hashes
 check-binary-hashes:
@@ -466,6 +477,10 @@ emptyapp:
 tb_application_fpga_irqpoc: SIMFIRMWARE=irqpoc.hex
 tb_application_fpga_irqpoc: irqpoc.hex emptyapp tb_application_fpga
 
+.PHONY: tb_application_fpga_irqpoc_with_app
+tb_application_fpga_irqpoc_with_app: SIMFIRMWARE=irqpoc_with_app.hex
+tb_application_fpga_irqpoc_with_app: irqpoc_with_app.hex emptyapp tb_application_fpga
+
 
 #-------------------------------------------------------------------
 # FPGA device programming.
@@ -515,6 +530,7 @@ clean_fw:
 	rm -f $(TESTFW_OBJS)
 	rm -f $(IRQPOC_OBJS)
 	rm -f $(IRQPOC_LED_TOGGLE_OBJS)
+	rm -f $(IRQPOC_WITH_APP_OBJS)
 	rm -f qemu_firmware.elf
 .PHONY: clean_fw
 
