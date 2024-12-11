@@ -80,7 +80,7 @@ module tb_application_fpga_sim ();
   //----------------------------------------------------------------
   initial begin
     // End simulation after XXX time units (set by timescale)
-    #1600;
+    #3000;
     $display("TIMEOUT");
     $finish;
   end
