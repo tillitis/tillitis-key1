@@ -45,6 +45,9 @@ module tk1 #(
     output wire gpio3,
     output wire gpio4,
 
+    input wire access_level_hi,
+    input wire access_level_med,
+
     input  wire          cs,
     input  wire          we,
     input  wire [ 7 : 0] address,
@@ -178,6 +181,8 @@ module tk1 #(
   wire          spi_ready;
   wire [ 7 : 0] spi_rx_data;
 
+  wire          rom_exec_en;
+
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
@@ -196,6 +201,7 @@ module tk1 #(
 
   assign system_reset  = system_reset_reg;
 
+  assign rom_exec_en   = !system_mode | access_level_med | access_level_hi;
 
   //----------------------------------------------------------------
   // Module instance.
@@ -378,6 +384,9 @@ module tk1 #(
   //
   // Trying to execute instructions in FW-RAM.
   //
+  // Executing instructions in ROM, while ROM is marked as not
+  // executable.
+  //
   // Trying to execute code in mem area set to be data access only.
   // This requires execution monitor to have been setup and
   // enabled.
@@ -453,6 +462,12 @@ module tk1 #(
       if (cpu_instr) begin
         if ((cpu_addr >= FW_RAM_FIRST) && (cpu_addr <= FW_RAM_LAST)) begin
           force_trap_set = 1'h1;
+        end
+
+        if (!rom_exec_en) begin
+          if (cpu_addr <= FW_ROM_LAST) begin  // Only valid as long as ROM starts at address 0x00.
+            force_trap_set = 1'h1;
+          end
         end
 
         if (cpu_mon_en_reg) begin

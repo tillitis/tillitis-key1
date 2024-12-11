@@ -147,11 +147,11 @@ module application_fpga (
 
   reg           irq30_cs;
   reg           irq30_we;
-  (* keep *)reg           irq30_eoi;
+  reg           irq30_eoi;
 
   reg           irq31_cs;
   reg           irq31_we;
-  (* keep *)reg           irq31_eoi;
+  reg           irq31_eoi;
 
   reg           tk1_cs;
   reg           tk1_we;
@@ -372,6 +372,9 @@ module application_fpga (
       .gpio2(app_gpio2),
       .gpio3(app_gpio3),
       .gpio4(app_gpio4),
+
+      .access_level_hi (irq31_eoi),
+      .access_level_med(irq30_eoi),
 
       .cs(tk1_cs),
       .we(tk1_we),
