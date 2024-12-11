@@ -112,12 +112,11 @@ module tk1 #(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg  [31 : 0] cdi_mem           [0 : 7];
+  reg  [31 : 0] cdi_mem             [0 : 7];
   reg           cdi_mem_we;
 
-  reg           app_mode_reg;
-  reg           app_mode_new;
-  reg           app_mode_we;
+  reg           fw_startup_done_reg;
+  reg           fw_startup_done_set;
 
   reg  [ 2 : 0] led_reg;
   reg           led_we;
@@ -186,7 +185,7 @@ module tk1 #(
   assign read_data     = tmp_read_data;
   assign ready         = tmp_ready;
 
-  assign app_mode      = app_mode_reg;
+  assign app_mode      = fw_startup_done_reg & ~syscall;
 
   assign force_trap    = force_trap_reg;
 
@@ -197,7 +196,6 @@ module tk1 #(
   assign ram_data_rand = ram_data_rand_reg;
 
   assign system_reset  = system_reset_reg;
-
 
   //----------------------------------------------------------------
   // Module instance.
@@ -249,31 +247,31 @@ module tk1 #(
   //----------------------------------------------------------------
   always @(posedge clk) begin : reg_update
     if (!reset_n) begin
-      app_mode_reg      <= 1'h0;
-      led_reg           <= 3'h6;
-      gpio1_reg         <= 2'h0;
-      gpio2_reg         <= 2'h0;
-      gpio3_reg         <= 1'h0;
-      gpio4_reg         <= 1'h0;
-      app_start_reg     <= 32'h0;
-      app_size_reg      <= APP_SIZE;
-      cdi_mem[0]        <= 32'h0;
-      cdi_mem[1]        <= 32'h0;
-      cdi_mem[2]        <= 32'h0;
-      cdi_mem[3]        <= 32'h0;
-      cdi_mem[4]        <= 32'h0;
-      cdi_mem[5]        <= 32'h0;
-      cdi_mem[6]        <= 32'h0;
-      cdi_mem[7]        <= 32'h0;
-      cpu_trap_ctr_reg  <= 24'h0;
-      cpu_trap_led_reg  <= 3'h0;
-      cpu_mon_en_reg    <= 1'h0;
-      cpu_mon_first_reg <= 32'h0;
-      cpu_mon_last_reg  <= 32'h0;
-      ram_addr_rand_reg <= 15'h0;
-      ram_data_rand_reg <= 32'h0;
-      force_trap_reg    <= 1'h0;
-      system_reset_reg  <= 1'h0;
+      fw_startup_done_reg <= 1'h0;
+      led_reg             <= 3'h6;
+      gpio1_reg           <= 2'h0;
+      gpio2_reg           <= 2'h0;
+      gpio3_reg           <= 1'h0;
+      gpio4_reg           <= 1'h0;
+      app_start_reg       <= 32'h0;
+      app_size_reg        <= APP_SIZE;
+      cdi_mem[0]          <= 32'h0;
+      cdi_mem[1]          <= 32'h0;
+      cdi_mem[2]          <= 32'h0;
+      cdi_mem[3]          <= 32'h0;
+      cdi_mem[4]          <= 32'h0;
+      cdi_mem[5]          <= 32'h0;
+      cdi_mem[6]          <= 32'h0;
+      cdi_mem[7]          <= 32'h0;
+      cpu_trap_ctr_reg    <= 24'h0;
+      cpu_trap_led_reg    <= 3'h0;
+      cpu_mon_en_reg      <= 1'h0;
+      cpu_mon_first_reg   <= 32'h0;
+      cpu_mon_last_reg    <= 32'h0;
+      ram_addr_rand_reg   <= 15'h0;
+      ram_data_rand_reg   <= 32'h0;
+      force_trap_reg      <= 1'h0;
+      system_reset_reg    <= 1'h0;
     end
 
     else begin
@@ -287,8 +285,8 @@ module tk1 #(
       gpio2_reg[0] <= gpio2;
       gpio2_reg[1] <= gpio2_reg[0];
 
-      if (app_mode_we) begin
-        app_mode_reg <= app_mode_new;
+      if (fw_startup_done_set) begin
+        fw_startup_done_reg <= 1'h1;
       end
 
       if (led_we) begin
@@ -380,6 +378,9 @@ module tk1 #(
   //
   // Trying to execute instructions in FW-RAM.
   //
+  // Executing instructions in ROM, while ROM is marked as not
+  // executable.
+  //
   // Trying to execute code in mem area set to be data access only.
   // This requires execution monitor to have been setup and
   // enabled.
@@ -467,6 +468,12 @@ module tk1 #(
           force_trap_set = 1'h1;
         end
 
+        if (app_mode) begin
+          if (cpu_addr <= FW_ROM_LAST) begin  // Only valid as long as ROM starts at address 0x00.
+            force_trap_set = 1'h1;
+          end
+        end
+
         if (cpu_mon_en_reg) begin
           if ((cpu_addr >= cpu_mon_first_reg) && (cpu_addr <= cpu_mon_last_reg)) begin
             force_trap_set = 1'h1;
@@ -477,18 +484,16 @@ module tk1 #(
   end
 
   //----------------------------------------------------------------
-  // app_mode_ctrl
+  // fw_startup_done_ctrl
   //
   // Automatically lower privilege when executing above ROM.
   // ----------------------------------------------------------------
-  always @* begin : app_mode_ctrl
-    app_mode_new = 1'h0;
-    app_mode_we  = 1'h0;
+  always @* begin : fw_startup_done_ctrl
+    fw_startup_done_set = 1'h0;
 
     if (cpu_valid & cpu_instr) begin
       if (cpu_addr > FW_ROM_LAST) begin
-        app_mode_new = 1'h1;
-        app_mode_we  = 1'h1;
+        fw_startup_done_set = 1'h1;
       end
     end
   end
@@ -532,13 +537,13 @@ module tk1 #(
         end
 
         if (address == ADDR_APP_START) begin
-          if (!app_mode_reg) begin
+          if (!app_mode) begin
             app_start_we = 1'h1;
           end
         end
 
         if (address == ADDR_APP_SIZE) begin
-          if (!app_mode_reg) begin
+          if (!app_mode) begin
             app_size_we = 1'h1;
           end
         end
@@ -548,19 +553,19 @@ module tk1 #(
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
-          if (!app_mode_reg) begin
+          if (!app_mode) begin
             cdi_mem_we = 1'h1;
           end
         end
 
         if (address == ADDR_RAM_ADDR_RAND) begin
-          if (!app_mode_reg) begin
+          if (!app_mode) begin
             ram_addr_rand_we = 1'h1;
           end
         end
 
         if (address == ADDR_RAM_DATA_RAND) begin
-          if (!app_mode_reg) begin
+          if (!app_mode) begin
             ram_data_rand_we = 1'h1;
           end
         end
@@ -608,7 +613,7 @@ module tk1 #(
         end
 
         if (address == ADDR_APP_MODE_CTRL) begin
-          tmp_read_data = {32{app_mode_reg}};
+          tmp_read_data = {32{app_mode}};
         end
 
         if (address == ADDR_LED) begin
@@ -632,7 +637,7 @@ module tk1 #(
         end
 
         if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
-          if (!app_mode_reg) begin
+          if (!app_mode) begin
             tmp_read_data = udi_rdata;
           end
         end
