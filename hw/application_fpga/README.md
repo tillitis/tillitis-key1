@@ -138,16 +138,18 @@ Interrupts can be enabled/disabled using the PicoRV32 specific
 The following table shows resource availablility for each execution
 context:
 
-| *Execution Context* | *ROM*  |
-|---------------------|--------|
-| Firmware mode       | r/x    |
-| App mode            | r      |
-| IRQ_SYSCALL_LO      | r/x    |
-| IRQ_SYSCALL_HI      | r/x    |
+| *Execution Context* | *ROM*  | *FW RAM* |
+|---------------------|--------|----------|
+| Firmware mode       | r/x    | r/w      |
+| App mode            | r      | i        |
+| IRQ_SYSCALL_LO      | r/x    | i        |
+| IRQ_SYSCALL_HI      | r/x    | r/w      |
 
 Legend:
 r = readable
+w = writeable
 x = executable
+i = invisible
 
 ## `tk1`
 
