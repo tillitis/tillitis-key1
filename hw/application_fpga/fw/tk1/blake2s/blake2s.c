@@ -332,7 +332,7 @@ void blake2s_final(blake2s_ctx *ctx, void *out)
 //------------------------------------------------------------------
 // Convenience function for all-in-one computation.
 //------------------------------------------------------------------
-int blake2s(void *out, size_t outlen,
+int __attribute__((aligned(4))) blake2s(void *out, size_t outlen,
     const void *key, size_t keylen,
     const void *in, size_t inlen,
     blake2s_ctx *ctx)
