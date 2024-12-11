@@ -118,10 +118,10 @@ be inspected to determine the interrupt source. Each interrupt source
 is assigned one bit in x4. Triggered interrupts have their bit set to
 `1`.
 
-| *Interrupt source* | *x4 bit* |
-|--------------------|----------|
-| IRQ30\_SET         | 30       |
-| IRQ31\_SET         | 31       |
+| *Interrupt Name* | *Source*   | *x4 Bit* |
+|------------------|------------|----------|
+| IRQ_SYSCALL_LO   | IRQ30\_SET | 30       |
+| IRQ_SYSCALL_HI   | IRQ31\_SET | 31       |
 
 The return address is located in register `x3`. Calling the PicoRV32
 specific instruction `retirq` exits the interrupt handler and clears
@@ -132,6 +132,22 @@ handler. It is up to the software to store/restore as necessary.
 
 Interrupts can be enabled/disabled using the PicoRV32 specific
 `maskirq` instruction.
+
+## Restricted resources
+
+The following table shows resource availablility for each execution
+context:
+
+| *Execution Context* | *ROM*  |
+|---------------------|--------|
+| Firmware mode       | r/x    |
+| App mode            | r      |
+| IRQ_SYSCALL_LO      | r/x    |
+| IRQ_SYSCALL_HI      | r/x    |
+
+Legend:
+r = readable
+x = executable
 
 ## `tk1`
 
