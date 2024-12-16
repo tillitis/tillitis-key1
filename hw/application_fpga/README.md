@@ -35,7 +35,6 @@ Rough memory map:
 | UART       | 0xc3     |
 | Touch      | 0xc4     |
 | FW\_RAM    | 0xd0     |
-| IRQ30\_SET | 0xe0     |
 | IRQ31\_SET | 0xe1     |
 | TK1        | 0xff     |
 
@@ -99,11 +98,6 @@ hours, days) there is also a 32 bit prescaler.
 
 The timer is available to use by firmware and applications.
 
-## `irq30_set`
-
-Interrupt 30 trigger area. A 32-bit write to the IRQ30\_SET memory
-area will trigger interrupt 30.
-
 ## `irq31_set`
 
 Interrupt 31 trigger area. A 32-bit write to the IRQ31\_SET memory
@@ -114,15 +108,14 @@ area will trigger interrupt 31.
 Triggering an interrupt will cause the CPU to execute the interrupt
 handler att address 0x10.
 
-The interrupt handler is shared by IRQ30 and IRQ31. Register `x4` can
-be inspected to determine the interrupt source. Each interrupt source
-is assigned one bit in x4. Triggered interrupts have their bit set to
-`1`.
+The interrupt handler is shared by all PicoRV32 interrupts but only
+interrupt 31 is enabled on the Tkey. Register `x4` can be inspected to
+determine the interrupt source. Each interrupt source is assigned one
+bit in x4. Triggered interrupts have their bit set to `1`.
 
 | *Interrupt Name* | *Source*   | *x4 Bit* |
 |------------------|------------|----------|
-| IRQ_SYSCALL_LO   | IRQ30\_SET | 30       |
-| IRQ_SYSCALL_HI   | IRQ31\_SET | 31       |
+| IRQ_SYSCALL      | IRQ31\_SET | 31       |
 
 The return address is located in register `x3`. Calling the PicoRV32
 specific instruction `retirq` exits the interrupt handler and clears
@@ -142,9 +135,8 @@ mode:
 | *Execution Mode*    | *ROM*  | *FW RAM* | *SPI* |
 |---------------------|--------|----------|-------|
 | Firmware mode       | r/x    | r/w      | r/w   |
-| App mode            | r      | i        | i     |
-| IRQ_SYSCALL_LO      | r/x    | i        | i     |
-| IRQ_SYSCALL_HI      | r/x    | r/w      | r/w   |
+| IRQ_SYSCALL         | r/x    | r/w      | r/w   |
+| Application mode    | r      | i        | i     |
 
 Legend:
 r = readable
