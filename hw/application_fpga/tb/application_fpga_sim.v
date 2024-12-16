@@ -70,14 +70,12 @@ module application_fpga_sim (
   localparam UART_PREFIX = 6'h03;
   localparam TOUCH_SENSE_PREFIX = 6'h04;
   localparam FW_RAM_PREFIX = 6'h10;
-  localparam IRQ30_PREFIX = 6'h20;
   localparam IRQ31_PREFIX = 6'h21;
   localparam TK1_PREFIX = 6'h3f;
 
   // Instruction used to cause a trap.
   localparam ILLEGAL_INSTRUCTION = 32'h0;
 
-  localparam IRQ30_IRQ_MASK = 2 ** 30;
   localparam IRQ31_IRQ_MASK = 2 ** 31;
 
   //----------------------------------------------------------------
@@ -158,10 +156,6 @@ module application_fpga_sim (
   wire [31 : 0] touch_sense_read_data;
   wire          touch_sense_ready;
 
-  reg           irq30_cs;
-  reg           irq30_we;
-  reg           irq30_eoi;
-
   reg           irq31_cs;
   reg           irq31_we;
   reg           irq31_eoi;
@@ -201,8 +195,8 @@ module application_fpga_sim (
       .ENABLE_IRQ      (1),
       .ENABLE_IRQ_QREGS(0),
       .ENABLE_IRQ_TIMER(0),
-      .MASKED_IRQ      (~(IRQ31_IRQ_MASK | IRQ30_IRQ_MASK)),
-      .LATCHED_IRQ     (IRQ31_IRQ_MASK | IRQ30_IRQ_MASK)
+      .MASKED_IRQ      (~IRQ31_IRQ_MASK),
+      .LATCHED_IRQ     (IRQ31_IRQ_MASK)
   ) cpu (
       .clk(clk),
       .resetn(reset_n),
@@ -386,8 +380,7 @@ module application_fpga_sim (
       .gpio3(app_gpio3),
       .gpio4(app_gpio4),
 
-      .access_level_hi (irq31_eoi),
-      .access_level_med(irq30_eoi),
+      .access_level_hi(irq31_eoi),
 
       .fw_ram_en(fw_ram_en),
 
@@ -422,14 +415,11 @@ module application_fpga_sim (
   //----------------------------------------------------------------
   always @* begin : irq_ctrl
     reg irq31_set;
-    reg irq30_set;
 
     irq31_set = irq31_cs & irq31_we;
-    irq30_set = irq30_cs & irq30_we;
-    cpu_irq   = {irq31_set, irq30_set, 30'h0};
+    cpu_irq   = {irq31_set, 31'h0};
 
     irq31_eoi = cpu_eoi[31];
-    irq30_eoi = cpu_eoi[30];
   end
 
 
@@ -483,9 +473,6 @@ module application_fpga_sim (
     touch_sense_cs      = 1'h0;
     touch_sense_we      = |cpu_wstrb;
     touch_sense_address = cpu_addr[9 : 2];
-
-    irq30_cs            = 1'h0;
-    irq30_we            = |cpu_wstrb;
 
     irq31_cs            = 1'h0;
     irq31_we            = |cpu_wstrb;
@@ -580,13 +567,6 @@ module application_fpga_sim (
                 fw_ram_cs       = 1'h1;
                 muxed_rdata_new = fw_ram_read_data;
                 muxed_ready_new = fw_ram_ready;
-              end
-
-              IRQ30_PREFIX: begin
-                `verbose($display("Access to blake2s interrupt trigger");)
-                ascii_state     = "Blake2s IRQ trigger";
-                irq30_cs        = 1'h1;
-                muxed_ready_new = 1'h1;
               end
 
               IRQ31_PREFIX: begin
