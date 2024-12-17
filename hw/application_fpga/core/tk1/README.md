@@ -78,18 +78,6 @@ FW as part of the loading of the app. The registers can't be written
 when the `ADDR_SYSTEM_MODE_CTRL` has been set.
 
 
-### Access to Blake2s
-
-```
-ADDR_BLAKE2S: 0x10
-```
-
-This register provides the 32-bit function pointer address to the
-Blake2s hash function in the FW. It is written by FW during boot. The
-register can't be written to when the `ADDR_SYSTEM_MODE_CTRL` has been
-set.
-
-
 ### Access to CDI
 
 ```

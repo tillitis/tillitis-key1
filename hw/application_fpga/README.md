@@ -11,9 +11,10 @@ The design top level is in `rtl/application_fpga.v`. It contains
 instances of all cores as well as the memory system.
 
 The memory system allows the CPU to access cores in different ways
-given the current execution mode. There are two execution modes -
-firmware and application. Basically, in application mode the access is
-more restrictive.
+given the current execution mode. There are three execution modes -
+firmware, application and system call. Each mode give access to a
+different set of resources. Where app mode is the most restrictive and
+firmware mode is the least restrictive.
 
 The rest of the components are under `cores`. They typically have
 their own `README.md` file documenting them and their API in detail.
@@ -24,17 +25,18 @@ and bitmasks, see the file `fw/tk1_mem.h`.
 
 Rough memory map:
 
-| *name*  | *prefix* |
-|---------|----------|
-| ROM     | 0x00     |
-| RAM     | 0x40     |
-| TRNG    | 0xc0     |
-| Timer   | 0xc1     |
-| UDS     | 0xc2     |
-| UART    | 0xc3     |
-| Touch   | 0xc4     |
-| FW\_RAM | 0xd0     |
-| TK1     | 0xff     |
+| *name*     | *prefix* |
+|------------|----------|
+| ROM        | 0x00     |
+| RAM        | 0x40     |
+| TRNG       | 0xc0     |
+| Timer      | 0xc1     |
+| UDS        | 0xc2     |
+| UART       | 0xc3     |
+| Touch      | 0xc4     |
+| FW\_RAM    | 0xd0     |
+| IRQ31\_SET | 0xe1     |
+| TK1        | 0xff     |
 
 ## `clk_reset_gen`
 
@@ -96,6 +98,71 @@ hours, days) there is also a 32 bit prescaler.
 
 The timer is available to use by firmware and applications.
 
+## `irq31_set`
+
+Interrupt 31 trigger area. A 32-bit write to the IRQ31\_SET memory
+area will trigger interrupt 31.
+
+## Interrupts
+
+Triggering an interrupt will cause the CPU to execute the interrupt
+handler att address 0x10.
+
+The interrupt handler is shared by all PicoRV32 interrupts but only
+interrupt 31 is enabled on the Tkey. Register `x4` can be inspected to
+determine the interrupt source. Each interrupt source is assigned one
+bit in x4. Triggered interrupts have their bit set to `1`.
+
+| *Interrupt Name* | *Source*   | *x4 Bit* |
+|------------------|------------|----------|
+| IRQ_SYSCALL      | IRQ31\_SET | 31       |
+
+The return address is located in register `x3`. Calling the PicoRV32
+specific instruction `retirq` exits the interrupt handler and clears
+the interrupt source.
+
+No registers are stored/restored when entering/exiting the interrupt
+handler. It is up to the software to store/restore as necessary.
+
+Interrupts can be enabled/disabled using the PicoRV32 specific
+`maskirq` instruction.
+
+## Restricted resources
+
+The following table shows resource availablility for each execution
+mode:
+
+| *Execution Mode* | *ROM*  | *FW RAM* | *SPI* | *Sensitive assets* |
+|------------------|--------|----------|-------|--------------------|
+| Firmware mode    | r/x    | r/w      | r/w   | r/w*               |
+| IRQ_SYSCALL      | r/x    | r/w      | r/w   | r*                 |
+| Application mode | r      | i        | i     | r*                 |
+
+Legend:
+r = readable
+w = writeable
+x = executable
+i = invisible
+* = read-/writeability varies, see below
+
+These sensitive assets are only readable and/or writeable in firmware
+mode:
+- APP_START
+- APP_SIZE
+- CDI_FIRST
+- CDI_LAST
+- RAM_ADDR_RAND
+- RAM_DATA_RAND
+- UDI_FIRST
+- UDI_LAST
+- UDS_FIRST
+- UDS_LAST
+
+Note that these assets have different properties, some are read-only
+and some are write-only. The list above only shows if they are
+restricted in app mode. See each individual API to find out more about
+their properties.
+
 ## `tk1`
 
 See [tk1 README](core/tk1/README.md) for details.
@@ -107,7 +174,6 @@ Contains:
 - RGB LED control.
 - General purpose input/output (GPIO) pin control.
 - Application introspection: start address and size of binary.
-- BLAKE2s function access.
 - Compound Device Identity (CDI).
 - Unique Device Identity (UDI).
 - RAM memory protection.
