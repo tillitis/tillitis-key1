@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define DEBUG_PRINT
+//#define DEBUG_PRINT
 //#define DEBUG_SETUP
 //#define UART_OUT_DEBUG
 //#define USE_NUM_U8
