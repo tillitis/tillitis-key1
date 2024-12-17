@@ -3,16 +3,15 @@
  * SPDX-License-Identifier: GPL-2.0-only
 */
 
-// Triggers both interrupts, one after the other, in an endless loop. The
-// interrupt handler updates the LED color depending on which interrupt
-// was triggered.
+// Example firmware demonstrating setting the LED from the interrupt handler.
 // The LED color will alterate between blue and green.
+// The color will be RED if an interrupt is triggered by an  unexpected source.
 //
-// | IRQ number | Color |
-// |------------|-------|
-// | 30         | Blue  |
-// | 31         | Green |
-// | Unexpected | Red   |
+// | Color | Execution context |
+// |-------|-------------------|
+// | Blue  | Firmware loop     |
+// | Green | IRQ31             |
+// | Red   | Unexpected IRQ    |
 //
 
 #include "custom_ops.S"  // PicoRV32 custom instructions
@@ -27,14 +26,6 @@ _start:
 irq_handler:
 	// PicoRV32 stores the IRQ bitmask in x4.
 	// If bit 31 is 1: IRQ31 was triggered.
-	// If bit 30 is 1: IRQ30 was triggered.
-irq30_check:
-	li t4, (1 << 30)
-	bne x4, t4, irq31_check
-	call led_blue
-	call delay
-	j irq_source_check_done
-irq31_check:
 	li t4, (1 << 31)
 	bne x4, t4, unexpected_irq
 	call led_green
@@ -48,17 +39,17 @@ irq_source_check_done:
 
 
 init:
-	li t0, 0x3fffffff // IRQ31 & IRQ30 mask
+	li t0, 0x7fffffff // IRQ31 mask
 	picorv32_maskirq_insn(zero, t0) // Enable IRQs
 
 irq_trigger_loop:
+	call led_blue
+	call delay
+
 	li t0, 0xe1000000 // IRQ31 trigger address
 	sw zero, 0(t0) // Raise IRQ by writing to interrupt trigger address.
 	               // Writing any data triggers an interrupt.
 
-	li t0, 0xe0000000 // IRQ30 trigger address
-	sw zero, 0(t0) // Raise IRQ by writing to interrupt trigger address.
-	               // Writing any data triggers an interrupt.
 	j irq_trigger_loop
 
 led_red:
