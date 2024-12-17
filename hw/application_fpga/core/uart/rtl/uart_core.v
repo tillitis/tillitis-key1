@@ -81,10 +81,9 @@ module uart_core (
   parameter ERX_SYN = 4;
 
   parameter ETX_IDLE = 0;
-  parameter ETX_ACK = 1;
-  parameter ETX_START = 2;
-  parameter ETX_BITS = 3;
-  parameter ETX_STOP = 4;
+  parameter ETX_START = 1;
+  parameter ETX_BITS = 2;
+  parameter ETX_STOP = 3;
 
 
   //----------------------------------------------------------------
@@ -171,19 +170,19 @@ module uart_core (
   //----------------------------------------------------------------
   always @(posedge clk) begin : reg_update
     if (!reset_n) begin
-      rxd0_reg            <= 1'b0;
-      rxd_reg             <= 1'b0;
+      rxd0_reg            <= 0;
+      rxd_reg             <= 0;
       rxd_byte_reg        <= 8'h0;
       rxd_bit_ctr_reg     <= 4'h0;
       rxd_bitrate_ctr_reg <= 16'h0;
       rxd_syn_reg         <= 0;
       erx_ctrl_reg        <= ERX_IDLE;
 
-      txd_reg             <= 1'b1;
+      txd_reg             <= 1;
       txd_byte_reg        <= 8'h0;
       txd_bit_ctr_reg     <= 4'h0;
       txd_bitrate_ctr_reg <= 16'h0;
-      txd_ready_reg       <= 1'b1;
+      txd_ready_reg       <= 1;
       etx_ctrl_reg        <= ETX_IDLE;
     end
 
@@ -246,16 +245,16 @@ module uart_core (
   //----------------------------------------------------------------
   always @* begin : rxd_bit_ctr
     rxd_bit_ctr_new = 4'h0;
-    rxd_bit_ctr_we  = 1'b0;
+    rxd_bit_ctr_we  = 0;
 
     if (rxd_bit_ctr_rst) begin
       rxd_bit_ctr_new = 4'h0;
-      rxd_bit_ctr_we  = 1'b1;
+      rxd_bit_ctr_we  = 1;
     end
 
     else if (rxd_bit_ctr_inc) begin
       rxd_bit_ctr_new = rxd_bit_ctr_reg + 1'h1;
-      rxd_bit_ctr_we  = 1'b1;
+      rxd_bit_ctr_we  = 1;
     end
   end  // rxd_bit_ctr
 
@@ -267,20 +266,19 @@ module uart_core (
   // serial interface.
   //----------------------------------------------------------------
   always @* begin : rxd_bitrate_ctr
-    rxd_bitrate_ctr_new = 16'h0;
-    rxd_bitrate_ctr_we  = 1'h0;
+    rxd_bitrate_ctr_new = 16'h1;
+    rxd_bitrate_ctr_we  = 0;
 
     if (rxd_bitrate_ctr_rst) begin
-      rxd_bitrate_ctr_new = 16'h0;
-      rxd_bitrate_ctr_we  = 1'b1;
+      rxd_bitrate_ctr_new = 16'h1;
+      rxd_bitrate_ctr_we  = 1;
     end
 
     else if (rxd_bitrate_ctr_inc) begin
       rxd_bitrate_ctr_new = rxd_bitrate_ctr_reg + 1'h1;
-      rxd_bitrate_ctr_we  = 1'b1;
+      rxd_bitrate_ctr_we  = 1;
     end
   end  // rxd_bitrate_ctr
-
 
 
   //----------------------------------------------------------------
@@ -291,16 +289,16 @@ module uart_core (
   //----------------------------------------------------------------
   always @* begin : txd_bit_ctr
     txd_bit_ctr_new = 4'h0;
-    txd_bit_ctr_we  = 1'h0;
+    txd_bit_ctr_we  = 0;
 
     if (txd_bit_ctr_rst) begin
       txd_bit_ctr_new = 4'h0;
-      txd_bit_ctr_we  = 1'h1;
+      txd_bit_ctr_we  = 1;
     end
 
     else if (txd_bit_ctr_inc) begin
       txd_bit_ctr_new = txd_bit_ctr_reg + 1'h1;
-      txd_bit_ctr_we  = 1'b1;
+      txd_bit_ctr_we  = 1;
     end
   end  // txd_bit_ctr
 
@@ -312,11 +310,11 @@ module uart_core (
   // serial interface.
   //----------------------------------------------------------------
   always @* begin : txd_bitrate_ctr
-    txd_bitrate_ctr_new = 16'h0;
+    txd_bitrate_ctr_new = 16'h1;
     txd_bitrate_ctr_we  = 0;
 
     if (txd_bitrate_ctr_rst) begin
-      txd_bitrate_ctr_new = 16'h0;
+      txd_bitrate_ctr_new = 16'h1;
       txd_bitrate_ctr_we  = 1;
     end
 
@@ -350,25 +348,32 @@ module uart_core (
       ERX_IDLE: begin
         if (!rxd_reg) begin
           // Possible start bit detected.
-          rxd_bitrate_ctr_rst = 1;
+          rxd_bitrate_ctr_inc = 1;
           erx_ctrl_new        = ERX_START;
           erx_ctrl_we         = 1;
         end
       end
 
+
       ERX_START: begin
-        rxd_bitrate_ctr_inc = 1;
         if (rxd_reg) begin
           // Just a glitch.
+          rxd_bitrate_ctr_rst = 1;
           erx_ctrl_new = ERX_IDLE;
           erx_ctrl_we  = 1;
         end
 
         else begin
-          if (rxd_bitrate_ctr_reg == half_bit_rate) begin
-            // start bit assumed. We start sampling data.
-            rxd_bit_ctr_rst     = 1;
+          if (rxd_bitrate_ctr_reg < half_bit_rate) begin
+            rxd_bitrate_ctr_inc = 1;
+          end
+
+          else begin
+            // Start bit assumed.
+            // We are in the middle of the start bit.
+            // Start sampling data.
             rxd_bitrate_ctr_rst = 1;
+            rxd_bit_ctr_rst     = 1;
             erx_ctrl_new        = ERX_BITS;
             erx_ctrl_we         = 1;
           end
@@ -382,11 +387,14 @@ module uart_core (
         end
 
         else begin
-          rxd_byte_we         = 1;
-          rxd_bit_ctr_inc     = 1;
-          rxd_bitrate_ctr_rst = 1;
-          if (rxd_bit_ctr_reg == (data_bits - 1)) begin
-            erx_ctrl_new = ERX_STOP;
+          if (rxd_bit_ctr_reg < data_bits) begin
+            rxd_bitrate_ctr_rst = 1;
+            rxd_bit_ctr_inc     = 1;
+            rxd_byte_we         = 1;  // We are in the middle of a data bit, make a sample
+          end
+
+          else begin
+            erx_ctrl_new = ERX_STOP;  // We are now in the middle of the stop bit
             erx_ctrl_we  = 1;
           end
         end
@@ -394,12 +402,17 @@ module uart_core (
 
 
       ERX_STOP: begin
-        rxd_bitrate_ctr_inc = 1;
-        if (rxd_bitrate_ctr_reg == bit_rate * stop_bits) begin
-          rxd_syn_new  = 1;
-          rxd_syn_we   = 1;
-          erx_ctrl_new = ERX_SYN;
-          erx_ctrl_we  = 1;
+        // stop_bits can be removed from line below if we are only using one stop bit
+        if (rxd_bitrate_ctr_reg < (bit_rate * stop_bits)) begin
+          rxd_bitrate_ctr_inc = 1;
+        end
+
+        else begin
+          rxd_bitrate_ctr_rst = 1;
+          rxd_syn_new         = 1;
+          rxd_syn_we          = 1;
+          erx_ctrl_new        = ERX_SYN;
+          erx_ctrl_we         = 1;
         end
       end
 
@@ -442,39 +455,35 @@ module uart_core (
 
     case (etx_ctrl_reg)
       ETX_IDLE: begin
-        txd_new = 1;
-        txd_we  = 1;
+        txd_new         = 1;
+        txd_we          = 1;
+        txd_bit_ctr_rst = 1;
         if (txd_syn) begin
+          txd_new             = 0;
+          txd_we              = 1;
           txd_byte_new        = txd_data;
           txd_byte_we         = 1;
           txd_ready_new       = 0;
           txd_ready_we        = 1;
           txd_bitrate_ctr_rst = 1;
-          etx_ctrl_new        = ETX_ACK;
+          etx_ctrl_new        = ETX_START;
           etx_ctrl_we         = 1;
         end
       end
 
 
-      ETX_ACK: begin
-        if (!txd_syn) begin
-          txd_new      = 0;
-          txd_we       = 1;
-          etx_ctrl_new = ETX_START;
-          etx_ctrl_we  = 1;
-        end
-      end
-
-
       ETX_START: begin
-        if (txd_bitrate_ctr_reg == bit_rate) begin
-          txd_bit_ctr_rst = 1;
-          etx_ctrl_new    = ETX_BITS;
-          etx_ctrl_we     = 1;
+        if (txd_bitrate_ctr_reg < bit_rate) begin
+          txd_bitrate_ctr_inc = 1;
         end
 
         else begin
-          txd_bitrate_ctr_inc = 1;
+          txd_bitrate_ctr_rst = 1;
+          txd_bit_ctr_inc     = 1;
+          txd_new             = txd_byte_reg[txd_bit_ctr_reg[2 : 0]];
+          txd_we              = 1;
+          etx_ctrl_new        = ETX_BITS;
+          etx_ctrl_we         = 1;
         end
       end
 
@@ -486,29 +495,36 @@ module uart_core (
 
         else begin
           txd_bitrate_ctr_rst = 1;
-          if (txd_bit_ctr_reg == data_bits) begin
+
+          if (txd_bit_ctr_reg < data_bits) begin
+            txd_bit_ctr_inc = 1;
+            txd_new         = txd_byte_reg[txd_bit_ctr_reg[2 : 0]];
+            txd_we          = 1;
+          end
+
+          else begin
             txd_new      = 1;
             txd_we       = 1;
             etx_ctrl_new = ETX_STOP;
             etx_ctrl_we  = 1;
-          end
-
-          else begin
-            txd_new         = txd_byte_reg[txd_bit_ctr_reg[2 : 0]];
-            txd_we          = 1;
-            txd_bit_ctr_inc = 1;
           end
         end
       end
 
 
       ETX_STOP: begin
-        txd_bitrate_ctr_inc = 1;
-        if (txd_bitrate_ctr_reg == bit_rate * stop_bits) begin
-          txd_ready_new = 1;
-          txd_ready_we  = 1;
-          etx_ctrl_new  = ETX_IDLE;
-          etx_ctrl_we   = 1;
+        // stop_bits can be removed from line below if we are only using one stop bit
+        if (txd_bitrate_ctr_reg < (bit_rate * stop_bits)) begin
+          txd_bitrate_ctr_inc = 1;
+        end
+
+        else begin
+          txd_bitrate_ctr_rst = 1;
+          txd_bit_ctr_rst     = 1;
+          txd_ready_new       = 1;
+          txd_ready_we        = 1;
+          etx_ctrl_new        = ETX_IDLE;
+          etx_ctrl_we         = 1;
         end
       end
 
