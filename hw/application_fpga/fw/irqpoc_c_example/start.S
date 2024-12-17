@@ -4,7 +4,7 @@
 */
 
 // This firmware copies an app from ROM to app RAM.
-// The app continuosly calls the SET_LED syscalls in firmware (main.c).
+// The app continuosly calls the SET_LED syscall in firmware (main.c).
 //
 #include "../tk1_mem.h"
 #include "custom_ops.S"  // PicoRV32 custom instructions
@@ -30,18 +30,12 @@ _start:
 irq_handler:
 	// PicoRV32 stores the IRQ bitmask in x4.
 	// If bit 31 is 1: IRQ31 was triggered.
-	// If bit 30 is 1: IRQ30 was triggered.
-irq_syscall_lo_check:
-	li t4, (1 << 30)
-	bne x4, t4, irq_syscall_hi_check
-
-	// Run low privilege syscall handler
-	call syscall_lo_handler
-
-	j irq_source_check_done
-irq_syscall_hi_check:
 	li t4, (1 << 31)
-	bne x4, t4, unexpected_irq
+	beq x4, t4, irq_source_ok
+unexpected_irq_source:
+	illegal_insn()
+	j unexpected_irq_source
+irq_source_ok:
 
 	// Save app stack pointer. App is responsible for saving the rest of
 	// the registers.
@@ -51,18 +45,14 @@ irq_syscall_hi_check:
 	// Setup firmware stack pointer
 	la sp, FW_STACK_TOP
 
-	// Run high privilege syscall handler
-	call syscall_hi_handler
+	// Run syscall handler
+	call syscall_handler
 
 	// Restore app stack pointer
 	la t0, FW_SP_STORAGE
 	lw sp, 0(t0)
 
-	j irq_source_check_done
-unexpected_irq:
-	illegal_insn()
-irq_source_check_done:
-	// Verify that interrupt return address is in app RAM
+	// Verify that interrupt return address (x3) is in app RAM
 	li t0, TK1_RAM_BASE // 0x40000000
 	blt x3, t0, x3_invalid
 	li t0, TK1_RAM_BASE + TK1_RAM_SIZE // 0x40020000
@@ -119,7 +109,7 @@ init:
 	sw t1, 0(t0)
 
 	// Enable IRQs
-	li t0, 0x3fffffff // IRQ31 & IRQ30 mask
+	li t0, 0x7fffffff // IRQ31 mask
 	picorv32_maskirq_insn(zero, t0) // Enable IRQs
 
 	// Copy app to App RAM
@@ -140,10 +130,7 @@ copy_app:
 //
 // App
 //
-#define APP_SYSCALL_HI (1 << 31)
-#define APP_SYSCALL_LO 0
-#define APP_SYSCALL_HI_SET_LED (APP_SYSCALL_HI | 10)
-#define APP_SYSCALL_LO_SET_LED (APP_SYSCALL_LO | 10)
+#define SYSCALL_SET_LED 10
 
 	.=0x1000
 app_start:
@@ -151,21 +138,15 @@ app_start:
 	li sp, 0x4001fffc
 
 app_loop:
-	li a0, APP_SYSCALL_LO_SET_LED
+	li a0, SYSCALL_SET_LED
 	li a1, LED_GREEN
 	call app_syscall
+	call app_delay
 
-	li a0, APP_SYSCALL_LO_SET_LED
+	li a0, SYSCALL_SET_LED
 	li a1, LED_BLUE
 	call app_syscall
-
-	li a0, APP_SYSCALL_HI_SET_LED
-	li a1, LED_RED | LED_GREEN
-	call app_syscall
-
-	li a0, APP_SYSCALL_HI_SET_LED
-	li a1, LED_RED | LED_BLUE
-	call app_syscall
+	call app_delay
 
 	j app_loop
 
@@ -205,20 +186,12 @@ app_syscall:
 	sw x30, 30*4(sp)
 	sw x31, 31*4(sp)
 
-	// Raise interrupt depending on bit 31 in a0
-	//   0: Low privilege syscall
-	//   1: High privilege syscall
+	// Trigger syscall interrupt
 	li t0, (1 << 31)
 	and t0, a0, t0
-	beqz t0, app_syscall_low_priv
-	li t1, 0xe1000000 // High privilege interrupt
-	sw zero, 0(t1) // Trigger interrupt
-	j app_syscall_restore_registers
-app_syscall_low_priv:
-	li t1, 0xe0000000 // Low privelege interrupt
+	li t1, 0xe1000000 // Syscall interrupt trigger address
 	sw zero, 0(t1) // Trigger interrupt
 
-app_syscall_restore_registers:
 	// Restore registers from stack
 	lw x0, 0*4(sp)
 	lw x1, 1*4(sp)
@@ -255,6 +228,13 @@ app_syscall_restore_registers:
 	addi sp, sp, 32*4
 
 	ret
+
+app_delay:
+        li t5, 0x100000
+app_delay_dec:
+        addi t5, t5, -1
+        bne t5, zero, app_delay_dec
+        ret
 
 	.align 4
 app_end:
