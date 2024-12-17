@@ -29,6 +29,8 @@ module tb_application_fpga_sim ();
   reg  tb_clk = 0;
   wire tb_interface_rx;
   reg  tb_interface_tx = 1'h1;  // Set to 1 to simulate inactive UART
+  reg  tb_interface_ch552_cts = 1'h1;  // Set to 1 to simulate OK to send
+  reg  tb_interface_fpga_cts;
   wire tb_spi_ss;
   wire tb_spi_sck;
   wire tb_spi_mosi;
@@ -49,6 +51,8 @@ module tb_application_fpga_sim ();
       .clk(tb_clk),
       .interface_rx(tb_interface_rx),
       .interface_tx(tb_interface_tx),
+      .interface_ch552_cts(tb_interface_ch552_cts),
+      .interface_fpga_cts(tb_interface_fpga_cts),
       .spi_ss(tb_spi_ss),
       .spi_sck(tb_spi_sck),
       .spi_mosi(tb_spi_mosi),
