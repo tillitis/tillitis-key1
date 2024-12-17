@@ -38,9 +38,21 @@
 //#define UART1_BAUD    1000000
 #endif
 
-void CfgFsys();            // CH554 clock selection and configuration
+void CfgFsys(void);        // CH554 clock selection and configuration
 void mDelayuS(uint16_t n); // Delay in units of uS
 void mDelaymS(uint16_t n); // Delay in mS
+
+// Set pin p1.4 and p1.5 to GPIO output mode.
+void gpio_init(void);
+void gpio_set(uint8_t pin);
+void gpio_unset(uint8_t pin);
+uint8_t gpio_get(uint8_t pin);
+
+void gpio_init_p1_4_in(void);
+void gpio_init_p1_5_out(void);
+uint8_t gpio_p1_4_get(void);
+void gpio_p1_5_set(void);
+void gpio_p1_5_unset(void);
 
 /*******************************************************************************
  * Function Name  : CH554UART0Alter()
@@ -83,7 +95,7 @@ inline void mInitSTDIO( )
     }
     TMOD = (TMOD & ~bT1_GATE & ~bT1_CT & ~MASK_T1_MOD) | bT1_M1; // Timer1 as 8-bit auto-reload timer
     T2MOD = T2MOD | bTMR_CLK | bT1_CLK; // Timer1 clock selection
-    TH1 = 0-x;                          // 12MHz crystal oscillator, buad / 12 is the actual need to set the baud rate
+    TH1 = 0-x;                          // 12MHz crystal oscillator, baud / 12 is the actual need to set the baud rate
     TR1 = 1;                            // Start timer 1
     TI = 1;                             // Enable transmit interrupt
     REN = 1;                            // UART0 receive enable
@@ -191,16 +203,18 @@ inline void CH554UART1SendBuffer(uint8_t *Buf, uint32_t Len)
 {
     uint32_t Count = 0;
     while (Count < Len) {
-        SBUF1 = Buf[Count++];
-        while (U1TI == 0)
-            ;
-        U1TI = 0;
+        if (gpio_p1_4_get()) {
+            SBUF1 = Buf[Count++];
+            while (U1TI == 0)
+                ;
+            U1TI = 0;
+        }
     }
 }
 
 #if SDCC < 370
 void putchar(char c);
-char getchar();
+char getchar(void);
 #else
 int putchar(int c);
 int getchar(void);
@@ -242,10 +256,5 @@ inline void CH554WDTFeed(uint8_t tim)
 {
     WDOG_COUNT = tim; // Watchdog counter assignment
 }
-
-// Set pin p1.4 and p1.5 to GPIO output mode.
-void gpio_init();
-void gpio_set(uint8_t pin);
-void gpio_unset(uint8_t pin);
 
 #endif

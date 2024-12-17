@@ -272,14 +272,15 @@ XDATA uint8_t LineCoding[7] = { 0x20, 0xA1, 0x07, 0x00, /* Data terminal rate, i
                                 };
 
 #define HID_FRAME_SIZE      64
-#define MAX_CDC_FRAME_SIZE  32
+#define MAX_CDC_FRAME_SIZE  64
 
-#define UART_TX_BUF_SIZE    64                      // Serial transmit buffer
-#define UART_RX_BUF_SIZE    ((HID_FRAME_SIZE*2)+4)  // Serial receive buffer
+#define UART_TX_BUF_SIZE    64   // Serial transmit buffer
+#define UART_RX_BUF_SIZE    140  // Serial receive buffer
 
 /** Communication UART */
 XDATA uint8_t UartTxBuf[UART_TX_BUF_SIZE] = { 0 };  // Serial transmit buffer
-volatile IDATA uint8_t byte_len;
+volatile IDATA uint8_t Ep2ByteLen;
+volatile IDATA uint8_t Ep3ByteLen;
 
 XDATA uint8_t UartRxBuf[UART_RX_BUF_SIZE] = { 0 };  // Serial receive buffer
 volatile IDATA uint8_t UartRxBufInputPointer = 0;     // Circular buffer write pointer, bus reset needs to be initialized to 0
@@ -295,27 +296,22 @@ volatile IDATA uint8_t DebugUartRxBufOutputPointer = 0;
 volatile IDATA uint8_t DebugUartRxBufByteCount = 0;
 
 /** Endpoint handling */
-volatile IDATA uint8_t UsbEp2ByteCount = 0;           // Represents the data received by USB endpoint 2 (CDC)
-volatile IDATA uint8_t UsbEp3ByteCount = 0;           // Represents the data received by USB endpoint 3 (HID)
-volatile IDATA uint8_t Endpoint2UploadBusy = 0;        // Whether the upload endpoint 2 (CDC) is busy
-volatile IDATA uint8_t Endpoint3UploadBusy = 0;        // Whether the upload endpoint 3 (HID) is busy
+volatile IDATA uint8_t UsbEp2ByteCount = 0;     // Represents the data received by USB endpoint 2 (CDC)
+volatile IDATA uint8_t UsbEp3ByteCount = 0;     // Represents the data received by USB endpoint 3 (HID)
+volatile IDATA uint8_t Endpoint2UploadBusy = 0; // Whether the upload endpoint 2 (CDC) is busy
+volatile IDATA uint8_t Endpoint3UploadBusy = 0; // Whether the upload endpoint 3 (HID) is busy
 
-/** CDC and HID variables */
-volatile IDATA uint32_t LoopCounter = 0;
-volatile IDATA uint32_t LastReceiveCounter = 0;
-
+/** CDC variables */
 XDATA uint8_t CdcRxBuf[MAX_CDC_FRAME_SIZE] = { 0 };
 IDATA uint8_t CdcRxBufLength = 0;
 IDATA uint8_t CdcDataAvailable = 0;
-IDATA uint32_t CdcLoopCount = 0;
 
+/** HID variables */
 XDATA uint8_t HidRxBuf[HID_FRAME_SIZE] = { 0 };
-IDATA uint8_t HidRxBufLength;
-IDATA uint8_t HidDataAvailable;
+IDATA uint8_t HidRxBufLength = 0;
+IDATA uint8_t HidDataAvailable = 0;
 
 /** Frame data */
-#define FRAME_TIMEOUT   10000  // Timeout in number of main loop iterations
-
 #define MODE_CDC        0x40
 #define MODE_HID        0x80
 #define MODE_MASK       0xC0
@@ -323,8 +319,15 @@ IDATA uint8_t HidDataAvailable;
 
 volatile IDATA uint8_t FrameMode   = 0;
 volatile IDATA uint8_t FrameLength = 0;
+volatile IDATA uint8_t FrameRemainingBytes = 0;
 volatile IDATA uint8_t FrameStarted = 0;
 volatile IDATA uint8_t Halted = 0;
+
+uint32_t increment_pointer(uint32_t pointer, uint32_t increment, uint32_t buffer_size);
+uint32_t decrement_pointer(uint32_t pointer, uint32_t decrement, uint32_t buffer_size);
+void cts_start(void);
+void cts_stop(void);
+void check_cts_stop(void);
 
 /*******************************************************************************
  * Function Name  : USBDeviceCfg()
@@ -403,12 +406,12 @@ void USBDeviceEndPointCfg()
  *******************************************************************************/
 void Config_Uart1(uint8_t *cfg_uart)
 {
-    uint32_t uart1_buad = 0;
-    *((uint8_t*) &uart1_buad) = cfg_uart[0];
-    *((uint8_t*) &uart1_buad + 1) = cfg_uart[1];
-    *((uint8_t*) &uart1_buad + 2) = cfg_uart[2];
-    *((uint8_t*) &uart1_buad + 3) = cfg_uart[3];
-    SBAUD1 = 256 - FREQ_SYS / 16 / uart1_buad;   // SBAUD1 = 256 - Fsys / 16 / baud rate
+    uint32_t uart1_baud = 0;
+    *((uint8_t*) &uart1_baud) = cfg_uart[0];
+    *((uint8_t*) &uart1_baud + 1) = cfg_uart[1];
+    *((uint8_t*) &uart1_baud + 2) = cfg_uart[2];
+    *((uint8_t*) &uart1_baud + 3) = cfg_uart[3];
+    SBAUD1 = 256 - FREQ_SYS / 16 / uart1_baud;   // SBAUD1 = 256 - Fsys / 16 / baud rate
     IE_UART1 = 1; // Enable UART1 interrupt
 }
 
@@ -683,7 +686,7 @@ void usb_irq_setup_handler(void)
         UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_STALL | UEP_T_RES_STALL; // STALL
     } else if (len <= DEFAULT_EP0_SIZE) { // Upload data or status phase returns 0 length packet
         UEP0_T_LEN = len;
-        UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK; // The default packet is DATA1, Return response ACK
+        UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK; // The default packet is DATA1, return response ACK
     } else {
         UEP0_T_LEN = 0; // Although it has not yet reached the status stage, it is preset to upload 0-length data packets in advance to prevent the host from entering the status stage early.
         UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK; // The default data packet is DATA1, and the response ACK is returned
@@ -895,13 +898,15 @@ void Uart1_ISR(void)IRQ_UART1
     // Check if data has been received
     if (U1RI) {
         UartRxBuf[UartRxBufInputPointer++] = SBUF1;
-        LastReceiveCounter = LoopCounter;  // Update the counter when a byte is received
         if (UartRxBufInputPointer == UartRxBufOutputPointer) {
             UartRxBufOverflow = 1;
         }
         if (UartRxBufInputPointer >= UART_RX_BUF_SIZE) {
             UartRxBufInputPointer = 0; // Reset write pointer
         }
+
+        check_cts_stop();
+
         U1RI = 0;
     }
 }
@@ -940,11 +945,42 @@ uint32_t increment_pointer(uint32_t pointer, uint32_t increment, uint32_t buffer
     return (pointer + increment) % buffer_size;
 }
 
+// Function to decrement a pointer and wrap around the buffer
+uint32_t decrement_pointer(uint32_t pointer, uint32_t decrement, uint32_t buffer_size)
+{
+    return (pointer + buffer_size - (decrement % buffer_size)) % buffer_size;
+}
+
+void cts_start(void)
+{
+    gpio_p1_5_set(); // Signal to FPGA to send more data
+}
+
+void cts_stop(void)
+{
+    gpio_p1_5_unset(); // Signal to FPGA to not send more data
+}
+
+void check_cts_stop(void)
+{
+    if (uart_byte_count() >= 133) // UartRxBuf is filled to 95% or more
+    {
+        cts_stop();
+    }
+}
+
 void main()
 {
+    // Enable GPIO signalling on p1.4 and p1.5
+    gpio_init_p1_4_in();  // Init GPIO p1.4 to input mode for FPGA_CTS
+    gpio_init_p1_5_out(); // Init GPIO p1.5 to output mode for CH552_CTS
+    cts_start();          // Signal OK to send
+
     CfgFsys();     // CH559 clock selection configuration
     mDelaymS(5);   // Modify the main frequency and wait for the internal crystal to stabilize, which must be added
+#if 0
     mInitSTDIO();  // Serial port 0, can be used for debugging
+#endif
     UART1Setup();  // For communication with FPGA
     UART1Clean();  // Clean register from spurious data
 
@@ -959,57 +995,63 @@ void main()
     UEP2_T_LEN = 0;         // Transmit length must be cleared (Endpoint 2)
     UEP3_T_LEN = 0;         // Transmit length must be cleared (Endpoint 3)
 
-    // Enable GPIO debugging on p1.4 and p1.5
-    // gpio_init();
-    // gpio_unset(0x10);
-    // gpio_unset(0x20);
-
     while (1) {
         if (UsbConfig) {
 
             // Check if Endpoint 2 (CDC) has received data
             if (UsbEp2ByteCount) {
-                byte_len = UsbEp2ByteCount;
-                memcpy(UartTxBuf, Ep2Buffer, byte_len);
+                Ep2ByteLen = UsbEp2ByteCount; // UsbEp2ByteCount can be maximum 64 bytes
+                memcpy(UartTxBuf, Ep2Buffer, Ep2ByteLen);
 
                 UsbEp2ByteCount = 0;
                 CH554UART1SendByte(MODE_CDC);  // Send CDC mode header
-                CH554UART1SendByte(byte_len);  // Send length
-                CH554UART1SendBuffer(UartTxBuf, byte_len);
+                CH554UART1SendByte(Ep2ByteLen);  // Send length
+                CH554UART1SendBuffer(UartTxBuf, Ep2ByteLen);
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 2 to ACK again
             }
 
             // Check if Endpoint 3 (HID) has received data
             if (UsbEp3ByteCount) {
-                byte_len = UsbEp3ByteCount;
-                memcpy(UartTxBuf, Ep3Buffer, byte_len);
+                Ep3ByteLen = UsbEp3ByteCount; // UsbEp3ByteCount can be maximum 64 bytes
+                memcpy(UartTxBuf, Ep3Buffer, Ep3ByteLen);
 
                 UsbEp3ByteCount = 0;
                 CH554UART1SendByte(MODE_HID); // Send HID mode header
-                CH554UART1SendByte(byte_len); // Send length (always 64 bytes)
-                CH554UART1SendBuffer(UartTxBuf, byte_len);
+                CH554UART1SendByte(Ep3ByteLen); // Send length (always 64 bytes)
+                CH554UART1SendBuffer(UartTxBuf, Ep3ByteLen);
                 UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 3 to ACK again
             }
 
-            UartRxBufByteCount = uart_byte_count();               // Check amount of data in buffer
+            UartRxBufByteCount = uart_byte_count(); // Check amount of data in buffer
 
-            if ((UartRxBufByteCount >= 2) && !FrameStarted) {            // If we have data and the header in not yet validated
-                FrameMode = UartRxBuf[UartRxBufOutputPointer];           // Extract frame mode
+            if ((UartRxBufByteCount >= 2) && !FrameStarted) {  // If we have data and the header is not yet validated
+                FrameMode = UartRxBuf[UartRxBufOutputPointer]; // Extract frame mode
                 if ((FrameMode == MODE_CDC) ||
                     (FrameMode == MODE_HID)) {
-                    FrameLength = UartRxBuf[increment_pointer(UartRxBufOutputPointer, 1, UART_RX_BUF_SIZE)]; // Extract frame length
+                    FrameLength = UartRxBuf[increment_pointer(UartRxBufOutputPointer,
+                                                              1,
+                                                              UART_RX_BUF_SIZE)]; // Extract frame length
+                    FrameRemainingBytes = FrameLength;
+                    UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+                                                               2,
+                                                               UART_RX_BUF_SIZE); // Start at valid data so skip the mode and length byte
+                    UartRxBufByteCount -= 2; // Subtract the frame mode and frame length bytes from the total byte count
                     FrameStarted = 1;
-                } else {                                                 // Invalid mode
+                } else { // Invalid mode
                     if (!Halted) {
                         printStr("Invalid header: 0x");
                         printNumHex(FrameMode);
                         printStr(", len = ");
-                        printNumU32(UartRxBuf[increment_pointer(UartRxBufOutputPointer, 1, UART_RX_BUF_SIZE)]);
+                        printNumU32(UartRxBuf[increment_pointer(UartRxBufOutputPointer,
+                                                                1,
+                                                                UART_RX_BUF_SIZE)]);
                         printStr("\n");
                         uint16_t i;
                         uint8_t print_char_count_out = 0;
                         for (i=0; i<UART_RX_BUF_SIZE; i++) {
-                            printNumHex(UartRxBuf[increment_pointer(UartRxBufOutputPointer, i, UART_RX_BUF_SIZE)]);
+                            printNumHex(UartRxBuf[increment_pointer(UartRxBufOutputPointer,
+                                                                    i,
+                                                                    UART_RX_BUF_SIZE)]);
                             print_char_count_out++;
                             if (print_char_count_out >= 16) {
                                 printStr("\n");
@@ -1025,50 +1067,67 @@ void main()
                 }
             }
 
-            if (FrameStarted && (LoopCounter - LastReceiveCounter > FRAME_TIMEOUT)) {
-                // Timeout, reset frame reception
-                FrameMode = 0;
-                FrameLength = 0;
-                FrameStarted = 0;
-                printStr("Frame timeout, reset\n");
+            // Copy CDC data from UartRxBuf to CdcRxBuf
+            if (FrameStarted && !CdcDataAvailable) {
                 if (FrameMode == MODE_CDC) {
-                    CdcRxBufLength = 0;
-                    CdcLoopCount = 0;
-                }
-            }
-
-            if (FrameStarted) {
-                // Check if a complete frame has been received, include one mode byte and and one length byte
-                if (UartRxBufByteCount >= (FrameLength + 2)) {
-                    UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer, 2, UART_RX_BUF_SIZE); // Start at valid data so skip the mode and length byte
-                    if (FrameMode == MODE_CDC) {
-                        circular_copy(CdcRxBuf + CdcRxBufLength,
+                    if ((FrameRemainingBytes >= MAX_PACKET_SIZE) &&
+                        (UartRxBufByteCount >= MAX_PACKET_SIZE)) {
+                        circular_copy(CdcRxBuf,
                                       UartRxBuf,
                                       UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
-                                      FrameLength);
-                        CdcRxBufLength += FrameLength;
+                                      MAX_PACKET_SIZE);
+                        CdcRxBufLength = MAX_PACKET_SIZE;
+                        // Update output pointer
+                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+                                                                   MAX_PACKET_SIZE,
+                                                                   UART_RX_BUF_SIZE);
+                        FrameRemainingBytes -= MAX_PACKET_SIZE;
                         CdcDataAvailable = 1;
-                    } else if (FrameMode == MODE_HID) {
+                        cts_start();
+                    }
+                    else if ((FrameRemainingBytes < MAX_PACKET_SIZE) &&
+                             (UartRxBufByteCount >= FrameRemainingBytes)) {
+                        circular_copy(CdcRxBuf,
+                                      UartRxBuf,
+                                      UART_RX_BUF_SIZE,
+                                      UartRxBufOutputPointer,
+                                      FrameRemainingBytes);
+                        CdcRxBufLength = FrameRemainingBytes;
+                        // Update output pointer
+                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+                                                                   FrameRemainingBytes,
+                                                                   UART_RX_BUF_SIZE);
+                        FrameRemainingBytes -= FrameRemainingBytes;
+                        CdcDataAvailable = 1;
+                        cts_start();
+                    }
+                }
+            }
+
+            // Copy HID data from UartRxBuf to HidRxBuf
+            if (FrameStarted && !HidDataAvailable) {
+                if (FrameMode == MODE_HID) {
+                    // Check if a complete frame has been received
+                    if (UartRxBufByteCount >= FrameRemainingBytes) {
                         circular_copy(HidRxBuf,
                                       UartRxBuf,
                                       UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
-                                      FrameLength);
+                                      FrameRemainingBytes);
                         HidRxBufLength = MAX_PACKET_SIZE;
+                        // Update output pointer
+                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+                                                                   FrameRemainingBytes,
+                                                                   UART_RX_BUF_SIZE);
                         HidDataAvailable = 1;
+                        cts_start();
                     }
-                    // Update output pointer
-                    UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer, FrameLength, UART_RX_BUF_SIZE);
-
-                    // Get next header and data
-                    FrameStarted = 0;
                 }
             }
 
             // Check if we should upload data to Endpoint 2 (CDC)
-            if (CdcDataAvailable && !Endpoint2UploadBusy && ((CdcLoopCount >= 100) || CdcRxBufLength >= MAX_CDC_FRAME_SIZE)) {
-
+            if (CdcDataAvailable && !Endpoint2UploadBusy) {
                 // Write upload endpoint
                 memcpy(Ep2Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 2 */
                        CdcRxBuf,
@@ -1077,11 +1136,14 @@ void main()
                 UEP2_T_LEN = CdcRxBufLength; // Set the number of data bytes that Endpoint 2 is ready to send
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
                 Endpoint2UploadBusy = 1; // Set busy flag
+
                 CdcDataAvailable = 0;
                 CdcRxBufLength = 0;
-                CdcLoopCount = 0;
-            } else {
-                CdcLoopCount++;
+
+                if (FrameRemainingBytes == 0) {
+                    // Complete frame sent, get next header and data
+                    FrameStarted = 0;
+                }
             }
 
             // Check if we should upload data to Endpoint 3 (HID)
@@ -1095,10 +1157,14 @@ void main()
                 UEP3_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 3 is ready to send
                 UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
                 Endpoint3UploadBusy = 1; // Set busy flag
+
                 HidDataAvailable = 0;
+
+                // Get next header and data
+                FrameStarted = 0;
             }
 
-#if 1
+#if 0
             DebugUartRxBufByteCount = debug_uart_byte_count();
             if (DebugUartRxBufByteCount) {
                 switch(DebugUartRxBuf[DebugUartRxBufOutputPointer]) {
@@ -1172,7 +1238,9 @@ void main()
                 }
 
                 // Update out pointer
-                DebugUartRxBufOutputPointer = increment_pointer(DebugUartRxBufOutputPointer, DebugUartRxBufByteCount, DEBUG_UART_RX_BUF_SIZE);
+                DebugUartRxBufOutputPointer = increment_pointer(DebugUartRxBufOutputPointer,
+                                                                DebugUartRxBufByteCount,
+                                                                DEBUG_UART_RX_BUF_SIZE);
             }
 #endif
         } /* END if (UsbConfig) */
