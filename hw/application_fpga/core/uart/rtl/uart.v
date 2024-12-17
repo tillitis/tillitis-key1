@@ -55,6 +55,9 @@ module uart (
     input  wire rxd,
     output wire txd,
 
+    input  wire ch552_cts,
+    output wire fpga_cts,
+
     input  wire          cs,
     input  wire          we,
     input  wire [ 7 : 0] address,
@@ -110,6 +113,7 @@ module uart (
   reg  [31 : 0] tmp_read_data;
   reg           tmp_ready;
 
+  reg  [ 1 : 0] ch552_cts_reg;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -158,8 +162,23 @@ module uart (
 
       .out_syn (fifo_out_syn),
       .out_data(fifo_out_data),
-      .out_ack (fifo_out_ack)
+      .out_ack (fifo_out_ack),
+
+      .fpga_cts(fpga_cts)
   );
+
+  //----------------------------------------------------------------
+  // reg_update
+  //----------------------------------------------------------------
+  always @(posedge clk) begin : reg_update
+    if (!reset_n) begin
+      ch552_cts_reg <= 2'h0;
+    end
+    else begin
+      ch552_cts_reg[0] <= ch552_cts;
+      ch552_cts_reg[1] <= ch552_cts_reg[0];
+    end
+  end  // reg_update
 
   //----------------------------------------------------------------
   // api
@@ -208,7 +227,7 @@ module uart (
           end
 
           ADDR_TX_STATUS: begin
-            tmp_read_data = {31'h0, core_txd_ready};
+            tmp_read_data = {31'h0, core_txd_ready & ch552_cts_reg[1]};
           end
 
           default: begin
