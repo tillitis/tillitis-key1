@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: GPL-2.0-only
 */
 
-// This firmware copies an app from ROM to app RAM. The app triggers both
-// IRQ_SYSCALL_HI and IRQ_SYSCALL_LO. One after the other. Finally, the
-// app tries to jump firmware. This should result in a trap since the
-// app in executing in app mode.
+// This firmware copies an app from ROM to app RAM. The app triggers IRQ_SYSCALL
+// Checks are done to make sure that firmware RAM can/cannot be read depending
+// on wether we're executing from firmware, syscall or app.
+// Finally the app tries to jump firmware. This should result in a trap since
+// the app is executing in app mode.
 //
 
 #include "custom_ops.S"  // PicoRV32 custom instructions
@@ -25,17 +26,9 @@ _start:
 irq_handler:
 	// PicoRV32 stores the IRQ bitmask in x4.
 	// If bit 31 is 1: IRQ31 was triggered.
-	// If bit 30 is 1: IRQ30 was triggered.
-irq_syscall_lo_check:
-	li t4, (1 << 30)
-	bne x4, t4, irq_syscall_hi_check
-	// Firmware RAM should not be readable from IRQ_SYSCALL_LO
-	call check_cannot_read_test_val_from_fw_ram
-	j irq_source_check_done
-irq_syscall_hi_check:
 	li t4, (1 << 31)
 	bne x4, t4, unexpected_irq
-	// Firmware RAM should be readable from IRQ_SYSCALL_HI
+	// Firmware RAM should be readable from IRQ_SYSCALL
 	call check_can_read_test_val_from_fw_ram
 	j irq_source_check_done
 unexpected_irq:
@@ -56,9 +49,8 @@ init:
 	// Firmware RAM should be readable from firmware mode
 	call check_can_read_test_val_from_fw_ram
 
-
 	// Enable IRQs
-	li t0, 0x3fffffff // IRQ31 & IRQ30 mask
+	li t0, 0x7fffffff // IRQ31
 	picorv32_maskirq_insn(zero, t0) // Enable IRQs
 
 	// Copy app to App RAM
@@ -84,13 +76,8 @@ app_start:
 	// Firmware RAM should not be readable from app mode
 	call check_cannot_read_test_val_from_fw_ram
 
-	// Raise IRQ_SYSCALL_HI
-	li t0, 0xe1000000 // IRQ_SYSCALL_HI (IRQ31) trigger address
-	sw zero, 0(t0) // Raise IRQ by writing to interrupt trigger address.
-	               // Writing any data triggers an interrupt.
-
-	// Raise IRQ_SYSCALL_LO
-	li t0, 0xe0000000 // IRQ_SYSCALL_LO (IRQ30) trigger address
+	// Raise IRQ_SYSCALL
+	li t0, 0xe1000000 // IRQ_SYSCALL (IRQ31) trigger address
 	sw zero, 0(t0) // Raise IRQ by writing to interrupt trigger address.
 	               // Writing any data triggers an interrupt.
 
