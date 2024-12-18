@@ -22,7 +22,8 @@ static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 		      enum cmdlen len);
 static int parseframe(uint8_t b, struct frame_header *hdr);
 static void write(uint8_t *buf, size_t nbytes);
-static int read(uint8_t *buf, size_t bufsize, size_t nbytes);
+static int read(uint8_t *buf, size_t bufsize, size_t nbytes, uint8_t *mode,
+		uint8_t *mode_bytes_left);
 static size_t bytelen(enum cmdlen cmdlen);
 
 static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
@@ -31,12 +32,13 @@ static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 	return (id << 5) | (endpoint << 3) | (status << 2) | len;
 }
 
-int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
+int readcommand(struct frame_header *hdr, uint8_t *cmd, int state,
+		uint8_t *mode, uint8_t *mode_bytes_left)
 {
 	uint8_t in = 0;
 
 	set_led((state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE);
-	in = readbyte();
+	in = readbyte(mode, mode_bytes_left);
 
 	if (parseframe(in, hdr) == -1) {
 		htif_puts("Couldn't parse header\n");
@@ -45,7 +47,7 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 
 	(void)memset(cmd, 0, CMDLEN_MAXBYTES);
 	// Now we know the size of the cmd frame, read it all
-	if (read(cmd, CMDLEN_MAXBYTES, hdr->len) != 0) {
+	if (read(cmd, CMDLEN_MAXBYTES, hdr->len, mode, mode_bytes_left) != 0) {
 		htif_puts("read: buffer overrun\n");
 		return -1;
 	}
@@ -115,6 +117,10 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 
 	nbytes = bytelen(len);
 
+	// Mode Protocol Header
+	writebyte(MODE_CDC);
+	writebyte(2);
+
 	// Frame Protocol Header
 	writebyte(genhdr(hdr.id, hdr.endpoint, 0x0, len));
 
@@ -122,7 +128,19 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 	writebyte(rspcode);
 	nbytes--;
 
-	write(buf, nbytes);
+	while (nbytes > 0) {
+		// Limit transfers to 64 bytes (2 byte header + 62 byte data) to
+		// fit in a single USB frame.
+		size_t tx_count = nbytes > 62 ? 62 : nbytes;
+		// Mode Protocol Header
+		writebyte(MODE_CDC);
+		writebyte(tx_count & 0xff);
+
+		// Data
+		write(buf, tx_count);
+		nbytes -= tx_count;
+		buf += tx_count;
+	}
 }
 
 void writebyte(uint8_t b)
@@ -142,23 +160,40 @@ static void write(uint8_t *buf, size_t nbytes)
 	}
 }
 
-uint8_t readbyte(void)
+uint8_t readbyte_(void)
 {
 	for (;;) {
 		if (*can_rx) {
-			return *rx;
+			uint32_t b = *rx;
+			return b;
 		}
 	}
 }
 
-static int read(uint8_t *buf, size_t bufsize, size_t nbytes)
+uint8_t readbyte(uint8_t *mode, uint8_t *mode_bytes_left)
+{
+	if (*mode_bytes_left == 0) {
+		*mode = readbyte_();
+		if (*mode != MODE_CDC) {
+			htif_puts("We only support MODE_CDC\n");
+		} else {
+			*mode_bytes_left = readbyte_();
+		}
+	}
+	uint8_t b = readbyte_();
+	*mode_bytes_left -= 1;
+	return b;
+}
+
+static int read(uint8_t *buf, size_t bufsize, size_t nbytes, uint8_t *mode,
+		uint8_t *mode_bytes_left)
 {
 	if (nbytes > bufsize) {
 		return -1;
 	}
 
 	for (int n = 0; n < nbytes; n++) {
-		buf[n] = readbyte();
+		buf[n] = readbyte(mode, mode_bytes_left);
 	}
 
 	return 0;
