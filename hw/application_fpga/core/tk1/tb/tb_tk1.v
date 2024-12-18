@@ -519,7 +519,7 @@ module tb_tk1 ();
       read_check_word(ADDR_APP_SIZE, 32'h47114711);
 
       $display("--- test5: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hf000000);
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test5: Write app start address and size again.");
       write_word(ADDR_APP_START, 32'hdeadbeef);
