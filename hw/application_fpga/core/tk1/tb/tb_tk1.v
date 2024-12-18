@@ -62,6 +62,7 @@ module tb_tk1 ();
   localparam ADDR_SPI_XFER = 8'h81;
   localparam ADDR_SPI_DATA = 8'h82;
 
+  localparam APP_RAM_START = 32'h40000000;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -468,7 +469,7 @@ module tb_tk1 ();
       read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
 
       $display("--- test3: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hdeadbeef);
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test3: Try to write CDI again.");
       write_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
