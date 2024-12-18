@@ -76,7 +76,7 @@ module tb_tk1 ();
   reg           tb_clk;
   reg           tb_reset_n;
   reg           tb_cpu_trap;
-  wire          tb_system_mode;
+  wire          tb_rw_locked;
 
   reg  [31 : 0] tb_cpu_addr;
   reg           tb_cpu_instr;
@@ -94,6 +94,10 @@ module tb_tk1 ();
   reg           tb_gpio2;
   wire          tb_gpio3;
   wire          tb_gpio4;
+
+  reg           tb_access_level_hi;
+
+  wire          tb_fw_ram_en;
 
   wire          tb_spi_ss;
   wire          tb_spi_sck;
@@ -122,7 +126,7 @@ module tb_tk1 ();
       .reset_n(tb_reset_n),
 
       .cpu_trap(tb_cpu_trap),
-      .system_mode(tb_system_mode),
+      .rw_locked(tb_rw_locked),
 
       .cpu_addr  (tb_cpu_addr),
       .cpu_instr (tb_cpu_instr),
@@ -140,6 +144,10 @@ module tb_tk1 ();
       .gpio2(tb_gpio2),
       .gpio3(tb_gpio3),
       .gpio4(tb_gpio4),
+
+      .access_level_hi(tb_access_level_hi),
+
+      .fw_ram_en(tb_fw_ram_en),
 
       .spi_ss  (tb_spi_ss),
       .spi_sck (tb_spi_sck),
@@ -192,7 +200,7 @@ module tb_tk1 ();
       $display("------------");
       if (tb_main_monitor) begin
         $display("Inputs and outputs:");
-        $display("tb_cpu_trap: 0x%1x, system_mode: 0x%1x", tb_cpu_trap, tb_system_mode);
+        $display("tb_cpu_trap: 0x%1x, system_mode: 0x%1x", tb_cpu_trap, dut.system_mode);
         $display("cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x, force_tap: 0x%1x",
                  tb_cpu_addr, tb_cpu_instr, tb_cpu_valid, tb_force_trap);
         $display("ram_addr_rand: 0x%08x, ram_data_rand: 0x%08x", tb_ram_addr_rand,
@@ -276,6 +284,8 @@ module tb_tk1 ();
 
       tb_gpio1        = 1'h0;
       tb_gpio2        = 1'h0;
+
+      tb_access_level_hi = 1'h0;
 
       tb_cs           = 1'h0;
       tb_we           = 1'h0;
