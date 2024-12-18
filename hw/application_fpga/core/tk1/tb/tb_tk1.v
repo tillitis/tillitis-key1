@@ -62,6 +62,7 @@ module tb_tk1 ();
   localparam ADDR_SPI_XFER = 8'h81;
   localparam ADDR_SPI_DATA = 8'h82;
 
+  localparam APP_RAM_START = 32'h40000000;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -94,6 +95,8 @@ module tb_tk1 ();
   reg           tb_gpio2;
   wire          tb_gpio3;
   wire          tb_gpio4;
+
+  reg           tb_syscall;
 
   wire          tb_spi_ss;
   wire          tb_spi_sck;
@@ -140,6 +143,8 @@ module tb_tk1 ();
       .gpio2(tb_gpio2),
       .gpio3(tb_gpio3),
       .gpio4(tb_gpio4),
+
+      .syscall(tb_syscall),
 
       .spi_ss  (tb_spi_ss),
       .spi_sck (tb_spi_sck),
@@ -192,7 +197,7 @@ module tb_tk1 ();
       $display("------------");
       if (tb_main_monitor) begin
         $display("Inputs and outputs:");
-        $display("tb_cpu_trap: 0x%1x, app_mode: 0x%1x", tb_cpu_trap, tb_app_mode);
+        $display("tb_cpu_trap: 0x%1x, app_mode: 0x%1x", tb_cpu_trap, dut.app_mode);
         $display("cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x, force_tap: 0x%1x",
                  tb_cpu_addr, tb_cpu_instr, tb_cpu_valid, tb_force_trap);
         $display("ram_addr_rand: 0x%08x, ram_data_rand: 0x%08x", tb_ram_addr_rand,
@@ -276,12 +281,33 @@ module tb_tk1 ();
       tb_gpio1        = 1'h0;
       tb_gpio2        = 1'h0;
 
+      tb_syscall = 1'h0;
+
       tb_cs           = 1'h0;
       tb_we           = 1'h0;
       tb_address      = 8'h0;
       tb_write_data   = 32'h0;
     end
   endtask  // init_sim
+
+
+  //----------------------------------------------------------------
+  // restore_mem_bus()
+  //
+  // Restore memory bus to its initial state
+  //----------------------------------------------------------------
+  task restore_mem_bus();
+    begin : restore_mem_bus
+      tb_cpu_addr  = 32'h0;
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+
+      tb_cs           = 1'h0;
+      tb_we           = 1'h0;
+      tb_address      = 8'h0;
+      tb_write_data   = 32'h0;
+    end
+  endtask
 
 
   //----------------------------------------------------------------
@@ -370,6 +396,23 @@ module tb_tk1 ();
     end
   endtask  // read_check_word
 
+
+  //----------------------------------------------------------------
+  // fetch_instruction()
+  //
+  // Simulate fetch of an instruction at specified address.
+  //----------------------------------------------------------------
+  task fetch_instruction(input [31 : 0] address);
+    begin : fetch_instruction
+      tb_cpu_addr  = address;
+      tb_cpu_instr = 1'h1;
+      tb_cpu_valid = 1'h1;
+      #(CLK_PERIOD);
+      tb_cpu_addr  = 32'h0;
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+    end
+  endtask  // fetch_instruction
 
   // cpu_read_word()
   //
@@ -529,7 +572,7 @@ module tb_tk1 ();
       read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
 
       $display("--- test3: Switch to app mode.");
-      write_word(ADDR_APP_MODE_CTRL, 32'hdeadbeef);
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test3: Try to write CDI again.");
       write_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
@@ -558,40 +601,6 @@ module tb_tk1 ();
 
 
   //----------------------------------------------------------------
-  // test4()
-  // Write and read blake2s entry point.
-  //----------------------------------------------------------------
-  task test4;
-    begin
-      tc_ctr = tc_ctr + 1;
-
-      $display("");
-      $display("--- test4: Write and read blake2s entry point in fw mode started.");
-      $display("--- test4: Reset DUT to switch to fw mode.");
-      reset_dut();
-
-      $display("--- test4: Write Blake2s entry point.");
-      write_word(ADDR_BLAKE2S, 32'hcafebabe);
-
-      $display("--- test4: Read Blake2s entry point.");
-      read_check_word(ADDR_BLAKE2S, 32'hcafebabe);
-
-      $display("--- test4: Switch to app mode.");
-      write_word(ADDR_APP_MODE_CTRL, 32'hf00ff00f);
-
-      $display("--- test4: Write Blake2s entry point again.");
-      write_word(ADDR_BLAKE2S, 32'hdeadbeef);
-
-      $display("--- test4: Read Blake2s entry point again");
-      read_check_word(ADDR_BLAKE2S, 32'hcafebabe);
-
-      $display("--- test4: completed.");
-      $display("");
-    end
-  endtask  // test4
-
-
-  //----------------------------------------------------------------
   // test5()
   // Write and read APP start address end size.
   //----------------------------------------------------------------
@@ -613,7 +622,7 @@ module tb_tk1 ();
       read_check_word(ADDR_APP_SIZE, 32'h47114711);
 
       $display("--- test5: Switch to app mode.");
-      write_word(ADDR_APP_MODE_CTRL, 32'hf000000);
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test5: Write app start address and size again.");
       write_word(ADDR_APP_START, 32'hdeadbeef);
@@ -747,10 +756,7 @@ module tb_tk1 ();
       $display("--- test9: force_trap before illegal access: 0x%1x", tb_force_trap);
       $display("--- test9: Creating an illegal access.");
 
-      tb_cpu_addr  = 32'h13371337;
-      tb_cpu_instr = 1'h1;
-      tb_cpu_valid = 1'h1;
-      #(2 * CLK_PERIOD);
+      fetch_instruction(32'h13371337);
       $display("--- test9: cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x", tb_cpu_addr,
                tb_cpu_instr, tb_cpu_valid);
       $display("--- test9: force_trap: 0x%1x", tb_force_trap);
@@ -770,6 +776,9 @@ module tb_tk1 ();
       tc_ctr         = tc_ctr + 1;
       tb_monitor     = 0;
       tb_spi_monitor = 0;
+
+      restore_mem_bus();
+      reset_dut();
 
       $display("");
       $display("--- test10: Loopback in SPI Master started.");
@@ -935,7 +944,6 @@ module tb_tk1 ();
     test1();
     test2();
     test3();
-    test4();
     test5();
     test6();
     test7();
