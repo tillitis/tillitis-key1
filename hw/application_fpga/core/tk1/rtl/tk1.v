@@ -381,7 +381,8 @@ module tk1 #(
   // Monitor events and state changes in the SoC, and handle
   // security violations. We currently check for:
   //
-  // Any access to RAM but outside of the size of the physical mem.
+  // Any memory access that is outside of the defined size of the
+  // defined memory areas.
   //
   // Trying to execute instructions in FW-RAM.
   //
@@ -393,8 +394,68 @@ module tk1 #(
     force_trap_set = 1'h0;
 
     if (cpu_valid) begin
+      // Outside ROM area
+      if (cpu_addr[31 : 30] == 2'h0 & |cpu_addr[29 : 14]) begin
+        force_trap_set = 1'h1;
+      end
+
+      // Outside RAM area
       if (cpu_addr[31 : 30] == 2'h1 & |cpu_addr[29 : 17]) begin
         force_trap_set = 1'h1;
+      end
+
+      // In RESERVED area
+      if (cpu_addr[31 : 30] == 2'h2) begin
+        force_trap_set = 1'h1;
+      end
+
+      // MMIO
+      if (cpu_addr[31 : 30] == 2'h3) begin
+
+        // Outside TRNG
+        if (cpu_addr[29 : 24] == 6'h00 & |cpu_addr[23 : 10]) begin
+          force_trap_set = 1'h1;
+        end
+
+        // Outside TIMER
+        if (cpu_addr[29 : 24] == 6'h01 & |cpu_addr[23 : 10]) begin
+          force_trap_set = 1'h1;
+        end
+
+        // Outside UDS
+        if (cpu_addr[29 : 24] == 6'h02 & |cpu_addr[23 : 5]) begin
+          force_trap_set = 1'h1;
+        end
+
+        // Outside UART
+        if (cpu_addr[29 : 24] == 6'h03 & |cpu_addr[23 : 10]) begin
+          force_trap_set = 1'h1;
+        end
+
+        // Outside TOUCH_SENSE
+        if (cpu_addr[29 : 24] == 6'h04 & |cpu_addr[23 : 10]) begin
+          force_trap_set = 1'h1;
+        end
+
+        // In unused space
+        if ((cpu_addr[29 : 24] > 6'h04) && (cpu_addr[29 : 24] < 6'h10)) begin
+          force_trap_set = 1'h1;
+        end
+
+        // Outside FW_RAM
+        if (cpu_addr[29 : 24] == 6'h10 & |cpu_addr[23 : 11]) begin
+          force_trap_set = 1'h1;
+        end
+
+        // In unused space
+        if ((cpu_addr[29 : 24] > 6'h10) && (cpu_addr[29 : 24] < 6'h3f)) begin
+          force_trap_set = 1'h1;
+        end
+
+        // Outside TK1
+        if (cpu_addr[29 : 24] == 6'h3f & |cpu_addr[23 : 10]) begin
+          force_trap_set = 1'h1;
+        end
       end
 
       if (cpu_instr) begin

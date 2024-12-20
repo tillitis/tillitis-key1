@@ -406,7 +406,7 @@ module application_fpga_sim (
 
     ram_cs              = 1'h0;
     ram_we              = 4'h0;
-    ram_address         = cpu_addr[17 : 2];
+    ram_address         = cpu_addr[16 : 2];
     ram_write_data      = cpu_wdata;
 
     fw_ram_cs           = 1'h0;
