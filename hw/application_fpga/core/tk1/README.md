@@ -164,8 +164,9 @@ ADDR_CPU_MON_LAST: 0x62
 Monitors events and state changes in the SoC and handles security
 violations. Currently checks for:
 
-1. Trying to execute instructions in FW\_RAM. *Always enabled.*
-2. Trying to access RAM outside of the physical memory. *Always enabled*
+1. Trying to access memory that is outside of the defined size of the
+   defined memory areas. *Always enabled*
+2. Trying to execute instructions in FW\_RAM. *Always enabled.*
 3. Trying to execute instructions from a memory area in RAM defined by
    the application.
 
