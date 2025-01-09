@@ -311,8 +311,8 @@ int main(void)
 	}
 
 	puts("\r\nTesting timer... 3");
-	// Matching clock at 18 MHz, giving us timer in seconds
-	*timer_prescaler = 18 * 1000000;
+	// Matching clock at 24 MHz, giving us timer in seconds
+	*timer_prescaler = 24 * 1000000;
 
 	// Test timer expiration after 1s
 	*timer = 1;
