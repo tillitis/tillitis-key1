@@ -9,6 +9,7 @@
 #define PROTO_H
 
 enum mode {
+	MODE_TKEYCTRL = 0x20,
 	MODE_CDC = 0x40,
 	MODE_HID = 0x80,
 };
