@@ -4,28 +4,61 @@
 #include "mem.h"
 
 unsigned char FLASH ProdDesc[]={  // "MTA1-USB-V1"
-    0x18, 0x03, 0x4d, 0x00, 0x54, 0x00, 0x41, 0x00,
-    0x31, 0x00, 0x2d, 0x00, 0x55, 0x00, 0x53, 0x00,
-    0x42, 0x00, 0x2d, 0x00, 0x56, 0x00, 0x31, 0x00
+    24,    // Length of this descriptor (in bytes)
+    0x03,  // Descriptor type (String)
+    'M', 0, 'T', 0, 'A', 0, '1', 0,
+    '-', 0, 'U', 0, 'S', 0, 'B', 0,
+    '-', 0, 'V', 0, '1', 0
 };
 
 unsigned char FLASH ManufDesc[]={  // "Tillitis"
-    0x12, 0x03, 0x54, 0x00, 0x69, 0x00, 0x6c, 0x00,
-    0x6c, 0x00, 0x69, 0x00, 0x74, 0x00, 0x69, 0x00,
-    0x73, 0x00
+    18,    // Length of this descriptor (in bytes)
+    0x03,  // Descriptor type (String)
+    'T', 0, 'i', 0, 'l', 0, 'l', 0,
+    'i', 0, 't', 0, 'i', 0, 's', 0
 };
 
 unsigned char FLASH SerialDesc[]={  // "68de5d27-e223-4874-bc76-a54d6e84068f"
-    0x4a, 0x03, 0x36, 0x00, 0x38, 0x00, 0x64, 0x00,
-    0x65, 0x00, 0x35, 0x00, 0x64, 0x00, 0x32, 0x00,
-    0x37, 0x00, 0x2d, 0x00, 0x65, 0x00, 0x32, 0x00,
-    0x32, 0x00, 0x33, 0x00, 0x2d, 0x00, 0x34, 0x00,
-    0x38, 0x00, 0x37, 0x00, 0x34, 0x00, 0x2d, 0x00,
-    0x62, 0x00, 0x63, 0x00, 0x37, 0x00, 0x36, 0x00,
-    0x2d, 0x00, 0x61, 0x00, 0x35, 0x00, 0x34, 0x00,
-    0x64, 0x00, 0x36, 0x00, 0x65, 0x00, 0x38, 0x00,
-    0x34, 0x00, 0x30, 0x00, 0x36, 0x00, 0x38, 0x00,
-    0x66, 0x00
+    74,    // Length of this descriptor (in bytes)
+    0x03,  // Descriptor type (String)
+    '6', 0, '8', 0, 'd', 0, 'e', 0,
+    '5', 0, 'd', 0, '2', 0, '7', 0,
+    '-', 0, 'e', 0, '2', 0, '2', 0,
+    '3', 0, '-', 0, '4', 0, '8', 0,
+    '7', 0, '4', 0, '-', 0, 'b', 0,
+    'c', 0, '7', 0, '6', 0, '-', 0,
+    'a', 0, '5', 0, '4', 0, 'd', 0,
+    '6', 0, 'e', 0, '8', 0, '4', 0,
+    '0', 0, '6', 0, '8', 0, 'f', 0,
+};
+
+unsigned char FLASH CdcCtrlInterfaceDesc[] = {
+    18,    // Length of this descriptor (in bytes)
+    0x03,  // Descriptor type (String)
+    'C', 0, 'D', 0, 'C', 0, '-', 0,
+    'C', 0, 't', 0, 'r', 0, 'l', 0,
+};
+
+unsigned char FLASH CdcDataInterfaceDesc[] = {
+    18,    // Length of this descriptor (in bytes)
+    0x03,  // Descriptor type (String)
+    'C', 0, 'D', 0, 'C', 0, '-', 0,
+    'D', 0, 'a', 0, 't', 0, 'a', 0,
+};
+
+unsigned char FLASH FidoHidInterfaceDesc[] = {
+    18,    // Length of this descriptor (in bytes)
+    0x03,  // Descriptor type (String)
+    'F', 0, 'I', 0, 'D', 0, 'O', 0,
+    '-', 0, 'H', 0, 'I', 0, 'D', 0,
+};
+
+unsigned char FLASH TkeyCtrlInterfaceDesc[] = {
+    20,    // Length of this descriptor (in bytes)
+    0x03,  // Descriptor type (String)
+    'T', 0, 'K', 0, 'E', 0, 'Y', 0,
+    '-', 0, 'C', 0, 't', 0, 'r', 0,
+    'l', 0,
 };
 
 #endif

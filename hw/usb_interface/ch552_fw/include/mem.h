@@ -13,7 +13,11 @@
 #define AT0050 __at(0x0050) // 0x050, 80
 #define AT0080 __at(0x0080) // 0x080, 128
 #define AT0090 __at(0x0090) // 0x090, 144
-#define AT0100 __at(0x0100) // 0x100, 256
+#define AT00C0 __at(0x00C0) // 0x0C0, 192
+#define AT00C8 __at(0x00C8) // 0x0C8, 200
+#define AT0110 __at(0x0110) // 0x110, 272
+#define AT0148 __at(0x0148) // 0x148, 328
+#define AT01C8 __at(0x01C8) // 0x1C8, 456
 #define FLASH  __code
 #else
 #define IDATA
@@ -25,7 +29,11 @@
 #define AT0050
 #define AT0080
 #define AT0090
-#define AT0100
+#define AT00C0
+#define AT00C8
+#define AT0110
+#define AT0148
+#define AT01C8
 #define FLASH
 #endif
 
