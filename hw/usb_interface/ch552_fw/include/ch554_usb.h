@@ -193,15 +193,17 @@ Header file for CH554 microcontrollers.
 #define USB_IDX_MFC_STR         0x01
 #define USB_IDX_PRODUCT_STR     0x02
 #define USB_IDX_SERIAL_STR      0x03
-#define USB_IDX_CONFIG_STR      0x04
-#define USB_IDX_INTERFACE_STR   0x05
+#define USB_IDX_INTERFACE_CDC_CTRL_STR   0x04
+#define USB_IDX_INTERFACE_CDC_DATA_STR   0x05
+#define USB_IDX_INTERFACE_FIDO_HID_STR   0x06
+#define USB_IDX_INTERFACE_TKEY_CTRL_STR  0x07
 #endif
 
 #ifndef USB_DEVICE_ADDR
 #define USB_DEVICE_ADDR         0x02
 #endif
 #ifndef DEFAULT_EP0_SIZE
-#define DEFAULT_EP0_SIZE        8       /* Default maximum packet size for Endpoint 0 */
+#define DEFAULT_EP0_SIZE        64      /* Default maximum packet size for Endpoint 0 */
 #endif
 #ifndef DEFAULT_EP1_SIZE
 #define DEFAULT_EP1_SIZE        8       /* Default maximum packet size for Endpoint 1 */
