@@ -60,6 +60,9 @@ USB_SETUP_REQ SetupReqBuf = { 0 };    // Temporary Setup package
 #define HID_FS_BINTERVAL               1                 //   1 ms polling interval at Full Speed
 #define TKEYCTRL_FS_BINTERVAL          1                 //   1 ms polling interval at Full Speed
 
+#define CFGDESC_SIZE                   139U              // Size of CfgDesc
+#define NUM_INTERFACES                 4                 // Number of interfaces
+
 #define HID_REPORT_DESC_SIZE           47                // Size of HID_ReportDesc
 #define TKEYCTRL_REPORT_DESC_SIZE      34                // Size of TKEYCTRL_ReportDesc
 
@@ -70,18 +73,18 @@ USB_SETUP_REQ SetupReqBuf = { 0 };    // Temporary Setup package
 FLASH uint8_t DevDesc[] = {
         0x12,                             /* bLength */
         USB_DESC_TYPE_DEVICE,             /* bDescriptorType: Device */
-        0x10,                             /* bcdUSB (low byte), USB Specification Release Number in Binary-Coded Decimal (1.10 is 110h) */
-        0x01,                             /* bcdUSB (high byte) USB Specification Release Number in Binary-Coded Decimal (1.10 is 110h) */
-        0x00,                             /* bDeviceClass */        // Each configuration has its own class
-        0x00,                             /* bDeviceSubClass */     // Each configuration has its own sub-class
-        0x00,                             /* bDeviceProtocol */     // Each configuration has its own protocol
+        0x00,                             /* bcdUSB (low byte), USB Specification Release Number in Binary-Coded Decimal (2.0 is 200h) */
+        0x02,                             /* bcdUSB (high byte) USB Specification Release Number in Binary-Coded Decimal (2.0 is 200h) */
+        USB_DEV_CLASS_MISCELLANEOUS,      /* bDeviceClass: Miscellaneous Device Class (Composite) */
+        0x02,                             /* bDeviceSubClass: Common Class */
+        0x01,                             /* bDeviceProtocol: IAD (Interface Association Descriptor) */
         DEFAULT_EP0_SIZE,                 /* bMaxPacketSize */
         0x07,                             /* idVendor */            // VID LOBYTE
         0x12,                             /* idVendor */            // VID HIBYTE
         0x87,                             /* idProduct */           // PID LOBYTE
         0x88,                             /* idProduct */           // PID HIBYTE
-        0x00,                             /* bcdDevice (low byte, i.e. YY) rel. XX.YY */
-        0x01,                             /* bcdDevice (high byte, i.e. XX) rel. XX.YY */ // Orig: 0x02
+        0x00,                             /* bcdDevice (device release number in binary-coded decimal (BCD) format, low byte, i.e. YY) rel. XX.YY */
+        0x01,                             /* bcdDevice (device release number in binary-coded decimal (BCD) format, high byte, i.e. XX) rel. XX.YY */
         0x01,                             /* Index of manufacturer string */
         0x02,                             /* Index of product string */
         0x03,                             /* Index of serial number string */
@@ -93,9 +96,9 @@ FLASH uint8_t CfgDesc[] = {
         /******************** Configuration Descriptor ********************/
         0x09,                             /* bLength: Configuration Descriptor size */
         USB_DESC_TYPE_CONFIGURATION,      /* bDescriptorType: Configuration */
-        131U,                             /* wTotalLength (low byte): Bytes returned */
+        CFGDESC_SIZE,                     /* wTotalLength (low byte): Bytes returned */
         0x00,                             /* wTotalLength (high byte): Bytes returned */
-        0x04,                             /* bNumInterfaces: 4 interfaces (1 CDC Ctrl, 1 CDC Data, 1 HID, 1 HID (TKEYCTRL) ) */
+        NUM_INTERFACES,                   /* bNumInterfaces: 4 interfaces (1 CDC Ctrl, 1 CDC Data, 1 HID, 1 HID (TKEYCTRL) ) */
         0x01,                             /* bConfigurationValue: Configuration value */
         0x00,                             /* iConfiguration: Index of string descriptor describing the configuration */
         0xA0,                             /* bmAttributes: Bus powered and Support Remote Wake-up */
@@ -123,14 +126,14 @@ FLASH uint8_t CfgDesc[] = {
         0x01,                             /* bInterfaceProtocol : AT Commands: V.250 etc */
         0x04,                             /* iInterface: Index of string descriptor */
         /******************** Header Functional Descriptor ********************/
-        /* 18 */
+        /* 26 */
         0x05,                             /* bFunctionLength: Size of this descriptor in bytes */
         USB_DESC_TYPE_CS_INTERFACE,       /* bDescriptorType: CS_INTERFACE (24h) */
         0x00,                             /* bDescriptorSubtype: Header Functional Descriptor */
         0x10,                             /* bcdCDC (low byte): CDC version 1.10 */
         0x01,                             /* bcdCDC (high byte): CDC version 1.10 */
         /******************** Call Management Functional Descriptor (no data interface, bmCapabilities=03, bDataInterface=01) ********************/
-        /* 23 */
+        /* 31 */
         0x05,                             /* bFunctionLength: Size of this descriptor */
         USB_DESC_TYPE_CS_INTERFACE,       /* bDescriptorType: CS_INTERFACE (24h) */
         0x01,                             /* bDescriptorSubtype: Call Management Functional Descriptor */
@@ -142,7 +145,7 @@ FLASH uint8_t CfgDesc[] = {
                                                           1 - Device handles call management itself) */
         0x00,                             /* bDataInterface: Interface number of Data Class interface optionally used for call management */
         /******************** Abstract Control Management Functional Descriptor ********************/
-        /* 28 */
+        /* 36 */
         0x04,                             /* bLength */
         0x24,                             /* bDescriptorType: CS_INTERFACE (24h) */
         0x02,                             /* bDescriptorSubtype: Abstract Control Management Functional Descriptor */
@@ -153,14 +156,14 @@ FLASH uint8_t CfgDesc[] = {
                                              D1   : 0x01 (1 - Device supports the request combination of Set_Line_Coding, Set_Control_Line_State, Get_Line_Coding, and the notification Serial_State)
                                              D0   : 0x00 (1 - Device supports the request combination of Set_Comm_Feature, Clear_Comm_Feature, and Get_Comm_Feature) */
         /******************** Union Functional Descriptor. CDC Ctrl interface numbered 0; CDC Data interface numbered 1 ********************/
-        /* 32 */
+        /* 40 */
         0x05,                             /* bLength */
         0x24,                             /* bDescriptorType: CS_INTERFACE (24h) */
         0x06,                             /* bDescriptorSubtype: Union Functional Descriptor */
         0x00,                             /* bControlInterface: Interface number 0 (Control interface) */
         0x01,                             /* bSubordinateInterface0: Interface number 1 (Data interface) */
         /******************** CDC Ctrl Endpoint descriptor (IN) ********************/
-        /* 37 */
+        /* 45 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
         CDC_CTRL_EPIN_ADDR,               /* bEndpointAddress: Endpoint Address (IN) */
@@ -169,7 +172,7 @@ FLASH uint8_t CfgDesc[] = {
         HIBYTE(CDC_CTRL_EPIN_SIZE),       /* wMaxPacketSize (high byte): 8 Byte max */
         CDC_CTRL_FS_BINTERVAL,            /* bInterval: Polling Interval */
         /******************** Interface 1, CDC Data Descriptor (two endpoints) ********************/
-        /* 44 */
+        /* 52 */
         0x09,                             /* bLength: Interface Descriptor size */
         USB_DESC_TYPE_INTERFACE,          /* bDescriptorType: Interface */
         0x01,                             /* bInterfaceNumber: Number of Interface */
@@ -180,7 +183,7 @@ FLASH uint8_t CfgDesc[] = {
         0x00,                             /* bInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
         0x05,                             /* iInterface: Index of string descriptor */
         /******************** CDC Data Endpoint descriptor (OUT) ********************/
-        /* 53 */
+        /* 61 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
         CDC_DATA_EPOUT_ADDR,              /* bEndpointAddress: Endpoint Address (OUT) */
@@ -189,7 +192,7 @@ FLASH uint8_t CfgDesc[] = {
         HIBYTE(CDC_DATA_EPOUT_SIZE),      /* wMaxPacketSize (high byte): 64 Byte max */
         CDC_DATA_FS_BINTERVAL,            /* bInterval: Polling Interval */
         /******************** CDC Data Endpoint descriptor (IN) ********************/
-        /* 60 */
+        /* 68 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
         CDC_DATA_EPIN_ADDR,               /* bEndpointAddress: Endpoint Address (IN) */
@@ -198,7 +201,7 @@ FLASH uint8_t CfgDesc[] = {
         HIBYTE(CDC_DATA_EPIN_SIZE),       /* wMaxPacketSize (high byte): 64 Byte max */
         CDC_DATA_FS_BINTERVAL,            /* bInterval: Polling Interval */
         /******************** Interface 2, HID Descriptor (two endpoints) ********************/
-        /* 67 */
+        /* 75 */
         0x09,                             /* bLength: Interface Descriptor size */
         USB_DESC_TYPE_INTERFACE,          /* bDescriptorType: Interface */
         0x02,                             /* bInterfaceNumber: Number of Interface */
@@ -209,7 +212,7 @@ FLASH uint8_t CfgDesc[] = {
         0x00,                             /* bInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
         0x06,                             /* iInterface: Index of string descriptor */
         /******************** HID Device Descriptor ********************/
-        /* 76 */
+        /* 84 */
         0x09,                             /* bLength: HID Descriptor size */
         USB_DESC_TYPE_HID,                /* bDescriptorType: HID */
         0x11,                             /* bcdHID (low byte): HID Class Spec release number */
@@ -220,7 +223,7 @@ FLASH uint8_t CfgDesc[] = {
         LOBYTE(HID_REPORT_DESC_SIZE),     /* wDescriptorLength (low byte): Total length of Report descriptor */
         HIBYTE(HID_REPORT_DESC_SIZE),     /* wDescriptorLength (high byte): Total length of Report descriptor */
         /******************** HID Endpoint Descriptor (OUT) ********************/
-        /* 85 */
+        /* 93 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
         HID_EPOUT_ADDR,                   /* bEndpointAddress: Endpoint Address (OUT) */
@@ -229,7 +232,7 @@ FLASH uint8_t CfgDesc[] = {
         HIBYTE(HID_EPOUT_SIZE),           /* wMaxPacketSize (high byte): 64 Byte max */
         HID_FS_BINTERVAL,                 /* bInterval: Polling Interval */
         /******************** HID Endpoint Descriptor (IN) ********************/
-        /* 92 */
+        /* 100 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
         HID_EPIN_ADDR,                    /* bEndpointAddress: Endpoint Address (IN) */
@@ -238,7 +241,7 @@ FLASH uint8_t CfgDesc[] = {
         HIBYTE(HID_EPIN_SIZE),            /* wMaxPacketSize (high byte): 64 Byte max */
         HID_FS_BINTERVAL,                 /* bInterval: Polling Interval */
         /******************** Interface 3, HID (TKEYCTRL) Descriptor (two endpoints) ********************/
-        /* 99 */
+        /* 107 */
         0x09,                             /* bLength: Interface Descriptor size */
         USB_DESC_TYPE_INTERFACE,          /* bDescriptorType: Interface */
         0x03,                             /* bInterfaceNumber: Number of Interface */
@@ -249,7 +252,7 @@ FLASH uint8_t CfgDesc[] = {
         0x00,                             /* bInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
         0x07,                             /* iInterface: Index of string descriptor */
         /******************** HID (TKEYCTRL) Device Descriptor ********************/
-        /* 108 */
+        /* 116 */
         0x09,                             /* bLength: HID Descriptor size */
         USB_DESC_TYPE_HID,                /* bDescriptorType: HID */
         0x11,                             /* bcdHID (low byte): HID Class Spec release number */
@@ -260,7 +263,7 @@ FLASH uint8_t CfgDesc[] = {
         LOBYTE(TKEYCTRL_REPORT_DESC_SIZE),/* wDescriptorLength (low byte): Total length of Report descriptor */
         HIBYTE(TKEYCTRL_REPORT_DESC_SIZE),/* wDescriptorLength (high byte): Total length of Report descriptor */
         /******************** HID (TKEYCTRL) Endpoint Descriptor (OUT) ********************/
-        /* 117 */
+        /* 125 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
         TKEYCTRL_EPOUT_ADDR,              /* bEndpointAddress: Endpoint Address (OUT) */
@@ -269,7 +272,7 @@ FLASH uint8_t CfgDesc[] = {
         HIBYTE(TKEYCTRL_EPOUT_SIZE),      /* wMaxPacketSize (high byte): 64 Byte max */
         TKEYCTRL_FS_BINTERVAL,            /* bInterval: Polling Interval */
         /******************** HID (TKEYCTRL) Endpoint Descriptor (IN) ********************/
-        /* 124 */
+        /* 132 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
         TKEYCTRL_EPIN_ADDR,               /* bEndpointAddress: Endpoint Address (IN) */
@@ -277,7 +280,7 @@ FLASH uint8_t CfgDesc[] = {
         LOBYTE(TKEYCTRL_EPIN_SIZE),       /* wMaxPacketSize (low byte): 64 Byte max */
         HIBYTE(TKEYCTRL_EPIN_SIZE),       /* wMaxPacketSize (high byte): 64 Byte max */
         TKEYCTRL_FS_BINTERVAL,            /* bInterval: Polling Interval */
-        /* 131 */
+        /* 139 */
 };
 
 // HID Device Descriptor (copy from CfgDesc)
@@ -310,7 +313,7 @@ FLASH uint8_t HID_ReportDesc[] ={
         0x26, 0xFF, 0x00,                 /*     Logical Maximum (255) */
         0x75, 0x08,                       /*     Report Size (8) */
         0x95, MAX_PACKET_SIZE,            /*     Report Count (64) */
-        0x91, 0x02,                       /*     Output (Data, Variable, Absolute); */
+        0x91, 0x02,                       /*     Output (Data, Variable, Absolute) */
         /* 33 */
         0x09, 0x07,                       /*     Usage (7, Reserved) */
         0x15, 0x00,                       /*     Logical Minimum (0) */
