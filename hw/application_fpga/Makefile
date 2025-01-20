@@ -353,8 +353,7 @@ tb:
 
 YOSYS_FLAG ?=
 
-synth.json: $(FPGA_VERILOG_SRCS) $(VERILOG_SRCS) $(PICORV32_SRCS) bram_fw.hex \
-		$(P)/data/uds.hex $(P)/data/udi.hex
+synth.json: $(FPGA_VERILOG_SRCS) $(VERILOG_SRCS) $(PICORV32_SRCS) bram_fw.hex
 	$(YOSYS_PATH)yosys \
 		-v3 \
 		-l synth.txt \
