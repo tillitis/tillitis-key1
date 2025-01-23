@@ -151,6 +151,7 @@ inline void UART1Setup()
                   // Should correct for rounding in SBAUD1 calculation
     SBAUD1 = 256 - FREQ_SYS/16/UART1_BAUD; // Calculation for Fast mode
     IE_UART1 = 1; // Enable UART1 interrupt
+    IP_EX = bIP_UART1; // Serial port IRQ has high priority
 }
 
 /*******************************************************************************

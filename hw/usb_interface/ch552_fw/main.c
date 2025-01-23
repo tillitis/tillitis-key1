@@ -55,10 +55,10 @@ USB_SETUP_REQ SetupReqBuf = { 0 };    // Temporary Setup package
 #define TKEYCTRL_EPIN_ADDR             0x84              // TKEYCTRL Endpoint IN Address
 #define TKEYCTRL_EPIN_SIZE             MAX_PACKET_SIZE   // TKEYCTRL Endpoint IN Size
 
-#define CDC_CTRL_FS_BINTERVAL          0xFF              // Gives 32 ms polling interval at Full Speed
-#define CDC_DATA_FS_BINTERVAL          10                // Gives 8 ms polling interval at Full Speed
-#define HID_FS_BINTERVAL               10                // Gives 8 ms polling interval at Full Speed
-#define TKEYCTRL_FS_BINTERVAL          10                // Gives 8 ms polling interval at Full Speed
+#define CDC_CTRL_FS_BINTERVAL          32                // Gives 32 ms polling interval at Full Speed for interrupt transfers
+#define CDC_DATA_FS_BINTERVAL          0                 // bInterval is ignored for BULK transfers
+#define HID_FS_BINTERVAL               2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
+#define TKEYCTRL_FS_BINTERVAL          2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
 
 #define CFGDESC_SIZE                   139U              // Size of CfgDesc
 #define NUM_INTERFACES                 4                 // Number of interfaces
