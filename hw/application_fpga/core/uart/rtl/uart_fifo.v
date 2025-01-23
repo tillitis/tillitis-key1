@@ -48,7 +48,9 @@ module uart_fifo (
 
     output wire         out_syn,
     output wire [7 : 0] out_data,
-    input  wire         out_ack
+    input  wire         out_ack,
+
+    output wire         fpga_cts
 );
 
 
@@ -75,6 +77,7 @@ module uart_fifo (
   reg         in_ack_reg;
   reg         in_ack_new;
 
+  reg         fpga_cts_reg;
 
   //----------------------------------------------------------------
   // Wires
@@ -90,6 +93,7 @@ module uart_fifo (
   assign out_syn    = ~fifo_empty;
   assign out_data   = fifo_mem[out_ptr_reg];
   assign fifo_bytes = byte_ctr_reg;
+  assign fpga_cts   = fpga_cts_reg;
 
 
   //----------------------------------------------------------------
@@ -101,6 +105,7 @@ module uart_fifo (
       out_ptr_reg  <= 9'h0;
       byte_ctr_reg <= 9'h0;
       in_ack_reg   <= 1'h0;
+      fpga_cts_reg <= 1'h1;
     end
     else begin
       in_ack_reg <= in_ack_new;
@@ -120,6 +125,14 @@ module uart_fifo (
       if (byte_ctr_we) begin
         byte_ctr_reg <= byte_ctr_new;
       end
+
+      if (byte_ctr_reg >= 9'd486) begin  // FIFO is filled to ~95% or more
+        fpga_cts_reg <= 0;  // Signal to not send more data
+      end
+      else begin
+        fpga_cts_reg <= 1;  // Signal to send more data
+      end
+
     end
   end  // reg_update
 
