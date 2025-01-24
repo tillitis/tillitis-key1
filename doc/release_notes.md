@@ -2,6 +2,104 @@
 
 Descriptions of the tagged TKey releases.
 
+## Upcoming release: Castor
+
+Overview of changes since TK TK1-24.03 for the Castor milestone so
+far.
+
+**Note well**: BREAKING CHANGE! The introduction of the USB Controller
+Protocol betwen the programs running on the PicoRV32 CPU and the CH552
+means that device apps that have not been changed to use the protocol
+will not have any way to communicate with the outside world.
+
+### General
+
+- Split repo:
+
+    - tk1, mta1-usb-dev, mta-usb-v1 and mta1-library moves to
+      https://github.com/tillitis/tk1-pcba
+
+    - tp1, mta1-usb-programmer, mta1-library and KiCad-RP Pico moves to
+      https://github.com/tillitis/tp1
+
+For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-23.03.2...coming-tag)
+
+### FPGA
+
+- Security Monitor memory access checks are now more complete.
+
+- Add SPI main controller mainly to access flash.
+
+- Add system reset API. Device apps can reset the system and restart
+  the firmware. The FPGA is not reset.
+
+- Increase clock frequence to 24 MHz.
+
+- Increase UART baudrate to 500,000.
+
+- Fix missing clock cycles in timer core.
+
+- Remove the UART runtime configuration API.
+
+- Several clean ups and testbench changes.
+
+- Make Verilator simulation work again.
+
+- Add hardware clear to send (CTS) signals for communication between
+  UART and CH552.
+
+### Firmware
+
+- At startup, fill RAM with random data using the xorwow PRNG, seeded
+  by TRNG.
+
+- Add support for the new USB Controller Protocol to communicate with
+  different endpoints.
+
+### CH552
+
+- Use the new CTS signals for communication over the UART.
+
+- Add support for two HID endpoints.
+
+- Add protocol to communicate with the three different endpoints: CDC,
+  HID, debug.
+
+- Change USB frame sending from a software timer to instead be
+  controlled by the USB Controller Protocol.
+
+### tkey-builder
+
+- New versions of:
+  - clang (18.1.3, part of ubuntu 24.04)
+  - icestorm (commit 738af822905fdcf0466e9dd784b9ae4b0b34987f
+)
+  - yosys (0.45)
+  - nextpnr (0.7) + extra patches for RNG seed handling and early exit
+  - iverilog (v12)
+  - verilator (v5.028)
+  - verible (v0.0-3795)
+  - cocotb (v1.9.1)
+
+- Remove TKey Programmer (TP) toolchain:
+
+  - gcc-arm-none-eabi: Used for the TKey Programmer firmware, now
+    moved to it's own repo.
+  - libnewlib-arm-none-eabi
+  - libstdc++-arm-none-eabi-newlib
+  - pico-sdk
+
+  TP1 is now in https://github.com/tillitis/tp1
+
+- Remove Go compiler support.
+
+### Docs
+
+- All docs now in READMEs close to the design or code.
+
+- Protocol docs moved to [the Developer
+  Handbook](https://dev.tillitis.se/)
+  [repo](https://github.com/tillitis/dev-tillitis)
 
 ## TK1-24.03
 
