@@ -7,6 +7,11 @@ Descriptions of the tagged TKey releases.
 Overview of changes since TK TK1-24.03 for the Castor milestone so
 far.
 
+**Note well**: BREAKING CHANGE! The introduction of the USB Controller
+Protocol betwen the programs running on the PicoRV32 CPU and the CH552
+means that device apps that have not been changed to use the protocol
+will not have any way to communicate with the outside world.
+
 ### General
 
 - Split repo:
