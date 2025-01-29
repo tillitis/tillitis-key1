@@ -297,6 +297,25 @@ module tb_tk1 ();
 
 
   //----------------------------------------------------------------
+  // restore_mem_bus()
+  //
+  // Restore memory bus to its initial state
+  //----------------------------------------------------------------
+  task restore_mem_bus();
+    begin : restore_mem_bus
+      tb_cpu_addr  = 32'h0;
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+
+      tb_cs           = 1'h0;
+      tb_we           = 1'h0;
+      tb_address      = 8'h0;
+      tb_write_data   = 32'h0;
+    end
+  endtask
+
+
+  //----------------------------------------------------------------
   // write_word()
   //
   // Write the given word to the DUT using the DUT interface.
@@ -673,6 +692,9 @@ module tb_tk1 ();
       tc_ctr         = tc_ctr + 1;
       tb_monitor     = 0;
       tb_spi_monitor = 0;
+
+      restore_mem_bus();
+      reset_dut();
 
       $display("");
       $display("--- test10: Loopback in SPI Master started.");
