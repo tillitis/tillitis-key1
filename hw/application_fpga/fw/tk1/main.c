@@ -9,6 +9,7 @@
 #include "lib.h"
 #include "proto.h"
 #include "state.h"
+#include "syscall_enable.h"
 #include "types.h"
 
 // clang-format off
@@ -343,13 +344,10 @@ static void run(const struct context *ctx)
 #endif
 	// clang-format on
 
-	// Flip over to application mode
-	*app_mode_ctrl = 1;
-
-	// XXX Firmware stack now no longer available
-	// Don't use any function calls!
+	syscall_enable();
 
 	// Jump to app - doesn't return
+	// Hardware is responsible for switching to app mode
 	// clang-format off
 #ifndef S_SPLINT_S
 	asm volatile(
