@@ -150,24 +150,11 @@ void failmsg(char *s)
 int main(void)
 {
 	uint8_t in;
-	// Hard coded test UDS in ../../data/uds.hex
-	// clang-format off
-	uint32_t uds_test[8] = {
-		0x80818283,
-		0x94959697,
-		0xa0a1a2a3,
-		0xb4b5b6b7,
-		0xc0c1c2c3,
-		0xd4d5d6d7,
-		0xe0e1e2e3,
-		0xf4f5f6f7,
-	};
-	// clang-format on
 
 	// Wait for terminal program and a character to be typed
 	in = readbyte();
 
-	puts("\r\nI'm testfw on:");
+	puts("\r\nI'm testapp on:");
 	// Output the TK1 core's NAME0 and NAME1
 	uint32_t name;
 	wordcpy_s(&name, 1, (void *)tk1name0, 1);
@@ -185,80 +172,50 @@ int main(void)
 	int anyfailed = 0;
 
 	uint32_t uds_local[UDS_WORDS];
+	uint32_t udi_local[UDI_WORDS];
 
-	// Should get non-empty UDS
-	wordcpy_s(uds_local, UDS_WORDS, (void *)uds, UDS_WORDS);
-	if (memeq(uds_local, zeros, UDS_WORDS * 4)) {
-		failmsg("UDS empty");
+	uint32_t sw = *system_mode_ctrl;
+	if (sw != 0xffffffff) {
+		failmsg("system_mode_ctrl is not 0xffffffff");
 		anyfailed = 1;
 	}
 
-	puts("\r\nUDS: ");
-	for (int i = 0; i < UDS_WORDS * 4; i++) {
-		puthex(((uint8_t *)uds_local)[i]);
-	}
-	puts("\r\n");
-	if (!memeq(uds_local, uds_test, UDS_WORDS * 4)) {
-		failmsg("UDS not equal to test UDS");
-		anyfailed = 1;
-	}
-
-	// Should NOT be able to read from UDS again
+	// Should NOT be able to read from UDS in app-mode.
 	wordcpy_s(uds_local, UDS_WORDS, (void *)uds, UDS_WORDS);
 	if (!memeq(uds_local, zeros, UDS_WORDS * 4)) {
-		failmsg("Read UDS a second time");
+		failmsg("Read from UDS in app-mode");
 		anyfailed = 1;
 	}
 
-	uint32_t udi_local[UDI_WORDS];
-	// Should get non-empty UDI
+	// Should NOT be able to read from UDI in app-mode.
 	wordcpy_s(udi_local, UDI_WORDS, (void *)udi, UDI_WORDS);
-	if (memeq(udi_local, zeros, UDI_WORDS * 4)) {
-		failmsg("UDI empty");
+	if (!memeq(udi_local, zeros, UDI_WORDS * 4)) {
+		failmsg("Read from UDI in app-mode");
 		anyfailed = 1;
 	}
 
-	// Should be able to write to CDI in fw (non-app) mode.
-	uint32_t cdi_writetest[CDI_WORDS] = {0xdeafbeef, 0xdeafbeef, 0xdeafbeef,
-					     0xdeafbeef, 0xdeafbeef, 0xdeafbeef,
-					     0xdeafbeef, 0xdeafbeef};
-	uint32_t cdi_readback[CDI_WORDS];
+	uint32_t cdi_local[CDI_WORDS];
+	uint32_t cdi_local2[CDI_WORDS];
+	wordcpy_s(cdi_local, CDI_WORDS, (void *)cdi, CDI_WORDS);
 
-	wordcpy_s((void *)cdi, CDI_WORDS, cdi_writetest, CDI_WORDS);
-	wordcpy_s(cdi_readback, CDI_WORDS, (void *)cdi, CDI_WORDS);
-	if (!memeq(cdi_writetest, cdi_readback, CDI_WORDS * 4)) {
-		failmsg("Can't write CDI in fw mode");
-		anyfailed = 1;
-	}
-
-	// Should be able to read bytes from CDI.
-	uint8_t cdi_readback_bytes[CDI_WORDS * 4];
-	memcpy(cdi_readback_bytes, (void *)cdi, CDI_WORDS * 4);
-	if (!memeq(cdi_writetest, cdi_readback_bytes, CDI_WORDS * 4)) {
-		failmsg("Can't read bytes from CDI");
+	// Write to CDI should NOT have any effect in app mode.
+	wordcpy_s((void *)cdi, CDI_WORDS, zeros, CDI_WORDS);
+	wordcpy_s(cdi_local2, CDI_WORDS, (void *)cdi, CDI_WORDS);
+	if (!memeq(cdi_local, cdi_local2, CDI_WORDS * 4)) {
+		failmsg("Write to CDI in app-mode");
 		anyfailed = 1;
 	}
 
 	// Test FW_RAM.
-	puts("\r\nTesting FW_RAM (takes 15s on hw)...\r\n");
-	for (unsigned int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
-		zero_fwram();
-		*(volatile uint8_t *)(TK1_MMIO_FW_RAM_BASE + i) = 0x42;
-		int fwram_fail = check_fwram_zero_except(i, 0x42);
-		if (fwram_fail) {
-			anyfailed = 1;
-		}
-	}
-
-	uint32_t sw = *system_mode_ctrl;
-	if (sw != 0) {
-		failmsg("system_mode_ctrl is not 0 in fw mode");
+	*fw_ram = 0x21;
+	if (*fw_ram == 0x21) {
+		failmsg("Write and read FW RAM in app-mode");
 		anyfailed = 1;
 	}
 
 	puts("\r\nTesting timer... 3");
-	// Matching clock at 18 MHz, giving us timer in seconds
-	*timer_prescaler = 18 * 1000000;
+	// Matching clock at 21 MHz, giving us timer in seconds
+	*timer_prescaler = 21 * 1000000;
 
 	// Test timer expiration after 1s
 	*timer = 1;
