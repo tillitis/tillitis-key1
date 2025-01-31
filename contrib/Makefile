@@ -23,11 +23,11 @@ all:
 
 run:
 	podman run --rm --mount type=bind,source="`pwd`/../",target=/build -w /build -it \
-	 $(IMAGE) /usr/bin/bash
+	 $(IMAGE) /usr/bin/bash -l
 
 docker-run:
 	docker run --rm --mount type=bind,source="`pwd`/../",target=/build -w /build -it \
-	 $(IMAGE) /usr/bin/bash
+	 $(IMAGE) /usr/bin/bash -l
 
 run-make:
 	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it \

@@ -315,6 +315,7 @@ int main(int argc, char **argv, char **env)
 	uart_init(&u, &top.interface_tx, &top.interface_rx, BIT_DIV);
 
 	top.clk = 0;
+	top.interface_ch552_cts = 1;
 
 	while (!Verilated::gotFinish()) {
 		uint8_t to_host = 0;

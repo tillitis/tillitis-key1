@@ -33,6 +33,9 @@ module application_fpga_sim (
     output wire interface_rx,
     input  wire interface_tx,
 
+    input  wire interface_ch552_cts,
+    output wire interface_fpga_cts,
+
     output wire spi_ss,
     output wire spi_sck,
     output wire spi_mosi,
@@ -304,6 +307,9 @@ module application_fpga_sim (
       .rxd(interface_tx),
       .txd(interface_rx),
 
+      .ch552_cts(interface_ch552_cts),
+      .fpga_cts(interface_fpga_cts),
+
       .cs(uart_cs),
       .we(uart_we),
       .address(uart_address),
@@ -406,7 +412,7 @@ module application_fpga_sim (
 
     ram_cs              = 1'h0;
     ram_we              = 4'h0;
-    ram_address         = cpu_addr[17 : 2];
+    ram_address         = cpu_addr[16 : 2];
     ram_write_data      = cpu_wdata;
 
     fw_ram_cs           = 1'h0;
