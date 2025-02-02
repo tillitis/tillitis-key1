@@ -21,6 +21,7 @@ module tk1 #(
 
     input  wire cpu_trap,
     output wire system_mode,
+    output wire rw_locked,
 
     input  wire [31 : 0] cpu_addr,
     input  wire          cpu_instr,
@@ -80,6 +81,7 @@ module tk1 #(
   localparam ADDR_APP_SIZE = 8'h0d;
 
   localparam ADDR_BLAKE2S = 8'h10;
+  localparam ADDR_SYSCALL = 8'h12;
 
   localparam ADDR_CDI_FIRST = 8'h20;
   localparam ADDR_CDI_LAST = 8'h27;
@@ -107,15 +109,27 @@ module tk1 #(
   localparam FW_RAM_FIRST = 32'hd0000000;
   localparam FW_RAM_LAST = 32'hd00007ff;
 
+  localparam FW_ROM_LAST = 32'h00001fff;
+
+  // ILLEGAL_ADDR is outside of the physical memory, and will trap in
+  // the security monitor if accessed.
+  localparam ILLEGAL_ADDR = 32'h4f000000;
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg  [31 : 0] cdi_mem           [0 : 7];
+  reg  [31 : 0] cdi_mem            [0 : 7];
   reg           cdi_mem_we;
 
   reg           system_mode_reg;
+  reg           system_mode_new;
   reg           system_mode_we;
+
+  reg           rom_executable_reg;
+  reg           rom_executable_new;
+  reg           rom_executable_we;
+
+  reg           rw_locked_reg;
 
   reg  [ 2 : 0] led_reg;
   reg           led_we;
@@ -135,6 +149,9 @@ module tk1 #(
 
   reg  [31 : 0] blake2s_addr_reg;
   reg           blake2s_addr_we;
+
+  reg  [31 : 0] syscall_addr_reg;
+  reg           syscall_addr_we;
 
   reg  [23 : 0] cpu_trap_ctr_reg;
   reg  [23 : 0] cpu_trap_ctr_new;
@@ -188,6 +205,7 @@ module tk1 #(
   assign ready         = tmp_ready;
 
   assign system_mode   = system_mode_reg;
+  assign rw_locked     = rw_locked_reg;
 
   assign force_trap    = force_trap_reg;
 
@@ -250,32 +268,35 @@ module tk1 #(
   //----------------------------------------------------------------
   always @(posedge clk) begin : reg_update
     if (!reset_n) begin
-      system_mode_reg   <= 1'h0;
-      led_reg           <= 3'h6;
-      gpio1_reg         <= 2'h0;
-      gpio2_reg         <= 2'h0;
-      gpio3_reg         <= 1'h0;
-      gpio4_reg         <= 1'h0;
-      app_start_reg     <= 32'h0;
-      app_size_reg      <= APP_SIZE;
-      blake2s_addr_reg  <= 32'h0;
-      cdi_mem[0]        <= 32'h0;
-      cdi_mem[1]        <= 32'h0;
-      cdi_mem[2]        <= 32'h0;
-      cdi_mem[3]        <= 32'h0;
-      cdi_mem[4]        <= 32'h0;
-      cdi_mem[5]        <= 32'h0;
-      cdi_mem[6]        <= 32'h0;
-      cdi_mem[7]        <= 32'h0;
-      cpu_trap_ctr_reg  <= 24'h0;
-      cpu_trap_led_reg  <= 3'h0;
-      cpu_mon_en_reg    <= 1'h0;
-      cpu_mon_first_reg <= 32'h0;
-      cpu_mon_last_reg  <= 32'h0;
-      ram_addr_rand_reg <= 15'h0;
-      ram_data_rand_reg <= 32'h0;
-      force_trap_reg    <= 1'h0;
-      system_reset_reg  <= 1'h0;
+      system_mode_reg    <= 1'h0;
+      rom_executable_reg <= 1'h1;
+      rw_locked_reg      <= 1'h0;
+      led_reg            <= 3'h6;
+      gpio1_reg          <= 2'h0;
+      gpio2_reg          <= 2'h0;
+      gpio3_reg          <= 1'h0;
+      gpio4_reg          <= 1'h0;
+      app_start_reg      <= 32'h0;
+      app_size_reg       <= APP_SIZE;
+      blake2s_addr_reg   <= ILLEGAL_ADDR;
+      syscall_addr_reg   <= ILLEGAL_ADDR;
+      cdi_mem[0]         <= 32'h0;
+      cdi_mem[1]         <= 32'h0;
+      cdi_mem[2]         <= 32'h0;
+      cdi_mem[3]         <= 32'h0;
+      cdi_mem[4]         <= 32'h0;
+      cdi_mem[5]         <= 32'h0;
+      cdi_mem[6]         <= 32'h0;
+      cdi_mem[7]         <= 32'h0;
+      cpu_trap_ctr_reg   <= 24'h0;
+      cpu_trap_led_reg   <= 3'h0;
+      cpu_mon_en_reg     <= 1'h0;
+      cpu_mon_first_reg  <= 32'h0;
+      cpu_mon_last_reg   <= 32'h0;
+      ram_addr_rand_reg  <= 15'h0;
+      ram_data_rand_reg  <= 32'h0;
+      force_trap_reg     <= 1'h0;
+      system_reset_reg   <= 1'h0;
     end
 
     else begin
@@ -290,7 +311,15 @@ module tk1 #(
       gpio2_reg[1] <= gpio2_reg[0];
 
       if (system_mode_we) begin
-        system_mode_reg <= 1'h1;
+        system_mode_reg <= system_mode_new;
+
+        if (system_mode_new) begin
+          rw_locked_reg <= 1'h1;
+        end
+      end
+
+      if (rom_executable_we) begin
+        rom_executable_reg <= rom_executable_new;
       end
 
       if (led_we) begin
@@ -315,6 +344,10 @@ module tk1 #(
 
       if (blake2s_addr_we) begin
         blake2s_addr_reg <= write_data;
+      end
+
+      if (syscall_addr_we) begin
+        syscall_addr_reg <= write_data;
       end
 
       if (cdi_mem_we) begin
@@ -385,6 +418,13 @@ module tk1 #(
   //
   // Trying to execute instructions in FW-RAM.
   //
+  // Executing instructions in ROM, while ROM is marked as not
+  // executable. Note that there is an exception, if the cpu_addr is
+  // the first instruction in either functions set in syscall_addr_reg
+  // or blake2s_addr_reg, it is allowed. For the next instruction ROM
+  // will be marked as executable.
+  // Note that the address to the functions needs to be 4-bytes aligned.
+  //
   // Trying to execute code in mem area set to be data access only.
   // This requires execution monitor to have been setup and
   // enabled.
@@ -402,6 +442,14 @@ module tk1 #(
           force_trap_set = 1'h1;
         end
 
+        if (!rom_executable_reg) begin
+          if ((cpu_addr != syscall_addr_reg) && (cpu_addr != blake2s_addr_reg)) begin
+            if (cpu_addr <= FW_ROM_LAST) begin  // Only valid as long as ROM starts at address 0x00.
+              force_trap_set = 1'h1;
+            end
+          end
+        end
+
         if (cpu_mon_en_reg) begin
           if ((cpu_addr >= cpu_mon_first_reg) && (cpu_addr <= cpu_mon_last_reg)) begin
             force_trap_set = 1'h1;
@@ -411,18 +459,59 @@ module tk1 #(
     end
   end
 
+  //----------------------------------------------------------------
+  // system_mode_ctrl dynamically sets the system mode and if ROM is
+  // executable depending on where we are currently executing.
+  //
+  // If the function in `syscall_addr_reg` is called system_mode will
+  // be set to firmware mode, and ROM will be marked as executable.
+  //
+  // If the function in `blake2s_addr_reg` is called only ROM will be
+  // marked as executable.
+  //
+  // Automatically lowers the privilege and removes ROM execution when
+  // executing above ROM.
+  //
+  // Note that the address to the functions needs to be 4-bytes aligned.
+  // ----------------------------------------------------------------
+  always @* begin : system_mode_ctrl
+    system_mode_new    = 1'h0;
+    system_mode_we     = 1'h0;
+    rom_executable_new = 1'h0;
+    rom_executable_we  = 1'h0;
+
+    if (cpu_valid & cpu_instr) begin
+      if (cpu_addr == syscall_addr_reg) begin
+        system_mode_new    = 1'h0;
+        system_mode_we     = 1'h1;
+        rom_executable_new = 1'h1;
+        rom_executable_we  = 1'h1;
+      end
+      if (cpu_addr == blake2s_addr_reg) begin
+        rom_executable_new = 1'h1;
+        rom_executable_we  = 1'h1;
+      end
+
+      if (cpu_addr > FW_ROM_LAST) begin
+        system_mode_new    = 1'h1;
+        system_mode_we     = 1'h1;
+        rom_executable_new = 1'h0;
+        rom_executable_we  = 1'h1;
+      end
+    end
+  end
 
   //----------------------------------------------------------------
   // api
   //----------------------------------------------------------------
   always @* begin : api
-    system_mode_we   = 1'h0;
     led_we           = 1'h0;
     gpio3_we         = 1'h0;
     gpio4_we         = 1'h0;
     app_start_we     = 1'h0;
     app_size_we      = 1'h0;
     blake2s_addr_we  = 1'h0;
+    syscall_addr_we  = 1'h0;
     cdi_mem_we       = 1'h0;
     ram_addr_rand_we = 1'h0;
     ram_data_rand_we = 1'h0;
@@ -437,16 +526,12 @@ module tk1 #(
     spi_start        = 1'h0;
     spi_tx_data_vld  = 1'h0;
 
-    spi_enable       = write_data[0];
-    spi_tx_data      = write_data[7 : 0];
+    spi_enable       = write_data[0] & ~system_mode_reg;
+    spi_tx_data      = write_data[7 : 0] & ~{8{system_mode_reg}};
 
     if (cs) begin
       tmp_ready = 1'h1;
       if (we) begin
-        if (address == ADDR_SYSTEM_MODE_CTRL) begin
-          system_mode_we = 1'h1;
-        end
-
         if (address == ADDR_LED) begin
           led_we = 1'h1;
         end
@@ -457,13 +542,13 @@ module tk1 #(
         end
 
         if (address == ADDR_APP_START) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             app_start_we = 1'h1;
           end
         end
 
         if (address == ADDR_APP_SIZE) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             app_size_we = 1'h1;
           end
         end
@@ -473,25 +558,31 @@ module tk1 #(
         end
 
         if (address == ADDR_BLAKE2S) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             blake2s_addr_we = 1'h1;
           end
         end
 
+        if (address == ADDR_SYSCALL) begin
+          if (!rw_locked_reg) begin
+            syscall_addr_we = 1'h1;
+          end
+        end
+
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             cdi_mem_we = 1'h1;
           end
         end
 
         if (address == ADDR_RAM_ADDR_RAND) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             ram_addr_rand_we = 1'h1;
           end
         end
 
         if (address == ADDR_RAM_DATA_RAND) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             ram_data_rand_we = 1'h1;
           end
         end
@@ -513,15 +604,21 @@ module tk1 #(
         end
 
         if (address == ADDR_SPI_EN) begin
-          spi_enable_vld = 1'h1;
+          if (!system_mode_reg) begin
+            spi_enable_vld = 1'h1;
+          end
         end
 
         if (address == ADDR_SPI_XFER) begin
-          spi_start = 1'h1;
+          if (!system_mode_reg) begin
+            spi_start = 1'h1;
+          end
         end
 
         if (address == ADDR_SPI_DATA) begin
-          spi_tx_data_vld = 1'h1;
+          if (!system_mode_reg) begin
+            spi_tx_data_vld = 1'h1;
+          end
         end
 
       end
@@ -562,22 +659,30 @@ module tk1 #(
           tmp_read_data = blake2s_addr_reg;
         end
 
+        if (address == ADDR_SYSCALL) begin
+          tmp_read_data = syscall_addr_reg;
+        end
+
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
           tmp_read_data = cdi_mem[address[2 : 0]];
         end
 
         if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
-          if (!system_mode_reg) begin
+          if (!rw_locked_reg) begin
             tmp_read_data = udi_rdata;
           end
         end
 
         if (address == ADDR_SPI_XFER) begin
-          tmp_read_data[0] = spi_ready;
+          if (!system_mode_reg) begin
+            tmp_read_data[0] = spi_ready;
+          end
         end
 
         if (address == ADDR_SPI_DATA) begin
-          tmp_read_data[7 : 0] = spi_rx_data;
+          if (!system_mode_reg) begin
+            tmp_read_data[7 : 0] = spi_rx_data;
+          end
         end
 
       end

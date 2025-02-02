@@ -25,13 +25,69 @@ applications.
 
 ### Control of execution mode
 
+The execution mode consists of two modes, firmware mode and
+application mode. These modes have certain privileges. The execution
+mode is dynamically controlled in the hardware, depending on current
+location of execution. After a reset the device starts in firmware
+mode, as soon as the executions moves outside of ROM the mode is
+changed to application mode.
+
+There also exists an API to access two different function pointers to
+functions located in ROM, i.e., in firmware. These are the syscall
+function and the Blake2s function. Since these operates in ROM, they
+need a higher privilege compared to application mode. The only way
+back into a raised privilege, is through the blake2s or syscall API.
+
+The syscall function operates in firmware mode, except for not being
+able to write to the sensitive assets, see the list of sensitive
+assets further down.
+
+The blake2s function operates in application mode, but ROM is
+executable during the function call.
+
+For a complete overview, see the modes and privileges depicted in the
+table below:
+
+| *name*          |  *ROM* | *FW RAM*  | *SPI*  | *Sensitive assets* |
+|-----------------|--------|-----------|--------|--------------------|
+| Firmware mode   | r/x    | r/w       |  r/w   | r/w*               |
+| app mode        | r      | i         |  i     | r                  |
+| syscall         | r/x    | r/w       |  r/w   | r                  |
+| blake2s         | r/x    | i         |  i     | r                  |
+
+Legend:
+r = readable
+w = writeable
+x = executable
+i = invisible
+* = only writeable during first time in firmware mode
+
+
+These sensitive assets are only readable and/or writeable in firmware
+mode, before the first switch to app mode:
+- ADDR_APP_START
+- ADDR_APP_SIZE
+- ADDR_BLAKE2S
+- ADDR_SYSCALL
+- ADDR_CDI_FIRST
+- ADDR_CDI_LAST
+- ADDR_RAM_ADDR_RAND
+- ADDR_RAM_DATA_RAND
+- ADDR_UDI_FIRST
+- ADDR_UDI_LAST
+
+Note that these assets have different properties, some are read-only
+and some are write-only. The list above only shows if they are
+restricted in app mode. See each individual API further down to find
+out more about their properties.
+
+
 ```
 ADDR_SYSTEM_MODE_CTRL: 0x08
 ```
 
-This register controls if the device is executing in FW mode or in App
-mode. The register can be written once between power cycles, and only
-by FW. If set the device is in app mode.
+This register is read-only and shows if the device is executing in FW
+mode or in App mode. If set the device is in app mode.
 
 
 ### Control of RGB LED
@@ -72,10 +128,10 @@ ADDR_APP_START: 0x0c
 ADDR_APP_SIZE:  0x0d
 ```
 
-These registers provide read only information to the loaded app to
+These registers provide read-only information to the loaded app to
 itself - where it was loaded and its size. The values are written by
 FW as part of the loading of the app. The registers can't be written
-when the `ADDR_SYSTEM_MODE_CTRL` has been set.
+after the `ADDR_SYSTEM_MODE_CTRL` has been set for the first time.
 
 
 ### Access to Blake2s
@@ -86,8 +142,31 @@ ADDR_BLAKE2S: 0x10
 
 This register provides the 32-bit function pointer address to the
 Blake2s hash function in the FW. It is written by FW during boot. The
-register can't be written to when the `ADDR_SYSTEM_MODE_CTRL` has been
-set.
+register can't be written after the `ADDR_SYSTEM_MODE_CTRL` has been
+set for the first time.
+
+This register will default to an illegal address, so if it is left
+unset by firmware and an application tries to call it the CPU will
+halt.
+
+### Syscall access
+
+```
+ADDR_SYSCALL: 0x12
+```
+
+This register provides the 32-bit function pointer address to the
+syscall function in the FW. The syscall function provides access to
+high privilege tasks in a secure manner, such as access to the SPI
+flash.
+
+The register is written by FW during boot. The register can't be
+written after the `ADDR_SYSTEM_MODE_CTRL` has been set for the first
+time.
+
+This register will default to an illegal address, so if it is left
+unset by firmware and an application tries to call it the CPU will
+halt.
 
 
 ### Access to CDI
@@ -99,10 +178,10 @@ ADDR_CDI_LAST:  0x27
 
 These registers provide access to the 256-bit compound device secret
 calculated by the FW as part of loading an application. The registers
-are written by the FW. The register can't be written to when the
-`ADDR_SYSTEM_MODE_CTRL` has been set. The CDI is readable by apps,
-which can then use it as a base secret for any other secrets required
-to carry out their intended use case.
+are written by the FW. The register can't be written to after the
+`ADDR_SYSTEM_MODE_CTRL` has been set for the first time. The CDI is
+readable by apps, which can then use it as a base secret to generate
+any other secrets required to carry out their intended use case.
 
 
 ### Access to UDI
@@ -113,7 +192,8 @@ ADDR_UDI_LAST:  0x31
 ```
 
 These read-only registers provide access to the 64-bit Unique Device
-Identity (UDI).
+Identity (UDI). The register can only be read in firmware mode before
+the first switch to app mode.
 
 The two UDI words are stored using 32 named SB\_LUT4 FPGA multiplexer
 (MUX) instances, identified in the source code as "udi\_rom\_idx". One
@@ -164,44 +244,42 @@ ADDR_CPU_MON_LAST: 0x62
 Monitors events and state changes in the SoC and handles security
 violations. Currently checks for:
 
-1. Trying to execute instructions in FW\_RAM. *Always enabled.*
+1. Trying to execute instructions in FW\_RAM. *Always enabled*
 2. Trying to access RAM outside of the physical memory. *Always enabled*
-3. Trying to execute instructions from a memory area in RAM defined by
+3. Trying to execute instructions in ROM, while ROM being marked as
+   non-executable. Except for the first instruction set in
+   `ADDR_SYSCALL` and `ADDR_BLAKE2S`. *Always enabled*
+4. Trying to execute instructions from a memory area in RAM defined by
    the application.
 
-Number 1 and 2 are always enabled. Number 3 is set and enabled by the
-device application. Once enabled, by writing to `ADDR_CPU_MON_CTRL`,
-the memory defined by `ADDR_CPU_MON_FIRST` and `ADDR_CPU_MON_LAST`
-will be protected against execution. Typically the application
-developer will set this protection to cover the application stack
-and/or heap.
+Number 1, 2 and 3 are always enabled. Number 4 is set and enabled by
+the device application.
 
-An application can write to these registers to define the area and
-then enable the monitor. Once enabled the monitor can't be disabled,
-and the `ADDR_CPU_MON_FIRST` and `ADDR_CPU_MON_LAST` registers can't be
-changed. This means that an application that wants to use the monitor
-must define the area first before enabling the monitor.
+An application must write to the `ADDR_CPU_MON_FIRST` and
+`ADDR_CPU_MON_LAST` first, before enabling the monitor by writing to
+`ADDR_CPU_MON_CTRL`. This effectively marks the region defined as
+data-only, and will protect against execution. Typically a application
+developer will set this protection to cover the application stack
+and/or heap. Once enabled the monitor can't be disabled, and the
+registers can't be written.
 
 Once enabled, if the CPU tries to read an instruction from the defined
-area, the core will force the CPU to instead read an all zero, which
-is an illegal instruction. This illegal instruction will trigger the
+area, the core will force the CPU to instead read an all zero
+instruction, which is an illegal instruction. This will trigger the
 CPU to enter its TRAP state, from which it can't return unless the
 TKey is power cycled.
 
-The firmware will not write to these registers as part of loading an
-app. The app developer must define the area and enable the monitor to
-get the protection.
-
-One feature not obvious from the API is that when the CPU traps the
-core will detect that and start flashing the status LED with a red
-light indicating that the CPU is in a trapped state and no further
-execution is possible.
+Another feature is that when the CPU traps the core will detect it and
+start flashing the status LED with a red light, indicating that the
+CPU is in a trapped state and no further execution is possible.
 
 ## SPI-master
 
 The TK1 includes a minimal SPI-master that provides access to the
 Winbond Flash memory mounted on the board. The SPI-master is byte
 oriented and very minimalistic.
+
+The SPI master can only be used in firmware mode.
 
 In order to transfer more than a single byte, SW must read status and
 write commands needed to send a sequence of bytes. In order to read
