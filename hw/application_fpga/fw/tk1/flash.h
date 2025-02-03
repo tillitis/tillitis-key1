@@ -4,9 +4,8 @@
 #ifndef TKEY_FLASH_H
 #define TKEY_FLASH_H
 
+#include "types.h"
 #include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 
 #define WRITE_ENABLE 0x06
 #define WRITE_DISABLE 0x04

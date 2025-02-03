@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
+#include "../tk1/flash.h"
 #include "../tk1/lib.h"
 #include "../tk1/proto.h"
 #include "../tk1/types.h"
@@ -283,6 +284,16 @@ int main(void)
 	memcpy(cdi_readback_bytes, (void *)cdi, CDI_WORDS * 4);
 	if (!memeq(cdi_writetest, cdi_readback_bytes, CDI_WORDS * 4)) {
 		failmsg("Can't read bytes from CDI");
+		anyfailed = 1;
+	}
+
+	uint8_t jedec_id[3];
+	puts("\r\nReading SPI flash capacity...\r\n");
+	flash_release_powerdown();
+	flash_read_jedec_id(jedec_id);
+
+	if (jedec_id[2] != 0x14) {
+		failmsg("Expected SPI flash capacity: 0x14 (1 MByte)");
 		anyfailed = 1;
 	}
 

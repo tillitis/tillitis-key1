@@ -148,7 +148,9 @@ TESTFW_OBJS = \
 	$(P)/fw/testfw/start.o \
 	$(P)/fw/tk1/proto.o \
 	$(P)/fw/tk1/assert.o \
-	$(P)/fw/tk1/lib.o
+	$(P)/fw/tk1/lib.o \
+	$(P)/fw/tk1/spi.o \
+	$(P)/fw/tk1/flash.o
 
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
