@@ -4,8 +4,7 @@
 #ifndef TKEY_SPI_H
 #define TKEY_SPI_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include "../tk1/types.h"
 
 int spi_ready(void);
 int spi_transfer(uint8_t *cmd, size_t cmd_size, uint8_t *tx_buf, size_t tx_size,

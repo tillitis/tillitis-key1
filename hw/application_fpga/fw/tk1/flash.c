@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 #include "flash.h"
+#include "../tk1/types.h"
 #include "../tk1_mem.h"
 #include "spi.h"
 
 #include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 
 // clang-format off
 static volatile uint32_t *timer			= (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;

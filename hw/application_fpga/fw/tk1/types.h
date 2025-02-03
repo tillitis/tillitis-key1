@@ -14,7 +14,7 @@ typedef long long int64_t;
 typedef unsigned char uint8_t;
 typedef unsigned long size_t;
 
-#define NULL ((char *)0)
+#define NULL ((void *)0)
 
 #define FALSE 0
 #define TRUE !FALSE
