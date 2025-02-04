@@ -4,6 +4,7 @@
  */
 
 #include "../tk1/assert.h"
+#include "../tk1/flash.h"
 #include "../tk1/led.h"
 #include "../tk1/syscall_nrs.h"
 #include "../tk1/types.h"
@@ -24,6 +25,13 @@ int32_t syscall_handler(uint32_t syscall_nr, uint32_t arg1)
 	case TK1_SYSCALL_SET_LED:
 		set_led(arg1);
 		return 0;
+	case TK1_SYSCALL_GET_FLASH_CAPACITY: {
+		uint8_t jedec_id[3];
+		flash_release_powerdown();
+		flash_read_jedec_id(jedec_id);
+		flash_powerdown();
+		return jedec_id[2];
+	}
 	default:
 		assert(1 == 2);
 	}

@@ -43,6 +43,7 @@ all: testapp.bin
 
 TESTAPP_FMTFILES = \
 	$(P)/main.c \
+	$(P)/syscall.h
 
 TESTAPP_OBJS = \
 	$(P)/main.o \

@@ -6,8 +6,10 @@
 #include "../tk1/led.h"
 #include "../tk1/lib.h"
 #include "../tk1/proto.h"
+#include "../tk1/syscall_nrs.h"
 #include "../tk1/types.h"
 #include "../tk1_mem.h"
+#include "syscall.h"
 
 #define USBMODE_PACKET_SIZE 64
 
@@ -186,6 +188,16 @@ int main(void)
 	wordcpy_s(cdi_local2, CDI_WORDS, (void *)cdi, CDI_WORDS);
 	if (!memeq(cdi_local, cdi_local2, CDI_WORDS * 4)) {
 		failmsg("Write to CDI in app-mode");
+		anyfailed = 1;
+	}
+
+	syscall_enable();
+
+	// Syscall should be able to access flash
+	puts("\r\nReading SPI flash capacity using syscall...\r\n");
+	int flash_capacity = syscall(TK1_SYSCALL_GET_FLASH_CAPACITY, 0);
+	if (flash_capacity != 0x14) {
+		failmsg("Expected SPI flash capacity: 0x14 (1 MByte)");
 		anyfailed = 1;
 	}
 
