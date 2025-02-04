@@ -249,9 +249,12 @@ int main(void)
 	}
 	puts("\r\n");
 
-	puts("Now echoing what you type...\r\n");
+	puts("Now echoing what you type...Type + to reset device\r\n");
 	for (;;) {
 		in = readbyte(&mode, &mode_bytes_left);
+		if (in == '+') {
+			syscall(TK1_SYSCALL_RESET, 0);
+		}
 
 		writebyte(MODE_CDC);
 		writebyte(1);
