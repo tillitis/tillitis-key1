@@ -379,6 +379,24 @@ module tb_tk1 ();
 
 
   //----------------------------------------------------------------
+  // fetch_instruction()
+  //
+  // Simulate fetch of an instruction at specified address.
+  //----------------------------------------------------------------
+  task fetch_instruction(input [31 : 0] address);
+    begin : fetch_instruction
+      tb_cpu_addr  = address;
+      tb_cpu_instr = 1'h1;
+      tb_cpu_valid = 1'h1;
+      #(CLK_PERIOD);
+      tb_cpu_addr  = 32'h0;
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+    end
+  endtask  // fetch_instruction
+
+
+  //----------------------------------------------------------------
   // test1()
   // Read out name and version.
   //----------------------------------------------------------------
@@ -634,10 +652,7 @@ module tb_tk1 ();
       $display("--- test9: force_trap before illegal access: 0x%1x", tb_force_trap);
       $display("--- test9: Creating an illegal access.");
 
-      tb_cpu_addr  = 32'h13371337;
-      tb_cpu_instr = 1'h1;
-      tb_cpu_valid = 1'h1;
-      #(2 * CLK_PERIOD);
+      fetch_instruction(32'h13371337);
       $display("--- test9: cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x", tb_cpu_addr,
                tb_cpu_instr, tb_cpu_valid);
       $display("--- test9: force_trap: 0x%1x", tb_force_trap);
