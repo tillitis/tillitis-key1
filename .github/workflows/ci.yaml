@@ -13,7 +13,7 @@ jobs:
   check-firmware:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/tillitis/tkey-builder:4
+      image: ghcr.io/tillitis/tkey-builder:5rc1
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
   check-verilog:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/tillitis/tkey-builder:4
+      image: ghcr.io/tillitis/tkey-builder:5rc1
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -64,7 +64,7 @@ jobs:
   build-usb-firmware:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/tillitis/tkey-builder:4
+      image: ghcr.io/tillitis/tkey-builder:5rc1
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
       commit_sha: ${{ github.sha }}
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/tillitis/tkey-builder:4
+      image: ghcr.io/tillitis/tkey-builder:5rc1
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -115,7 +115,7 @@ jobs:
     needs: build-bitstream
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/tillitis/tkey-builder:4
+      image: ghcr.io/tillitis/tkey-builder:5rc1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
