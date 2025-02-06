@@ -398,6 +398,21 @@ module tb_tk1 ();
 
 
   //----------------------------------------------------------------
+  // check_equal()
+  //
+  // Check that two values are equal
+  //----------------------------------------------------------------
+  task check_equal(input [31 : 0] value, input [31 : 0] expected);
+    begin : check_equal
+      if (value != expected) begin
+        $display("--- Error: Got 0x%08x, expected 0x%08x", value, expected);
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask  // check_equal
+
+
+  //----------------------------------------------------------------
   // fetch_instruction()
   //
   // Simulate fetch of an instruction at specified address.
@@ -531,9 +546,26 @@ module tb_tk1 ();
 
       $display("");
       $display("--- test2: Read out UDI started.");
+      tb_syscall = 0;
+      reset_dut();
 
       read_check_word(ADDR_UDI_FIRST, 32'h00010203);
       read_check_word(ADDR_UDI_LAST, 32'h04050607);
+
+      $display("--- test2: Switch to app mode.");
+      fetch_instruction(APP_RAM_START);
+
+      read_check_word(ADDR_UDI_FIRST, 32'h0);
+      read_check_word(ADDR_UDI_LAST, 32'h0);
+
+      $display("--- test2: Enter syscall.");
+      tb_syscall = 1;
+
+      read_check_word(ADDR_UDI_FIRST, 32'h00010203);
+      read_check_word(ADDR_UDI_LAST, 32'h04050607);
+
+      $display("--- test2: Leave syscall.");
+      tb_syscall = 0;
 
       $display("--- test2: completed.");
       $display("");
@@ -548,6 +580,10 @@ module tb_tk1 ();
   task test3;
     begin
       tc_ctr = tc_ctr + 1;
+
+      $display("--- test5: Reset DUT to switch to fw mode.");
+      tb_syscall = 0;
+      reset_dut();
 
       $display("");
       $display("--- test3: Write and read CDI started.");
@@ -574,7 +610,7 @@ module tb_tk1 ();
       $display("--- test3: Switch to app mode.");
       fetch_instruction(APP_RAM_START);
 
-      $display("--- test3: Try to write CDI again.");
+      $display("--- test3: Try to write CDI from app mode.");
       write_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
       write_word(ADDR_CDI_FIRST + 1, 32'hefeeedec);
       write_word(ADDR_CDI_FIRST + 2, 32'hdfdedddc);
@@ -584,7 +620,7 @@ module tb_tk1 ();
       write_word(ADDR_CDI_FIRST + 6, 32'h8f8e8d8c);
       write_word(ADDR_CDI_FIRST + 7, 32'h7f7e7d7c);
 
-      $display("--- test3: Read CDI again.");
+      $display("--- test3: Read CDI from app mode.");
       read_check_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
       read_check_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
       read_check_word(ADDR_CDI_FIRST + 2, 32'hd0d1d2d3);
@@ -593,6 +629,32 @@ module tb_tk1 ();
       read_check_word(ADDR_CDI_FIRST + 5, 32'h90919293);
       read_check_word(ADDR_CDI_FIRST + 6, 32'h80818283);
       read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
+
+      $display("--- test3: Enter syscall.");
+      tb_syscall = 1;
+
+      $display("--- test3: Try to write CDI from syscall.");
+      write_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
+      write_word(ADDR_CDI_FIRST + 1, 32'hefeeedec);
+      write_word(ADDR_CDI_FIRST + 2, 32'hdfdedddc);
+      write_word(ADDR_CDI_FIRST + 3, 32'hcfcecdcc);
+      write_word(ADDR_CDI_FIRST + 4, 32'hafaeadac);
+      write_word(ADDR_CDI_FIRST + 5, 32'h9f9e9d9c);
+      write_word(ADDR_CDI_FIRST + 6, 32'h8f8e8d8c);
+      write_word(ADDR_CDI_FIRST + 7, 32'h7f7e7d7c);
+
+      $display("--- test3: Read CDI from syscall.");
+      read_check_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
+      read_check_word(ADDR_CDI_FIRST + 1, 32'hefeeedec);
+      read_check_word(ADDR_CDI_FIRST + 2, 32'hdfdedddc);
+      read_check_word(ADDR_CDI_FIRST + 3, 32'hcfcecdcc);
+      read_check_word(ADDR_CDI_FIRST + 4, 32'hafaeadac);
+      read_check_word(ADDR_CDI_FIRST + 5, 32'h9f9e9d9c);
+      read_check_word(ADDR_CDI_FIRST + 6, 32'h8f8e8d8c);
+      read_check_word(ADDR_CDI_LAST + 0, 32'h7f7e7d7c);
+
+      $display("--- test3: Leave syscall.");
+      tb_syscall = 0;
 
       $display("--- test3: completed.");
       $display("");
@@ -640,7 +702,7 @@ module tb_tk1 ();
 
   //----------------------------------------------------------------
   // test6()
-  // Write RAM address and data randomizatio in fw mode.
+  // Write and read RAM-address and data randomization.
   //----------------------------------------------------------------
   task test6;
     begin
@@ -649,6 +711,7 @@ module tb_tk1 ();
       $display("");
       $display("--- test6: Write RAM addr and data randomization in fw mode.");
       $display("--- test6: Reset DUT to switch to fw mode.");
+      tb_syscall = 0;
       reset_dut();
 
       $display("--- test6: Write to ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND .");
@@ -659,9 +722,14 @@ module tb_tk1 ();
           "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
       $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
                dut.ram_addr_rand, dut.ram_data_rand);
+      check_equal(dut.ram_addr_rand, 15'h1337);
+      check_equal(dut.ram_data_rand, 32'h47114711);
+      read_check_word(ADDR_RAM_ADDR_RAND, 32'h0);
+      read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
+
 
       $display("--- test6: Switch to app mode.");
-      write_word(ADDR_APP_MODE_CTRL, 32'hf000000);
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test6: Write to ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND again.");
       write_word(ADDR_RAM_ADDR_RAND, 32'hdeadbeef);
@@ -671,6 +739,30 @@ module tb_tk1 ();
           "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
       $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
                dut.ram_addr_rand, dut.ram_data_rand);
+      check_equal(dut.ram_addr_rand, 15'h1337);
+      check_equal(dut.ram_data_rand, 32'h47114711);
+      read_check_word(ADDR_RAM_ADDR_RAND, 32'h0);
+      read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
+
+
+      $display("--- test6: Enter syscall.");
+      tb_syscall = 1;
+
+      $display("--- test6: Write to ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND again.");
+      write_word(ADDR_RAM_ADDR_RAND, 32'hdeadbeef);
+      write_word(ADDR_RAM_DATA_RAND, 32'hf00ff00f);
+
+      $display(
+          "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
+      $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
+               dut.ram_addr_rand, dut.ram_data_rand);
+      check_equal(dut.ram_addr_rand, 15'h3eef);
+      check_equal(dut.ram_data_rand, 32'hf00ff00f);
+      read_check_word(ADDR_RAM_ADDR_RAND, 32'h0);
+      read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
+
+      $display("--- test6: Leave syscall.");
+      tb_syscall = 0;
 
       $display("--- test6: completed.");
       $display("");
@@ -752,6 +844,8 @@ module tb_tk1 ();
       write_word(ADDR_CPU_MON_LAST, 32'hdeadcafe);
       $display("--- test9: cpu_mon_first_reg: 0x%08x, cpu_mon_last_reg: 0x%08x",
                dut.cpu_mon_first_reg, dut.cpu_mon_last_reg);
+      check_equal(dut.cpu_mon_first_reg, 32'h10000000);
+      check_equal(dut.cpu_mon_last_reg, 32'h20000000);
 
       $display("--- test9: force_trap before illegal access: 0x%1x", tb_force_trap);
       $display("--- test9: Creating an illegal access.");
@@ -759,12 +853,76 @@ module tb_tk1 ();
       fetch_instruction(32'h13371337);
       $display("--- test9: cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x", tb_cpu_addr,
                tb_cpu_instr, tb_cpu_valid);
+      check_equal(dut.cpu_mon_first_reg, 32'h10000000);
+      check_equal(dut.cpu_mon_last_reg, 32'h20000000);
+
       $display("--- test9: force_trap: 0x%1x", tb_force_trap);
+      check_equal(tb_force_trap, 1);
 
       $display("--- test9: completed.");
       $display("");
     end
   endtask  // test9
+
+
+  //----------------------------------------------------------------
+  // check_inverting_spi_loopback_transfer_succeeds()
+  // Do an SPI tranfer. Check that the received value is the inverse
+  // of the value sent.
+  //----------------------------------------------------------------
+  task check_inverting_spi_loopback_transfer_succeeds(input [32 : 0] data);
+    begin : check_inverting_spi_loopback_transfer
+      $display("--- test10: Sending a byte.");
+      write_word(ADDR_SPI_EN, 32'h1);
+      write_word(ADDR_SPI_DATA, data);
+      write_word(ADDR_SPI_XFER, 32'h1);
+
+      // Ready ready flag in SPI until it is set.
+      read_word(ADDR_SPI_XFER);
+      while (!tb_read_data) begin
+        read_word(ADDR_SPI_XFER);
+      end
+      $display("--- test10: Byte should have been sent.");
+
+      #(2 * CLK_PERIOD);
+      read_check_word(ADDR_SPI_DATA, ~data[7 : 0] & 8'hff);
+      write_word(ADDR_SPI_EN, 32'h0);
+    end
+  endtask
+
+
+  //----------------------------------------------------------------
+  // check_spi_does_not_transfer()
+  // Do an SPI transfer. Check that the SS, SCK and MISO signal are
+  // not active.
+  //----------------------------------------------------------------
+  task check_spi_does_not_transfer;
+    begin : check_spi_does_not_transfer
+      reg [31 : 0] wait_ctr;
+      reg error;
+      localparam CLK_PER_SPI_BIT = 3;
+      localparam WAIT_MARGIN = 10;
+
+      error = 0;
+      wait_ctr = CLK_PER_SPI_BIT * 8 * WAIT_MARGIN;
+
+      $display("--- test10: Sending a byte.");
+      write_word(ADDR_SPI_EN, 32'h1);
+      write_word(ADDR_SPI_DATA, 32'haa);
+      write_word(ADDR_SPI_XFER, 32'h1);
+
+      $display("--- test10: Waiting to see if SPI signals change state.");
+      while (!error && (wait_ctr != 0)) begin
+        if (~tb_spi_ss || tb_spi_sck || tb_spi_mosi) begin
+          $display("--- Error: SPI signals changed state");
+          error_ctr = error_ctr + 1;
+          error = 1;
+        end
+        #(CLK_PERIOD);
+        wait_ctr = wait_ctr - 1;
+      end
+    end
+  endtask
 
 
   //----------------------------------------------------------------
@@ -785,23 +943,20 @@ module tb_tk1 ();
 
       #(CLK_PERIOD);
 
-      // Sending 0xa7 trough the inverting loopback.
-      $display("--- test10: Sending a byte.");
-      write_word(ADDR_SPI_EN, 32'h1);
-      write_word(ADDR_SPI_DATA, 32'ha7);
-      write_word(ADDR_SPI_XFER, 32'h1);
+      check_inverting_spi_loopback_transfer_succeeds(32'ha7);
 
-      // Ready ready flag in SPI until it is set.
-      read_word(ADDR_SPI_XFER);
-      while (!tb_read_data) begin
-        read_word(ADDR_SPI_XFER);
-      end
-      $display("--- test10: Byte should have been sent.");
+      $display("--- test10: Switch to app mode.");
+      fetch_instruction(APP_RAM_START);
 
-      // 0x58 is the inverse of 0xa7.
-      #(2 * CLK_PERIOD);
-      read_check_word(ADDR_SPI_DATA, 32'h58);
-      write_word(ADDR_SPI_EN, 32'h0);
+      check_spi_does_not_transfer();
+
+      $display("--- test10: Enter syscall.");
+      tb_syscall = 1;
+
+      check_inverting_spi_loopback_transfer_succeeds(32'hc8);
+
+      $display("--- test10: Leave syscall.");
+      tb_syscall = 0;
 
       tb_monitor     = 0;
       tb_spi_monitor = 0;
