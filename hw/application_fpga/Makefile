@@ -241,9 +241,6 @@ check-binary-hashes:
 	sha256sum -c application_fpga.bin.sha256
 
 %.bin: %.elf
-	$(SIZE) $<
-	@test "$$($(SIZE) $< | awk 'NR==2{print $$2, $$3}')" = "0 0" \
-	|| { printf "Non-empty data or bss section!\n"; false; }
 	$(OBJCOPY) --input-target=elf32-littleriscv --output-target=binary $< $@
 	chmod -x $@
 

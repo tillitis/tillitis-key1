@@ -8,7 +8,8 @@ ENTRY(_start)
 
 MEMORY
 {
-	ROM (rx)    : ORIGIN = 0x00000000, LENGTH = 0x20000 /* 128 KB */
+	ROM (rx)    : ORIGIN = 0x00000000, LENGTH = 0x20000 /* Pretend we have 128 kiB */
+	FWRAM (rwx) : ORIGIN = 0xd0000000, LENGTH = 0x800 /* 2 KB */
 	RAM (rwx)   : ORIGIN = 0x40000000, LENGTH = 0x20000 /* 128 KB */
 }
 
@@ -39,8 +40,6 @@ SECTIONS
 		_sidata = _etext;
 	} >ROM
 
-        /* XXX We don't allow any data or BSS - but they need be defined or linking will fail */
-
 	.data : AT (_etext)
 	{
 		. = ALIGN(4);
@@ -52,7 +51,7 @@ SECTIONS
 		*(.sdata*)          /* .sdata* sections */
 		. = ALIGN(4);
 		_edata = .;
-	} >ROM
+	} >FWRAM
 
 	/* Uninitialized data section */
 	.bss :
@@ -67,5 +66,5 @@ SECTIONS
 
 		. = ALIGN(4);
 		_ebss = .;
-	} >ROM
+	} >FWRAM
 }

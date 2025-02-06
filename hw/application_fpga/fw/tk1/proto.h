@@ -57,9 +57,8 @@ struct frame_header {
 };
 
 /*@ -exportlocal @*/
-void writebyte(uint8_t b);
-uint8_t readbyte(uint8_t *mode, uint8_t *mode_bytes_left);
+int read(uint8_t *buf, size_t bufsize, size_t nbytes, enum mode expect_mode);
+void write(const uint8_t *buf, size_t nbytes, enum mode mode);
 void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf);
-int readcommand(struct frame_header *hdr, uint8_t *cmd, int state,
-		uint8_t *mode, uint8_t *mode_bytes_left);
+int readcommand(struct frame_header *hdr, uint8_t *cmd, int state);
 #endif

@@ -11,6 +11,16 @@
 #include "state.h"
 #include "types.h"
 
+// USB Mode Protocol:
+//   1 byte mode
+//   1 byte length
+//
+// Our USB Mode Protocol packets has room for 255 bytes according to
+// the header but we use a packet size of 62 so we limit transfers to
+// 64 bytes (2 byte header + 62 byte data) to fit in a single USB
+// frame.
+#define USBMODE_PACKET_SIZE 64
+
 // clang-format off
 static volatile uint32_t *can_rx = (volatile uint32_t *)TK1_MMIO_UART_RX_STATUS;
 static volatile uint32_t *rx =     (volatile uint32_t *)TK1_MMIO_UART_RX_DATA;
@@ -21,9 +31,10 @@ static volatile uint32_t *tx =     (volatile uint32_t *)TK1_MMIO_UART_TX_DATA;
 static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 		      enum cmdlen len);
 static int parseframe(uint8_t b, struct frame_header *hdr);
-static void write(uint8_t *buf, size_t nbytes);
-static int read(uint8_t *buf, size_t bufsize, size_t nbytes, uint8_t *mode,
-		uint8_t *mode_bytes_left);
+static uint8_t readbyte(void);
+static void write_with_header(const uint8_t *buf, size_t nbytes,
+			      enum mode mode);
+static void writebyte(uint8_t b);
 static size_t bytelen(enum cmdlen cmdlen);
 
 static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
@@ -32,13 +43,15 @@ static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 	return (id << 5) | (endpoint << 3) | (status << 2) | len;
 }
 
-int readcommand(struct frame_header *hdr, uint8_t *cmd, int state,
-		uint8_t *mode, uint8_t *mode_bytes_left)
+int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 {
 	uint8_t in = 0;
 
 	set_led((state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE);
-	in = readbyte(mode, mode_bytes_left);
+
+	if (read(&in, 1, 1, MODE_CDC) == -1) {
+		return -1;
+	}
 
 	if (parseframe(in, hdr) == -1) {
 		htif_puts("Couldn't parse header\n");
@@ -47,7 +60,7 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state,
 
 	(void)memset(cmd, 0, CMDLEN_MAXBYTES);
 	// Now we know the size of the cmd frame, read it all
-	if (read(cmd, CMDLEN_MAXBYTES, hdr->len, mode, mode_bytes_left) != 0) {
+	if (read(cmd, CMDLEN_MAXBYTES, hdr->len, MODE_CDC) != 0) {
 		htif_puts("read: buffer overrun\n");
 		return -1;
 	}
@@ -80,12 +93,14 @@ static int parseframe(uint8_t b, struct frame_header *hdr)
 	return 0;
 }
 
+#define FWFRAMESIZE (2 + 128)
 // Send a firmware reply with a frame header, response code rspcode and
 // following data in buf
 void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 {
 	size_t nbytes = 0;
-	enum cmdlen len = 0; // length covering (rspcode + length of buf)
+	enum cmdlen len = 0;	    // length covering (rspcode + length of buf)
+	uint8_t frame[FWFRAMESIZE]; // Frame header + longest response
 
 	switch (rspcode) {
 	case FW_RSP_NAME_VERSION:
@@ -117,33 +132,20 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 
 	nbytes = bytelen(len);
 
-	// Mode Protocol Header
-	writebyte(MODE_CDC);
-	writebyte(2);
-
 	// Frame Protocol Header
-	writebyte(genhdr(hdr.id, hdr.endpoint, 0x0, len));
+	frame[0] = genhdr(hdr.id, hdr.endpoint, 0x0, len);
 
 	// FW protocol header
-	writebyte(rspcode);
-	nbytes--;
+	frame[1] = rspcode;
 
-	while (nbytes > 0) {
-		// Limit transfers to 64 bytes (2 byte header + 62 byte data) to
-		// fit in a single USB frame.
-		size_t tx_count = nbytes > 62 ? 62 : nbytes;
-		// Mode Protocol Header
-		writebyte(MODE_CDC);
-		writebyte(tx_count & 0xff);
+	// Payload
+	memcpy_s(&frame[2], FWFRAMESIZE, buf, nbytes);
 
-		// Data
-		write(buf, tx_count);
-		nbytes -= tx_count;
-		buf += tx_count;
-	}
+	// 1 byte framing header + length + payload
+	write(frame, 1 + nbytes, MODE_CDC);
 }
 
-void writebyte(uint8_t b)
+static void writebyte(uint8_t b)
 {
 	for (;;) {
 		if (*can_tx) {
@@ -153,14 +155,39 @@ void writebyte(uint8_t b)
 	}
 }
 
-static void write(uint8_t *buf, size_t nbytes)
+static void write_with_header(const uint8_t *buf, size_t nbytes, enum mode mode)
 {
+	// Append USB Mode Protocol header:
+	//   1 byte mode
+	//   1 byte length
+
+	writebyte(mode);
+	writebyte(nbytes);
+
 	for (int i = 0; i < nbytes; i++) {
 		writebyte(buf[i]);
 	}
 }
 
-uint8_t readbyte_(void)
+// write blockingly writes nbytes bytes of data from buf to the UART,
+// framing the data in USB Mode Protocol with mode mode, either
+// MODE_CDC or MODE_HID.
+void write(const uint8_t *buf, size_t nbytes, enum mode mode)
+{
+	while (nbytes > 0) {
+		// We split the data into chunks that will fit in the
+		// USB Mode Protocol with some spare change.
+		uint8_t len =
+		    nbytes < USBMODE_PACKET_SIZE ? nbytes : USBMODE_PACKET_SIZE;
+
+		write_with_header((const uint8_t *)buf, len, mode);
+
+		buf += len;
+		nbytes -= len;
+	}
+}
+
+static uint8_t readbyte(void)
 {
 	for (;;) {
 		if (*can_rx) {
@@ -170,30 +197,48 @@ uint8_t readbyte_(void)
 	}
 }
 
-uint8_t readbyte(uint8_t *mode, uint8_t *mode_bytes_left)
+// read blockingly reads nbytes bytes of data into buffer buf, a
+// maximum bufsize bytes.
+//
+// Caller asks for the expected USB mode expect_mode: MODE_CDC or
+// MODE_HID, which represents different endpoints on the USB
+// controller.
+//
+// If data is readable but with another mode set, it is silently
+// discarded and we keep on reading until nbytes bytes have appeared.
+//
+int read(uint8_t *buf, size_t bufsize, size_t nbytes, enum mode expect_mode)
 {
-	if (*mode_bytes_left == 0) {
-		*mode = readbyte_();
-		if (*mode != MODE_CDC) {
-			htif_puts("We only support MODE_CDC\n");
-		} else {
-			*mode_bytes_left = readbyte_();
-		}
-	}
-	uint8_t b = readbyte_();
-	*mode_bytes_left -= 1;
-	return b;
-}
+	static uint8_t mode = 0;
+	static uint8_t mode_bytes_left = 0;
 
-static int read(uint8_t *buf, size_t bufsize, size_t nbytes, uint8_t *mode,
-		uint8_t *mode_bytes_left)
-{
 	if (nbytes > bufsize) {
 		return -1;
 	}
 
-	for (int n = 0; n < nbytes; n++) {
-		buf[n] = readbyte(mode, mode_bytes_left);
+	int n = 0;
+	while (n < nbytes) {
+		if (mode_bytes_left == 0) {
+			// Read USB Mode Protocol header:
+			//   1 byte mode
+			//   1 byte length
+			mode = readbyte();
+			mode_bytes_left = readbyte();
+		}
+
+		if (mode == expect_mode) {
+			// Reading payload.
+			buf[n] = readbyte();
+			n++;
+			mode_bytes_left--;
+		} else {
+			// Not the USB mode caller asked for. Eat the rest.
+			for (int i = 0; i < mode_bytes_left; i++) {
+				(void)readbyte();
+			}
+
+			mode_bytes_left = 0;
+		}
 	}
 
 	return 0;
