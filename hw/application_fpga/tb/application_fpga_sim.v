@@ -308,7 +308,7 @@ module application_fpga_sim (
       .txd(interface_rx),
 
       .ch552_cts(interface_ch552_cts),
-      .fpga_cts(interface_fpga_cts),
+      .fpga_cts (interface_fpga_cts),
 
       .cs(uart_cs),
       .we(uart_we),
