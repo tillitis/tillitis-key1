@@ -30,6 +30,16 @@ volatile uint32_t *fw_blake2s_addr  = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
 #define UDI_WORDS 2
 #define CDI_WORDS 8
 
+unsigned strlen(const char *str)
+{
+	const char *s;
+
+	for (s = str; *s; ++s)
+		;
+
+	return (s - str);
+}
+
 void *memcpy(void *dest, const void *src, size_t n)
 {
 	uint8_t *src_byte = (uint8_t *)src;
@@ -42,51 +52,66 @@ void *memcpy(void *dest, const void *src, size_t n)
 	return dest;
 }
 
-void puts(char *reason)
+void puts(char *s)
 {
-	for (char *c = reason; *c != '\0'; c++) {
-		writebyte(*c);
-	}
+	write((const uint8_t *)s, strlen(s), MODE_CDC);
 }
 
 void putsn(char *p, int n)
 {
-	for (int i = 0; i < n; i++) {
-		writebyte(p[i]);
-	}
+	write((const uint8_t *)p, n, MODE_CDC);
+}
+
+uint8_t *hex(const uint8_t c)
+{
+	static uint8_t buf[2];
+
+	unsigned int upper = (c >> 4) & 0xf;
+	unsigned int lower = c & 0xf;
+	buf[0] = upper < 10 ? '0' + upper : 'a' - 10 + upper;
+	buf[1] = lower < 10 ? '0' + lower : 'a' - 10 + lower;
+
+	return buf;
 }
 
 void puthex(uint8_t c)
 {
-	unsigned int upper = (c >> 4) & 0xf;
-	unsigned int lower = c & 0xf;
-	writebyte(upper < 10 ? '0' + upper : 'a' - 10 + upper);
-	writebyte(lower < 10 ? '0' + lower : 'a' - 10 + lower);
+	write(hex(c), 2, MODE_CDC);
 }
 
-void puthexn(uint8_t *p, int n)
-{
-	for (int i = 0; i < n; i++) {
-		puthex(p[i]);
-	}
-}
+// Size of a hex line. 16 bytes printed 3 chars + CRLF
+#define LINEBUFSIZE (16 * 3 + 2)
 
-void hexdump(void *buf, int len)
+void hexdump(const void *buf, int len)
 {
+	uint8_t rowbuf[LINEBUFSIZE] = {0};
+	uint8_t *hexbuf = {0}; // A byte represented as 2 chars and a
+			       // space, allocated by hex()
 	uint8_t *byte_buf = (uint8_t *)buf;
 
+	int rowpos = 0;
 	for (int i = 0; i < len; i++) {
-		puthex(byte_buf[i]);
-		if (i % 2 == 1) {
-			writebyte(' ');
-		}
+		hexbuf = hex(byte_buf[i]);
+		rowbuf[rowpos++] = hexbuf[0];
+		rowbuf[rowpos++] = hexbuf[1];
+		rowbuf[rowpos++] = ' ';
 
-		if (i != 1 && i % 16 == 1) {
-			puts("\r\n");
+		// A finished row is 3 chars * 16. If the row is full,
+		// print it now.
+		if (rowpos == LINEBUFSIZE - 2) {
+			rowbuf[rowpos++] = '\r';
+			rowbuf[rowpos++] = '\n';
+			write(rowbuf, rowpos, MODE_CDC);
+			rowpos = 0;
 		}
 	}
 
-	puts("\r\n");
+	// If final row wasn't full, print it now.
+	if (rowpos != 0) {
+		rowbuf[rowpos++] = '\r';
+		rowbuf[rowpos++] = '\n';
+		write(rowbuf, rowpos, MODE_CDC);
+	}
 }
 
 void reverseword(uint32_t *wordp)
@@ -135,7 +160,7 @@ int check_fwram_zero_except(unsigned int offset, uint8_t expected_val)
 		if (failed_now) {
 			failed = 1;
 			reverseword(&addr);
-			puthexn((uint8_t *)&addr, 4);
+			hexdump(&addr, 4);
 			puts("\r\n");
 		}
 	}
@@ -172,7 +197,7 @@ int main(void)
 	// clang-format on
 
 	// Wait for terminal program and a character to be typed
-	in = readbyte();
+	read(&in, 1, 1, MODE_CDC);
 
 	puts("\r\nI'm testfw on:");
 	// Output the TK1 core's NAME0 and NAME1
@@ -387,7 +412,7 @@ int main(void)
 				(1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
 			}
 			uint32_t rnd = *trng_entropy;
-			puthexn((uint8_t *)&rnd, 4);
+			hexdump(&rnd, 4);
 			puts(" ");
 		}
 		puts("\r\n");
@@ -396,7 +421,7 @@ int main(void)
 
 	puts("Now echoing what you type...\r\n");
 	for (;;) {
-		in = readbyte(); // blocks
-		writebyte(in);
+		read(&in, 1, 1, MODE_CDC);
+		write((const uint8_t *)&in, 1, MODE_CDC);
 	}
 }
