@@ -304,6 +304,8 @@ fmt: $(FPGA_VERILOG_SRCS) $(SIM_VERILOG_SRCS) $(VERILATOR_VERILOG_SRCS) $(VERILO
 # Temporary fix using grep, since the verible with --verify flag only returns
 # error if the last file is malformatted.
 checkfmt: $(FPGA_VERILOG_SRCS) $(SIM_VERILOG_SRCS) $(VERILATOR_VERILOG_SRCS) $(VERILOG_SRCS)
+	make -C fw/tk1 checkfmt
+	make -C fw/testfw checkfmt
 	$(FORMAT) $(CHECK_FORMAT_FLAGS) $^ 2>&1 | \
 		grep "Needs formatting" && exit 1 || true
 .PHONY: checkfmt
