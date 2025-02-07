@@ -10,7 +10,7 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  check-firmware:
+  check-formatting:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/tillitis/tkey-builder:5rc1
@@ -26,11 +26,26 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: check indentation in firmware C code
+      - name: check formatting on Verilog and C
         working-directory: hw/application_fpga
         run: |
-          make -C fw/tk1 checkfmt
-          make -C fw/testfw checkfmt
+          make checkfmt
+
+  check-firmware:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/tillitis/tkey-builder:5rc1
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0
+          persist-credentials: false
+
+      - name: fix
+        # https://github.com/actions/runner-images/issues/6775
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: run static analysis on firmware C code
         working-directory: hw/application_fpga
