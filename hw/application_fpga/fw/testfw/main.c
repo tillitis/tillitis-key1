@@ -3,11 +3,14 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
+#include "../tk1/assert.h"
 #include "../tk1/blake2s/blake2s.h"
 #include "../tk1/lib.h"
 #include "../tk1/proto.h"
 #include "../tk1/types.h"
 #include "../tk1_mem.h"
+
+#define USBMODE_PACKET_SIZE 64
 
 // clang-format off
 volatile uint32_t *tk1name0         = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
@@ -42,26 +45,68 @@ void *memcpy(void *dest, const void *src, size_t n)
 	return dest;
 }
 
-void puts(char *reason)
+static void write_with_header(const uint8_t *buf, size_t nbytes, enum mode mode)
 {
-	for (char *c = reason; *c != '\0'; c++) {
-		writebyte(*c);
+	// Append USB Mode Protocol header:
+	//   1 byte mode
+	//   1 byte length
+	writebyte(mode);
+	writebyte(nbytes);
+
+	for (int i = 0; i < nbytes; i++) {
+		writebyte(buf[i]);
 	}
 }
 
-void putsn(char *p, int n)
+static void write(const uint8_t *buf, size_t nbytes)
 {
-	for (int i = 0; i < n; i++) {
-		writebyte(p[i]);
+	uint8_t len;
+
+	while (nbytes > 0) {
+		// We split the data into chunks that will fit in the
+		// USB Mode Protocol with some spare change.
+		len =
+		    nbytes < USBMODE_PACKET_SIZE ? nbytes : USBMODE_PACKET_SIZE;
+
+		write_with_header((const uint8_t *)buf, len, MODE_CDC);
+
+		buf += len;
+		nbytes -= len;
 	}
+}
+
+unsigned strlen(const char *str)
+{
+	const char *s;
+
+	for (s = str; *s; ++s)
+		;
+
+	return (s - str);
+}
+
+void puts(char *buf)
+{
+	size_t nbytes = strlen(buf);
+
+	write((const uint8_t *)buf, nbytes);
+}
+
+void hex(uint8_t buf[2], const uint8_t c)
+{
+	unsigned int upper = (c >> 4) & 0xf;
+	unsigned int lower = c & 0xf;
+
+	buf[0] = upper < 10 ? '0' + upper : 'a' - 10 + upper;
+	buf[1] = lower < 10 ? '0' + lower : 'a' - 10 + lower;
 }
 
 void puthex(uint8_t c)
 {
-	unsigned int upper = (c >> 4) & 0xf;
-	unsigned int lower = c & 0xf;
-	writebyte(upper < 10 ? '0' + upper : 'a' - 10 + upper);
-	writebyte(lower < 10 ? '0' + lower : 'a' - 10 + lower);
+	uint8_t buf[2];
+
+	hex(buf, c);
+	write(buf, 2);
 }
 
 void puthexn(uint8_t *p, int n)
@@ -78,7 +123,7 @@ void hexdump(void *buf, int len)
 	for (int i = 0; i < len; i++) {
 		puthex(byte_buf[i]);
 		if (i % 2 == 1) {
-			writebyte(' ');
+			puts(" ");
 		}
 
 		if (i != 1 && i % 16 == 1) {
@@ -156,7 +201,10 @@ int main(void)
 				   unsigned long, const void *, unsigned long,
 				   blake2s_ctx *);
 
-	uint8_t in;
+	uint8_t in = 0;
+	uint8_t mode = 0;
+	uint8_t mode_bytes_left = 0;
+
 	// Hard coded test UDS in ../../data/uds.hex
 	// clang-format off
 	uint32_t uds_test[8] = {
@@ -172,18 +220,18 @@ int main(void)
 	// clang-format on
 
 	// Wait for terminal program and a character to be typed
-	in = readbyte();
+	in = readbyte(&mode, &mode_bytes_left);
 
 	puts("\r\nI'm testfw on:");
 	// Output the TK1 core's NAME0 and NAME1
 	uint32_t name;
 	wordcpy_s(&name, 1, (void *)tk1name0, 1);
 	reverseword(&name);
-	putsn((char *)&name, 4);
+	write((const uint8_t *)&name, 4);
 	puts(" ");
 	wordcpy_s(&name, 1, (void *)tk1name1, 1);
 	reverseword(&name);
-	putsn((char *)&name, 4);
+	write((const uint8_t *)&name, 4);
 	puts("\r\n");
 
 	uint32_t zeros[8];
@@ -381,6 +429,7 @@ int main(void)
 	}
 
 	puts("\r\nHere are 256 bytes from the TRNG:\r\n");
+
 	for (int j = 0; j < 8; j++) {
 		for (int i = 0; i < 8; i++) {
 			while ((*trng_status &
@@ -396,7 +445,10 @@ int main(void)
 
 	puts("Now echoing what you type...\r\n");
 	for (;;) {
-		in = readbyte(); // blocks
+		in = readbyte(&mode, &mode_bytes_left);
+
+		writebyte(MODE_CDC);
+		writebyte(1);
 		writebyte(in);
 	}
 }
