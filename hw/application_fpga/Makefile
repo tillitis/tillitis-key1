@@ -177,6 +177,7 @@ secret:
 # Included in the bitstream.
 #-------------------------------------------------------------------
 LDFLAGS = -T $(P)/fw/tk1/firmware.lds
+TESTFWLDFLAGS = -T $(P)/fw/testfw/testfw.lds
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
@@ -220,7 +221,7 @@ splint:
 		$(FIRMWARE_SOURCES)
 
 testfw.elf: $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
-	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(TESTFWLDFLAGS) -o $@
 
 # Generate a fake BRAM file that will be filled in later after place-n-route
 bram_fw.hex:
