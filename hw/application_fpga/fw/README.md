@@ -37,15 +37,38 @@ memory access control.
 
 ## Communication
 
-The firmware communicates to the host via the
-`UART_{RX,TX}_{STATUS,DATA}` registers, using the framing protocol
-described in the [Framing
-Protocol](https://dev.tillitis.se/protocol/).
+The firmware communicates with the client using the
+`UART_{RX,TX}_{STATUS,DATA}` registers. On top of that is uses three
+protocols: The USB Mode protocol, the TKey framing protocol, and the
+firmware's own protocol.
+
+To communicate between the CPU and the CH552 USB controller it uses an
+internal protocol, used only within the TKey, which we call the USB
+Mode Protocol. It is used in both directions.
+
+| *Name*   | *Size*    | *Comment*                          |
+|----------|-----------|------------------------------------|
+| Endpoint | 1B        | Origin or destination USB endpoint |
+| Length   | 1B        | Number of bytes following          |
+| Payload  | See above | Actual data from or to firmware    |
+
+The different endpoints:
+
+| *Name* | *Value* | *Comment*                                                           |
+|--------|---------|---------------------------------------------------------------------|
+| CTRL   | 0x20    | A USB HID special debug pipe. Useful for debug prints.              |
+| CDC    | 0x40    | USB CDC-ACM, a serial port on the client.                           |
+| HID    | 0x80    | A USB HID security token device, useful for FIDO-type applications. |
+
+On top of the USB Mode Protocol is [the TKey Framing
+Protocol](https://dev.tillitis.se/protocol/) which is described in the
+Developer Handbook.
 
 The firmware uses a protocol on top of this framing layer which is
-used to bootstrap the application. All commands are initiated by the
+used to bootstrap an application. All commands are initiated by the
 client. All commands receive a reply. See [Firmware
-protocol](#firmware-protocol) for specific details.
+protocol](http://dev.tillitis.se/protocol/#firmware-protocol) in the
+Dev Handbook for specific details.
 
 ## Memory constraints
 
@@ -137,12 +160,9 @@ application mode, but with no privileged access.
 Firmware loads the application at the start of RAM (`0x4000_0000`). It
 uses the special FW\_RAM for its own stack.
 
-When the firmware starts it clears all FW\_RAM, then sets up a stack
-there before jumping to `main()`.
-
 When reset is released, the CPU starts executing the firmware. It
-begins by clearing all CPU registers, and then sets up a stack for
-itself and then jumps to main().
+begins by clearing all CPU registers, clears all FW\_RAM, sets up a
+stack for itself there, and then jumps to `main()`.
 
 Beginning at `main()` it sets up the "system calls", then fills the
 entire RAM with pseudo random data and setting up the RAM address and
@@ -187,8 +207,8 @@ Typical expected use scenario:
      stack. After this it performs no more function calls and uses no
      more automatic variables.
 
-  8. Firmware starts the application by first switching to from
-     firmware mode to application mode by writing to the `SYSTEM_MODE_CTRL`
+  8. Firmware starts the application by first switching from firmware
+     mode to application mode by writing to the `SYSTEM_MODE_CTRL`
      register. In this mode the MMIO region is restricted, e.g. some
      registers are removed (`UDS`), and some are switched from
      read/write to read-only (see [the memory
