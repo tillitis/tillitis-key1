@@ -20,8 +20,8 @@ module application_fpga (
     output wire interface_rx,
     input  wire interface_tx,
 
-    input  wire interface_ch552_cts, // CH552 clear to send,  1 = OK, 0 = NOK
-    output wire interface_fpga_cts, // FPGA clear to send, 1 = OK, 0 = NOK
+    input  wire interface_ch552_cts,  // CH552 clear to send,  1 = OK, 0 = NOK
+    output wire interface_fpga_cts,   // FPGA clear to send, 1 = OK, 0 = NOK
 
     output wire spi_ss,
     output wire spi_sck,
@@ -297,7 +297,7 @@ module application_fpga (
       .txd(interface_rx),
 
       .ch552_cts(interface_ch552_cts),
-      .fpga_cts(interface_fpga_cts),
+      .fpga_cts (interface_fpga_cts),
 
       .cs(uart_cs),
       .we(uart_we),

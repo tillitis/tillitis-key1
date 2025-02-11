@@ -9,7 +9,6 @@ ENTRY(_start)
 MEMORY
 {
 	ROM (rx)    : ORIGIN = 0x00000000, LENGTH = 0x20000 /* Pretend we have 128 kiB */
-	FWRAM (rwx) : ORIGIN = 0xd0000000, LENGTH = 0x800 /* 2 KB */
 	RAM (rwx)   : ORIGIN = 0x40000000, LENGTH = 0x20000 /* 128 KB */
 }
 
@@ -51,7 +50,7 @@ SECTIONS
 		*(.sdata*)          /* .sdata* sections */
 		. = ALIGN(4);
 		_edata = .;
-	} >FWRAM
+	} >RAM
 
 	/* Uninitialized data section */
 	.bss :
@@ -66,5 +65,5 @@ SECTIONS
 
 		. = ALIGN(4);
 		_ebss = .;
-	} >FWRAM
+	} >RAM
 }

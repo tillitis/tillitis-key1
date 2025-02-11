@@ -50,7 +50,7 @@ module uart_fifo (
     output wire [7 : 0] out_data,
     input  wire         out_ack,
 
-    output wire         fpga_cts
+    output wire fpga_cts
 );
 
 

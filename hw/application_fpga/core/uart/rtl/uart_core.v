@@ -360,7 +360,7 @@ module uart_core (
           // Just a glitch.
           rxd_bitrate_ctr_rst = 1;
           erx_ctrl_new = ERX_IDLE;
-          erx_ctrl_we  = 1;
+          erx_ctrl_we = 1;
         end
 
         else begin
