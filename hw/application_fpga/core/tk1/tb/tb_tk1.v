@@ -227,7 +227,6 @@ module tb_tk1 ();
   //----------------------------------------------------------------
   task reset_dut;
     begin
-      $display("--- Toggle reset.");
       tb_reset_n = 0;
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
@@ -320,12 +319,16 @@ module tb_tk1 ();
       reg [31 : 0] read_data;
 
       tb_address = address;
-      tb_cs      = 1'h1;
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h1;
+      tb_we = 1'h0;
+      tb_cs = 1'h1;
 
       #(CLK_PERIOD);
       read_data = tb_read_data;
 
       #(CLK_PERIOD);
+      tb_cpu_valid = 1'h0;
       tb_cs = 1'h0;
     end
   endtask  // read_word
@@ -367,6 +370,92 @@ module tb_tk1 ();
     end
   endtask  // read_check_word
 
+
+  // cpu_read_word()
+  //
+  // Read a data word from the given CPU address in the DUT.
+  // the word read will be available in the global variable
+  // tb_read_data.
+  //----------------------------------------------------------------
+  task cpu_read_word(input [31 : 0] address);
+    begin : cpu_read_word
+      reg [31 : 0] read_data;
+
+      tb_cpu_addr = address;
+      tb_address = tb_cpu_addr[13:2];
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h1;
+      tb_we = 1'h0;
+      tb_cs = 1'h1;
+
+      #(CLK_PERIOD);
+      read_data = tb_read_data;
+
+      #(CLK_PERIOD);
+      tb_cpu_addr = 32'h0;
+      tb_cpu_valid = 1'h0;
+      tb_address = 12'h0;
+      tb_cs = 1'h0;
+    end
+  endtask  // read_word
+
+
+  //----------------------------------------------------------------
+  // cpu_read_check_range_should_trap()
+  //
+  // Read data in a range of CPU addresses (32-bit addresses). Fail
+  // if trap signal is not asserted.
+  // Range is inclusive.
+  //----------------------------------------------------------------
+  task cpu_read_check_range_should_trap(input [31 : 0] start_address, input [31 : 0] end_address);
+    begin : read_check_range_should_not_trap
+      reg [32 : 0] address;
+      reg error_detected;
+
+      address = start_address;
+      error_detected = 0;
+
+      while (!error_detected && (address <= end_address)) begin
+        reset_dut();
+        cpu_read_word(address);
+        if (tb_force_trap == 0) begin
+          $display("--- Error: Expected trap when reading from address 0x%08x", address);
+          error_ctr += 1;
+          error_detected = 1;
+        end
+        address += 1;
+      end
+    end
+  endtask
+
+
+  //----------------------------------------------------------------
+  // cpu_read_check_range_should_not_trap()
+  //
+  // Read data in a range of CPU addresses (32-bit addresses). Fail
+  // if trap signal is asserted.
+  // Range is inclusive.
+  //----------------------------------------------------------------
+  task cpu_read_check_range_should_not_trap(input [31 : 0] start_address, input [31 : 0] end_address);
+    begin : read_check_should_not_trap
+      reg [31 : 0] address;
+      reg error_detected;
+
+      address = start_address;
+      error_detected = 0;
+
+      while (!error_detected && (address <= end_address)) begin
+        reset_dut();
+        cpu_read_word(address);
+        if (tb_force_trap == 1) begin
+          $display("--- Error: Did not expected trap when reading from address 0x%08x", address);
+          error_ctr += 1;
+          error_detected = 1;
+        end
+        address += 1;
+      end
+    end
+  endtask
 
   //----------------------------------------------------------------
   // test1()
@@ -713,6 +802,96 @@ module tb_tk1 ();
     end
   endtask  // test10
 
+
+  //----------------------------------------------------------------
+  // test11()
+  // Test security monitor trap ranges.
+  // - Check that reading accessible areas does not trap
+  // - Check that reading the start and end of inaccessible areas
+  //   trap
+  //----------------------------------------------------------------
+  task test11;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test11: Test trap ranges.");
+
+      // ROM         trap range: 0x00004000-0x3fffffff
+      $display("--- test11: ROM");
+      cpu_read_check_range_should_not_trap(32'h0, 32'h1fff);
+      cpu_read_check_range_should_trap(32'h2000, 32'h200f);
+      cpu_read_check_range_should_trap(32'h3ffffff0, 32'h3fffffff);
+
+      // RAM         trap range: 0x40020000-0x7fffffff
+      $display("--- test11: RAM");
+      cpu_read_check_range_should_not_trap(32'h40000000, 32'h4000000f);
+      cpu_read_check_range_should_trap(32'h40020000, 32'h4002000f);
+      cpu_read_check_range_should_trap(32'h7ffffff0, 32'h7fffffff);
+
+      // Reserved    trap range: 0x80000000-0xbfffffff
+      $display("--- test11: Reserved");
+      cpu_read_check_range_should_trap(32'h80000000, 32'h8000000f);
+      cpu_read_check_range_should_trap(32'hbffffff0, 32'hbfffffff);
+
+      // TRNG        trap range: 0xc0000400-0xc0ffffff
+      $display("--- test11: TRNG");
+      cpu_read_check_range_should_not_trap(32'hc0000000, 32'hc00003ff);
+      cpu_read_check_range_should_trap(32'hc0000400, 32'hc000040f);
+      cpu_read_check_range_should_trap(32'hc0fffff0, 32'hc0ffffff);
+
+      // TIMER       trap range: 0xc1000400-0xc1ffffff
+      $display("--- test11: TIMER");
+      cpu_read_check_range_should_not_trap(32'hc1000000, 32'hc10003ff);
+      cpu_read_check_range_should_trap(32'hc1000400, 32'hc100040f);
+      cpu_read_check_range_should_trap(32'hc1fffff0, 32'hc1ffffff);
+
+      // UDS         trap range: 0xc2000020-0xc2ffffff
+      $display("--- test11: UDS");
+      cpu_read_check_range_should_not_trap(32'hc2000000, 32'hc200001f);
+      cpu_read_check_range_should_trap(32'hc2000020, 32'hc200002f);
+      cpu_read_check_range_should_trap(32'hc2fffff0, 32'hc2ffffff);
+
+      // UART        trap range: 0xc3000400-0xc3ffffff
+      $display("--- test11: UART");
+      cpu_read_check_range_should_not_trap(32'hc3000000, 32'hc30003ff);
+      cpu_read_check_range_should_trap(32'hc3000400, 32'hc300040f);
+      cpu_read_check_range_should_trap(32'hc3fffff0, 32'hc3ffffff);
+
+      // TOUCH_SENSE trap range: 0xc4000400-0xc4ffffff
+      $display("--- test11: TOUCH_SENSE");
+      cpu_read_check_range_should_not_trap(32'hc4000000, 32'hc40003ff);
+      cpu_read_check_range_should_trap(32'hc4000400, 32'hc400040f);
+      cpu_read_check_range_should_trap(32'hc4fffff0, 32'hc4ffffff);
+
+      // Unused      trap range: 0xc5000000-0xcfffffff
+      $display("--- test11: Unused");
+      cpu_read_check_range_should_trap(32'hc5000000, 32'hc500000f);
+      cpu_read_check_range_should_trap(32'hc5fffff0, 32'hc5ffffff);
+
+      // FW_RAM      trap range: 0xd0000800-0xd0ffffff
+      $display("--- test11: FW_RAM");
+      cpu_read_check_range_should_not_trap(32'hd0000000, 32'hd0000fff);
+      cpu_read_check_range_should_trap(32'hd0001000, 32'hd000100f);
+      cpu_read_check_range_should_trap(32'hd0fffff0, 32'hd0ffffff);
+
+      // Unused      trap range: 0xd1000000-0xfeffffff
+      $display("--- test11: Unused");
+      cpu_read_check_range_should_trap(32'hd1000000, 32'hd100000f);
+      cpu_read_check_range_should_trap(32'hfefffff0, 32'hfeffffff);
+
+      // TK1         trap range: 0xff000400-0xffffffff
+      $display("--- test11: TK1");
+      cpu_read_check_range_should_not_trap(32'hff000000, 32'hff0003ff);
+      cpu_read_check_range_should_trap(32'hff000400, 32'hff00040f);
+      cpu_read_check_range_should_trap(32'hfffffff0, 32'hffffffff);
+
+      $display("--- test11: completed.");
+      $display("");
+    end
+  endtask  // test11
+
+
   //----------------------------------------------------------------
   // exit_with_error_code()
   //
@@ -753,6 +932,7 @@ module tb_tk1 ();
     test9();
     test9();
     test10();
+    test11();
 
     display_test_result();
     $display("");
