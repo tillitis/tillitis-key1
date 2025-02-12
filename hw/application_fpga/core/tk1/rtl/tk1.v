@@ -456,7 +456,14 @@ module tk1 #(
         end
 
         // In unused space
-        if ((cpu_addr[29 : 24] > 6'h10) && (cpu_addr[29 : 24] < 6'h3f)) begin
+        if ((cpu_addr[29 : 24] > 6'h10) && (cpu_addr[29 : 24] < 6'h21)) begin
+          force_trap_set = 1'h1;
+        end
+
+        // Entire IRQ31 trigger area is accessible
+
+        // In unused space
+        if ((cpu_addr[29 : 24] > 6'h21) && (cpu_addr[29 : 24] < 6'h3f)) begin
           force_trap_set = 1'h1;
         end
 

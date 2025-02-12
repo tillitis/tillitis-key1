@@ -1046,6 +1046,16 @@ module tb_tk1 ();
       // Unused      trap range: 0xd1000000-0xfeffffff
       $display("--- test11: Unused");
       cpu_read_check_range_should_trap(32'hd1000000, 32'hd100000f);
+      cpu_read_check_range_should_trap(32'he0fffff0, 32'he0ffffff);
+
+      // IRQ31       No trap range. Entire 0xe1 range is accessible.
+      cpu_read_check_range_should_not_trap(32'he1000000, 32'he100000f);
+      cpu_read_check_range_should_not_trap(32'he1fffff0, 32'he1ffffff);
+
+      // Unused      trap range: 0xe2000000-0xfeffffff
+      //
+      $display("--- test11: Unused");
+      cpu_read_check_range_should_trap(32'he2000000, 32'he200000f);
       cpu_read_check_range_should_trap(32'hfefffff0, 32'hfeffffff);
 
       // TK1         trap range: 0xff000400-0xffffffff
