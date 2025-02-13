@@ -142,6 +142,10 @@ clear:
          */
         li sp, 0xd0000800 // 2 kiB (TK1_MMIO_FW_RAM_SIZE)
 
+	/* Enable syscall IRQ */
+	li t0, 0x7fffffff // IRQ31 mask
+	picorv32_maskirq_insn(zero, t0) // Enable IRQs
+        
 	call main
 
 loop:

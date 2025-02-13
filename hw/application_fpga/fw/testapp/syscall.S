@@ -4,15 +4,8 @@
 #include "../tk1/picorv32/custom_ops.S"
 
 	.section ".text"
-	.globl syscall_enable
 	.globl syscall
 
-syscall_enable:
-	// Enable IRQs
-	li t0, 0x7fffffff // IRQ31 mask
-	picorv32_maskirq_insn(zero, t0) // Enable IRQs
-
-	ret
 
 syscall:
 	// Save registers to stack

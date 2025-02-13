@@ -191,8 +191,6 @@ int main(void)
 		anyfailed = 1;
 	}
 
-	syscall_enable();
-
 	// Syscall should be able to access flash
 	puts("\r\nReading SPI flash capacity using syscall...\r\n");
 	int flash_capacity = syscall(TK1_SYSCALL_GET_FLASH_CAPACITY, 0);
