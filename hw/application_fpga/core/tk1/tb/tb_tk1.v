@@ -18,7 +18,7 @@ module tb_tk1 ();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG = 1;
+  parameter DEBUG = 0;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
@@ -62,6 +62,7 @@ module tb_tk1 ();
   localparam ADDR_SPI_XFER = 8'h81;
   localparam ADDR_SPI_DATA = 8'h82;
 
+  localparam APP_RAM_START = 32'h40000000;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -76,7 +77,7 @@ module tb_tk1 ();
   reg           tb_clk;
   reg           tb_reset_n;
   reg           tb_cpu_trap;
-  wire          tb_system_mode;
+  wire          tb_rw_locked;
 
   reg  [31 : 0] tb_cpu_addr;
   reg           tb_cpu_instr;
@@ -94,6 +95,10 @@ module tb_tk1 ();
   reg           tb_gpio2;
   wire          tb_gpio3;
   wire          tb_gpio4;
+
+  reg           tb_access_level_hi;
+
+  wire          tb_fw_ram_en;
 
   wire          tb_spi_ss;
   wire          tb_spi_sck;
@@ -122,7 +127,7 @@ module tb_tk1 ();
       .reset_n(tb_reset_n),
 
       .cpu_trap(tb_cpu_trap),
-      .system_mode(tb_system_mode),
+      .rw_locked(tb_rw_locked),
 
       .cpu_addr  (tb_cpu_addr),
       .cpu_instr (tb_cpu_instr),
@@ -140,6 +145,10 @@ module tb_tk1 ();
       .gpio2(tb_gpio2),
       .gpio3(tb_gpio3),
       .gpio4(tb_gpio4),
+
+      .access_level_hi(tb_access_level_hi),
+
+      .fw_ram_en(tb_fw_ram_en),
 
       .spi_ss  (tb_spi_ss),
       .spi_sck (tb_spi_sck),
@@ -192,7 +201,7 @@ module tb_tk1 ();
       $display("------------");
       if (tb_main_monitor) begin
         $display("Inputs and outputs:");
-        $display("tb_cpu_trap: 0x%1x, system_mode: 0x%1x", tb_cpu_trap, tb_system_mode);
+        $display("tb_cpu_trap: 0x%1x, system_mode: 0x%1x", tb_cpu_trap, dut.system_mode);
         $display("cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x, force_tap: 0x%1x",
                  tb_cpu_addr, tb_cpu_instr, tb_cpu_valid, tb_force_trap);
         $display("ram_addr_rand: 0x%08x, ram_data_rand: 0x%08x", tb_ram_addr_rand,
@@ -227,7 +236,6 @@ module tb_tk1 ();
   //----------------------------------------------------------------
   task reset_dut;
     begin
-      $display("--- Toggle reset.");
       tb_reset_n = 0;
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
@@ -277,12 +285,33 @@ module tb_tk1 ();
       tb_gpio1        = 1'h0;
       tb_gpio2        = 1'h0;
 
+      tb_access_level_hi = 1'h0;
+
       tb_cs           = 1'h0;
       tb_we           = 1'h0;
       tb_address      = 8'h0;
       tb_write_data   = 32'h0;
     end
   endtask  // init_sim
+
+
+  //----------------------------------------------------------------
+  // restore_mem_bus()
+  //
+  // Restore memory bus to its initial state
+  //----------------------------------------------------------------
+  task restore_mem_bus();
+    begin : restore_mem_bus
+      tb_cpu_addr  = 32'h0;
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+
+      tb_cs           = 1'h0;
+      tb_we           = 1'h0;
+      tb_address      = 8'h0;
+      tb_write_data   = 32'h0;
+    end
+  endtask
 
 
   //----------------------------------------------------------------
@@ -301,7 +330,7 @@ module tb_tk1 ();
       tb_write_data = word;
       tb_cs = 1;
       tb_we = 1;
-      #(2 * CLK_PERIOD);
+      #(CLK_PERIOD);
       tb_cs = 0;
       tb_we = 0;
     end
@@ -320,12 +349,16 @@ module tb_tk1 ();
       reg [31 : 0] read_data;
 
       tb_address = address;
-      tb_cs      = 1'h1;
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h1;
+      tb_we = 1'h0;
+      tb_cs = 1'h1;
 
       #(CLK_PERIOD);
       read_data = tb_read_data;
 
       #(CLK_PERIOD);
+      tb_cpu_valid = 1'h0;
       tb_cs = 1'h0;
     end
   endtask  // read_word
@@ -354,20 +387,137 @@ module tb_tk1 ();
       #(CLK_PERIOD);
       tb_cs = 1'h0;
 
-      if (DEBUG) begin
-        if (read_data == expected) begin
+      if (read_data == expected) begin
+        if (DEBUG) begin
           $display("--- Reading 0x%08x from 0x%02x.", read_data, address);
         end
-        else begin
-          $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x", read_data,
-                   address, expected);
-          error_ctr = error_ctr + 1;
-        end
-        $display("");
+      end
+      else begin
+        $display("--- Error: Got 0x%08x when reading from 0x%02x, expected 0x%08x", read_data,
+                 address, expected);
+        error_ctr = error_ctr + 1;
       end
     end
   endtask  // read_check_word
 
+
+  //----------------------------------------------------------------
+  // check_equal()
+  //
+  // Check that two values are equal
+  //----------------------------------------------------------------
+  task check_equal(input [31 : 0] value, input [31 : 0] expected);
+    begin : check_equal
+      if (value != expected) begin
+        $display("--- Error: Got 0x%08x, expected 0x%08x", value, expected);
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask  // check_equal
+
+
+  //----------------------------------------------------------------
+  // fetch_instruction()
+  //
+  // Simulate fetch of an instruction at specified address.
+  //----------------------------------------------------------------
+  task fetch_instruction(input [31 : 0] address);
+    begin : fetch_instruction
+      tb_cpu_addr  = address;
+      tb_cpu_instr = 1'h1;
+      tb_cpu_valid = 1'h1;
+      #(CLK_PERIOD);
+      tb_cpu_addr  = 32'h0;
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h0;
+    end
+  endtask  // fetch_instruction
+
+  // cpu_read_word()
+  //
+  // Read a data word from the given CPU address in the DUT.
+  // the word read will be available in the global variable
+  // tb_read_data.
+  //----------------------------------------------------------------
+  task cpu_read_word(input [31 : 0] address);
+    begin : cpu_read_word
+      reg [31 : 0] read_data;
+
+      tb_cpu_addr = address;
+      tb_address = tb_cpu_addr[13:2];
+      tb_cpu_instr = 1'h0;
+      tb_cpu_valid = 1'h1;
+      tb_we = 1'h0;
+      tb_cs = 1'h1;
+
+      #(CLK_PERIOD);
+      read_data = tb_read_data;
+
+      #(CLK_PERIOD);
+      tb_cpu_addr = 32'h0;
+      tb_cpu_valid = 1'h0;
+      tb_address = 12'h0;
+      tb_cs = 1'h0;
+    end
+  endtask  // read_word
+
+
+  //----------------------------------------------------------------
+  // cpu_read_check_range_should_trap()
+  //
+  // Read data in a range of CPU addresses (32-bit addresses). Fail
+  // if trap signal is not asserted.
+  // Range is inclusive.
+  //----------------------------------------------------------------
+  task cpu_read_check_range_should_trap(input [31 : 0] start_address, input [31 : 0] end_address);
+    begin : read_check_range_should_not_trap
+      reg [32 : 0] address;
+      reg error_detected;
+
+      address = start_address;
+      error_detected = 0;
+
+      while (!error_detected && (address <= end_address)) begin
+        reset_dut();
+        cpu_read_word(address);
+        if (tb_force_trap == 0) begin
+          $display("--- Error: Expected trap when reading from address 0x%08x", address);
+          error_ctr += 1;
+          error_detected = 1;
+        end
+        address += 1;
+      end
+    end
+  endtask
+
+
+  //----------------------------------------------------------------
+  // cpu_read_check_range_should_not_trap()
+  //
+  // Read data in a range of CPU addresses (32-bit addresses). Fail
+  // if trap signal is asserted.
+  // Range is inclusive.
+  //----------------------------------------------------------------
+  task cpu_read_check_range_should_not_trap(input [31 : 0] start_address, input [31 : 0] end_address);
+    begin : read_check_should_not_trap
+      reg [31 : 0] address;
+      reg error_detected;
+
+      address = start_address;
+      error_detected = 0;
+
+      while (!error_detected && (address <= end_address)) begin
+        reset_dut();
+        cpu_read_word(address);
+        if (tb_force_trap == 1) begin
+          $display("--- Error: Did not expected trap when reading from address 0x%08x", address);
+          error_ctr += 1;
+          error_detected = 1;
+        end
+        address += 1;
+      end
+    end
+  endtask
 
   //----------------------------------------------------------------
   // test1()
@@ -400,9 +550,26 @@ module tb_tk1 ();
 
       $display("");
       $display("--- test2: Read out UDI started.");
+      tb_access_level_hi = 0;
+      reset_dut();
 
       read_check_word(ADDR_UDI_FIRST, 32'h00010203);
       read_check_word(ADDR_UDI_LAST, 32'h04050607);
+
+      $display("--- test2: Switch to app mode.");
+      fetch_instruction(APP_RAM_START);
+
+      read_check_word(ADDR_UDI_FIRST, 32'h0);
+      read_check_word(ADDR_UDI_LAST, 32'h0);
+
+      $display("--- test2: Enter syscall.");
+      tb_access_level_hi = 1;
+
+      read_check_word(ADDR_UDI_FIRST, 32'h0);
+      read_check_word(ADDR_UDI_LAST, 32'h0);
+
+      $display("--- test2: Leave syscall.");
+      tb_access_level_hi = 0;
 
       $display("--- test2: completed.");
       $display("");
@@ -417,6 +584,10 @@ module tb_tk1 ();
   task test3;
     begin
       tc_ctr = tc_ctr + 1;
+
+      $display("--- test5: Reset DUT to switch to fw mode.");
+      tb_access_level_hi = 0;
+      reset_dut();
 
       $display("");
       $display("--- test3: Write and read CDI started.");
@@ -441,9 +612,9 @@ module tb_tk1 ();
       read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
 
       $display("--- test3: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hdeadbeef);
+      fetch_instruction(APP_RAM_START);
 
-      $display("--- test3: Try to write CDI again.");
+      $display("--- test3: Try to write CDI from app mode.");
       write_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
       write_word(ADDR_CDI_FIRST + 1, 32'hefeeedec);
       write_word(ADDR_CDI_FIRST + 2, 32'hdfdedddc);
@@ -453,7 +624,7 @@ module tb_tk1 ();
       write_word(ADDR_CDI_FIRST + 6, 32'h8f8e8d8c);
       write_word(ADDR_CDI_FIRST + 7, 32'h7f7e7d7c);
 
-      $display("--- test3: Read CDI again.");
+      $display("--- test3: Read CDI from app mode.");
       read_check_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
       read_check_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
       read_check_word(ADDR_CDI_FIRST + 2, 32'hd0d1d2d3);
@@ -463,44 +634,36 @@ module tb_tk1 ();
       read_check_word(ADDR_CDI_FIRST + 6, 32'h80818283);
       read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
 
+      $display("--- test3: Enter syscall.");
+      tb_access_level_hi = 1;
+
+      $display("--- test3: Try to write CDI from syscall.");
+      write_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
+      write_word(ADDR_CDI_FIRST + 1, 32'hefeeedec);
+      write_word(ADDR_CDI_FIRST + 2, 32'hdfdedddc);
+      write_word(ADDR_CDI_FIRST + 3, 32'hcfcecdcc);
+      write_word(ADDR_CDI_FIRST + 4, 32'hafaeadac);
+      write_word(ADDR_CDI_FIRST + 5, 32'h9f9e9d9c);
+      write_word(ADDR_CDI_FIRST + 6, 32'h8f8e8d8c);
+      write_word(ADDR_CDI_FIRST + 7, 32'h7f7e7d7c);
+
+      $display("--- test3: Read CDI from syscall.");
+      read_check_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
+      read_check_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
+      read_check_word(ADDR_CDI_FIRST + 2, 32'hd0d1d2d3);
+      read_check_word(ADDR_CDI_FIRST + 3, 32'hc0c1c2c3);
+      read_check_word(ADDR_CDI_FIRST + 4, 32'ha0a1a2a3);
+      read_check_word(ADDR_CDI_FIRST + 5, 32'h90919293);
+      read_check_word(ADDR_CDI_FIRST + 6, 32'h80818283);
+      read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
+
+      $display("--- test3: Leave syscall.");
+      tb_access_level_hi = 0;
+
       $display("--- test3: completed.");
       $display("");
     end
   endtask  // test3
-
-
-  //----------------------------------------------------------------
-  // test4()
-  // Write and read blake2s entry point.
-  //----------------------------------------------------------------
-  task test4;
-    begin
-      tc_ctr = tc_ctr + 1;
-
-      $display("");
-      $display("--- test4: Write and read blake2s entry point in fw mode started.");
-      $display("--- test4: Reset DUT to switch to fw mode.");
-      reset_dut();
-
-      $display("--- test4: Write Blake2s entry point.");
-      write_word(ADDR_BLAKE2S, 32'hcafebabe);
-
-      $display("--- test4: Read Blake2s entry point.");
-      read_check_word(ADDR_BLAKE2S, 32'hcafebabe);
-
-      $display("--- test4: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hf00ff00f);
-
-      $display("--- test4: Write Blake2s entry point again.");
-      write_word(ADDR_BLAKE2S, 32'hdeadbeef);
-
-      $display("--- test4: Read Blake2s entry point again");
-      read_check_word(ADDR_BLAKE2S, 32'hcafebabe);
-
-      $display("--- test4: completed.");
-      $display("");
-    end
-  endtask  // test4
 
 
   //----------------------------------------------------------------
@@ -525,7 +688,7 @@ module tb_tk1 ();
       read_check_word(ADDR_APP_SIZE, 32'h47114711);
 
       $display("--- test5: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hf000000);
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test5: Write app start address and size again.");
       write_word(ADDR_APP_START, 32'hdeadbeef);
@@ -543,7 +706,7 @@ module tb_tk1 ();
 
   //----------------------------------------------------------------
   // test6()
-  // Write RAM address and data randomizatio in fw mode.
+  // Write and read RAM-address and data randomization.
   //----------------------------------------------------------------
   task test6;
     begin
@@ -552,6 +715,7 @@ module tb_tk1 ();
       $display("");
       $display("--- test6: Write RAM addr and data randomization in fw mode.");
       $display("--- test6: Reset DUT to switch to fw mode.");
+      tb_access_level_hi = 0;
       reset_dut();
 
       $display("--- test6: Write to ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND .");
@@ -562,9 +726,14 @@ module tb_tk1 ();
           "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
       $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
                dut.ram_addr_rand, dut.ram_data_rand);
+      check_equal(dut.ram_addr_rand, 15'h1337);
+      check_equal(dut.ram_data_rand, 32'h47114711);
+      read_check_word(ADDR_RAM_ADDR_RAND, 32'h0);
+      read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
+
 
       $display("--- test6: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hf000000);
+      fetch_instruction(APP_RAM_START);
 
       $display("--- test6: Write to ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND again.");
       write_word(ADDR_RAM_ADDR_RAND, 32'hdeadbeef);
@@ -574,6 +743,30 @@ module tb_tk1 ();
           "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
       $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
                dut.ram_addr_rand, dut.ram_data_rand);
+      check_equal(dut.ram_addr_rand, 15'h1337);
+      check_equal(dut.ram_data_rand, 32'h47114711);
+      read_check_word(ADDR_RAM_ADDR_RAND, 32'h0);
+      read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
+
+
+      $display("--- test6: Enter syscall.");
+      tb_access_level_hi = 1;
+
+      $display("--- test6: Write to ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND again.");
+      write_word(ADDR_RAM_ADDR_RAND, 32'hdeadbeef);
+      write_word(ADDR_RAM_DATA_RAND, 32'hf00ff00f);
+
+      $display(
+          "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
+      $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
+               dut.ram_addr_rand, dut.ram_data_rand);
+      check_equal(dut.ram_addr_rand, 15'h1337);
+      check_equal(dut.ram_data_rand, 32'h47114711);
+      read_check_word(ADDR_RAM_ADDR_RAND, 32'h0);
+      read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
+
+      $display("--- test6: Leave syscall.");
+      tb_access_level_hi = 0;
 
       $display("--- test6: completed.");
       $display("");
@@ -655,22 +848,85 @@ module tb_tk1 ();
       write_word(ADDR_CPU_MON_LAST, 32'hdeadcafe);
       $display("--- test9: cpu_mon_first_reg: 0x%08x, cpu_mon_last_reg: 0x%08x",
                dut.cpu_mon_first_reg, dut.cpu_mon_last_reg);
+      check_equal(dut.cpu_mon_first_reg, 32'h10000000);
+      check_equal(dut.cpu_mon_last_reg, 32'h20000000);
 
       $display("--- test9: force_trap before illegal access: 0x%1x", tb_force_trap);
       $display("--- test9: Creating an illegal access.");
 
-      tb_cpu_addr  = 32'h13371337;
-      tb_cpu_instr = 1'h1;
-      tb_cpu_valid = 1'h1;
-      #(2 * CLK_PERIOD);
+      fetch_instruction(32'h13371337);
       $display("--- test9: cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x", tb_cpu_addr,
                tb_cpu_instr, tb_cpu_valid);
+      check_equal(dut.cpu_mon_first_reg, 32'h10000000);
+      check_equal(dut.cpu_mon_last_reg, 32'h20000000);
+
       $display("--- test9: force_trap: 0x%1x", tb_force_trap);
+      check_equal(tb_force_trap, 1);
 
       $display("--- test9: completed.");
       $display("");
     end
   endtask  // test9
+
+
+  //----------------------------------------------------------------
+  // check_inverting_spi_loopback_transfer_succeeds()
+  // Do an SPI tranfer. Check that the received value is the inverse
+  // of the value sent.
+  //----------------------------------------------------------------
+  task check_inverting_spi_loopback_transfer_succeeds(input [32 : 0] data);
+    begin : check_inverting_spi_loopback_transfer
+      $display("--- test10: Sending a byte.");
+      write_word(ADDR_SPI_EN, 32'h1);
+      write_word(ADDR_SPI_DATA, data);
+      write_word(ADDR_SPI_XFER, 32'h1);
+
+      // Ready ready flag in SPI until it is set.
+      read_word(ADDR_SPI_XFER);
+      while (!tb_read_data) begin
+        read_word(ADDR_SPI_XFER);
+      end
+      $display("--- test10: Byte should have been sent.");
+
+      #(2 * CLK_PERIOD);
+      read_check_word(ADDR_SPI_DATA, ~data[7 : 0] & 8'hff);
+      write_word(ADDR_SPI_EN, 32'h0);
+    end
+  endtask
+
+
+  //----------------------------------------------------------------
+  // check_spi_does_not_transfer()
+  // Do an SPI transfer. Check that the SS, SCK and MISO signal are
+  // not active.
+  //----------------------------------------------------------------
+  task check_spi_does_not_transfer;
+    begin : check_spi_does_not_transfer
+      reg [31 : 0] wait_ctr;
+      reg error;
+      localparam CLK_PER_SPI_BIT = 3;
+      localparam WAIT_MARGIN = 10;
+
+      error = 0;
+      wait_ctr = CLK_PER_SPI_BIT * 8 * WAIT_MARGIN;
+
+      $display("--- test10: Sending a byte.");
+      write_word(ADDR_SPI_EN, 32'h1);
+      write_word(ADDR_SPI_DATA, 32'haa);
+      write_word(ADDR_SPI_XFER, 32'h1);
+
+      $display("--- test10: Waiting to see if SPI signals change state.");
+      while (!error && (wait_ctr != 0)) begin
+        if (~tb_spi_ss || tb_spi_sck || tb_spi_mosi) begin
+          $display("--- Error: SPI signals changed state");
+          error_ctr = error_ctr + 1;
+          error = 1;
+        end
+        #(CLK_PERIOD);
+        wait_ctr = wait_ctr - 1;
+      end
+    end
+  endtask
 
 
   //----------------------------------------------------------------
@@ -683,28 +939,28 @@ module tb_tk1 ();
       tb_monitor     = 0;
       tb_spi_monitor = 0;
 
+      restore_mem_bus();
+      reset_dut();
+
       $display("");
       $display("--- test10: Loopback in SPI Master started.");
 
       #(CLK_PERIOD);
 
-      // Sending 0xa7 trough the inverting loopback.
-      $display("--- test10: Sending a byte.");
-      write_word(ADDR_SPI_EN, 32'h1);
-      write_word(ADDR_SPI_DATA, 32'ha7);
-      write_word(ADDR_SPI_XFER, 32'h1);
+      check_inverting_spi_loopback_transfer_succeeds(32'ha7);
 
-      // Ready ready flag in SPI until it is set.
-      read_word(ADDR_SPI_XFER);
-      while (!tb_read_data) begin
-        read_word(ADDR_SPI_XFER);
-      end
-      $display("--- test10: Byte should have been sent.");
+      $display("--- test10: Switch to app mode.");
+      fetch_instruction(APP_RAM_START);
 
-      // 0x58 is the inverse of 0xa7.
-      #(2 * CLK_PERIOD);
-      read_check_word(ADDR_SPI_DATA, 32'h58);
-      write_word(ADDR_SPI_EN, 32'h0);
+      check_spi_does_not_transfer();
+
+      $display("--- test10: Enter syscall.");
+      tb_access_level_hi = 1;
+
+      check_inverting_spi_loopback_transfer_succeeds(32'hc8);
+
+      $display("--- test10: Leave syscall.");
+      tb_access_level_hi = 0;
 
       tb_monitor     = 0;
       tb_spi_monitor = 0;
@@ -713,6 +969,106 @@ module tb_tk1 ();
       $display("");
     end
   endtask  // test10
+
+
+  //----------------------------------------------------------------
+  // test11()
+  // Test security monitor trap ranges.
+  // - Check that reading accessible areas does not trap
+  // - Check that reading the start and end of inaccessible areas
+  //   trap
+  //----------------------------------------------------------------
+  task test11;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test11: Test trap ranges.");
+
+      // ROM         trap range: 0x00004000-0x3fffffff
+      $display("--- test11: ROM");
+      cpu_read_check_range_should_not_trap(32'h0, 32'h3fff);
+      cpu_read_check_range_should_trap(32'h4000, 32'h400f);
+      cpu_read_check_range_should_trap(32'h3ffffff0, 32'h3fffffff);
+
+      // RAM         trap range: 0x40020000-0x7fffffff
+      $display("--- test11: RAM");
+      cpu_read_check_range_should_not_trap(32'h40000000, 32'h4000000f);
+      cpu_read_check_range_should_trap(32'h40020000, 32'h4002000f);
+      cpu_read_check_range_should_trap(32'h7ffffff0, 32'h7fffffff);
+
+      // Reserved    trap range: 0x80000000-0xbfffffff
+      $display("--- test11: Reserved");
+      cpu_read_check_range_should_trap(32'h80000000, 32'h8000000f);
+      cpu_read_check_range_should_trap(32'hbffffff0, 32'hbfffffff);
+
+      // TRNG        trap range: 0xc0000400-0xc0ffffff
+      $display("--- test11: TRNG");
+      cpu_read_check_range_should_not_trap(32'hc0000000, 32'hc00003ff);
+      cpu_read_check_range_should_trap(32'hc0000400, 32'hc000040f);
+      cpu_read_check_range_should_trap(32'hc0fffff0, 32'hc0ffffff);
+
+      // TIMER       trap range: 0xc1000400-0xc1ffffff
+      $display("--- test11: TIMER");
+      cpu_read_check_range_should_not_trap(32'hc1000000, 32'hc10003ff);
+      cpu_read_check_range_should_trap(32'hc1000400, 32'hc100040f);
+      cpu_read_check_range_should_trap(32'hc1fffff0, 32'hc1ffffff);
+
+      // UDS         trap range: 0xc2000020-0xc2ffffff
+      $display("--- test11: UDS");
+      cpu_read_check_range_should_not_trap(32'hc2000000, 32'hc200001f);
+      cpu_read_check_range_should_trap(32'hc2000020, 32'hc200002f);
+      cpu_read_check_range_should_trap(32'hc2fffff0, 32'hc2ffffff);
+
+      // UART        trap range: 0xc3000400-0xc3ffffff
+      $display("--- test11: UART");
+      cpu_read_check_range_should_not_trap(32'hc3000000, 32'hc30003ff);
+      cpu_read_check_range_should_trap(32'hc3000400, 32'hc300040f);
+      cpu_read_check_range_should_trap(32'hc3fffff0, 32'hc3ffffff);
+
+      // TOUCH_SENSE trap range: 0xc4000400-0xc4ffffff
+      $display("--- test11: TOUCH_SENSE");
+      cpu_read_check_range_should_not_trap(32'hc4000000, 32'hc40003ff);
+      cpu_read_check_range_should_trap(32'hc4000400, 32'hc400040f);
+      cpu_read_check_range_should_trap(32'hc4fffff0, 32'hc4ffffff);
+
+      // Unused      trap range: 0xc5000000-0xcfffffff
+      $display("--- test11: Unused");
+      cpu_read_check_range_should_trap(32'hc5000000, 32'hc500000f);
+      cpu_read_check_range_should_trap(32'hc5fffff0, 32'hc5ffffff);
+
+      // FW_RAM      trap range: 0xd0000800-0xd0ffffff
+      $display("--- test11: FW_RAM");
+      cpu_read_check_range_should_not_trap(32'hd0000000, 32'hd00007ff);
+      cpu_read_check_range_should_trap(32'hd0000800, 32'hd000080f);
+      cpu_read_check_range_should_trap(32'hd0fffff0, 32'hd0ffffff);
+
+      // Unused      trap range: 0xd1000000-0xfeffffff
+      $display("--- test11: Unused");
+      cpu_read_check_range_should_trap(32'hd1000000, 32'hd100000f);
+      cpu_read_check_range_should_trap(32'he0fffff0, 32'he0ffffff);
+
+      // IRQ31       No trap range. Entire 0xe1 range is accessible.
+      cpu_read_check_range_should_not_trap(32'he1000000, 32'he100000f);
+      cpu_read_check_range_should_not_trap(32'he1fffff0, 32'he1ffffff);
+
+      // Unused      trap range: 0xe2000000-0xfeffffff
+      //
+      $display("--- test11: Unused");
+      cpu_read_check_range_should_trap(32'he2000000, 32'he200000f);
+      cpu_read_check_range_should_trap(32'hfefffff0, 32'hfeffffff);
+
+      // TK1         trap range: 0xff000400-0xffffffff
+      $display("--- test11: TK1");
+      cpu_read_check_range_should_not_trap(32'hff000000, 32'hff0003ff);
+      cpu_read_check_range_should_trap(32'hff000400, 32'hff00040f);
+      cpu_read_check_range_should_trap(32'hfffffff0, 32'hffffffff);
+
+      $display("--- test11: completed.");
+      $display("");
+    end
+  endtask  // test11
+
 
   //----------------------------------------------------------------
   // exit_with_error_code()
@@ -746,7 +1102,6 @@ module tb_tk1 ();
     test1();
     test2();
     test3();
-    test4();
     test5();
     test6();
     test7();
@@ -754,6 +1109,7 @@ module tb_tk1 ();
     test9();
     test9();
     test10();
+    test11();
 
     display_test_result();
     $display("");

@@ -1,11 +1,102 @@
 /*
- * Copyright (C) 2022, 2023 - Tillitis AB
+ * Copyright (C) 2022, 2023, 2024, 2025 - Tillitis AB
  * SPDX-License-Identifier: GPL-2.0-only
 */
+
+#include "../tk1_mem.h"
+#include "picorv32/custom_ops.S"  // PicoRV32 custom instructions
+
+#define illegal_insn() .word 0
+
+#define FW_SP_STORAGE (TK1_MMIO_FW_RAM_BASE + TK1_MMIO_FW_RAM_SIZE - 4)
+#define FW_STACK_TOP (TK1_MMIO_FW_RAM_BASE + TK1_MMIO_FW_RAM_SIZE - 2*4)
 
 	.section ".text.init"
 	.globl _start
 _start:
+	j init
+
+/*
+ * IRQ handler
+*/
+	.=0x10
+irq_handler:
+	// PicoRV32 stores the IRQ bitmask in x4.
+	// If bit 31 is 1: IRQ31 was triggered.
+	li t4, (1 << 31)
+	beq x4, t4, irq_source_ok
+unexpected_irq_source:
+	illegal_insn()
+	j unexpected_irq_source
+irq_source_ok:
+
+	// Save app stack pointer. App is responsible for saving the rest of
+	// the registers.
+	li t0, FW_SP_STORAGE
+	sw sp, 0(t0)
+
+	// Setup firmware stack pointer
+	li sp, FW_STACK_TOP
+
+	// Run syscall handler
+	call syscall_handler
+
+	// Restore app stack pointer
+	li t0, FW_SP_STORAGE
+	lw sp, 0(t0)
+
+	// Verify that interrupt return address (x3) is in app RAM
+	li t0, TK1_RAM_BASE // 0x40000000
+	blt x3, t0, x3_invalid
+	li t0, TK1_RAM_BASE + TK1_RAM_SIZE // 0x40020000
+	bge x3, t0, x3_invalid
+	j x3_valid
+x3_invalid:
+	illegal_insn()
+	j x3_invalid
+x3_valid:
+
+	// Remove data left over from the syscall handling
+	mv x0, zero
+	mv x1, zero
+	// x2 (sp) is assumed to be preserved by the interrupt handler
+	// x3 (interrupt return address) assumed preserved
+	mv x4, zero
+	mv x5, zero
+	mv x6, zero
+	mv x7, zero
+	mv x8, zero
+	mv x9, zero
+	// x10 (a0) contains syscall return value. And should not be destroyed.
+	mv x11, zero
+	mv x12, zero
+	mv x13, zero
+	mv x14, zero
+	mv x15, zero
+	mv x16, zero
+	mv x17, zero
+	mv x18, zero
+	mv x19, zero
+	mv x20, zero
+	mv x21, zero
+	mv x22, zero
+	mv x23, zero
+	mv x24, zero
+	mv x25, zero
+	mv x26, zero
+	mv x27, zero
+	mv x28, zero
+	mv x29, zero
+	mv x30, zero
+	mv x31, zero
+
+	picorv32_retirq_insn() // Return from interrupt
+
+/*
+ * Init
+*/
+	.=0x100
+init:
 	li x1, 0
 	li x2, 0
 	li x3, 0
@@ -51,6 +142,10 @@ clear:
          */
         li sp, 0xd0000800 // 2 kiB (TK1_MMIO_FW_RAM_SIZE)
 
+	/* Enable syscall IRQ */
+	li t0, 0x7fffffff // IRQ31 mask
+	picorv32_maskirq_insn(zero, t0) // Enable IRQs
+        
 	call main
 
 loop:
