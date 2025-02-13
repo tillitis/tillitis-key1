@@ -182,7 +182,7 @@ module tk1 #(
   wire          spi_ready;
   wire [ 7 : 0] spi_rx_data;
   wire          spi_access_en;
-
+  wire          udi_access_en;
   wire          rom_exec_en;
 
   wire          system_mode;
@@ -208,6 +208,7 @@ module tk1 #(
   assign rom_exec_en   = !system_mode | access_level_hi;
   assign fw_ram_en     = !system_mode | access_level_hi;
   assign spi_access_en = !system_mode | access_level_hi;
+  assign udi_access_en = !system_mode | access_level_hi;
   assign rw_locked     = system_mode;
 
   //----------------------------------------------------------------
@@ -655,7 +656,7 @@ module tk1 #(
         end
 
         if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
-          if (!rw_locked) begin
+          if (udi_access_en) begin
             tmp_read_data = udi_rdata;
           end
         end

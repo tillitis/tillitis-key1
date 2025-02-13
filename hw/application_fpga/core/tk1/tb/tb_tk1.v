@@ -565,8 +565,8 @@ module tb_tk1 ();
       $display("--- test2: Enter syscall.");
       tb_access_level_hi = 1;
 
-      read_check_word(ADDR_UDI_FIRST, 32'h0);
-      read_check_word(ADDR_UDI_LAST, 32'h0);
+      read_check_word(ADDR_UDI_FIRST, 32'h00010203);
+      read_check_word(ADDR_UDI_LAST, 32'h04050607);
 
       $display("--- test2: Leave syscall.");
       tb_access_level_hi = 0;
