@@ -7,10 +7,12 @@ Descriptions of the tagged TKey releases.
 Overview of changes since TK TK1-24.03 for the Castor milestone so
 far.
 
-**Note well**: BREAKING CHANGE! The introduction of the USB Controller
-Protocol betwen the programs running on the PicoRV32 CPU and the CH552
-means that device apps that have not been changed to use the protocol
-will not have any way to communicate with the outside world.
+**Note well**: BREAKING CHANGE! Older device apps WILL NOT WORK.
+
+The introduction of the USB Mode Protocol between the programs running
+on the PicoRV32 CPU and the CH552 means that device apps that have not
+been changed to use the protocol will not have any way to communicate
+with the outside world.
 
 ### General
 
@@ -53,7 +55,7 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
 - At startup, fill RAM with random data using the xorwow PRNG, seeded
   by TRNG.
 
-- Add support for the new USB Controller Protocol to communicate with
+- Add support for the new USB Mode Protocol to communicate with
   different endpoints.
 
 ### CH552
@@ -67,6 +69,13 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
 
 - Change USB frame sending from a software timer to instead be
   controlled by the USB Controller Protocol.
+
+Note that to update the CH552 firmware you will need something like
+the Blinkinlabs CH55x Reset Controller:
+
+https://shop-nl.blinkinlabs.com/products/ch55x-reset-controller
+
+https://github.com/Blinkinlabs/ch55x_programmer
 
 ### tkey-builder
 
