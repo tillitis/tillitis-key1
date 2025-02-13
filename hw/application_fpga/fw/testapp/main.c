@@ -172,6 +172,14 @@ int main(void)
 		anyfailed = 1;
 	}
 
+	// But a syscall to get parts of UDI should be able to run
+	int vidpid = syscall(TK1_SYSCALL_GET_VIDPID, 0);
+
+	if (vidpid != 0x00010203) {
+		failmsg("Expected VID/PID to be 0x00010203");
+		anyfailed = 1;
+	}
+
 	uint32_t cdi_local[CDI_WORDS];
 	uint32_t cdi_local2[CDI_WORDS];
 	wordcpy_s(cdi_local, CDI_WORDS, (void *)cdi, CDI_WORDS);

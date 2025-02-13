@@ -7,6 +7,7 @@
 enum syscall_num {
 	TK1_SYSCALL_RESET = 1,
 	TK1_SYSCALL_SET_LED = 10,
+	TK1_SYSCALL_GET_VIDPID = 12,
 };
 
 #endif
