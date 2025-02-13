@@ -89,6 +89,25 @@ void hex(uint8_t buf[2], const uint8_t c)
 	buf[1] = lower < 10 ? '0' + lower : 'a' - 10 + lower;
 }
 
+void putinthex(const uint32_t n)
+{
+	uint8_t buf[10];
+	uint8_t hexbuf[2];
+	uint8_t *intbuf = (uint8_t *)&n;
+
+	buf[0] = '0';
+	buf[1] = 'x';
+
+	int j = 2;
+	for (int i = 3; i > -1; i--) {
+		hex(hexbuf , intbuf[i]);
+		memcpy_s(&buf[j], 10-j, hexbuf, 2);
+		j += 2;
+	}
+
+	write(buf, 10);
+}
+
 void puthex(uint8_t c)
 {
 	uint8_t buf[2];
@@ -179,6 +198,15 @@ int main(void)
 		anyfailed = 1;
 	}
 
+	// But a syscall to get parts of UDI should be able to run
+	int vidpid = syscall(TK1_SYSCALL_GET_VIDPID, 0);
+	putinthex(vidpid);
+
+	if (vidpid != 0x00010203) {
+		failmsg("Expected VID/PID to be 0x00010203");
+		anyfailed = 1;
+	}
+
 	uint32_t cdi_local[CDI_WORDS];
 	uint32_t cdi_local2[CDI_WORDS];
 	wordcpy_s(cdi_local, CDI_WORDS, (void *)cdi, CDI_WORDS);
@@ -188,14 +216,6 @@ int main(void)
 	wordcpy_s(cdi_local2, CDI_WORDS, (void *)cdi, CDI_WORDS);
 	if (!memeq(cdi_local, cdi_local2, CDI_WORDS * 4)) {
 		failmsg("Write to CDI in app-mode");
-		anyfailed = 1;
-	}
-
-	// Syscall should be able to access flash
-	puts("\r\nReading SPI flash capacity using syscall...\r\n");
-	int flash_capacity = syscall(TK1_SYSCALL_GET_FLASH_CAPACITY, 0);
-	if (flash_capacity != 0x14) {
-		failmsg("Expected SPI flash capacity: 0x14 (1 MByte)");
 		anyfailed = 1;
 	}
 
