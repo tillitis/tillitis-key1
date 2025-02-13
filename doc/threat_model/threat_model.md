@@ -115,8 +115,8 @@ allowed
 * Access to compute resources. Possibly access to lab equipment
 * Will try all possible SW and HW attack vectors. In and out of scope
 * End game is to find flaws in threat model. Acquire knowledge and
-  findings to produce an interesting talk at CCC, USENIX or Security
-  Fest
+  findings to produce an interesting talk at Chaos Communication
+  Congress, USENIX or Security Fest
 
 Over time (with new releases), and given feedback by the CCC Hacker,
 the TKey device should be able to withstand attacks by the CCC Hacker.
@@ -258,7 +258,7 @@ information, see the [Release Notes](/doc/release_notes.md)
     Note that this mitigates an attack from outside the CPU, not from
     an exploit towards applications running on it.
 
-#### Known possible weakneses
+#### Known possible weaknesses
 
 The CH552 MCU providing USB host communication contains firmware that
 implements the UART communication with the FPGA. The CH552 firmware
@@ -297,7 +297,7 @@ board, and is even shipped with a programmer to download new FPGA
 bitstreams.
 
 
-#### Known weakneses
+#### Known weaknesses
 
 The bitstream, which includes the Unique Device Secret (UDS) as well
 as the firmware implementing the measured boot are stored as part of
