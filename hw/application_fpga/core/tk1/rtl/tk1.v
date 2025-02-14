@@ -63,8 +63,6 @@ module tk1 #(
   localparam ADDR_NAME1 = 8'h01;
   localparam ADDR_VERSION = 8'h02;
 
-  localparam ADDR_APP_MODE_CTRL = 8'h08;
-
   localparam ADDR_LED = 8'h09;
   localparam LED_R_BIT = 2;
   localparam LED_G_BIT = 1;
@@ -616,10 +614,6 @@ module tk1 #(
 
         if (address == ADDR_VERSION) begin
           tmp_read_data = TK1_VERSION;
-        end
-
-        if (address == ADDR_APP_MODE_CTRL) begin
-          tmp_read_data = {32{app_mode}};
         end
 
         if (address == ADDR_LED) begin

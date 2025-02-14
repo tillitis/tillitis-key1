@@ -14,7 +14,6 @@
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
-static volatile uint32_t *app_mode_ctrl    = (volatile uint32_t *)TK1_MMIO_TK1_APP_MODE_CTRL;
 static volatile uint32_t *name0            = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
 static volatile uint32_t *name1            = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
 static volatile uint32_t *ver              = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;

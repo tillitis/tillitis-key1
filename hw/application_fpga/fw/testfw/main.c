@@ -16,7 +16,6 @@ volatile uint32_t *tk1name1         = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
 volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
 volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
-volatile uint32_t *app_mode_ctrl    = (volatile uint32_t *)TK1_MMIO_TK1_APP_MODE_CTRL;
 volatile uint8_t  *fw_ram           = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
 volatile uint32_t *timer            = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
 volatile uint32_t *timer_prescaler  = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
@@ -295,12 +294,6 @@ int main(void)
 		if (fwram_fail) {
 			anyfailed = 1;
 		}
-	}
-
-	uint32_t sw = *app_mode_ctrl;
-	if (sw != 0) {
-		failmsg("app_mode_ctrl is not 0 in fw mode");
-		anyfailed = 1;
 	}
 
 	puts("\r\nTesting timer... 3");
