@@ -65,7 +65,7 @@ module tk1 #(
   localparam ADDR_NAME1 = 8'h01;
   localparam ADDR_VERSION = 8'h02;
 
-  localparam ADDR_SYSTEM_MODE_CTRL = 8'h08;
+  localparam ADDR_APP_MODE_CTRL = 8'h08;
 
   localparam ADDR_LED = 8'h09;
   localparam LED_R_BIT = 2;
@@ -117,9 +117,9 @@ module tk1 #(
   reg  [31 : 0] cdi_mem           [0 : 7];
   reg           cdi_mem_we;
 
-  reg           system_mode_reg;
-  reg           system_mode_new;
-  reg           system_mode_we;
+  reg           app_mode_reg;
+  reg           app_mode_new;
+  reg           app_mode_we;
 
   reg  [ 2 : 0] led_reg;
   reg           led_we;
@@ -185,7 +185,7 @@ module tk1 #(
   wire          udi_access_en;
   wire          rom_exec_en;
 
-  wire          system_mode;
+  wire          app_mode;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -203,13 +203,13 @@ module tk1 #(
 
   assign system_reset  = system_reset_reg;
 
-  assign system_mode   = system_mode_reg;
+  assign app_mode      = app_mode_reg;
 
-  assign rom_exec_en   = !system_mode | syscall;
-  assign fw_ram_en     = !system_mode | syscall;
-  assign spi_access_en = !system_mode | syscall;
-  assign udi_access_en = !system_mode | syscall;
-  assign rw_locked     = system_mode;
+  assign rom_exec_en   = !app_mode | syscall;
+  assign fw_ram_en     = !app_mode | syscall;
+  assign spi_access_en = !app_mode | syscall;
+  assign udi_access_en = !app_mode | syscall;
+  assign rw_locked     = app_mode;
 
   //----------------------------------------------------------------
   // Module instance.
@@ -261,7 +261,7 @@ module tk1 #(
   //----------------------------------------------------------------
   always @(posedge clk) begin : reg_update
     if (!reset_n) begin
-      system_mode_reg   <= 1'h0;
+      app_mode_reg      <= 1'h0;
       led_reg           <= 3'h6;
       gpio1_reg         <= 2'h0;
       gpio2_reg         <= 2'h0;
@@ -299,8 +299,8 @@ module tk1 #(
       gpio2_reg[0] <= gpio2;
       gpio2_reg[1] <= gpio2_reg[0];
 
-      if (system_mode_we) begin
-        system_mode_reg <= system_mode_new;
+      if (app_mode_we) begin
+        app_mode_reg <= app_mode_new;
       end
 
       if (led_we) begin
@@ -495,18 +495,18 @@ module tk1 #(
   end
 
   //----------------------------------------------------------------
-  // system_mode_ctrl
+  // app_mode_ctrl
   //
   // Automatically lower privilege when executing above ROM.
   // ----------------------------------------------------------------
-  always @* begin : system_mode_ctrl
-    system_mode_new = 1'h0;
-    system_mode_we  = 1'h0;
+  always @* begin : app_mode_ctrl
+    app_mode_new = 1'h0;
+    app_mode_we  = 1'h0;
 
     if (cpu_valid & cpu_instr) begin
       if (cpu_addr > FW_ROM_LAST) begin
-        system_mode_new = 1'h1;
-        system_mode_we  = 1'h1;
+        app_mode_new = 1'h1;
+        app_mode_we  = 1'h1;
       end
     end
   end
@@ -631,8 +631,8 @@ module tk1 #(
           tmp_read_data = TK1_VERSION;
         end
 
-        if (address == ADDR_SYSTEM_MODE_CTRL) begin
-          tmp_read_data = {32{system_mode_reg}};
+        if (address == ADDR_APP_MODE_CTRL) begin
+          tmp_read_data = {32{app_mode_reg}};
         end
 
         if (address == ADDR_LED) begin

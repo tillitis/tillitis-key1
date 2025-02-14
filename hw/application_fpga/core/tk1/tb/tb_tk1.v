@@ -27,7 +27,7 @@ module tb_tk1 ();
   localparam ADDR_NAME1 = 8'h01;
   localparam ADDR_VERSION = 8'h02;
 
-  localparam ADDR_SYSTEM_MODE_CTRL = 8'h08;
+  localparam ADDR_APP_MODE_CTRL = 8'h08;
 
   localparam ADDR_LED = 8'h09;
   localparam LED_R_BIT = 2;
@@ -201,7 +201,7 @@ module tb_tk1 ();
       $display("------------");
       if (tb_main_monitor) begin
         $display("Inputs and outputs:");
-        $display("tb_cpu_trap: 0x%1x, system_mode: 0x%1x", tb_cpu_trap, dut.system_mode);
+        $display("tb_cpu_trap: 0x%1x, app_mode: 0x%1x", tb_cpu_trap, dut.app_mode);
         $display("cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x, force_tap: 0x%1x",
                  tb_cpu_addr, tb_cpu_instr, tb_cpu_valid, tb_force_trap);
         $display("ram_addr_rand: 0x%08x, ram_data_rand: 0x%08x", tb_ram_addr_rand,
