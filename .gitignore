@@ -49,3 +49,5 @@ verilated/
 .*.swp
 *.sch-bak
 *.sim
+compile_commands.json
+.cache
