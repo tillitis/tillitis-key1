@@ -8,8 +8,9 @@
 
 #define illegal_insn() .word 0
 
-#define FW_SP_STORAGE (TK1_MMIO_FW_RAM_BASE + TK1_MMIO_FW_RAM_SIZE - 4)
-#define FW_STACK_TOP (TK1_MMIO_FW_RAM_BASE + TK1_MMIO_FW_RAM_SIZE - 2*4)
+#define APP_SP_STORAGE (TK1_MMIO_FW_RAM_BASE + TK1_MMIO_FW_RAM_SIZE - 4)
+#define IRQ_RET_ADDR_STORAGE (TK1_MMIO_FW_RAM_BASE + TK1_MMIO_FW_RAM_SIZE - 2*4)
+#define FW_STACK_TOP (TK1_MMIO_FW_RAM_BASE + TK1_MMIO_FW_RAM_SIZE - 3*4)
 
 	.section ".text.init"
 	.globl _start
@@ -30,9 +31,13 @@ unexpected_irq_source:
 	j unexpected_irq_source
 irq_source_ok:
 
+	// Save interrupt return address (x3)
+	li t0, IRQ_RET_ADDR_STORAGE
+	sw x3, 0(t0)
+
 	// Save app stack pointer. App is responsible for saving the rest of
 	// the registers.
-	li t0, FW_SP_STORAGE
+	li t0, APP_SP_STORAGE
 	sw sp, 0(t0)
 
 	// Setup firmware stack pointer
@@ -42,8 +47,12 @@ irq_source_ok:
 	call syscall_handler
 
 	// Restore app stack pointer
-	li t0, FW_SP_STORAGE
+	li t0, APP_SP_STORAGE
 	lw sp, 0(t0)
+
+	// Restore interrupt return address (x3)
+	li t0, IRQ_RET_ADDR_STORAGE
+	lw x3, 0(t0)
 
 	// Verify that interrupt return address (x3) is in app RAM
 	li t0, TK1_RAM_BASE // 0x40000000
@@ -60,7 +69,7 @@ x3_valid:
 	mv x0, zero
 	mv x1, zero
 	// x2 (sp) is assumed to be preserved by the interrupt handler
-	// x3 (interrupt return address) assumed preserved
+	// x3 (interrupt return address) need to be preserved
 	mv x4, zero
 	mv x5, zero
 	mv x6, zero
