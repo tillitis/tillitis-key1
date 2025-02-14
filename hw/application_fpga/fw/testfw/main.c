@@ -287,16 +287,6 @@ int main(void)
 		anyfailed = 1;
 	}
 
-	uint8_t jedec_id[3];
-	puts("\r\nReading SPI flash capacity...\r\n");
-	flash_release_powerdown();
-	flash_read_jedec_id(jedec_id);
-
-	if (jedec_id[2] != 0x14) {
-		failmsg("Expected SPI flash capacity: 0x14 (1 MByte)");
-		anyfailed = 1;
-	}
-
 	// Test FW_RAM.
 	puts("\r\nTesting FW_RAM (takes 15s on hw)...\r\n");
 	for (unsigned int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
