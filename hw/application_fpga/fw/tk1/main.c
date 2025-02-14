@@ -13,7 +13,6 @@
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
-static volatile uint32_t *system_mode_ctrl = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_MODE_CTRL;
 static volatile uint32_t *name0            = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
 static volatile uint32_t *name1            = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
 static volatile uint32_t *ver              = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
@@ -344,13 +343,8 @@ static void run(const struct context *ctx)
 #endif
 	// clang-format on
 
-	// Flip over to application mode
-	*system_mode_ctrl = 1;
-
-	// XXX Firmware stack now no longer available
-	// Don't use any function calls!
-
 	// Jump to app - doesn't return
+	// Hardware is responsible for switching to app mode
 	// clang-format off
 #ifndef S_SPLINT_S
 	asm volatile(
