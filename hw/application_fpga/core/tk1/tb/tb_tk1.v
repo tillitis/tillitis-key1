@@ -64,6 +64,9 @@ module tb_tk1 ();
 
   localparam APP_RAM_START = 32'h40000000;
 
+  localparam ROM_START = 32'h00000000;
+  localparam ROM_END = 32'h00001fff;
+
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
@@ -1068,6 +1071,58 @@ module tb_tk1 ();
 
 
   //----------------------------------------------------------------
+  // test12()
+  // Test ROM execution protection. Test trapping at ROM edges while
+  // executing in different contexts.
+  //----------------------------------------------------------------
+  task test12;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      restore_mem_bus();
+
+      $display("");
+      $display("--- test12: ROM execution allowed in firmware mode.");
+
+      reset_dut();
+      fetch_instruction(ROM_START);
+      check_equal(tb_force_trap, 0);
+
+      fetch_instruction(ROM_END);
+      check_equal(tb_force_trap, 0);
+
+      $display("--- test12: ROM execution not allowed in app mode.");
+      reset_dut();
+      fetch_instruction(APP_RAM_START);
+      fetch_instruction(ROM_START);
+      check_equal(tb_force_trap, 1);
+
+      reset_dut();
+      fetch_instruction(APP_RAM_START);
+      fetch_instruction(ROM_END);
+      check_equal(tb_force_trap, 1);
+
+      $display("--- test12: ROM execution allowed in syscalls made from app mode.");
+      reset_dut();
+      fetch_instruction(APP_RAM_START);
+      tb_syscall = 1;
+
+      fetch_instruction(ROM_START);
+      check_equal(tb_force_trap, 0);
+
+      fetch_instruction(ROM_END);
+      check_equal(tb_force_trap, 0);
+
+      $display("--- test12: Leave syscall.");
+      tb_syscall = 0;
+
+      $display("--- test12: completed.");
+      $display("");
+    end
+  endtask  // test12
+
+
+  //----------------------------------------------------------------
   // exit_with_error_code()
   //
   // Exit with the right error code
@@ -1107,6 +1162,7 @@ module tb_tk1 ();
     test9();
     test10();
     test11();
+    test12();
 
     display_test_result();
     $display("");
