@@ -207,15 +207,12 @@ Typical expected use scenario:
      stack. After this it performs no more function calls and uses no
      more automatic variables.
 
-  8. Firmware starts the application by first switching from firmware
-     mode to application mode by writing to the `APP_MODE_CTRL`
-     register. In this mode the MMIO region is restricted, e.g. some
-     registers are removed (`UDS`), and some are switched from
-     read/write to read-only (see [the memory
+  8. Firmware starts the application by jumping to the contents of
+     `APP_ADDR`. Hardware automatically switches from firmware mode to
+     application mode. In this mode the MMIO region is restricted,
+     e.g. some registers are removed (`UDS`), and some are switched
+     from read/write to read-only (see [the memory
      map](https://dev.tillitis.se/memory/)).
-
-     Then the firmware jumps to what is in `APP_ADDR` which starts the
-     application.
 
 If during this whole time any commands are received which are not
 allowed in the current state, we enter the "failed" state and execute
