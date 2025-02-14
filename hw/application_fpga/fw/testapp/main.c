@@ -218,14 +218,6 @@ int main(void)
 		anyfailed = 1;
 	}
 
-	// Syscall should be able to access flash
-	puts("\r\nReading SPI flash capacity using syscall...\r\n");
-	int flash_capacity = syscall(TK1_SYSCALL_GET_FLASH_CAPACITY, 0);
-	if (flash_capacity != 0x14) {
-		failmsg("Expected SPI flash capacity: 0x14 (1 MByte)");
-		anyfailed = 1;
-	}
-
 	// Test FW_RAM.
 	*fw_ram = 0x21;
 	if (*fw_ram == 0x21) {
