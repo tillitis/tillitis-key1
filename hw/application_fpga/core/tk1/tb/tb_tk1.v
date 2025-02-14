@@ -96,7 +96,7 @@ module tb_tk1 ();
   wire          tb_gpio3;
   wire          tb_gpio4;
 
-  reg           tb_access_level_hi;
+  reg           tb_syscall;
 
   wire          tb_fw_ram_en;
 
@@ -146,7 +146,7 @@ module tb_tk1 ();
       .gpio3(tb_gpio3),
       .gpio4(tb_gpio4),
 
-      .access_level_hi(tb_access_level_hi),
+      .syscall(tb_syscall),
 
       .fw_ram_en(tb_fw_ram_en),
 
@@ -285,7 +285,7 @@ module tb_tk1 ();
       tb_gpio1        = 1'h0;
       tb_gpio2        = 1'h0;
 
-      tb_access_level_hi = 1'h0;
+      tb_syscall = 1'h0;
 
       tb_cs           = 1'h0;
       tb_we           = 1'h0;
@@ -550,7 +550,7 @@ module tb_tk1 ();
 
       $display("");
       $display("--- test2: Read out UDI started.");
-      tb_access_level_hi = 0;
+      tb_syscall = 0;
       reset_dut();
 
       read_check_word(ADDR_UDI_FIRST, 32'h00010203);
@@ -563,13 +563,13 @@ module tb_tk1 ();
       read_check_word(ADDR_UDI_LAST, 32'h0);
 
       $display("--- test2: Enter syscall.");
-      tb_access_level_hi = 1;
+      tb_syscall = 1;
 
       read_check_word(ADDR_UDI_FIRST, 32'h00010203);
       read_check_word(ADDR_UDI_LAST, 32'h04050607);
 
       $display("--- test2: Leave syscall.");
-      tb_access_level_hi = 0;
+      tb_syscall = 0;
 
       $display("--- test2: completed.");
       $display("");
@@ -586,7 +586,7 @@ module tb_tk1 ();
       tc_ctr = tc_ctr + 1;
 
       $display("--- test5: Reset DUT to switch to fw mode.");
-      tb_access_level_hi = 0;
+      tb_syscall = 0;
       reset_dut();
 
       $display("");
@@ -635,7 +635,7 @@ module tb_tk1 ();
       read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
 
       $display("--- test3: Enter syscall.");
-      tb_access_level_hi = 1;
+      tb_syscall = 1;
 
       $display("--- test3: Try to write CDI from syscall.");
       write_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
@@ -658,7 +658,7 @@ module tb_tk1 ();
       read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
 
       $display("--- test3: Leave syscall.");
-      tb_access_level_hi = 0;
+      tb_syscall = 0;
 
       $display("--- test3: completed.");
       $display("");
@@ -715,7 +715,7 @@ module tb_tk1 ();
       $display("");
       $display("--- test6: Write RAM addr and data randomization in fw mode.");
       $display("--- test6: Reset DUT to switch to fw mode.");
-      tb_access_level_hi = 0;
+      tb_syscall = 0;
       reset_dut();
 
       $display("--- test6: Write to ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND .");
@@ -750,7 +750,7 @@ module tb_tk1 ();
 
 
       $display("--- test6: Enter syscall.");
-      tb_access_level_hi = 1;
+      tb_syscall = 1;
 
       $display("--- test6: Write to ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND again.");
       write_word(ADDR_RAM_ADDR_RAND, 32'hdeadbeef);
@@ -766,7 +766,7 @@ module tb_tk1 ();
       read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
 
       $display("--- test6: Leave syscall.");
-      tb_access_level_hi = 0;
+      tb_syscall = 0;
 
       $display("--- test6: completed.");
       $display("");
@@ -955,12 +955,12 @@ module tb_tk1 ();
       check_spi_does_not_transfer();
 
       $display("--- test10: Enter syscall.");
-      tb_access_level_hi = 1;
+      tb_syscall = 1;
 
       check_inverting_spi_loopback_transfer_succeeds(32'hc8);
 
       $display("--- test10: Leave syscall.");
-      tb_access_level_hi = 0;
+      tb_syscall = 0;
 
       tb_monitor     = 0;
       tb_spi_monitor = 0;

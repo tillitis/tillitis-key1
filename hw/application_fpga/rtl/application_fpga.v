@@ -367,7 +367,7 @@ module application_fpga (
       .gpio3(app_gpio3),
       .gpio4(app_gpio4),
 
-      .access_level_hi(irq31_eoi),
+      .syscall(irq31_eoi),
 
       .fw_ram_en(fw_ram_en),
 

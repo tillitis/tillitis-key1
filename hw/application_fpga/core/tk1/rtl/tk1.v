@@ -45,7 +45,7 @@ module tk1 #(
     output wire gpio3,
     output wire gpio4,
 
-    input wire access_level_hi,
+    input wire syscall,
 
     output wire fw_ram_en,
 
@@ -205,10 +205,10 @@ module tk1 #(
 
   assign system_mode   = system_mode_reg;
 
-  assign rom_exec_en   = !system_mode | access_level_hi;
-  assign fw_ram_en     = !system_mode | access_level_hi;
-  assign spi_access_en = !system_mode | access_level_hi;
-  assign udi_access_en = !system_mode | access_level_hi;
+  assign rom_exec_en   = !system_mode | syscall;
+  assign fw_ram_en     = !system_mode | syscall;
+  assign spi_access_en = !system_mode | syscall;
+  assign udi_access_en = !system_mode | syscall;
   assign rw_locked     = system_mode;
 
   //----------------------------------------------------------------
