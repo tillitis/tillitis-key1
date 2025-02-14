@@ -19,7 +19,6 @@ volatile uint32_t *tk1name1         = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
 volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
 volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
-volatile uint32_t *app_mode_ctrl    = (volatile uint32_t *)TK1_MMIO_TK1_APP_MODE_CTRL;
 volatile uint8_t  *fw_ram           = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
 volatile uint32_t *timer            = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
 volatile uint32_t *timer_prescaler  = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
@@ -177,12 +176,6 @@ int main(void)
 
 	uint32_t uds_local[UDS_WORDS];
 	uint32_t udi_local[UDI_WORDS];
-
-	uint32_t sw = *app_mode_ctrl;
-	if (sw != 0xffffffff) {
-		failmsg("app_mode_ctrl is not 0xffffffff");
-		anyfailed = 1;
-	}
 
 	// Should NOT be able to read from UDS in app-mode.
 	wordcpy_s(uds_local, UDS_WORDS, (void *)uds, UDS_WORDS);
