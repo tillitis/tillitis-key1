@@ -180,6 +180,7 @@ module tk1 #(
   wire          spi_ready;
   wire [ 7 : 0] spi_rx_data;
   wire          spi_access_en;
+  wire          system_reset_en;
   wire          udi_access_en;
   wire          rom_exec_en;
 
@@ -203,11 +204,12 @@ module tk1 #(
 
   assign app_mode      = app_mode_reg;
 
-  assign rom_exec_en   = !app_mode | syscall;
-  assign fw_ram_en     = !app_mode | syscall;
-  assign spi_access_en = !app_mode | syscall;
-  assign udi_access_en = !app_mode | syscall;
-  assign rw_locked     = app_mode;
+  assign rom_exec_en     = !app_mode | syscall;
+  assign fw_ram_en       = !app_mode | syscall;
+  assign spi_access_en   = !app_mode | syscall;
+  assign system_reset_en = !app_mode | syscall;
+  assign udi_access_en   = !app_mode | syscall;
+  assign rw_locked       = app_mode;
 
   //----------------------------------------------------------------
   // Module instance.
@@ -560,7 +562,9 @@ module tk1 #(
         end
 
         if (address == ADDR_SYSTEM_RESET) begin
-          system_reset_new = 1'h1;
+          if (system_reset_en) begin
+            system_reset_new = 1'h1;
+          end
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
