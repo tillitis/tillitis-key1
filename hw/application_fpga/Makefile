@@ -128,9 +128,7 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/assert.o \
 	$(P)/fw/tk1/led.o \
 	$(P)/fw/tk1/blake2s/blake2s.o \
-	$(P)/fw/tk1/syscall.o \
-	$(P)/fw/tk1/spi.o \
-	$(P)/fw/tk1/flash.o
+	$(P)/fw/tk1/syscall.o
 
 FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/main.c \
@@ -139,18 +137,14 @@ FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/assert.c \
 	$(P)/fw/tk1/led.c \
 	$(P)/fw/tk1/blake2s/blake2s.c \
-	$(P)/fw/tk1/syscall.c \
-	$(P)/fw/tk1/spi.c \
-	$(P)/fw/tk1/flash.c
+	$(P)/fw/tk1/syscall.c
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
 	$(P)/fw/testfw/start.o \
 	$(P)/fw/tk1/proto.o \
 	$(P)/fw/tk1/assert.o \
-	$(P)/fw/tk1/lib.o \
-	$(P)/fw/tk1/spi.o \
-	$(P)/fw/tk1/flash.o
+	$(P)/fw/tk1/lib.o
 
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
