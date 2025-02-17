@@ -17,6 +17,7 @@ volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
 volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
 volatile uint8_t  *fw_ram           = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
+volatile uint32_t *system_reset     = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;
 volatile uint32_t *timer            = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
 volatile uint32_t *timer_prescaler  = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
 volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
@@ -355,9 +356,12 @@ int main(void)
 	}
 	puts("\r\n");
 
-	puts("Now echoing what you type...\r\n");
+	puts("Now echoing what you type...Type + to reset device\r\n");
 	for (;;) {
 		in = readbyte(&mode, &mode_bytes_left);
+		if (in == '+') {
+			*system_reset = 1;
+		}
 
 		writebyte(MODE_CDC);
 		writebyte(1);

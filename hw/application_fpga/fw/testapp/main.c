@@ -20,6 +20,7 @@ volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
 volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
 volatile uint8_t  *fw_ram           = (volatile uint8_t  *)TK1_MMIO_FW_RAM_BASE;
+volatile uint32_t *system_reset     = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;
 volatile uint32_t *timer            = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
 volatile uint32_t *timer_prescaler  = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
 volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
@@ -191,6 +192,11 @@ int main(void)
 		failmsg("Write to CDI in app-mode");
 		anyfailed = 1;
 	}
+
+	// Should NOT be able to reset Tkey from app mode
+	puts("\r\nTesting system reset...");
+	*system_reset = 1;
+	puts("done.\r\n");
 
 	// Test FW_RAM.
 	*fw_ram = 0x21;

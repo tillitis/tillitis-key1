@@ -56,6 +56,8 @@ module tb_tk1 ();
   localparam ADDR_CPU_MON_FIRST = 8'h61;
   localparam ADDR_CPU_MON_LAST = 8'h62;
 
+  localparam ADDR_SYSTEM_RESET = 8'h70;
+
   localparam ADDR_SPI_EN = 8'h80;
   localparam ADDR_SPI_XFER = 8'h81;
   localparam ADDR_SPI_DATA = 8'h82;
@@ -84,6 +86,7 @@ module tb_tk1 ();
   reg           tb_cpu_instr;
   reg           tb_cpu_valid;
   wire          tb_force_trap;
+  wire          tb_system_reset;
 
   wire [14 : 0] tb_ram_addr_rand;
   wire [31 : 0] tb_ram_data_rand;
@@ -132,6 +135,7 @@ module tb_tk1 ();
       .cpu_instr (tb_cpu_instr),
       .cpu_valid (tb_cpu_valid),
       .force_trap(tb_force_trap),
+      .system_reset(tb_system_reset),
 
       .ram_addr_rand(tb_ram_addr_rand),
       .ram_data_rand(tb_ram_data_rand),
@@ -1121,6 +1125,45 @@ module tb_tk1 ();
 
 
   //----------------------------------------------------------------
+  // test13()
+  // System reset
+  //----------------------------------------------------------------
+  task test13;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test13: Reset allowed from firmware mode.");
+      tb_syscall = 0;
+      reset_dut();
+
+      write_word(ADDR_SYSTEM_RESET, 32'h1);
+      check_equal(tb_system_reset, 1);
+
+      $display("--- test13: Reset not allowed from app mode.");
+      reset_dut();
+      fetch_instruction(APP_RAM_START);
+
+      write_word(ADDR_SYSTEM_RESET, 32'h1);
+      check_equal(tb_system_reset, 0);
+
+      $display("--- test13: Reset allowed from syscall.");
+      reset_dut();
+      fetch_instruction(APP_RAM_START);
+      tb_syscall = 1;
+
+      write_word(ADDR_SYSTEM_RESET, 32'h1);
+      check_equal(tb_system_reset, 1);
+
+      tb_syscall = 0;
+
+      $display("--- test13: completed.");
+      $display("");
+    end
+  endtask  // test13
+
+
+  //----------------------------------------------------------------
   // exit_with_error_code()
   //
   // Exit with the right error code
@@ -1161,6 +1204,7 @@ module tb_tk1 ();
     test10();
     test11();
     test12();
+    test13();
 
     display_test_result();
     $display("");

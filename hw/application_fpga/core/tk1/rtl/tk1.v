@@ -547,7 +547,9 @@ module tk1 #(
         end
 
         if (address == ADDR_SYSTEM_RESET) begin
-          system_reset_new = 1'h1;
+          if (!app_mode) begin
+            system_reset_new = 1'h1;
+          end
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
