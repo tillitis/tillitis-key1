@@ -114,8 +114,7 @@ module tk1 #(
   reg           cdi_mem_we;
 
   reg           fw_exit_lock_reg;
-  reg           fw_exit_lock_new;
-  reg           fw_exit_lock_we;
+  reg           fw_exit_lock_set;
 
   reg  [ 2 : 0] led_reg;
   reg           led_we;
@@ -284,8 +283,8 @@ module tk1 #(
       gpio2_reg[0] <= gpio2;
       gpio2_reg[1] <= gpio2_reg[0];
 
-      if (fw_exit_lock_we) begin
-        fw_exit_lock_reg <= fw_exit_lock_new;
+      if (fw_exit_lock_set) begin
+        fw_exit_lock_reg <= 1'h1;
       end
 
       if (led_we) begin
@@ -485,13 +484,11 @@ module tk1 #(
   // Automatically lower privilege when executing above ROM.
   // ----------------------------------------------------------------
   always @* begin : fw_exit_lock_ctrl
-    fw_exit_lock_new = 1'h0;
-    fw_exit_lock_we  = 1'h0;
+    fw_exit_lock_set = 1'h0;
 
     if (cpu_valid & cpu_instr) begin
       if (cpu_addr > FW_ROM_LAST) begin
-        fw_exit_lock_new = 1'h1;
-        fw_exit_lock_we  = 1'h1;
+        fw_exit_lock_set = 1'h1;
       end
     end
   end
