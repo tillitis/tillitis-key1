@@ -113,9 +113,9 @@ module tk1 #(
   reg  [31 : 0] cdi_mem           [0 : 7];
   reg           cdi_mem_we;
 
-  reg           app_mode_reg;
-  reg           app_mode_new;
-  reg           app_mode_we;
+  reg           fw_exit_lock_reg;
+  reg           fw_exit_lock_new;
+  reg           fw_exit_lock_we;
 
   reg  [ 2 : 0] led_reg;
   reg           led_we;
@@ -194,7 +194,7 @@ module tk1 #(
 
   assign system_reset  = system_reset_reg;
 
-  assign app_mode      = app_mode_reg & ~syscall;
+  assign app_mode      = fw_exit_lock_reg & ~syscall;
 
   //----------------------------------------------------------------
   // Module instance.
@@ -246,7 +246,7 @@ module tk1 #(
   //----------------------------------------------------------------
   always @(posedge clk) begin : reg_update
     if (!reset_n) begin
-      app_mode_reg      <= 1'h0;
+      fw_exit_lock_reg  <= 1'h0;
       led_reg           <= 3'h6;
       gpio1_reg         <= 2'h0;
       gpio2_reg         <= 2'h0;
@@ -284,8 +284,8 @@ module tk1 #(
       gpio2_reg[0] <= gpio2;
       gpio2_reg[1] <= gpio2_reg[0];
 
-      if (app_mode_we) begin
-        app_mode_reg <= app_mode_new;
+      if (fw_exit_lock_we) begin
+        fw_exit_lock_reg <= fw_exit_lock_new;
       end
 
       if (led_we) begin
@@ -480,18 +480,18 @@ module tk1 #(
   end
 
   //----------------------------------------------------------------
-  // app_mode_ctrl
+  // fw_exit_lock_ctrl
   //
   // Automatically lower privilege when executing above ROM.
   // ----------------------------------------------------------------
-  always @* begin : app_mode_ctrl
-    app_mode_new = 1'h0;
-    app_mode_we  = 1'h0;
+  always @* begin : fw_exit_lock_ctrl
+    fw_exit_lock_new = 1'h0;
+    fw_exit_lock_we  = 1'h0;
 
     if (cpu_valid & cpu_instr) begin
       if (cpu_addr > FW_ROM_LAST) begin
-        app_mode_new = 1'h1;
-        app_mode_we  = 1'h1;
+        fw_exit_lock_new = 1'h1;
+        fw_exit_lock_we  = 1'h1;
       end
     end
   end
