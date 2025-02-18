@@ -148,7 +148,6 @@ module application_fpga_sim (
   reg  [31 : 0] fw_ram_write_data;
   wire [31 : 0] fw_ram_read_data;
   wire          fw_ram_ready;
-  wire          fw_ram_en;
 
   reg           touch_sense_cs;
   reg           touch_sense_we;
@@ -166,7 +165,7 @@ module application_fpga_sim (
   reg  [31 : 0] tk1_write_data;
   wire [31 : 0] tk1_read_data;
   wire          tk1_ready;
-  wire          rw_locked;
+  wire          app_mode;
   wire          force_trap;
   wire [14 : 0] ram_addr_rand;
   wire [31 : 0] ram_data_rand;
@@ -266,7 +265,7 @@ module application_fpga_sim (
       .clk(clk),
       .reset_n(reset_n),
 
-      .en(fw_ram_en),
+      .en(~app_mode),
       .cs(fw_ram_cs),
       .we(fw_ram_we),
       .address(fw_ram_address),
@@ -305,7 +304,7 @@ module application_fpga_sim (
       .clk(clk),
       .reset_n(reset_n),
 
-      .en(~rw_locked),
+      .en(~app_mode),
 
       .cs(uds_cs),
       .address(uds_address),
@@ -353,7 +352,7 @@ module application_fpga_sim (
       .clk(clk),
       .reset_n(reset_n),
 
-      .rw_locked(rw_locked),
+      .app_mode(app_mode),
 
       .cpu_addr  (cpu_addr),
       .cpu_instr (cpu_instr),
@@ -381,8 +380,6 @@ module application_fpga_sim (
       .gpio4(app_gpio4),
 
       .syscall(irq31_eoi),
-
-      .fw_ram_en(fw_ram_en),
 
       .cs(tk1_cs),
       .we(tk1_we),

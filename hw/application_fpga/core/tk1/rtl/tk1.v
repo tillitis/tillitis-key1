@@ -20,7 +20,7 @@ module tk1 #(
     input wire reset_n,
 
     input  wire cpu_trap,
-    output wire rw_locked,
+    output wire app_mode,
 
     input  wire [31 : 0] cpu_addr,
     input  wire          cpu_instr,
@@ -46,8 +46,6 @@ module tk1 #(
     output wire gpio4,
 
     input wire syscall,
-
-    output wire fw_ram_en,
 
     input  wire          cs,
     input  wire          we,
@@ -179,12 +177,6 @@ module tk1 #(
   reg           spi_tx_data_vld;
   wire          spi_ready;
   wire [ 7 : 0] spi_rx_data;
-  wire          spi_access_en;
-  wire          system_reset_en;
-  wire          udi_access_en;
-  wire          rom_exec_en;
-
-  wire          app_mode;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -202,14 +194,7 @@ module tk1 #(
 
   assign system_reset  = system_reset_reg;
 
-  assign app_mode      = app_mode_reg;
-
-  assign rom_exec_en     = !app_mode | syscall;
-  assign fw_ram_en       = !app_mode | syscall;
-  assign spi_access_en   = !app_mode | syscall;
-  assign system_reset_en = !app_mode | syscall;
-  assign udi_access_en   = !app_mode | syscall;
-  assign rw_locked       = app_mode;
+  assign app_mode      = app_mode_reg & ~syscall;
 
   //----------------------------------------------------------------
   // Module instance.
@@ -479,7 +464,7 @@ module tk1 #(
           force_trap_set = 1'h1;
         end
 
-        if (!rom_exec_en) begin
+        if (app_mode) begin
           if (cpu_addr <= FW_ROM_LAST) begin  // Only valid as long as ROM starts at address 0x00.
             force_trap_set = 1'h1;
           end
@@ -534,8 +519,8 @@ module tk1 #(
     spi_start        = 1'h0;
     spi_tx_data_vld  = 1'h0;
 
-    spi_enable       = write_data[0] & spi_access_en;
-    spi_tx_data      = write_data[7 : 0] & {8{spi_access_en}};
+    spi_enable       = write_data[0] & !app_mode;
+    spi_tx_data      = write_data[7 : 0] & {8{!app_mode}};
 
     if (cs) begin
       tmp_ready = 1'h1;
@@ -550,37 +535,37 @@ module tk1 #(
         end
 
         if (address == ADDR_APP_START) begin
-          if (!rw_locked) begin
+          if (!app_mode) begin
             app_start_we = 1'h1;
           end
         end
 
         if (address == ADDR_APP_SIZE) begin
-          if (!rw_locked) begin
+          if (!app_mode) begin
             app_size_we = 1'h1;
           end
         end
 
         if (address == ADDR_SYSTEM_RESET) begin
-          if (system_reset_en) begin
+          if (!app_mode) begin
             system_reset_new = 1'h1;
           end
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
-          if (!rw_locked) begin
+          if (!app_mode) begin
             cdi_mem_we = 1'h1;
           end
         end
 
         if (address == ADDR_RAM_ADDR_RAND) begin
-          if (!rw_locked) begin
+          if (!app_mode) begin
             ram_addr_rand_we = 1'h1;
           end
         end
 
         if (address == ADDR_RAM_DATA_RAND) begin
-          if (!rw_locked) begin
+          if (!app_mode) begin
             ram_data_rand_we = 1'h1;
           end
         end
@@ -602,19 +587,19 @@ module tk1 #(
         end
 
         if (address == ADDR_SPI_EN) begin
-          if (spi_access_en) begin
+          if (!app_mode) begin
             spi_enable_vld = 1'h1;
           end
         end
 
         if (address == ADDR_SPI_XFER) begin
-          if (spi_access_en) begin
+          if (!app_mode) begin
             spi_start = 1'h1;
           end
         end
 
         if (address == ADDR_SPI_DATA) begin
-          if (spi_access_en) begin
+          if (!app_mode) begin
             spi_tx_data_vld = 1'h1;
           end
         end
@@ -654,19 +639,19 @@ module tk1 #(
         end
 
         if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
-          if (udi_access_en) begin
+          if (!app_mode) begin
             tmp_read_data = udi_rdata;
           end
         end
 
         if (address == ADDR_SPI_XFER) begin
-          if (spi_access_en) begin
+          if (!app_mode) begin
             tmp_read_data[0] = spi_ready;
           end
         end
 
         if (address == ADDR_SPI_DATA) begin
-          if (spi_access_en) begin
+          if (!app_mode) begin
             tmp_read_data[7 : 0] = spi_rx_data;
           end
         end

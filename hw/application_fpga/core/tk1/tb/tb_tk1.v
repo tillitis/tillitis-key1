@@ -80,7 +80,7 @@ module tb_tk1 ();
   reg           tb_clk;
   reg           tb_reset_n;
   reg           tb_cpu_trap;
-  wire          tb_rw_locked;
+  wire          tb_app_mode;
 
   reg  [31 : 0] tb_cpu_addr;
   reg           tb_cpu_instr;
@@ -101,8 +101,6 @@ module tb_tk1 ();
   wire          tb_gpio4;
 
   reg           tb_syscall;
-
-  wire          tb_fw_ram_en;
 
   wire          tb_spi_ss;
   wire          tb_spi_sck;
@@ -131,7 +129,7 @@ module tb_tk1 ();
       .reset_n(tb_reset_n),
 
       .cpu_trap(tb_cpu_trap),
-      .rw_locked(tb_rw_locked),
+      .app_mode(tb_app_mode),
 
       .cpu_addr  (tb_cpu_addr),
       .cpu_instr (tb_cpu_instr),
@@ -152,8 +150,6 @@ module tb_tk1 ();
       .gpio4(tb_gpio4),
 
       .syscall(tb_syscall),
-
-      .fw_ram_en(tb_fw_ram_en),
 
       .spi_ss  (tb_spi_ss),
       .spi_sck (tb_spi_sck),
@@ -653,14 +649,14 @@ module tb_tk1 ();
       write_word(ADDR_CDI_FIRST + 7, 32'h7f7e7d7c);
 
       $display("--- test3: Read CDI from syscall.");
-      read_check_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
-      read_check_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
-      read_check_word(ADDR_CDI_FIRST + 2, 32'hd0d1d2d3);
-      read_check_word(ADDR_CDI_FIRST + 3, 32'hc0c1c2c3);
-      read_check_word(ADDR_CDI_FIRST + 4, 32'ha0a1a2a3);
-      read_check_word(ADDR_CDI_FIRST + 5, 32'h90919293);
-      read_check_word(ADDR_CDI_FIRST + 6, 32'h80818283);
-      read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
+      read_check_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
+      read_check_word(ADDR_CDI_FIRST + 1, 32'hefeeedec);
+      read_check_word(ADDR_CDI_FIRST + 2, 32'hdfdedddc);
+      read_check_word(ADDR_CDI_FIRST + 3, 32'hcfcecdcc);
+      read_check_word(ADDR_CDI_FIRST + 4, 32'hafaeadac);
+      read_check_word(ADDR_CDI_FIRST + 5, 32'h9f9e9d9c);
+      read_check_word(ADDR_CDI_FIRST + 6, 32'h8f8e8d8c);
+      read_check_word(ADDR_CDI_LAST + 0, 32'h7f7e7d7c);
 
       $display("--- test3: Leave syscall.");
       tb_syscall = 0;
@@ -765,8 +761,8 @@ module tb_tk1 ();
           "--- test6: Check value in dut ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND registers.");
       $display("--- test6: ram_addr_rand_reg: 0x%04x, ram_data_rand_reg: 0x%08x",
                dut.ram_addr_rand, dut.ram_data_rand);
-      check_equal(dut.ram_addr_rand, 15'h1337);
-      check_equal(dut.ram_data_rand, 32'h47114711);
+      check_equal(dut.ram_addr_rand, 15'h3eef);
+      check_equal(dut.ram_data_rand, 32'hf00ff00f);
       read_check_word(ADDR_RAM_ADDR_RAND, 32'h0);
       read_check_word(ADDR_RAM_DATA_RAND, 32'h0);
 
