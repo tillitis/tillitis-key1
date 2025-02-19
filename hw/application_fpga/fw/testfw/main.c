@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include "../tk1/assert.h"
-#include "../tk1/blake2s/blake2s.h"
 #include "../tk1/lib.h"
 #include "../tk1/proto.h"
 #include "../tk1/types.h"
@@ -26,7 +24,6 @@ volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS
 volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
 volatile uint32_t *trng_status      = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
 volatile uint32_t *trng_entropy     = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
-volatile uint32_t *fw_blake2s_addr  = (volatile uint32_t *)TK1_MMIO_TK1_BLAKE2S;
 // clang-format on
 
 #define UDS_WORDS 8
@@ -196,11 +193,6 @@ void failmsg(char *s)
 
 int main(void)
 {
-	// Function pointer to blake2s()
-	volatile int (*fw_blake2s)(void *, unsigned long, const void *,
-				   unsigned long, const void *, unsigned long,
-				   blake2s_ctx *);
-
 	uint8_t in = 0;
 	uint8_t mode = 0;
 	uint8_t mode_bytes_left = 0;
@@ -311,9 +303,6 @@ int main(void)
 		anyfailed = 1;
 	}
 
-	// Store function pointer to blake2s() so it's reachable from app
-	*fw_blake2s_addr = (uint32_t)blake2s;
-
 	// Turn on application mode.
 	// -------------------------
 
@@ -391,32 +380,6 @@ int main(void)
 
 	if (*timer != 10) {
 		failmsg("Timer didn't reset to 10");
-		anyfailed = 1;
-	}
-
-	// Testing the blake2s MMIO in app mode
-
-	fw_blake2s = (volatile int (*)(void *, unsigned long, const void *,
-				       unsigned long, const void *,
-				       unsigned long, blake2s_ctx *)) *
-		     fw_blake2s_addr;
-
-	char msg[17] = "dldlkjsdkljdslsdj";
-	uint32_t digest0[8];
-	uint32_t digest1[8];
-	blake2s_ctx b2s_ctx;
-
-	blake2s(&digest0[0], 32, NULL, 0, &msg, 17, &b2s_ctx);
-	fw_blake2s(&digest1[0], 32, NULL, 0, &msg, 17, &b2s_ctx);
-
-	puts("\r\ndigest #0: \r\n");
-	hexdump((uint8_t *)digest0, 32);
-
-	puts("digest #1: \r\n");
-	hexdump((uint8_t *)digest1, 32);
-
-	if (!memeq(digest0, digest1, 32)) {
-		failmsg("Digests not the same");
 		anyfailed = 1;
 	}
 

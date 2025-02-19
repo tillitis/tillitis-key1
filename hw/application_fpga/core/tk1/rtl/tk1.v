@@ -81,8 +81,6 @@ module tk1 #(
   localparam ADDR_APP_START = 8'h0c;
   localparam ADDR_APP_SIZE = 8'h0d;
 
-  localparam ADDR_BLAKE2S = 8'h10;
-
   localparam ADDR_CDI_FIRST = 8'h20;
   localparam ADDR_CDI_LAST = 8'h27;
 
@@ -136,9 +134,6 @@ module tk1 #(
 
   reg  [31 : 0] app_size_reg;
   reg           app_size_we;
-
-  reg  [31 : 0] blake2s_addr_reg;
-  reg           blake2s_addr_we;
 
   reg  [23 : 0] cpu_trap_ctr_reg;
   reg  [23 : 0] cpu_trap_ctr_new;
@@ -262,7 +257,6 @@ module tk1 #(
       gpio4_reg         <= 1'h0;
       app_start_reg     <= 32'h0;
       app_size_reg      <= APP_SIZE;
-      blake2s_addr_reg  <= 32'h0;
       cdi_mem[0]        <= 32'h0;
       cdi_mem[1]        <= 32'h0;
       cdi_mem[2]        <= 32'h0;
@@ -315,10 +309,6 @@ module tk1 #(
 
       if (app_size_we) begin
         app_size_reg <= write_data;
-      end
-
-      if (blake2s_addr_we) begin
-        blake2s_addr_reg <= write_data;
       end
 
       if (cdi_mem_we) begin
@@ -512,7 +502,6 @@ module tk1 #(
     gpio4_we         = 1'h0;
     app_start_we     = 1'h0;
     app_size_we      = 1'h0;
-    blake2s_addr_we  = 1'h0;
     cdi_mem_we       = 1'h0;
     ram_addr_rand_we = 1'h0;
     ram_data_rand_we = 1'h0;
@@ -556,12 +545,6 @@ module tk1 #(
 
         if (address == ADDR_SYSTEM_RESET) begin
           system_reset_new = 1'h1;
-        end
-
-        if (address == ADDR_BLAKE2S) begin
-          if (!app_mode_reg) begin
-            blake2s_addr_we = 1'h1;
-          end
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
@@ -642,10 +625,6 @@ module tk1 #(
 
         if (address == ADDR_APP_SIZE) begin
           tmp_read_data = app_size_reg;
-        end
-
-        if (address == ADDR_BLAKE2S) begin
-          tmp_read_data = blake2s_addr_reg;
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
