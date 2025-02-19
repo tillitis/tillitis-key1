@@ -73,7 +73,9 @@ Dev Handbook for specific details.
 ## Memory constraints
 
 - ROM: 6 kByte.
-- FW\_RAM: 2 kByte.
+- FW\_RAM: 4 kByte.
+  - fw stack: 3824 bytes.
+  - resetinfo: 272 bytes.
 - RAM: 128 kByte.
 
 ## Firmware behaviour
@@ -158,7 +160,7 @@ in the memory map, so it's still possible to execute firmware code in
 application mode, but with no privileged access.
 
 Firmware loads the application at the start of RAM (`0x4000_0000`). It
-uses the special FW\_RAM for its own stack.
+use a part of the special FW\_RAM for its own stack.
 
 When reset is released, the CPU starts executing the firmware. It
 begins by clearing all CPU registers, clears all FW\_RAM, sets up a
@@ -203,9 +205,9 @@ Typical expected use scenario:
      let the device application know where it is loaded and how large
      it is, if it wants to relocate in RAM.
 
-  7. The firmware now clears the special `FW_RAM` where it keeps it
-     stack. After this it performs no more function calls and uses no
-     more automatic variables.
+  7. The firmware now clears the part of the special `FW_RAM` where it
+     keeps it stack. After this it performs no more function calls and
+     uses no more automatic variables.
 
   8. Firmware starts the application by first switching from firmware
      mode to application mode by writing to the `SYSTEM_MODE_CTRL`
@@ -245,8 +247,8 @@ implementation in the FPGA at this time.
 
 The firmware instead does the CDI computation using the special
 firmware-only `FW_RAM` which is invisible after switching to app mode.
-We keep the entire firmware stack in `FW_RAM` and clear it just before
-switching to app mode just in case.
+We keep the entire firmware stack in `FW_RAM` and clear the stack just
+before switching to app mode just in case.
 
 We sleep for a random number of cycles before reading out the UDS,
 call `blake2s_update()` with it and then immediately call
@@ -258,10 +260,6 @@ should now not be available to firmware at all.
 Then we continue with the CDI computation by updating with an optional
 USS and then finalizing the hash, storing the resulting digest in
 `CDI`.
-
-We also clear the entire `FW_RAM` where the stack lived, including the
-BLAKE2s context with the UDS, very soon after that, just before
-jumping to the application.
 
 ### Firmware services
 

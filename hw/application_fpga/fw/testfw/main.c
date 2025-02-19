@@ -295,7 +295,7 @@ int main(void)
 	}
 
 	// Test FW_RAM.
-	puts("\r\nTesting FW_RAM (takes 15s on hw)...\r\n");
+	puts("\r\nTesting FW_RAM (takes 50s on hw)...\r\n");
 	for (unsigned int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
 		zero_fwram();
 		*(volatile uint8_t *)(TK1_MMIO_FW_RAM_BASE + i) = 0x42;

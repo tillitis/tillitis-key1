@@ -39,17 +39,24 @@ _start:
 	li x31,0
 
 	/* Clear FW_RAM */
-	li a0, 0xd0000000 // TK1_MMIO_FW_RAM_BASE
-	li a1, 0xd0000800 // TK1_MMIO_FW_RAM_BASE + TK1_MMIO_FW_RAM_SIZE
+	la a0, _sfwram
+	la a1, _efwram
 clear:
 	sw zero, 0(a0)
 	addi a0, a0, 4
 	blt a0, a1, clear
 
-        /*
-         * Init stack at top of fw_ram.
-         */
-        li sp, 0xd0000800 // 2 kiB (TK1_MMIO_FW_RAM_SIZE)
+	/* Zero-init bss section */
+	la a0, _sbss
+	la a1, _ebss
+
+loop_init_bss:
+	sw zero, 0(a0)
+	addi a0, a0, 4
+	blt a0, a1, loop_init_bss
+
+	/* Init stack */
+	la sp, _estack
 
 	call main
 

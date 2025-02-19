@@ -32,7 +32,7 @@ TARGET_FREQ ?= 24
 
 # Size in 32-bit words, must be divisible by 256 (pairs of EBRs, because 16
 # bits wide; an EBR is 128 32-bits words)
-BRAM_FW_SIZE ?= 1536
+BRAM_FW_SIZE ?= 2048
 
 PIN_FILE ?= application_fpga_tk1.pcf
 
@@ -47,7 +47,7 @@ CFLAGS = \
 	-mabi=ilp32 \
 	-static \
 	-std=gnu99 \
-	-O2 \
+	-Os \
 	-ffast-math \
 	-fno-common \
 	-fno-builtin-printf \
@@ -156,7 +156,10 @@ all: application_fpga.bin
 # incorrect BRAM_FW_SIZE
 # -------------------------------------------------------------------
 %_size_mismatch: %.elf phony_explicit
-	@test $$($(SIZE) $< | awk 'NR==2{print $$4}') -le $$(( 32 / 8 * $(BRAM_FW_SIZE) )) \
+	@test $$(( \
+		$$($(SIZE) -A $< | grep text | awk 'NR==1{print $$2}') + \
+		$$($(SIZE) -A $< | grep text | awk 'NR==2{print $$2}') \
+		)) -le $$(( 32 / 8 * $(BRAM_FW_SIZE) )) \
 	|| { printf "The 'BRAM_FW_SIZE' variable needs to be increased\n"; \
 	[[ $< =~ testfw ]] && printf "Note that testfw fits if built with -Os\n"; \
 	false; }
@@ -177,17 +180,19 @@ secret:
 # Firmware generation.
 # Included in the bitstream.
 #-------------------------------------------------------------------
-LDFLAGS = -T $(P)/fw/tk1/firmware.lds
+LDFLAGS = \
+	-T $(P)/fw/tk1/firmware.lds \
+	-Wl,--cref,-M
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
 firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
-	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 simfirmware.elf: CFLAGS += -DSIMULATION
 simfirmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
-	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 qemu_firmware.elf: CFLAGS += -DQEMU_CONSOLE
 qemu_firmware.elf: firmware.elf
@@ -221,7 +226,7 @@ splint:
 		$(FIRMWARE_SOURCES)
 
 testfw.elf: $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
-	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 # Generate a fake BRAM file that will be filled in later after place-n-route
 bram_fw.hex:
@@ -242,9 +247,6 @@ check-binary-hashes:
 	sha256sum -c application_fpga.bin.sha256
 
 %.bin: %.elf
-	$(SIZE) $<
-	@test "$$($(SIZE) $< | awk 'NR==2{print $$2, $$3}')" = "0 0" \
-	|| { printf "Non-empty data or bss section!\n"; false; }
 	$(OBJCOPY) --input-target=elf32-littleriscv --output-target=binary $< $@
 	chmod -x $@
 
@@ -371,7 +373,7 @@ synth.json: $(FPGA_VERILOG_SRCS) $(VERILOG_SRCS) $(PICORV32_SRCS) bram_fw.hex
 application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
 	$(NEXTPNR_PATH)nextpnr-ice40 \
 		-l application_fpga_par.txt \
-		--seed 9106179903728618585 \
+		--seed 16549106670644347421 \
 		--freq $(TARGET_FREQ) \
 		--ignore-loops \
 		--up5k \
@@ -484,15 +486,15 @@ clean: clean_sim clean_fw clean_tb
 .PHONY: clean
 
 clean_fw:
-	rm -f firmware.{elf,elf.map,bin,hex}
+	rm -f firmware.{elf,map,bin,hex}
 	rm -f $(FIRMWARE_OBJS)
-	rm -f testfw.{elf,elf.map,bin,hex}
+	rm -f testfw.{elf,map,bin,hex}
 	rm -f $(TESTFW_OBJS)
 	rm -f qemu_firmware.elf
 .PHONY: clean_fw
 
 clean_sim:
-	rm -f simfirmware.{elf,elf.map,bin,hex}
+	rm -f simfirmware.{elf,map,bin,hex}
 	rm -f tb_application_fpga_sim.fst
 	rm -f tb_application_fpga_sim.fst.hier
 	rm -f tb/output_spram*.hex

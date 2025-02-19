@@ -3,13 +3,18 @@
  * SPDX-License-Identifier: GPL-2.0-only
 */
 
-OUTPUT_ARCH( "riscv" )
+OUTPUT_ARCH("riscv")
 ENTRY(_start)
+
+/* Define stack size */
+STACK_SIZE = 0xEF0; /* 3824 B */
 
 MEMORY
 {
-	ROM (rx)    : ORIGIN = 0x00000000, LENGTH = 0x20000 /* 128 KB */
-	RAM (rwx)   : ORIGIN = 0x40000000, LENGTH = 0x20000 /* 128 KB */
+	ROM       (rx)  : ORIGIN = 0x00000000, LENGTH = 0x2000  /* 8 KB */
+	FWRAM     (rw)  : ORIGIN = 0xd0000000, LENGTH = 0xF00   /* 3840 B */
+	RESETINFO (rw)  : ORIGIN = 0xd0000F00, LENGTH = 0x100   /* 256 B (part of FW_RAM area) */
+	RAM       (rwx) : ORIGIN = 0x40000000, LENGTH = 0x20000 /* 128 KB */
 }
 
 SECTIONS
@@ -28,31 +33,38 @@ SECTIONS
 	.text :
 	{
 		. = ALIGN(4);
+		_stext = .;
 		*(.text)           /* .text sections (code) */
 		*(.text*)          /* .text* sections (code) */
 		*(.rodata)         /* .rodata sections (constants, strings, etc.) */
 		*(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
-		*(.srodata)        /* .rodata sections (constants, strings, etc.) */
-		*(.srodata*)       /* .rodata* sections (constants, strings, etc.) */
+		*(.srodata)        /* .srodata sections (constants, strings, etc.) */
+		*(.srodata*)       /* .srodata* sections (constants, strings, etc.) */
 		. = ALIGN(4);
 		_etext = .;
-		_sidata = _etext;
 	} >ROM
 
-        /* XXX We don't allow any data or BSS - but they need be defined or linking will fail */
+	.stack (NOLOAD) :
+	{
+		. = ALIGN(16);
+		_sstack = .;
+		. += STACK_SIZE;
+		. = ALIGN(16);
+		_estack = .;
+	} >FWRAM
 
-	.data : AT (_etext)
+	.data :
 	{
 		. = ALIGN(4);
 		_sdata = .;
-		. = ALIGN(4);
 		*(.data)           /* .data sections */
 		*(.data*)          /* .data* sections */
-		*(.sdata)           /* .sdata sections */
-		*(.sdata*)          /* .sdata* sections */
+		*(.sdata)          /* .sdata sections */
+		*(.sdata*)         /* .sdata* sections */
 		. = ALIGN(4);
 		_edata = .;
-	} >ROM
+	} >FWRAM AT>ROM
+	_sidata = LOADADDR(.data);
 
 	/* Uninitialized data section */
 	.bss :
@@ -64,8 +76,12 @@ SECTIONS
 		*(.sbss)
 		*(.sbss*)
 		*(COMMON)
-
 		. = ALIGN(4);
 		_ebss = .;
-	} >ROM
+	} >FWRAM
 }
+
+_sfwram = ORIGIN(FWRAM);
+_efwram = ORIGIN(FWRAM) + LENGTH(FWRAM);
+_sresetinfo = ORIGIN(RESETINFO);
+_eresetinfo = ORIGIN(RESETINFO) + LENGTH(RESETINFO);
