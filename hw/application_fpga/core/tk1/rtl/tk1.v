@@ -20,7 +20,7 @@ module tk1 #(
     input wire reset_n,
 
     input  wire cpu_trap,
-    output wire system_mode,
+    output wire app_mode,
 
     input  wire [31 : 0] cpu_addr,
     input  wire          cpu_instr,
@@ -63,7 +63,7 @@ module tk1 #(
   localparam ADDR_NAME1 = 8'h01;
   localparam ADDR_VERSION = 8'h02;
 
-  localparam ADDR_SYSTEM_MODE_CTRL = 8'h08;
+  localparam ADDR_APP_MODE_CTRL = 8'h08;
 
   localparam ADDR_LED = 8'h09;
   localparam LED_R_BIT = 2;
@@ -116,8 +116,8 @@ module tk1 #(
   reg  [31 : 0] cdi_mem           [0 : 7];
   reg           cdi_mem_we;
 
-  reg           system_mode_reg;
-  reg           system_mode_we;
+  reg           app_mode_reg;
+  reg           app_mode_we;
 
   reg  [ 2 : 0] led_reg;
   reg           led_we;
@@ -189,7 +189,7 @@ module tk1 #(
   assign read_data     = tmp_read_data;
   assign ready         = tmp_ready;
 
-  assign system_mode   = system_mode_reg;
+  assign app_mode      = app_mode_reg;
 
   assign force_trap    = force_trap_reg;
 
@@ -252,7 +252,7 @@ module tk1 #(
   //----------------------------------------------------------------
   always @(posedge clk) begin : reg_update
     if (!reset_n) begin
-      system_mode_reg   <= 1'h0;
+      app_mode_reg      <= 1'h0;
       led_reg           <= 3'h6;
       gpio1_reg         <= 2'h0;
       gpio2_reg         <= 2'h0;
@@ -291,8 +291,8 @@ module tk1 #(
       gpio2_reg[0] <= gpio2;
       gpio2_reg[1] <= gpio2_reg[0];
 
-      if (system_mode_we) begin
-        system_mode_reg <= 1'h1;
+      if (app_mode_we) begin
+        app_mode_reg <= 1'h1;
       end
 
       if (led_we) begin
@@ -489,7 +489,7 @@ module tk1 #(
   // api
   //----------------------------------------------------------------
   always @* begin : api
-    system_mode_we   = 1'h0;
+    app_mode_we      = 1'h0;
     led_we           = 1'h0;
     gpio3_we         = 1'h0;
     gpio4_we         = 1'h0;
@@ -516,8 +516,8 @@ module tk1 #(
     if (cs) begin
       tmp_ready = 1'h1;
       if (we) begin
-        if (address == ADDR_SYSTEM_MODE_CTRL) begin
-          system_mode_we = 1'h1;
+        if (address == ADDR_APP_MODE_CTRL) begin
+          app_mode_we = 1'h1;
         end
 
         if (address == ADDR_LED) begin
@@ -530,13 +530,13 @@ module tk1 #(
         end
 
         if (address == ADDR_APP_START) begin
-          if (!system_mode_reg) begin
+          if (!app_mode_reg) begin
             app_start_we = 1'h1;
           end
         end
 
         if (address == ADDR_APP_SIZE) begin
-          if (!system_mode_reg) begin
+          if (!app_mode_reg) begin
             app_size_we = 1'h1;
           end
         end
@@ -546,25 +546,25 @@ module tk1 #(
         end
 
         if (address == ADDR_BLAKE2S) begin
-          if (!system_mode_reg) begin
+          if (!app_mode_reg) begin
             blake2s_addr_we = 1'h1;
           end
         end
 
         if ((address >= ADDR_CDI_FIRST) && (address <= ADDR_CDI_LAST)) begin
-          if (!system_mode_reg) begin
+          if (!app_mode_reg) begin
             cdi_mem_we = 1'h1;
           end
         end
 
         if (address == ADDR_RAM_ADDR_RAND) begin
-          if (!system_mode_reg) begin
+          if (!app_mode_reg) begin
             ram_addr_rand_we = 1'h1;
           end
         end
 
         if (address == ADDR_RAM_DATA_RAND) begin
-          if (!system_mode_reg) begin
+          if (!app_mode_reg) begin
             ram_data_rand_we = 1'h1;
           end
         end
@@ -611,8 +611,8 @@ module tk1 #(
           tmp_read_data = TK1_VERSION;
         end
 
-        if (address == ADDR_SYSTEM_MODE_CTRL) begin
-          tmp_read_data = {32{system_mode_reg}};
+        if (address == ADDR_APP_MODE_CTRL) begin
+          tmp_read_data = {32{app_mode_reg}};
         end
 
         if (address == ADDR_LED) begin
@@ -640,7 +640,7 @@ module tk1 #(
         end
 
         if ((address >= ADDR_UDI_FIRST) && (address <= ADDR_UDI_LAST)) begin
-          if (!system_mode_reg) begin
+          if (!app_mode_reg) begin
             tmp_read_data = udi_rdata;
           end
         end

@@ -17,7 +17,7 @@ module uds (
     input wire clk,
     input wire reset_n,
 
-    input wire system_mode,
+    input wire app_mode,
 
     input  wire          cs,
     input  wire [ 2 : 0] address,
@@ -89,7 +89,7 @@ module uds (
     if (cs) begin
       tmp_ready = 1'h1;
 
-      if (!system_mode) begin
+      if (!app_mode) begin
         if (uds_rd_reg[address[2 : 0]] == 1'h0) begin
           uds_rd_we = 1'h1;
         end

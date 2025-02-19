@@ -21,6 +21,6 @@ The contents of the fw_ram is cleared when the FPGA is powered up and
 configured by the bitstream. The contents is not cleared by a system
 reset.
 
-If the system_mode input is set, i.e. in app mode, no memory
-accesses are allowed. Any reads when the system_mode is set will
+If the app_mode input is set, i.e. in app mode, no memory
+accesses are allowed. Any reads when the app_mode is set will
 return an all zero word.

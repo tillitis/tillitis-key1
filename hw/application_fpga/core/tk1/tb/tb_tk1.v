@@ -27,7 +27,7 @@ module tb_tk1 ();
   localparam ADDR_NAME1 = 8'h01;
   localparam ADDR_VERSION = 8'h02;
 
-  localparam ADDR_SYSTEM_MODE_CTRL = 8'h08;
+  localparam ADDR_APP_MODE_CTRL = 8'h08;
 
   localparam ADDR_LED = 8'h09;
   localparam LED_R_BIT = 2;
@@ -76,7 +76,7 @@ module tb_tk1 ();
   reg           tb_clk;
   reg           tb_reset_n;
   reg           tb_cpu_trap;
-  wire          tb_system_mode;
+  wire          tb_app_mode;
 
   reg  [31 : 0] tb_cpu_addr;
   reg           tb_cpu_instr;
@@ -122,7 +122,7 @@ module tb_tk1 ();
       .reset_n(tb_reset_n),
 
       .cpu_trap(tb_cpu_trap),
-      .system_mode(tb_system_mode),
+      .app_mode(tb_app_mode),
 
       .cpu_addr  (tb_cpu_addr),
       .cpu_instr (tb_cpu_instr),
@@ -192,7 +192,7 @@ module tb_tk1 ();
       $display("------------");
       if (tb_main_monitor) begin
         $display("Inputs and outputs:");
-        $display("tb_cpu_trap: 0x%1x, system_mode: 0x%1x", tb_cpu_trap, tb_system_mode);
+        $display("tb_cpu_trap: 0x%1x, app_mode: 0x%1x", tb_cpu_trap, tb_app_mode);
         $display("cpu_addr: 0x%08x, cpu_instr: 0x%1x, cpu_valid: 0x%1x, force_tap: 0x%1x",
                  tb_cpu_addr, tb_cpu_instr, tb_cpu_valid, tb_force_trap);
         $display("ram_addr_rand: 0x%08x, ram_data_rand: 0x%08x", tb_ram_addr_rand,
@@ -529,7 +529,7 @@ module tb_tk1 ();
       read_check_word(ADDR_CDI_LAST + 0, 32'h70717273);
 
       $display("--- test3: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hdeadbeef);
+      write_word(ADDR_APP_MODE_CTRL, 32'hdeadbeef);
 
       $display("--- test3: Try to write CDI again.");
       write_word(ADDR_CDI_FIRST + 0, 32'hfffefdfc);
@@ -577,7 +577,7 @@ module tb_tk1 ();
       read_check_word(ADDR_BLAKE2S, 32'hcafebabe);
 
       $display("--- test4: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hf00ff00f);
+      write_word(ADDR_APP_MODE_CTRL, 32'hf00ff00f);
 
       $display("--- test4: Write Blake2s entry point again.");
       write_word(ADDR_BLAKE2S, 32'hdeadbeef);
@@ -613,7 +613,7 @@ module tb_tk1 ();
       read_check_word(ADDR_APP_SIZE, 32'h47114711);
 
       $display("--- test5: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hf000000);
+      write_word(ADDR_APP_MODE_CTRL, 32'hf000000);
 
       $display("--- test5: Write app start address and size again.");
       write_word(ADDR_APP_START, 32'hdeadbeef);
@@ -652,7 +652,7 @@ module tb_tk1 ();
                dut.ram_addr_rand, dut.ram_data_rand);
 
       $display("--- test6: Switch to app mode.");
-      write_word(ADDR_SYSTEM_MODE_CTRL, 32'hf000000);
+      write_word(ADDR_APP_MODE_CTRL, 32'hf000000);
 
       $display("--- test6: Write to ADDR_RAM_ADDR_RAND and ADDR_RAM_DATA_RAND again.");
       write_word(ADDR_RAM_ADDR_RAND, 32'hdeadbeef);

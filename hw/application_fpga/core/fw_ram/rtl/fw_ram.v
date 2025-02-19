@@ -17,7 +17,7 @@ module fw_ram (
     input wire clk,
     input wire reset_n,
 
-    input wire system_mode,
+    input wire app_mode,
 
     input  wire          cs,
     input  wire [ 3 : 0] we,
@@ -37,7 +37,7 @@ module fw_ram (
   reg  [31 : 0] mem_read_data2;
   reg  [31 : 0] mem_read_data3;
   reg           ready_reg;
-  wire          system_mode_cs;
+  wire          app_mode_cs;
   reg           bank0;
   reg           bank1;
   reg           bank2;
@@ -47,9 +47,9 @@ module fw_ram (
   //----------------------------------------------------------------
   // Concurrent assignment of ports.
   //----------------------------------------------------------------
-  assign read_data      = tmp_read_data;
-  assign ready          = ready_reg;
-  assign system_mode_cs = cs && ~system_mode;
+  assign read_data   = tmp_read_data;
+  assign ready       = ready_reg;
+  assign app_mode_cs = cs && ~app_mode;
 
 
   //----------------------------------------------------------------
@@ -77,12 +77,12 @@ module fw_ram (
       .RADDR({3'h0, address[7 : 0]}),
       .RCLK(clk),
       .RCLKE(1'h1),
-      .RE(system_mode_cs & bank0),
+      .RE(app_mode_cs & bank0),
       .WADDR({3'h0, address[7 : 0]}),
       .WCLK(clk),
       .WCLKE(1'h1),
       .WDATA(write_data[15 : 0]),
-      .WE((|we & system_mode_cs & bank0)),
+      .WE((|we & app_mode_cs & bank0)),
       .MASK({{8{~we[1]}}, {8{~we[0]}}})
   );
 
@@ -108,12 +108,12 @@ module fw_ram (
       .RADDR({3'h0, address[7 : 0]}),
       .RCLK(clk),
       .RCLKE(1'h1),
-      .RE(system_mode_cs & bank0),
+      .RE(app_mode_cs & bank0),
       .WADDR({3'h0, address[7 : 0]}),
       .WCLK(clk),
       .WCLKE(1'h1),
       .WDATA(write_data[31 : 16]),
-      .WE((|we & system_mode_cs & bank0)),
+      .WE((|we & app_mode_cs & bank0)),
       .MASK({{8{~we[3]}}, {8{~we[2]}}})
   );
 
@@ -139,12 +139,12 @@ module fw_ram (
       .RADDR({3'h0, address[7 : 0]}),
       .RCLK(clk),
       .RCLKE(1'h1),
-      .RE(system_mode_cs & bank1),
+      .RE(app_mode_cs & bank1),
       .WADDR({3'h0, address[7 : 0]}),
       .WCLK(clk),
       .WCLKE(1'h1),
       .WDATA(write_data[15 : 0]),
-      .WE((|we & system_mode_cs & bank1)),
+      .WE((|we & app_mode_cs & bank1)),
       .MASK({{8{~we[1]}}, {8{~we[0]}}})
   );
 
@@ -170,12 +170,12 @@ module fw_ram (
       .RADDR({3'h0, address[7 : 0]}),
       .RCLK(clk),
       .RCLKE(1'h1),
-      .RE(system_mode_cs & bank1),
+      .RE(app_mode_cs & bank1),
       .WADDR({3'h0, address[7 : 0]}),
       .WCLK(clk),
       .WCLKE(1'h1),
       .WDATA(write_data[31 : 16]),
-      .WE((|we & system_mode_cs & bank1)),
+      .WE((|we & app_mode_cs & bank1)),
       .MASK({{8{~we[3]}}, {8{~we[2]}}})
   );
 
@@ -201,12 +201,12 @@ module fw_ram (
       .RADDR({3'h0, address[7 : 0]}),
       .RCLK(clk),
       .RCLKE(1'h1),
-      .RE(system_mode_cs & bank2),
+      .RE(app_mode_cs & bank2),
       .WADDR({3'h0, address[7 : 0]}),
       .WCLK(clk),
       .WCLKE(1'h1),
       .WDATA(write_data[15 : 0]),
-      .WE((|we & system_mode_cs & bank2)),
+      .WE((|we & app_mode_cs & bank2)),
       .MASK({{8{~we[1]}}, {8{~we[0]}}})
   );
 
@@ -232,12 +232,12 @@ module fw_ram (
       .RADDR({3'h0, address[7 : 0]}),
       .RCLK(clk),
       .RCLKE(1'h1),
-      .RE(system_mode_cs & bank2),
+      .RE(app_mode_cs & bank2),
       .WADDR({3'h0, address[7 : 0]}),
       .WCLK(clk),
       .WCLKE(1'h1),
       .WDATA(write_data[31 : 16]),
-      .WE((|we & system_mode_cs & bank2)),
+      .WE((|we & app_mode_cs & bank2)),
       .MASK({{8{~we[3]}}, {8{~we[2]}}})
   );
 
@@ -263,12 +263,12 @@ module fw_ram (
       .RADDR({3'h0, address[7 : 0]}),
       .RCLK(clk),
       .RCLKE(1'h1),
-      .RE(system_mode_cs & bank3),
+      .RE(app_mode_cs & bank3),
       .WADDR({3'h0, address[7 : 0]}),
       .WCLK(clk),
       .WCLKE(1'h1),
       .WDATA(write_data[15 : 0]),
-      .WE((|we & system_mode_cs & bank3)),
+      .WE((|we & app_mode_cs & bank3)),
       .MASK({{8{~we[1]}}, {8{~we[0]}}})
   );
 
@@ -294,12 +294,12 @@ module fw_ram (
       .RADDR({3'h0, address[7 : 0]}),
       .RCLK(clk),
       .RCLKE(1'h1),
-      .RE(system_mode_cs & bank3),
+      .RE(app_mode_cs & bank3),
       .WADDR({3'h0, address[7 : 0]}),
       .WCLK(clk),
       .WCLKE(1'h1),
       .WDATA(write_data[31 : 16]),
-      .WE((|we & system_mode_cs & bank3)),
+      .WE((|we & app_mode_cs & bank3)),
       .MASK({{8{~we[3]}}, {8{~we[2]}}})
   );
 
@@ -326,7 +326,7 @@ module fw_ram (
     bank3         = 1'h0;
     tmp_read_data = 32'h0;
 
-    if (system_mode_cs) begin
+    if (app_mode_cs) begin
       case (address[9:8])
         2'b11: begin
           bank3 = 1'h1;

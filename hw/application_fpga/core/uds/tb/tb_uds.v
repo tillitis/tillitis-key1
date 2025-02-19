@@ -37,7 +37,7 @@ module tb_uds ();
 
   reg           tb_clk;
   reg           tb_reset_n;
-  reg           tb_system_mode;
+  reg           tb_app_mode;
   reg           tb_cs;
   reg  [ 7 : 0] tb_address;
   wire [31 : 0] tb_read_data;
@@ -50,7 +50,7 @@ module tb_uds ();
       .clk(tb_clk),
       .reset_n(tb_reset_n),
 
-      .system_mode(tb_system_mode),
+      .app_mode(tb_app_mode),
 
       .cs(tb_cs),
       .address(tb_address),
@@ -95,7 +95,7 @@ module tb_uds ();
       $display("State of DUT at cycle: %08d", cycle_ctr);
       $display("------------");
       $display("Inputs and outputs:");
-      $display("system_mode: 0x%1x", tb_system_mode);
+      $display("app_mode: 0x%1x", tb_app_mode);
       $display("cs: 0x%1x, address: 0x%02x, read_data: 0x%08x", tb_cs, tb_address, tb_read_data);
       $display("");
 
@@ -160,7 +160,7 @@ module tb_uds ();
 
       tb_clk         = 1'h0;
       tb_reset_n     = 1'h1;
-      tb_system_mode = 1'h0;
+      tb_app_mode    = 1'h0;
       tb_cs          = 1'h0;
       tb_address     = 8'h0;
     end
