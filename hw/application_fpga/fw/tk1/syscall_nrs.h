@@ -1,8 +1,8 @@
 // Copyright (C) 2025 - Tillitis AB
 // SPDX-License-Identifier: GPL-2.0-only
 
-#ifndef TKEY_SYSCALL_H
-#define TKEY_SYSCALL_H
+#ifndef TKEY_SYSCALL_NRS_H
+#define TKEY_SYSCALL_NRS_H
 
 enum {
 	TK1_SYSCALL_RESET = 1,
