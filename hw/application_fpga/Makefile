@@ -28,7 +28,7 @@ ICESTORM_PATH ?=
 
 # FPGA target frequency. Should be in sync with the clock frequency
 # given by the parameters to the PLL in rtl/clk_reset_gen.v
-TARGET_FREQ ?= 24
+TARGET_FREQ ?= 21
 
 # Size in 32-bit words, must be divisible by 256 (pairs of EBRs, because 16
 # bits wide; an EBR is 128 32-bits words)
@@ -127,7 +127,9 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/lib.o \
 	$(P)/fw/tk1/assert.o \
 	$(P)/fw/tk1/led.o \
-	$(P)/fw/tk1/blake2s/blake2s.o
+	$(P)/fw/tk1/blake2s/blake2s.o \
+	$(P)/fw/tk1/syscall.o \
+	$(P)/fw/tk1/syscall_enable.o
 
 FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/main.c \
@@ -135,15 +137,15 @@ FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/lib.c \
 	$(P)/fw/tk1/assert.c \
 	$(P)/fw/tk1/led.c \
-	$(P)/fw/tk1/blake2s/blake2s.c
+	$(P)/fw/tk1/blake2s/blake2s.c \
+	$(P)/fw/tk1/syscall.c
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
 	$(P)/fw/testfw/start.o \
 	$(P)/fw/tk1/proto.o \
-	$(P)/fw/tk1/lib.o \
 	$(P)/fw/tk1/assert.o \
-	$(P)/fw/tk1/blake2s/blake2s.o
+	$(P)/fw/tk1/lib.o
 
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
@@ -371,7 +373,7 @@ synth.json: $(FPGA_VERILOG_SRCS) $(VERILOG_SRCS) $(PICORV32_SRCS) bram_fw.hex
 application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
 	$(NEXTPNR_PATH)nextpnr-ice40 \
 		-l application_fpga_par.txt \
-		--seed 9106179903728618585 \
+		--seed 4127945014473118301 \
 		--freq $(TARGET_FREQ) \
 		--ignore-loops \
 		--up5k \
