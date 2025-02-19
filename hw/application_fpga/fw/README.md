@@ -1,35 +1,43 @@
-# Firmware
+# Firmware implementation notes
 
 ## Introduction
 
-This text is an introduction to, a requirement specification of,
-and some implementation notes of the TKey firmware. It also gives a
-few hint on developing and debugging the firmware.
-
-This text is specific for the firmware. For a more general description
-on how to implement device apps, see [the TKey Developer
-Handbook](https://dev.tillitis.se/).
+This text is specific for the firmware, the piece of software in TKey
+ROM. For a more general description on how to implement device apps,
+see [the TKey Developer Handbook](https://dev.tillitis.se/).
 
 ## Definitions
 
-- Firmware - software in ROM responsible for loading applications. The
-  firmware is included as part of the FPGA bitstream and not
-  replacable on a usual consumer TKey.
-- Device application or app - software supplied by the client which is
-  received, loaded, measured, and started by the firmware.
+- Firmware: Software in ROM responsible for loading, measuring, and
+  starting applications. The firmware is included as part of the FPGA
+  bitstream and not replacable on a usual consumer TKey.
+- Client: Software running on a computer or a mobile phone the TKey is
+  inserted into.
+- Device application or app: Software supplied by the client that runs
+  on the TKey.
 
 ## CPU modes and firmware
 
 The TKey has two modes of software operation: firmware mode and
-application mode. The TKey always starts in firmware mode and starts
-the firmware. When the firmware is about to start the application it
-switches to a more constrained environment, the application mode.
+application mode. The TKey always starts in firmware mode when it
+starts the firmware. When the application starts the hardware
+automatically switches to a more constrained environment: the
+application mode.
 
-The TKey hardware cores are memory mapped. Firmware has complete
-access, except that the UDS is readable only once. The memory map is
-constrained when running in application mode, e.g. FW\_RAM and UDS
-isn't readable, and several other hardware addresses are either not
-readable or not writable for the application.
+The TKey hardware cores are memory mapped but the memory access is
+different depending on mode. Firmware has complete access, except that
+the Unique Device Secret (UDS) words are readable only once even in
+firmware mode. The memory map is constrained when running in
+application mode, e.g. FW\_RAM and UDS isn't readable, and several
+other hardware addresses are either not readable or not writable for
+the application.
+
+When doing system calls from a device app the context switches back to
+firmware mode. However, the UDS is still not available, protected by
+two measures: 1) the UDS words can only be read out once and have
+already been read by firmware when measuring the app, and, 2) the UDS
+is protected by hardware after the execution leaves ROM for the first
+time.
 
 See the table in [the Developer
 Handbook](https://dev.tillitis.se/memory/) for an overview about the
@@ -72,9 +80,11 @@ Dev Handbook for specific details.
 
 ## Memory constraints
 
-- ROM: 6 kByte.
-- FW\_RAM: 2 kByte.
-- RAM: 128 kByte.
+| *Name*  | *Size*   | *FW mode* | *App mode* |
+|---------|----------|-----------|------------|
+| ROM     | 6 kByte  | r-x       | r          |
+| FW\_RAM | 2 kByte  | rw-       | -          |
+| RAM     | 128 kByt | rwx       | rwx        |
 
 ## Firmware behaviour
 
@@ -84,7 +94,7 @@ application received from the client over the USB/UART.
 The firmware binary is part of the FPGA bitstream as the initial
 values of the Block RAMs used to construct the `FW_ROM`. The `FW_ROM`
 start address is located at `0x0000_0000` in the CPU memory map, which
-is the CPU reset vector.
+is also the CPU reset vector.
 
 ### Firmware state machine
 
@@ -148,26 +158,30 @@ is received, when state is changed to "running".
 
 In "running", the loaded device app is measured, the Compound Device
 Identifier (CDI) is computed, we do some cleanup of firmware data
-structures, flip to application mode, and finally start the app, which
-ends the firmware state machine.
+structures, enable the system calls, and finally start the app, which
+ends the firmware state machine. Hardware guarantees that we leave
+firmware mode automatically when the program counter leaves ROM.
 
-The device app is now running in application mode. There is no other
-means of getting back from application mode to firmware mode than
-resetting/power cycling the device. Note that ROM is still accessible
-in the memory map, so it's still possible to execute firmware code in
-application mode, but with no privileged access.
+The device app is now running in application mode. We can, however,
+return to firmware mode (excepting access to the UDS) by doing system
+calls. Note that ROM is still readable, but is now hardware protected
+from execution, except through the system call mechanism.
+
+### Golden path
 
 Firmware loads the application at the start of RAM (`0x4000_0000`). It
 uses the special FW\_RAM for its own stack.
 
 When reset is released, the CPU starts executing the firmware. It
-begins by clearing all CPU registers, clears all FW\_RAM, sets up a
-stack for itself there, and then jumps to `main()`.
+begins in `start.S` by clearing all CPU registers, clears all FW\_RAM,
+sets up a stack for itself there, and then jumps to `main()`. Also
+included in the assembly part of firmware is an interrupt handler for
+the system calls, but the handler is not yet enabled.
 
-Beginning at `main()` it sets up the "system calls", then fills the
-entire RAM with pseudo random data and setting up the RAM address and
-data hardware scrambling with values from the True Random Number
-Generator (TRNG). It then waits for data coming in through the UART.
+Beginning at `main()` it fills the entire RAM with pseudo random data
+and setting up the RAM address and data hardware scrambling with
+values from the True Random Number Generator (TRNG). It then waits for
+data coming in through the UART.
 
 Typical expected use scenario:
 
@@ -196,7 +210,7 @@ Typical expected use scenario:
      ([CDI]((#compound-device-identifier-computation))) is then
      computed by doing a new BLAKE2s using the Unique Device Secret
      (UDS), the application digest, and any User Supplied Secret
-     (USS).
+     (USS) digest already received.
 
   6. The start address of the device app, currently `0x4000_0000`, is
      written to `APP_ADDR` and the size of the binary to `APP_SIZE` to
@@ -204,21 +218,22 @@ Typical expected use scenario:
      it is, if it wants to relocate in RAM.
 
   7. The firmware now clears the special `FW_RAM` where it keeps it
-     stack. After this it performs no more function calls and uses no
-     more automatic variables.
+     stack.
 
-  8. Firmware starts the application by jumping to the contents of
+  8. The interrupt handler for system calls is enabled.
+
+  9. Firmware starts the application by jumping to the contents of
      `APP_ADDR`. Hardware automatically switches from firmware mode to
-     application mode. In this mode the MMIO region is restricted,
-     e.g. some registers are removed (`UDS`), and some are switched
-     from read/write to read-only (see [the memory
+     application mode. In this mode some memory access is restricted,
+     e.g. some addresses are inaccessible (`UDS`), and some are
+     switched from read/write to read-only (see [the memory
      map](https://dev.tillitis.se/memory/)).
 
 If during this whole time any commands are received which are not
-allowed in the current state, we enter the "failed" state and execute
-an illegal instruction. An illegal instruction traps the CPU and
-hardware blinks the status LED red until a power cycle. No further
-instructions are executed.
+allowed in the current state, or any errors occur, we enter the
+"failed" state and execute an illegal instruction. An illegal
+instruction traps the CPU and hardware blinks the status LED red until
+a power cycle. No further instructions are executed.
 
 ### User-supplied Secret (USS)
 
@@ -250,46 +265,16 @@ call `blake2s_update()` with it and then immediately call
 `blake2s_update()` again with the program digest, destroying the UDS
 stored in the internal context buffer. UDS should now not be in
 `FW_RAM` anymore. We can read UDS only once per power cycle so UDS
-should now not be available to firmware at all.
+should now not be available even to firmware.
 
 Then we continue with the CDI computation by updating with an optional
-USS and then finalizing the hash, storing the resulting digest in
+USS digest and finalizing the hash, storing the resulting digest in
 `CDI`.
 
-We also clear the entire `FW_RAM` where the stack lived, including the
-BLAKE2s context with the UDS, very soon after that, just before
-jumping to the application.
+### Firmware system calls
 
-### Firmware services
-
-The firmware exposes a BLAKE2s function through a function pointer
-located in MMIO `BLAKE2S` (see [memory
-map](system_description.md#memory-mapped-hardware-functions)) with the
-with function signature:
-
-```c
-int blake2s(void *out, unsigned long outlen, const void *key,
-	    unsigned long keylen, const void *in, unsigned long inlen,
-	    blake2s_ctx *ctx);
-
-```
-
-where `blake2s_ctx` is:
-
-```c
-typedef struct {
-	uint8_t b[64]; // input buffer
-	uint32_t h[8]; // chained state
-	uint32_t t[2]; // total number of bytes
-	size_t c;      // pointer for b[]
-	size_t outlen; // digest size
-} blake2s_ctx;
-```
-
-The `libcommon` library in
-[tkey-libs](https://github.com/tillitis/tkey-libs/)
-has a wrapper for using this function called `blake2s()` which needs
-to be maintained if you do any changes to the firmware call.
+The firmware provides a system call mechanism through the use of the
+PicoRV32 interrupt handler.
 
 ## Developing firmware
 
