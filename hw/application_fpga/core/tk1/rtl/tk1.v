@@ -21,6 +21,7 @@ module tk1 #(
 
     input  wire cpu_trap,
     output wire app_mode,
+    output wire fw_exit_lock,
 
     input  wire [31 : 0] cpu_addr,
     input  wire          cpu_instr,
@@ -194,6 +195,7 @@ module tk1 #(
   assign system_reset  = system_reset_reg;
 
   assign app_mode      = fw_exit_lock_reg & ~syscall;
+  assign fw_exit_lock  = fw_exit_lock_reg;
 
   //----------------------------------------------------------------
   // Module instance.

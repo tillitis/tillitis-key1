@@ -154,6 +154,7 @@ module application_fpga (
   wire [31 : 0] tk1_read_data;
   wire          tk1_ready;
   wire          app_mode;
+  wire          fw_exit_lock;
   wire          force_trap;
   wire [14 : 0] ram_addr_rand;
   wire [31 : 0] ram_data_rand;
@@ -293,7 +294,7 @@ module application_fpga (
       .clk(clk),
       .reset_n(reset_n),
 
-      .en(~app_mode),
+      .en(~fw_exit_lock),
 
       .cs(uds_cs),
       .address(uds_address),
