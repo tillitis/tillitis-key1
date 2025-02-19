@@ -9,6 +9,7 @@
 #include "lib.h"
 #include "proto.h"
 #include "state.h"
+#include "syscall_enable.h"
 #include "types.h"
 
 // clang-format off
@@ -342,6 +343,8 @@ static void run(const struct context *ctx)
 		::: "memory");
 #endif
 	// clang-format on
+
+	syscall_enable();
 
 	// Jump to app - doesn't return
 	// Hardware is responsible for switching to app mode

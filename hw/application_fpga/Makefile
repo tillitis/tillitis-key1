@@ -128,7 +128,8 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/assert.o \
 	$(P)/fw/tk1/led.o \
 	$(P)/fw/tk1/blake2s/blake2s.o \
-	$(P)/fw/tk1/syscall.o
+	$(P)/fw/tk1/syscall.o \
+	$(P)/fw/tk1/syscall_enable.o
 
 FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/main.c \
