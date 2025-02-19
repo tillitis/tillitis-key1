@@ -101,7 +101,7 @@ module application_fpga_sim (
   wire [31 : 0] cpu_wdata;
 
   reg           rom_cs;
-  reg  [11 : 0] rom_address;
+  reg  [10 : 0] rom_address;
   wire [31 : 0] rom_read_data;
   wire          rom_ready;
 
@@ -140,7 +140,7 @@ module application_fpga_sim (
 
   reg           fw_ram_cs;
   reg  [ 3 : 0] fw_ram_we;
-  reg  [ 8 : 0] fw_ram_address;
+  reg  [ 9 : 0] fw_ram_address;
   reg  [31 : 0] fw_ram_write_data;
   wire [31 : 0] fw_ram_read_data;
   wire          fw_ram_ready;
@@ -408,7 +408,7 @@ module application_fpga_sim (
     muxed_rdata_new     = 32'h0;
 
     rom_cs              = 1'h0;
-    rom_address         = cpu_addr[13 : 2];
+    rom_address         = cpu_addr[12 : 2];
 
     ram_cs              = 1'h0;
     ram_we              = 4'h0;
@@ -417,7 +417,7 @@ module application_fpga_sim (
 
     fw_ram_cs           = 1'h0;
     fw_ram_we           = cpu_wstrb;
-    fw_ram_address      = cpu_addr[10 : 2];
+    fw_ram_address      = cpu_addr[11 : 2];
     fw_ram_write_data   = cpu_wdata;
 
     trng_cs             = 1'h0;

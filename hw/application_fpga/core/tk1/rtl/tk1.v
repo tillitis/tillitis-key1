@@ -105,7 +105,7 @@ module tk1 #(
   localparam TK1_VERSION = 32'h00000005;
 
   localparam FW_RAM_FIRST = 32'hd0000000;
-  localparam FW_RAM_LAST = 32'hd00007ff;
+  localparam FW_RAM_LAST = 32'hd0000fff;  // 4 KB
 
 
   //----------------------------------------------------------------
@@ -395,7 +395,7 @@ module tk1 #(
 
     if (cpu_valid) begin
       // Outside ROM area
-      if (cpu_addr[31 : 30] == 2'h0 & |cpu_addr[29 : 14]) begin
+      if (cpu_addr[31 : 30] == 2'h0 & |cpu_addr[29 : 13]) begin
         force_trap_set = 1'h1;
       end
 
@@ -443,7 +443,7 @@ module tk1 #(
         end
 
         // Outside FW_RAM
-        if (cpu_addr[29 : 24] == 6'h10 & |cpu_addr[23 : 11]) begin
+        if (cpu_addr[29 : 24] == 6'h10 & |cpu_addr[23 : 12]) begin
           force_trap_set = 1'h1;
         end
 

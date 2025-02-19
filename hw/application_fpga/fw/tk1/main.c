@@ -334,8 +334,8 @@ static void run(const struct context *ctx)
 	// clang-format off
 #ifndef S_SPLINT_S
 	asm volatile(
-		"li a0, 0xd0000000;" // FW_RAM
-		"li a1, 0xd0000800;" // End of 2 KB FW_RAM (just past the end)
+		"la a0, _sstack;"
+		"la a1, _estack;"
 		"loop:;"
 		"sw zero, 0(a0);"
 		"addi a0, a0, 4;"
