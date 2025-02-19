@@ -6,8 +6,10 @@
 #include "../tk1/led.h"
 #include "../tk1/lib.h"
 #include "../tk1/proto.h"
+#include "../tk1/syscall_num.h"
 #include "../tk1/types.h"
 #include "../tk1_mem.h"
+#include "syscall.h"
 
 #define USBMODE_PACKET_SIZE 64
 
