@@ -287,11 +287,21 @@ system call handler. The caller should place them in the a0 and a1
 registers according to the RISC-V calling convention. The caller is
 responsible for saving and restoring registers.
 
+TODO: Should we increase the number of arguments? RV calling
+convention uses a0-a7.
+
 The syscall handler returns execution on the next instruction after
 the store instruction to the trigger address. The return value from
 the syscall is now available in x10 (a0).
 
 To add or change syscalls, see the `syscall_handler()` in `syscall.c`.
+
+Currently supported syscalls:
+
+| *Name*      | *Number* | *Argument* | *Description*                    |
+| RESET       | 1        | Unused     | Reset the TKey                   |
+| SET\_LED    | 10       | Colour     | Set the colour of the status LED |
+| GET\_VIDPID | 12       | Unused     | Get Vendor and Product ID        |
 
 ## Developing firmware
 
