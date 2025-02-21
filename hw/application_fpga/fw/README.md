@@ -274,7 +274,24 @@ USS digest and finalizing the hash, storing the resulting digest in
 ### Firmware system calls
 
 The firmware provides a system call mechanism through the use of the
-PicoRV32 interrupt handler.
+PicoRV32 interrupt handler. They are triggered by writing to the
+trigger address: 0xe1000000. It's typically done with a function
+signature like this:
+
+```
+int syscall(uint32_t number, uint32_t arg1);
+```
+
+Arguments are system call number and a generic argument passed to the
+system call handler. The caller should place them in the a0 and a1
+registers according to the RISC-V calling convention. The caller is
+responsible for saving and restoring registers.
+
+The syscall handler returns execution on the next instruction after
+the store instruction to the trigger address. The return value from
+the syscall is now available in x10 (a0).
+
+To add or change syscalls, see the `syscall_handler()` in `syscall.c`.
 
 ## Developing firmware
 
