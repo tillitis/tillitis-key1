@@ -21,6 +21,7 @@ module tk1 #(
 
     input  wire cpu_trap,
     output wire app_mode,
+    output wire fw_startup_done,
 
     input  wire [31 : 0] cpu_addr,
     input  wire          cpu_instr,
@@ -180,20 +181,21 @@ module tk1 #(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign read_data     = tmp_read_data;
-  assign ready         = tmp_ready;
+  assign read_data       = tmp_read_data;
+  assign ready           = tmp_ready;
 
-  assign app_mode      = fw_startup_done_reg & ~syscall;
+  assign app_mode        = fw_startup_done_reg & ~syscall;
+  assign fw_startup_done = fw_startup_done_reg;
 
-  assign force_trap    = force_trap_reg;
+  assign force_trap      = force_trap_reg;
 
-  assign gpio3         = gpio3_reg;
-  assign gpio4         = gpio4_reg;
+  assign gpio3           = gpio3_reg;
+  assign gpio4           = gpio4_reg;
 
-  assign ram_addr_rand = ram_addr_rand_reg;
-  assign ram_data_rand = ram_data_rand_reg;
+  assign ram_addr_rand   = ram_addr_rand_reg;
+  assign ram_data_rand   = ram_data_rand_reg;
 
-  assign system_reset  = system_reset_reg;
+  assign system_reset    = system_reset_reg;
 
   //----------------------------------------------------------------
   // Module instance.
