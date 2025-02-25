@@ -1375,9 +1375,9 @@ void main()
                        CdcRxBuf,
                        CdcRxBufLength);
 
+                Endpoint2UploadBusy = 1; // Set busy flag
                 UEP2_T_LEN = CdcRxBufLength; // Set the number of data bytes that Endpoint 2 is ready to send
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-                Endpoint2UploadBusy = 1; // Set busy flag
 
                 CdcDataAvailable = 0;
                 CdcRxBufLength = 0;
@@ -1396,9 +1396,9 @@ void main()
                        HidRxBuf,
                        HidRxBufLength);
 
+                Endpoint3UploadBusy = 1; // Set busy flag
                 UEP3_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 3 is ready to send
                 UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-                Endpoint3UploadBusy = 1; // Set busy flag
 
                 HidDataAvailable = 0;
 
@@ -1422,9 +1422,9 @@ void main()
                             TkeyCtrlRxBufLength);
                 }
 
+                Endpoint4UploadBusy = 1; // Set busy flag
                 UEP4_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 4 is ready to send
                 UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-                Endpoint4UploadBusy = 1; // Set busy flag
 
                 TkeyCtrlDataAvailable = 0;
                 TkeyCtrlRxBufLength = 0;
