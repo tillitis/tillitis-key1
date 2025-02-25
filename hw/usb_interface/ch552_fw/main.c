@@ -394,7 +394,6 @@ XDATA uint8_t UartRxBuf[UART_RX_BUF_SIZE] = { 0 };  // Serial receive buffer
 volatile IDATA uint8_t UartRxBufInputPointer = 0;   // Circular buffer write pointer, bus reset needs to be initialized to 0
 volatile IDATA uint8_t UartRxBufOutputPointer = 0;  // Take pointer out of circular buffer, bus reset needs to be initialized to 0
 volatile IDATA uint8_t UartRxBufByteCount = 0;      // Number of unprocessed bytes remaining in the buffer
-volatile IDATA uint8_t UartRxBufOverflow = 0;
 
 /** Debug UART */
 #define DEBUG_UART_RX_BUF_SIZE        8
@@ -461,13 +460,13 @@ void USBDeviceCfg()
     USB_CTRL |= bUC_DEV_PU_EN | bUC_INT_BUSY | bUC_DMA_EN; // USB device and internal pull-up enable, automatically return to NAK before interrupt flag is cleared
     USB_DEV_AD = 0x00;                                     // Device address initialization
 #if 0
-    // USB_CTRL |= bUC_LOW_SPEED;
+    // USB_CTRL  |= bUC_LOW_SPEED;
     // UDEV_CTRL |= bUD_LOW_SPEED;                         // Select low speed 1.5M mode
 #else
-    USB_CTRL &= ~bUC_LOW_SPEED;
+    USB_CTRL  &= ~bUC_LOW_SPEED;
     UDEV_CTRL &= ~bUD_LOW_SPEED;                           // Select full speed 12M mode, the default mode
 #endif
-    UDEV_CTRL = bUD_PD_DIS;                                // Disable DP / DM pull-down resistor
+    UDEV_CTRL |= bUD_PD_DIS;                               // Disable DP / DM pull-down resistor
     UDEV_CTRL |= bUD_PORT_EN;                              // Enable physical port
 }
 
@@ -1003,8 +1002,10 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
         UartRxBufByteCount = 0;         // The number of bytes remaining in the current buffer to be fetched
         UsbEp2ByteCount = 0;            // USB endpoint 2 (CDC) received length
         UsbEp3ByteCount = 0;            // USB endpoint 3 (HID) received length
+        UsbEp4ByteCount = 0;            // USB endpoint 4 (TKEYCTRL) received length
         Endpoint2UploadBusy = 0;        // Clear busy flag
         Endpoint3UploadBusy = 0;        // Clear busy flag
+        Endpoint4UploadBusy = 0;        // Clear busy flag
 
         FrameMode = 0;
 
@@ -1087,9 +1088,6 @@ void Uart1_ISR(void)IRQ_UART1
     // Check if data has been received
     if (U1RI) {
         UartRxBuf[UartRxBufInputPointer++] = SBUF1;
-        if (UartRxBufInputPointer == UartRxBufOutputPointer) {
-            UartRxBufOverflow = 1;
-        }
         if (UartRxBufInputPointer >= UART_RX_BUF_SIZE) {
             UartRxBufInputPointer = 0; // Reset write pointer
         }
@@ -1105,10 +1103,11 @@ uint8_t uart_byte_count()
     uint8_t in = UartRxBufInputPointer;
     uint8_t out = UartRxBufOutputPointer;
 
-    if (in < out) {
-        in = in + UART_RX_BUF_SIZE;
+    if (in >= out) {
+        return (in - out);
+    } else {
+        return (UART_RX_BUF_SIZE - (out - in));
     }
-    return in - out;
 }
 
 // Copy data from a circular buffer
@@ -1270,44 +1269,6 @@ void main()
                 }
             }
 
-            // Copy TKEYCTRL data from UartRxBuf to TkeyCtrlRxBuf
-            if (FrameStarted && !TkeyCtrlDataAvailable) {
-                if (FrameMode == MODE_TKEYCTRL) {
-                    if ((FrameRemainingBytes >= MAX_PACKET_SIZE) &&
-                        (UartRxBufByteCount >= MAX_PACKET_SIZE)) {
-                        circular_copy(TkeyCtrlRxBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      MAX_PACKET_SIZE);
-                        TkeyCtrlRxBufLength = MAX_PACKET_SIZE;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_PACKET_SIZE,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= MAX_PACKET_SIZE;
-                        TkeyCtrlDataAvailable = 1;
-                        cts_start();
-                    }
-                    else if ((FrameRemainingBytes < MAX_PACKET_SIZE) &&
-                             (UartRxBufByteCount >= FrameRemainingBytes)) {
-                        circular_copy(TkeyCtrlRxBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      FrameRemainingBytes);
-                        TkeyCtrlRxBufLength = FrameRemainingBytes;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   FrameRemainingBytes,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= FrameRemainingBytes;
-                        TkeyCtrlDataAvailable = 1;
-                        cts_start();
-                    }
-                }
-            }
-
             // Copy CDC data from UartRxBuf to CdcRxBuf
             if (FrameStarted && !CdcDataAvailable) {
                 if (FrameMode == MODE_CDC) {
@@ -1367,6 +1328,44 @@ void main()
                 }
             }
 
+            // Copy TKEYCTRL data from UartRxBuf to TkeyCtrlRxBuf
+            if (FrameStarted && !TkeyCtrlDataAvailable) {
+                if (FrameMode == MODE_TKEYCTRL) {
+                    if ((FrameRemainingBytes >= MAX_PACKET_SIZE) &&
+                        (UartRxBufByteCount >= MAX_PACKET_SIZE)) {
+                        circular_copy(TkeyCtrlRxBuf,
+                                      UartRxBuf,
+                                      UART_RX_BUF_SIZE,
+                                      UartRxBufOutputPointer,
+                                      MAX_PACKET_SIZE);
+                        TkeyCtrlRxBufLength = MAX_PACKET_SIZE;
+                        // Update output pointer
+                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+                                                                   MAX_PACKET_SIZE,
+                                                                   UART_RX_BUF_SIZE);
+                        FrameRemainingBytes -= MAX_PACKET_SIZE;
+                        TkeyCtrlDataAvailable = 1;
+                        cts_start();
+                    }
+                    else if ((FrameRemainingBytes < MAX_PACKET_SIZE) &&
+                             (UartRxBufByteCount >= FrameRemainingBytes)) {
+                        circular_copy(TkeyCtrlRxBuf,
+                                      UartRxBuf,
+                                      UART_RX_BUF_SIZE,
+                                      UartRxBufOutputPointer,
+                                      FrameRemainingBytes);
+                        TkeyCtrlRxBufLength = FrameRemainingBytes;
+                        // Update output pointer
+                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+                                                                   FrameRemainingBytes,
+                                                                   UART_RX_BUF_SIZE);
+                        FrameRemainingBytes -= FrameRemainingBytes;
+                        TkeyCtrlDataAvailable = 1;
+                        cts_start();
+                    }
+                }
+            }
+
             // Check if we should upload data to Endpoint 2 (CDC)
             if (CdcDataAvailable && !Endpoint2UploadBusy) {
 
@@ -1411,15 +1410,15 @@ void main()
 
                 if (TkeyCtrlRxBufLength == MAX_PACKET_SIZE) {
                     // Write upload endpoint
-                    memcpy(Ep0Buffer+128, /* Copy to IN (TX) buffer of Endpoint 4 */
-                            TkeyCtrlRxBuf,
-                            TkeyCtrlRxBufLength);
+                    memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
+                           TkeyCtrlRxBuf,
+                           TkeyCtrlRxBufLength);
                 } else {
-                    memset(Ep0Buffer+128, 0, MAX_PACKET_SIZE);
+                    memset(Ep0Buffer + 128, 0, MAX_PACKET_SIZE);
                     // Write upload endpoint
-                    memcpy(Ep0Buffer+128, /* Copy to IN (TX) buffer of Endpoint 4 */
-                            TkeyCtrlRxBuf,
-                            TkeyCtrlRxBufLength);
+                    memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
+                           TkeyCtrlRxBuf,
+                           TkeyCtrlRxBufLength);
                 }
 
                 Endpoint4UploadBusy = 1; // Set busy flag
@@ -1449,7 +1448,6 @@ void main()
                     /** UART */
                     UartRxBufInputPointer = 0;
                     UartRxBufOutputPointer = 0;
-                    UartRxBufOverflow = 0;
                     /** Frame */
                     FrameMode = 0;
                     FrameLength = 0;
@@ -1495,7 +1493,6 @@ void main()
 
                     printStr("UartRxBufInputPointer  = "); printNumU32(UartRxBufInputPointer);  printStr("\n");
                     printStr("UartRxBufOutputPointer = "); printNumU32(UartRxBufOutputPointer); printStr("\n");
-                    printStr("UartRxBufOverflow = ");      printNumU32(UartRxBufOverflow);      printStr("\n");
 
                     printStr("UartRxBufByteCount = ");     printNumU32(UartRxBufByteCount);     printStr("\n");
                     printStr("FrameMode = 0x");            printNumHex(FrameMode);              printStr("\n");

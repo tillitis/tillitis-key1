@@ -254,13 +254,13 @@ void gpio_init_p1_5_out()
                         //        1 = Pull-up resistor enabled
 }
 
-// Set p1.5 high
+// Set pin 1.5 high
 void gpio_p1_5_set(void)
 {
-    P1 |= 0x20; // p1.4
+    P1 |= 0x20;
 }
 
-// Set p1.5 low
+// Set pin 1.5 low
 void gpio_p1_5_unset(void)
 {
     P1 &= ~0x20;

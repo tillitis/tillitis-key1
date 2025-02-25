@@ -29,13 +29,11 @@
 //Std  1000000   1000000     0.00%
 
 #ifndef UART0_BAUD
-//#define UART0_BAUD    115200
 #define UART0_BAUD      1000000
 #endif
 
 #ifndef UART1_BAUD
 #define UART1_BAUD      500000
-//#define UART1_BAUD    1000000
 #endif
 
 void CfgFsys(void);        // CH554 clock selection and configuration
@@ -148,8 +146,8 @@ inline void UART1Setup()
     U1SM0 = 0;    // UART1 selects 8-bit data bit
     U1SMOD = 1;   // Fast mode
     U1REN = 1;    // Enable receiving
-                  // Should correct for rounding in SBAUD1 calculation
-    SBAUD1 = 256 - FREQ_SYS/16/UART1_BAUD; // Calculation for Fast mode
+    uint32_t val = FREQ_SYS/16/UART1_BAUD; // Calculation for Fast mode
+    SBAUD1 = 256 - val;                    // Calculation for Fast mode
     IE_UART1 = 1; // Enable UART1 interrupt
     IP_EX = bIP_UART1; // Serial port IRQ has high priority
 }
