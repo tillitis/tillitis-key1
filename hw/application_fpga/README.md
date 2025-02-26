@@ -11,9 +11,10 @@ The design top level is in `rtl/application_fpga.v`. It contains
 instances of all cores as well as the memory system.
 
 The memory system allows the CPU to access cores in different ways
-given the current execution mode. There are two execution modes -
-firmware and application. Basically, in application mode the access is
-more restrictive.
+given the current execution mode. There are three execution modes -
+firmware, application and system call. Each mode give access to a
+different set of resources. Where app mode is the most restrictive and
+firmware mode is the least restrictive.
 
 The rest of the components are under `cores`. They typically have
 their own `README.md` file documenting them and their API in detail.
@@ -34,6 +35,7 @@ Rough memory map:
 | UART    | 0xc3     |
 | Touch   | 0xc4     |
 | FW\_RAM | 0xd0     |
+| Syscall | 0xe1     |
 | TK1     | 0xff     |
 
 ## `clk_reset_gen`
@@ -96,6 +98,54 @@ hours, days) there is also a 32 bit prescaler.
 
 The timer is available to use by firmware and applications.
 
+## Syscall
+
+System call trigger area. A 32-bit write to address 0xe1000000 will
+trigger interrupt 31, which in turn triggers a system call in the
+firmware.
+
+## Interrupts
+
+Triggering an interrupt will cause the CPU to execute the interrupt
+handler att address 0x10.
+
+The interrupt handler is shared by all PicoRV32 interrupts but only
+interrupt 31 is enabled on the Tkey. Register `x4` can be inspected to
+determine the interrupt source. Each interrupt source is assigned one
+bit in x4. Triggered interrupts have their bit set to `1`.
+
+| *Source* | *x4 Bit* |
+|----------|----------|
+| Syscall  | 31       |
+
+The return address is located in register `x3`. Calling the PicoRV32
+specific instruction `retirq` exits the interrupt handler and clears
+the interrupt source.
+
+No registers are stored/restored when entering/exiting the interrupt
+handler. It is up to the software to store/restore as necessary.
+
+Interrupts can be enabled/disabled using the PicoRV32 specific
+`maskirq` instruction.
+
+## Restricted resources
+
+The following table shows resource availablility for each execution
+mode:
+
+| *Execution Mode* | *ROM* | *FW RAM* | *SPI* | *UDS* |
+|------------------|-------|----------|-------|-------|
+| Firmware mode    | r/x   | r/w      | r/w   | r/w*  |
+| Syscall          | r/x   | r/w      | r/w   | i     |
+| Application mode | r     | i        | i     | i     |
+
+Legend:
+r = readable
+w = writeable
+x = executable
+i = invisible
+* = UDS words are readable only once in firmware mode.
+
 ## `tk1`
 
 See [tk1 README](core/tk1/README.md) for details.
@@ -107,7 +157,6 @@ Contains:
 - RGB LED control.
 - General purpose input/output (GPIO) pin control.
 - Application introspection: start address and size of binary.
-- BLAKE2s function access.
 - Compound Device Identity (CDI).
 - Unique Device Identity (UDI).
 - RAM memory protection.
@@ -135,13 +184,13 @@ should make it infeasible to improve asset extraction by observing
 multiple memory dumps from the same TKey device. The attack should
 also not directly scale to multiple TKey devices.
 
-The RAM address and data scrambling is done in de RAM core.
+The RAM address and data scrambling is done in the RAM core.
 
 The memory protection is setup by the firmware. Access to the memory
 protection controls is disabled for applications. Before the memory
 protecetion is enabled, the RAM is filled with randomised data using
-Xorwow. So during boot the firmware perform the following steps to
-setup the memory protection:
+Xorwow. During boot the firmware perform the following steps to setup
+the memory protection:
 
 1. Get a random 32-bit value from the TRNG to use as data state for
    Xorwow.
