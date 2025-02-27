@@ -50,6 +50,24 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
 - Add hardware clear to send (CTS) signals for communication between
   UART and CH552.
 
+- Increase size of ROM and FW\_RAM.
+
+- Make ROM non-executable in app mode.
+
+- Remove support for access to the firmware blake2s() function from
+  apps.
+
+- Automatically leave firmware mode when execution leaves ROM and
+  remove the now unnecessary APP\_MODE\_CTRL register.
+
+- Add extra protection of UDS: When execution leaves ROM the first
+  time, UDS is hardware protected from reading, as well as already
+  existing UDS protection after first read and UDS being unreadable in
+  app mode.
+
+- Introduce interrupt handler for hardware-based privilege raising for
+  system calls.
+
 ### Firmware
 
 - At startup, fill RAM with random data using the xorwow PRNG, seeded
@@ -57,6 +75,9 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
 
 - Add support for the new USB Mode Protocol to communicate with
   different endpoints.
+
+- Introduce a system call mechanism and the first syscalls: RESET,
+  SET\_LED, GET\_VIDPID.
 
 ### CH552
 
