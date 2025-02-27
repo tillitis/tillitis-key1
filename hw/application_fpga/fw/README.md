@@ -314,7 +314,7 @@ Currently supported syscalls:
 Standing in `hw/application_fpga/` you can run `make firmware.elf` to
 build just the firmware. You don't need all the FPGA development
 tools. See [the Developer Handbook](https://dev.tillitis.se/tools/)
-for the tools you need. The easiest is probably to use your OCI image,
+for the tools you need. The easiest is probably to use our OCI image,
 `ghcr.io/tillitis/tkey-builder`.
 
 [Our version of qemu](https://dev.tillitis.se/tools/#qemu-emulator) is
@@ -322,11 +322,28 @@ also useful for debugging the firmware. You can attach GDB, use
 breakpoints, et cetera.
 
 There is a special make target for QEMU: `qemu_firmware.elf`, which
-sets `-DQEMU_CONSOLE`, so you can use plain debug prints using the
-helper functions in `lib.c` like `htif_puts()` `htif_putinthex()`
-`htif_hexdump()` and friends. Note that these functions are only
-usable in qemu and that you might need to `make clean` before
-building, if you have already built before.
+sets `-DQEMU_DEBUG`, so you can debug prints using the `debug_*()`
+functions. Note that these functions are only usable in QEMU and that
+you might need to `make clean` before building, if you have already
+built before.
+
+If you want debug prints to show up on the special TKey HID debug
+endpoint instead, define `-DTKEY_DEBUG`.
+
+Note that if you use `TKEY_DEBUG` you *must* have something listening
+on the corresponding HID device. It's usually the last HID device
+created. On Linux, for instance, this means the last reported hidraw
+in `dmesg` is the one you should do `cat /dev/hidrawX` on.
+
+### tkey-libs
+
+Most of the utility functions that the firmware use lives in
+`tkey-libs`. The canonical place where you can find tkey-libs is at:
+
+  https://github.com/tillitis/tkey-libs
+
+but we have vendored it in for firmware use in `../tkey-libs`. See top
+README for how to update.
 
 ### Test firmware
 

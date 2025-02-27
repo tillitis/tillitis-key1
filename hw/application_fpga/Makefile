@@ -41,6 +41,8 @@ OBJCOPY ?= llvm-objcopy
 
 CC = clang
 
+LIBDIR ?= tkey-libs
+
 CFLAGS = \
 	-target riscv32-unknown-none-elf \
 	-march=rv32iczmmul \
@@ -59,7 +61,9 @@ CFLAGS = \
 	-Wpedantic \
 	-Wno-language-extension-token \
 	-flto \
-	-g
+	-g \
+	-I $(LIBDIR)/include \
+	-I $(LIBDIR)
 
 AS = clang
 
@@ -113,20 +117,12 @@ PICORV32_SRCS = \
 	$(P)/core/picorv32/rtl/picorv32.v
 
 FIRMWARE_DEPS = \
-	$(P)/fw/tk1_mem.h \
-	$(P)/fw/tk1/types.h \
-	$(P)/fw/tk1/lib.h \
-	$(P)/fw/tk1/proto.h \
-	$(P)/fw/tk1/assert.h \
-	$(P)/fw/tk1/led.h
+	$(P)/fw/tk1/proto.h
 
 FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
 	$(P)/fw/tk1/start.o \
 	$(P)/fw/tk1/proto.o \
-	$(P)/fw/tk1/lib.o \
-	$(P)/fw/tk1/assert.o \
-	$(P)/fw/tk1/led.o \
 	$(P)/fw/tk1/blake2s/blake2s.o \
 	$(P)/fw/tk1/syscall_enable.o \
 	$(P)/fw/tk1/syscall_handler.o
@@ -134,18 +130,12 @@ FIRMWARE_OBJS = \
 FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/main.c \
 	$(P)/fw/tk1/proto.c \
-	$(P)/fw/tk1/lib.c \
-	$(P)/fw/tk1/assert.c \
-	$(P)/fw/tk1/led.c \
 	$(P)/fw/tk1/blake2s/blake2s.c \
 	$(P)/fw/tk1/syscall_handler.c
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
-	$(P)/fw/testfw/start.o \
-	$(P)/fw/tk1/proto.o \
-	$(P)/fw/tk1/assert.o \
-	$(P)/fw/tk1/lib.o
+	$(P)/fw/testfw/start.o
 
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
@@ -184,19 +174,27 @@ secret:
 #-------------------------------------------------------------------
 LDFLAGS = \
 	-T $(P)/fw/tk1/firmware.lds \
-	-Wl,--cref,-M
+	-Wl,--cref,-M \
+	-L $(LIBDIR) -lcommon
+
+# Common libraries the firmware and testfw depend on. See
+# https://github.com/tillitis/tkey-libs/
+.PHONY: tkey-libs
+tkey-libs:
+	make -C $(LIBDIR)
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
-firmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
+#firmware.elf: CFLAGS += -DTKEY_DEBUG
+firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 simfirmware.elf: CFLAGS += -DSIMULATION
 simfirmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
-qemu_firmware.elf: CFLAGS += -DQEMU_CONSOLE
+qemu_firmware.elf: CFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: firmware.elf
 	mv firmware.elf qemu_firmware.elf
 
@@ -227,7 +225,7 @@ splint:
 		-fullinitblock \
 		$(FIRMWARE_SOURCES)
 
-testfw.elf: $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
+testfw.elf: tkey-libs $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 # Generate a fake BRAM file that will be filled in later after place-n-route

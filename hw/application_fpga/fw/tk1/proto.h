@@ -3,16 +3,11 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include "types.h"
+#include <stddef.h>
+#include <stdint.h>
 
 #ifndef PROTO_H
 #define PROTO_H
-
-enum mode {
-	MODE_TKEYCTRL = 0x20,
-	MODE_CDC = 0x40,
-	MODE_HID = 0x80,
-};
 
 enum endpoints {
 	DST_HW_IFPGA,
@@ -28,7 +23,7 @@ enum cmdlen {
 	LEN_128
 };
 
-#define CMDLEN_MAXBYTES 128
+#define CMDSIZE 128
 
 // clang-format off
 enum fwcmd {
@@ -57,9 +52,6 @@ struct frame_header {
 };
 
 /*@ -exportlocal @*/
-void writebyte(uint8_t b);
-uint8_t readbyte(uint8_t *mode, uint8_t *mode_bytes_left);
 void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf);
-int readcommand(struct frame_header *hdr, uint8_t *cmd, int state,
-		uint8_t *mode, uint8_t *mode_bytes_left);
+int readcommand(struct frame_header *hdr, uint8_t *cmd, int state);
 #endif

@@ -1,4 +1,5 @@
 P := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+LIBDIR ?= ../../tkey-libs
 OBJCOPY ?= llvm-objcopy
 CC = clang
 CFLAGS = \
@@ -21,7 +22,9 @@ CFLAGS = \
 	-Wno-language-extension-token \
 	-Werror \
 	-flto \
-	-g
+	-g \
+	-I $(LIBDIR)/include \
+	-I $(LIBDIR)
 
 AS = clang
 
@@ -31,7 +34,9 @@ ASFLAGS = \
 	-mabi=ilp32 \
 	-mno-relax
 
-LDFLAGS=-T $(P)/app.lds
+LDFLAGS = \
+	-T $(P)/app.lds \
+	-L $(LIBDIR) -lcommon
 
 .PHONY: all
 all: testapp.bin
@@ -41,6 +46,10 @@ all: testapp.bin
 	$(OBJCOPY) --input-target=elf32-littleriscv --output-target=binary $^ $@
 	chmod a-x $@
 
+.PHONY: tkey-libs
+tkey-libs:
+	make -C $(LIBDIR)
+
 TESTAPP_FMTFILES = \
 	$(P)/main.c \
 	$(P)/syscall.h
@@ -48,13 +57,9 @@ TESTAPP_FMTFILES = \
 TESTAPP_OBJS = \
 	$(P)/main.o \
 	$(P)/crt0.o \
-	$(P)/syscall.o \
-	$(P)/../tk1/assert.o \
-	$(P)/../tk1/led.o \
-	$(P)/../tk1/lib.o \
-	$(P)/../tk1/proto.o
+	$(P)/syscall.o
 
-testapp.elf: $(TESTAPP_OBJS)
+testapp.elf: tkey-libs $(TESTAPP_OBJS)
 	$(CC) $(CFLAGS) $(TESTAPP_OBJS) $(LDFLAGS) -o $@
 
 .PHONY: fmt

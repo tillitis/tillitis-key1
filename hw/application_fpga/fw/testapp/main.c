@@ -3,11 +3,14 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include "../tk1/led.h"
-#include "../tk1/lib.h"
+#include <stdint.h>
+#include <tkey/assert.h>
+#include <tkey/io.h>
+#include <tkey/led.h>
+#include <tkey/lib.h>
+
 #include "../tk1/proto.h"
 #include "../tk1/syscall_num.h"
-#include "../tk1/types.h"
 #include "../tk1_mem.h"
 #include "syscall.h"
 
@@ -33,74 +36,10 @@ volatile uint32_t *trng_entropy     = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY
 #define UDI_WORDS 2
 #define CDI_WORDS 8
 
-static void write_with_header(const uint8_t *buf, size_t nbytes, enum mode mode)
-{
-	// Append USB Mode Protocol header:
-	//   1 byte mode
-	//   1 byte length
-	writebyte(mode);
-	writebyte(nbytes);
-
-	for (int i = 0; i < nbytes; i++) {
-		writebyte(buf[i]);
-	}
-}
-
-static void write(const uint8_t *buf, size_t nbytes)
-{
-	uint8_t len;
-
-	while (nbytes > 0) {
-		// We split the data into chunks that will fit in the
-		// USB Mode Protocol with some spare change.
-		len =
-		    nbytes < USBMODE_PACKET_SIZE ? nbytes : USBMODE_PACKET_SIZE;
-
-		write_with_header((const uint8_t *)buf, len, MODE_CDC);
-
-		buf += len;
-		nbytes -= len;
-	}
-}
-
-unsigned strlen(const char *str)
-{
-	const char *s;
-
-	for (s = str; *s; ++s)
-		;
-
-	return (s - str);
-}
-
-void puts(char *buf)
-{
-	size_t nbytes = strlen(buf);
-
-	write((const uint8_t *)buf, nbytes);
-}
-
-void hex(uint8_t buf[2], const uint8_t c)
-{
-	unsigned int upper = (c >> 4) & 0xf;
-	unsigned int lower = c & 0xf;
-
-	buf[0] = upper < 10 ? '0' + upper : 'a' - 10 + upper;
-	buf[1] = lower < 10 ? '0' + lower : 'a' - 10 + lower;
-}
-
-void puthex(uint8_t c)
-{
-	uint8_t buf[2];
-
-	hex(buf, c);
-	write(buf, 2);
-}
-
 void puthexn(uint8_t *p, int n)
 {
 	for (int i = 0; i < n; i++) {
-		puthex(p[i]);
+		puthex(IO_CDC, p[i]);
 	}
 }
 
@@ -123,33 +62,41 @@ uint32_t wait_timer_tick(uint32_t last_timer)
 
 void failmsg(char *s)
 {
-	puts("FAIL: ");
-	puts(s);
-	puts("\r\n");
+	puts(IO_CDC, "FAIL: ");
+	puts(IO_CDC, s);
+	puts(IO_CDC, "\r\n");
 }
 
 int main(void)
 {
 	uint8_t in = 0;
-	uint8_t mode = 0;
-	uint8_t mode_bytes_left = 0;
+	uint8_t available = 0;
+	enum ioend endpoint = IO_NONE;
 
-	set_led(LED_BLUE);
+	led_set(LED_BLUE);
 
 	// Wait for terminal program and a character to be typed
-	in = readbyte(&mode, &mode_bytes_left);
+	if (readselect(IO_CDC, &endpoint, &available) < 0) {
+		// readselect failed! I/O broken? Just redblink.
+		assert(1 == 2);
+	}
 
-	puts("\r\nI'm testapp on:");
+	if (read(IO_CDC, &in, 1, 1) < 0) {
+		// read failed! I/O broken? Just redblink.
+		assert(1 == 2);
+	}
+
+	puts(IO_CDC, "\r\nI'm testapp on:");
 	// Output the TK1 core's NAME0 and NAME1
 	uint32_t name;
 	wordcpy_s(&name, 1, (void *)tk1name0, 1);
 	reverseword(&name);
-	write((const uint8_t *)&name, 4);
-	puts(" ");
+	write(IO_CDC, (const uint8_t *)&name, 4);
+	puts(IO_CDC, " ");
 	wordcpy_s(&name, 1, (void *)tk1name1, 1);
 	reverseword(&name);
-	write((const uint8_t *)&name, 4);
-	puts("\r\n");
+	write(IO_CDC, (const uint8_t *)&name, 4);
+	puts(IO_CDC, "\r\n");
 
 	uint32_t zeros[8];
 	memset(zeros, 0, 8 * 4);
@@ -194,9 +141,9 @@ int main(void)
 	}
 
 	// Should NOT be able to reset Tkey from app mode
-	puts("\r\nTesting system reset...");
+	puts(IO_CDC, "\r\nTesting system reset...");
 	*system_reset = 1;
-	puts("done.\r\n");
+	puts(IO_CDC, "done.\r\n");
 
 	// Test FW_RAM.
 	*fw_ram = 0x21;
@@ -205,7 +152,7 @@ int main(void)
 		anyfailed = 1;
 	}
 
-	puts("\r\nTesting timer... 3");
+	puts(IO_CDC, "\r\nTesting timer... 3");
 	// Matching clock at 21 MHz, giving us timer in seconds
 	*timer_prescaler = 21 * 1000000;
 
@@ -216,7 +163,7 @@ int main(void)
 	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
 	// Now timer has expired and is ready to run again
-	puts(" 2");
+	puts(IO_CDC, " 2");
 
 	// Test to interrupt a timer - and reads from timer register
 	// Starting 10s timer and interrupting it in 3s...
@@ -229,7 +176,7 @@ int main(void)
 
 	// Stop the timer
 	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_STOP_BIT);
-	puts(" 1. done.\r\n");
+	puts(IO_CDC, " 1. done.\r\n");
 
 	if (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 		failmsg("Timer didn't stop");
@@ -242,14 +189,14 @@ int main(void)
 	}
 
 	// Check and display test results.
-	puts("\r\n--> ");
+	puts(IO_CDC, "\r\n--> ");
 	if (anyfailed) {
-		puts("Some test FAILED!\r\n");
+		puts(IO_CDC, "Some test FAILED!\r\n");
 	} else {
-		puts("All tests passed.\r\n");
+		puts(IO_CDC, "All tests passed.\r\n");
 	}
 
-	puts("\r\nHere are 256 bytes from the TRNG:\r\n");
+	puts(IO_CDC, "\r\nHere are 256 bytes from the TRNG:\r\n");
 	for (int j = 0; j < 8; j++) {
 		for (int i = 0; i < 8; i++) {
 			while ((*trng_status &
@@ -257,21 +204,28 @@ int main(void)
 			}
 			uint32_t rnd = *trng_entropy;
 			puthexn((uint8_t *)&rnd, 4);
-			puts(" ");
+			puts(IO_CDC, " ");
 		}
-		puts("\r\n");
+		puts(IO_CDC, "\r\n");
 	}
-	puts("\r\n");
+	puts(IO_CDC, "\r\n");
 
-	puts("Now echoing what you type...Type + to reset device\r\n");
+	puts(IO_CDC, "Now echoing what you type...Type + to reset device\r\n");
 	for (;;) {
-		in = readbyte(&mode, &mode_bytes_left);
+		if (readselect(IO_CDC, &endpoint, &available) < 0) {
+			// readselect failed! I/O broken? Just redblink.
+			assert(1 == 2);
+		}
+
+		if (read(IO_CDC, &in, 1, 1) < 0) {
+			// read failed! I/O broken? Just redblink.
+			assert(1 == 2);
+		}
+
 		if (in == '+') {
 			syscall(TK1_SYSCALL_RESET, 0);
 		}
 
-		writebyte(MODE_CDC);
-		writebyte(1);
-		writebyte(in);
+		write(IO_CDC, &in, 1);
 	}
 }
