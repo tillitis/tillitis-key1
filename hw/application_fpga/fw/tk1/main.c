@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <tkey/lib.h>
+
 #include "../tk1_mem.h"
 #include "assert.h"
 #include "blake2s/blake2s.h"
@@ -10,7 +15,6 @@
 #include "proto.h"
 #include "state.h"
 #include "syscall_enable.h"
-#include "types.h"
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -36,7 +40,7 @@ struct context {
 	uint32_t left;	    // Bytes left to receive
 	uint8_t digest[32]; // Program digest
 	uint8_t *loadaddr;  // Where we are currently loading a TKey program
-	uint8_t use_uss;    // Use USS?
+	bool use_uss;    // Use USS?
 	uint8_t uss[32];    // User Supplied Secret, if any
 };
 
@@ -218,10 +222,10 @@ static enum state initial_commands(const struct frame_header *hdr,
 		// Do we have a USS at all?
 		if (cmd[5] != 0) {
 			// Yes
-			ctx->use_uss = TRUE;
+			ctx->use_uss = true;
 			memcpy_s(ctx->uss, 32, &cmd[6], 32);
 		} else {
-			ctx->use_uss = FALSE;
+			ctx->use_uss = false;
 		}
 
 		rsp[0] = STATUS_OK;
@@ -411,7 +415,7 @@ int main(void)
 	 */
 	ctx.loadaddr = (uint8_t *)TK1_RAM_BASE;
 	/*@+mustfreeonly@*/
-	ctx.use_uss = FALSE;
+	ctx.use_uss = false;
 
 	uint8_t mode = 0;
 	uint8_t mode_bytes_left = 0;

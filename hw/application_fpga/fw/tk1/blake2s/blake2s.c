@@ -6,7 +6,8 @@
 // A simple blake2s Reference Implementation.
 //======================================================================
 
-#include "../types.h"
+#include <stdint.h>
+
 #include "../lib.h"
 #include "blake2s.h"
 

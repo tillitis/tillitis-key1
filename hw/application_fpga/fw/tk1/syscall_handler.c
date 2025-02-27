@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
+#include <stdint.h>
+
 #include "../tk1/assert.h"
 #include "../tk1/led.h"
 #include "../tk1/syscall_num.h"
-#include "../tk1/types.h"
 
 // clang-format off
 static volatile uint32_t *system_reset = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;

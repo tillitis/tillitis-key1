@@ -3,13 +3,15 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
+#include <stdint.h>
+#include <tkey/lib.h>
+
 #include "proto.h"
 #include "../tk1_mem.h"
 #include "assert.h"
 #include "led.h"
 #include "lib.h"
 #include "state.h"
-#include "types.h"
 
 // clang-format off
 static volatile uint32_t *can_rx = (volatile uint32_t *)TK1_MMIO_UART_RX_STATUS;
