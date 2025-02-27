@@ -3,9 +3,13 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include "../tk1/lib.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <tkey/assert.h>
+#include <tkey/io.h>
+#include <tkey/lib.h>
+
 #include "../tk1/proto.h"
-#include "../tk1/types.h"
 #include "../tk1_mem.h"
 
 #define USBMODE_PACKET_SIZE 64
@@ -30,105 +34,11 @@ volatile uint32_t *trng_entropy     = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY
 #define UDI_WORDS 2
 #define CDI_WORDS 8
 
-void *memcpy(void *dest, const void *src, size_t n)
-{
-	uint8_t *src_byte = (uint8_t *)src;
-	uint8_t *dest_byte = (uint8_t *)dest;
-
-	for (int i = 0; i < n; i++) {
-		dest_byte[i] = src_byte[i];
-	}
-
-	return dest;
-}
-
-static void write_with_header(const uint8_t *buf, size_t nbytes, enum mode mode)
-{
-	// Append USB Mode Protocol header:
-	//   1 byte mode
-	//   1 byte length
-	writebyte(mode);
-	writebyte(nbytes);
-
-	for (int i = 0; i < nbytes; i++) {
-		writebyte(buf[i]);
-	}
-}
-
-static void write(const uint8_t *buf, size_t nbytes)
-{
-	uint8_t len;
-
-	while (nbytes > 0) {
-		// We split the data into chunks that will fit in the
-		// USB Mode Protocol with some spare change.
-		len =
-		    nbytes < USBMODE_PACKET_SIZE ? nbytes : USBMODE_PACKET_SIZE;
-
-		write_with_header((const uint8_t *)buf, len, MODE_CDC);
-
-		buf += len;
-		nbytes -= len;
-	}
-}
-
-unsigned strlen(const char *str)
-{
-	const char *s;
-
-	for (s = str; *s; ++s)
-		;
-
-	return (s - str);
-}
-
-void puts(char *buf)
-{
-	size_t nbytes = strlen(buf);
-
-	write((const uint8_t *)buf, nbytes);
-}
-
-void hex(uint8_t buf[2], const uint8_t c)
-{
-	unsigned int upper = (c >> 4) & 0xf;
-	unsigned int lower = c & 0xf;
-
-	buf[0] = upper < 10 ? '0' + upper : 'a' - 10 + upper;
-	buf[1] = lower < 10 ? '0' + lower : 'a' - 10 + lower;
-}
-
-void puthex(uint8_t c)
-{
-	uint8_t buf[2];
-
-	hex(buf, c);
-	write(buf, 2);
-}
-
 void puthexn(uint8_t *p, int n)
 {
 	for (int i = 0; i < n; i++) {
-		puthex(p[i]);
+		puthex(IO_CDC, p[i]);
 	}
-}
-
-void hexdump(void *buf, int len)
-{
-	uint8_t *byte_buf = (uint8_t *)buf;
-
-	for (int i = 0; i < len; i++) {
-		puthex(byte_buf[i]);
-		if (i % 2 == 1) {
-			puts(" ");
-		}
-
-		if (i != 1 && i % 16 == 1) {
-			puts("\r\n");
-		}
-	}
-
-	puts("\r\n");
 }
 
 void reverseword(uint32_t *wordp)
@@ -166,19 +76,19 @@ int check_fwram_zero_except(unsigned int offset, uint8_t expected_val)
 		if (i == offset) {
 			if (val != expected_val) {
 				failed_now = 1;
-				puts("  wrong value at: ");
+				puts(IO_CDC, "  wrong value at: ");
 			}
 		} else {
 			if (val != 0) {
 				failed_now = 1;
-				puts("  not zero at: ");
+				puts(IO_CDC, "  not zero at: ");
 			}
 		}
 		if (failed_now) {
 			failed = 1;
 			reverseword(&addr);
 			puthexn((uint8_t *)&addr, 4);
-			puts("\r\n");
+			puts(IO_CDC, "\r\n");
 		}
 	}
 	return failed;
@@ -186,16 +96,16 @@ int check_fwram_zero_except(unsigned int offset, uint8_t expected_val)
 
 void failmsg(char *s)
 {
-	puts("FAIL: ");
-	puts(s);
-	puts("\r\n");
+	puts(IO_CDC, "FAIL: ");
+	puts(IO_CDC, s);
+	puts(IO_CDC, "\r\n");
 }
 
 int main(void)
 {
 	uint8_t in = 0;
-	uint8_t mode = 0;
-	uint8_t mode_bytes_left = 0;
+	uint8_t available = 0;
+	enum ioend endpoint = IO_NONE;
 
 	// Hard coded test UDS in ../../data/uds.hex
 	// clang-format off
@@ -212,19 +122,27 @@ int main(void)
 	// clang-format on
 
 	// Wait for terminal program and a character to be typed
-	in = readbyte(&mode, &mode_bytes_left);
+	if (readselect(IO_CDC, &endpoint, &available) < 0) {
+		// readselect failed! I/O broken? Just redblink.
+		assert(1 == 2);
+	}
 
-	puts("\r\nI'm testfw on:");
+	if (read(IO_CDC, &in, 1, 1) < 0) {
+		// read failed! I/O broken? Just redblink.
+		assert(1 == 2);
+	}
+
+	puts(IO_CDC, "\r\nI'm testfw on:");
 	// Output the TK1 core's NAME0 and NAME1
 	uint32_t name;
 	wordcpy_s(&name, 1, (void *)tk1name0, 1);
 	reverseword(&name);
-	write((const uint8_t *)&name, 4);
-	puts(" ");
+	write(IO_CDC, (const uint8_t *)&name, 4);
+	puts(IO_CDC, " ");
 	wordcpy_s(&name, 1, (void *)tk1name1, 1);
 	reverseword(&name);
-	write((const uint8_t *)&name, 4);
-	puts("\r\n");
+	write(IO_CDC, (const uint8_t *)&name, 4);
+	puts(IO_CDC, "\r\n");
 
 	uint32_t zeros[8];
 	memset(zeros, 0, 8 * 4);
@@ -240,11 +158,11 @@ int main(void)
 		anyfailed = 1;
 	}
 
-	puts("\r\nUDS: ");
+	puts(IO_CDC, "\r\nUDS: ");
 	for (int i = 0; i < UDS_WORDS * 4; i++) {
-		puthex(((uint8_t *)uds_local)[i]);
+		puthex(IO_CDC, ((uint8_t *)uds_local)[i]);
 	}
-	puts("\r\n");
+	puts(IO_CDC, "\r\n");
 	if (!memeq(uds_local, uds_test, UDS_WORDS * 4)) {
 		failmsg("UDS not equal to test UDS");
 		anyfailed = 1;
@@ -287,7 +205,7 @@ int main(void)
 	}
 
 	// Test FW_RAM.
-	puts("\r\nTesting FW_RAM (takes 50s on hw)...\r\n");
+	puts(IO_CDC, "\r\nTesting FW_RAM (takes 50s on hw)...\r\n");
 	for (unsigned int i = 0; i < TK1_MMIO_FW_RAM_SIZE; i++) {
 		zero_fwram();
 		*(volatile uint8_t *)(TK1_MMIO_FW_RAM_BASE + i) = 0x42;
@@ -297,7 +215,7 @@ int main(void)
 		}
 	}
 
-	puts("\r\nTesting timer... 3");
+	puts(IO_CDC, "\r\nTesting timer... 3");
 	// Matching clock at 24 MHz, giving us timer in seconds
 	*timer_prescaler = 24 * 1000000;
 
@@ -308,7 +226,7 @@ int main(void)
 	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
 	// Now timer has expired and is ready to run again
-	puts(" 2");
+	puts(IO_CDC, " 2");
 
 	// Test to interrupt a timer - and reads from timer register
 	// Starting 10s timer and interrupting it in 3s...
@@ -321,7 +239,7 @@ int main(void)
 
 	// Stop the timer
 	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_STOP_BIT);
-	puts(" 1. done.\r\n");
+	puts(IO_CDC, " 1. done.\r\n");
 
 	if (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 		failmsg("Timer didn't stop");
@@ -334,14 +252,14 @@ int main(void)
 	}
 
 	// Check and display test results.
-	puts("\r\n--> ");
+	puts(IO_CDC, "\r\n--> ");
 	if (anyfailed) {
-		puts("Some test FAILED!\r\n");
+		puts(IO_CDC, "Some test FAILED!\r\n");
 	} else {
-		puts("All tests passed.\r\n");
+		puts(IO_CDC, "All tests passed.\r\n");
 	}
 
-	puts("\r\nHere are 256 bytes from the TRNG:\r\n");
+	puts(IO_CDC, "\r\nHere are 256 bytes from the TRNG:\r\n");
 
 	for (int j = 0; j < 8; j++) {
 		for (int i = 0; i < 8; i++) {
@@ -350,21 +268,28 @@ int main(void)
 			}
 			uint32_t rnd = *trng_entropy;
 			puthexn((uint8_t *)&rnd, 4);
-			puts(" ");
+			puts(IO_CDC, " ");
 		}
-		puts("\r\n");
+		puts(IO_CDC, "\r\n");
 	}
-	puts("\r\n");
+	puts(IO_CDC, "\r\n");
 
-	puts("Now echoing what you type...Type + to reset device\r\n");
+	puts(IO_CDC, "Now echoing what you type...Type + to reset device\r\n");
 	for (;;) {
-		in = readbyte(&mode, &mode_bytes_left);
+		if (readselect(IO_CDC, &endpoint, &available) < 0) {
+			// readselect failed! I/O broken? Just redblink.
+			assert(1 == 2);
+		}
+
+		if (read(IO_CDC, &in, 1, 1) < 0) {
+			// read failed! I/O broken? Just redblink.
+			assert(1 == 2);
+		}
+
 		if (in == '+') {
 			*system_reset = 1;
 		}
 
-		writebyte(MODE_CDC);
-		writebyte(1);
-		writebyte(in);
+		write(IO_CDC, &in, 1);
 	}
 }

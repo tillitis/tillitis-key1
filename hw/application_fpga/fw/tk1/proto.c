@@ -3,27 +3,19 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include "proto.h"
-#include "../tk1_mem.h"
-#include "assert.h"
-#include "led.h"
-#include "lib.h"
-#include "state.h"
-#include "types.h"
+#include <stdint.h>
+#include <tkey/assert.h>
+#include <tkey/debug.h>
+#include <tkey/io.h>
+#include <tkey/led.h>
+#include <tkey/lib.h>
 
-// clang-format off
-static volatile uint32_t *can_rx = (volatile uint32_t *)TK1_MMIO_UART_RX_STATUS;
-static volatile uint32_t *rx =     (volatile uint32_t *)TK1_MMIO_UART_RX_DATA;
-static volatile uint32_t *can_tx = (volatile uint32_t *)TK1_MMIO_UART_TX_STATUS;
-static volatile uint32_t *tx =     (volatile uint32_t *)TK1_MMIO_UART_TX_DATA;
-// clang-format on
+#include "proto.h"
+#include "state.h"
 
 static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 		      enum cmdlen len);
 static int parseframe(uint8_t b, struct frame_header *hdr);
-static void write(uint8_t *buf, size_t nbytes);
-static int read(uint8_t *buf, size_t bufsize, size_t nbytes, uint8_t *mode,
-		uint8_t *mode_bytes_left);
 static size_t bytelen(enum cmdlen cmdlen);
 
 static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
@@ -32,29 +24,59 @@ static uint8_t genhdr(uint8_t id, uint8_t endpoint, uint8_t status,
 	return (id << 5) | (endpoint << 3) | (status << 2) | len;
 }
 
-int readcommand(struct frame_header *hdr, uint8_t *cmd, int state,
-		uint8_t *mode, uint8_t *mode_bytes_left)
+int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 {
 	uint8_t in = 0;
+	uint8_t available = 0;
+	enum ioend endpoint = IO_NONE;
 
-	set_led((state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE);
-	in = readbyte(mode, mode_bytes_left);
+	led_set((state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE);
 
-	if (parseframe(in, hdr) == -1) {
-		htif_puts("Couldn't parse header\n");
+	debug_puts("readcommand\n");
+
+	if (readselect(IO_CDC, &endpoint, &available) < 0) {
 		return -1;
 	}
 
-	(void)memset(cmd, 0, CMDLEN_MAXBYTES);
-	// Now we know the size of the cmd frame, read it all
-	if (read(cmd, CMDLEN_MAXBYTES, hdr->len, mode, mode_bytes_left) != 0) {
-		htif_puts("read: buffer overrun\n");
+	if (read(IO_CDC, &in, 1, 1) == -1) {
 		return -1;
+	}
+
+	debug_puts("read 1 byte\n");
+
+	if (parseframe(in, hdr) == -1) {
+		debug_puts("Couldn't parse header\n");
+		return -1;
+	}
+
+	debug_puts("parseframe succeeded\n");
+
+	(void)memset(cmd, 0, CMDSIZE);
+
+	// Now we know the size of the cmd frame, read it all
+	uint8_t n = 0;
+	while (n < hdr->len) {
+		// Wait for something to be available
+		if (readselect(IO_CDC, &endpoint, &available) < 0) {
+			return -1;
+		}
+
+		// Read as much as is available of what we expect
+		available = available > hdr->len ? hdr->len : available;
+
+		assert(n < CMDSIZE);
+		int n_bytes_read =
+		    read(IO_CDC, &cmd[n], CMDSIZE - n, available);
+		if (n_bytes_read < 0) {
+			return -1;
+		}
+
+		n += n_bytes_read;
 	}
 
 	// Is it for us?
 	if (hdr->endpoint != DST_FW) {
-		htif_puts("Message not meant for us\n");
+		debug_puts("Message not meant for us\n");
 		return -1;
 	}
 
@@ -85,7 +107,8 @@ static int parseframe(uint8_t b, struct frame_header *hdr)
 void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 {
 	size_t nbytes = 0;
-	enum cmdlen len = 0; // length covering (rspcode + length of buf)
+	enum cmdlen len = 0;	// length covering (rspcode + length of buf)
+	uint8_t frame[1 + 128]; // Frame header + longest response
 
 	switch (rspcode) {
 	case FW_RSP_NAME_VERSION:
@@ -109,95 +132,23 @@ void fwreply(struct frame_header hdr, enum fwcmd rspcode, uint8_t *buf)
 		break;
 
 	default:
-		htif_puts("fwreply(): Unknown response code: 0x");
-		htif_puthex(rspcode);
-		htif_lf();
+		debug_puts("fwreply(): Unknown response code: 0x");
+		debug_puthex(rspcode);
+		debug_lf();
 		return;
 	}
 
 	nbytes = bytelen(len);
 
-	// Mode Protocol Header
-	writebyte(MODE_CDC);
-	writebyte(2);
-
 	// Frame Protocol Header
-	writebyte(genhdr(hdr.id, hdr.endpoint, 0x0, len));
+	frame[0] = genhdr(hdr.id, hdr.endpoint, 0x0, len);
+	// App protocol header
+	frame[1] = rspcode;
 
-	// FW protocol header
-	writebyte(rspcode);
-	nbytes--;
+	// Payload
+	memcpy(&frame[2], buf, nbytes - 1);
 
-	while (nbytes > 0) {
-		// Limit transfers to 64 bytes (2 byte header + 62 byte data) to
-		// fit in a single USB frame.
-		size_t tx_count = nbytes > 62 ? 62 : nbytes;
-		// Mode Protocol Header
-		writebyte(MODE_CDC);
-		writebyte(tx_count & 0xff);
-
-		// Data
-		write(buf, tx_count);
-		nbytes -= tx_count;
-		buf += tx_count;
-	}
-}
-
-void writebyte(uint8_t b)
-{
-	for (;;) {
-		if (*can_tx) {
-			*tx = b;
-			return;
-		}
-	}
-}
-
-static void write(uint8_t *buf, size_t nbytes)
-{
-	for (int i = 0; i < nbytes; i++) {
-		writebyte(buf[i]);
-	}
-}
-
-uint8_t readbyte_(void)
-{
-	for (;;) {
-		if (*can_rx) {
-			uint32_t b = *rx;
-			return b;
-		}
-	}
-}
-
-uint8_t readbyte(uint8_t *mode, uint8_t *mode_bytes_left)
-{
-	if (*mode_bytes_left == 0) {
-		*mode = readbyte_();
-		if (*mode != MODE_CDC) {
-			htif_puts("We only support MODE_CDC\n");
-			assert(1 == 2);
-		} else {
-			*mode_bytes_left = readbyte_();
-		}
-	}
-	uint8_t b = readbyte_();
-	*mode_bytes_left -= 1;
-	return b;
-}
-
-static int read(uint8_t *buf, size_t bufsize, size_t nbytes, uint8_t *mode,
-		uint8_t *mode_bytes_left)
-{
-	if (nbytes > bufsize) {
-		return -1;
-	}
-
-	for (int n = 0; n < nbytes; n++) {
-		buf[n] = readbyte(mode, mode_bytes_left);
-	}
-
-	return 0;
+	write(IO_CDC, frame, 1 + nbytes);
 }
 
 // bytelen returns the number of bytes a cmdlen takes

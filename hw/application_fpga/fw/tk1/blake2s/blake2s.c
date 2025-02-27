@@ -6,8 +6,8 @@
 // A simple blake2s Reference Implementation.
 //======================================================================
 
-#include "../types.h"
-#include "../lib.h"
+#include <stdint.h>
+
 #include "blake2s.h"
 
 // Dummy printf() for verbose mode
