@@ -6,8 +6,9 @@
 #ifndef LED_H
 #define LED_H
 
+#include <stdint.h>
+
 #include "../tk1_mem.h"
-#include "types.h"
 
 // clang-format off
 #define LED_BLACK 0

@@ -41,6 +41,8 @@ OBJCOPY ?= llvm-objcopy
 
 CC = clang
 
+LIBDIR ?= tkey-libs
+
 CFLAGS = \
 	-target riscv32-unknown-none-elf \
 	-march=rv32iczmmul \
@@ -59,7 +61,9 @@ CFLAGS = \
 	-Wpedantic \
 	-Wno-language-extension-token \
 	-flto \
-	-g
+	-g \
+	-I $(LIBDIR)/include \
+	-I $(LIBDIR)
 
 AS = clang
 
@@ -114,7 +118,6 @@ PICORV32_SRCS = \
 
 FIRMWARE_DEPS = \
 	$(P)/fw/tk1_mem.h \
-	$(P)/fw/tk1/types.h \
 	$(P)/fw/tk1/lib.h \
 	$(P)/fw/tk1/proto.h \
 	$(P)/fw/tk1/assert.h \
@@ -184,7 +187,8 @@ secret:
 #-------------------------------------------------------------------
 LDFLAGS = \
 	-T $(P)/fw/tk1/firmware.lds \
-	-Wl,--cref,-M
+	-Wl,--cref,-M \
+	-L $(LIBDIR) -lcommon
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
