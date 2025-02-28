@@ -186,10 +186,56 @@ the system calls, but the handler is not yet enabled.
 
 Beginning at `main()` it fills the entire RAM with pseudo random data
 and setting up the RAM address and data hardware scrambling with
-values from the True Random Number Generator (TRNG). It then waits for
-data coming in through the UART.
+values from the True Random Number Generator (TRNG).
 
-Typical expected use scenario:
+1. Check the special resetinfo area in FW\_RAM to see if there is any
+   data about why a reset has been made. Or all zeroes(?) meaning a power
+   loss.
+
+2. If it was reset intentende to start a device app from client, see
+   App loaded from client below.
+
+3. If it was reset to start a device app from the flash it first
+   checks which app it should start from the resetinfo (out of two
+   available). If no data is available, start with the first.
+
+4. Load flash app into RAM without USS.
+
+5. Compute digest of loaded app.
+
+6. Compare against stored app digest in partition table to note if app
+   has been corrupted on flash.
+
+7. If there is an app digest in the resetinfo left from previous app,
+   compare the digests. Halt CPU if differences.
+
+8. Start the app. See details in description below.
+
+If the app is the first set in a chain, it's the job of the app itself
+to reset the TKey when it has done its job. For instance, a verified
+boot loader app:
+
+  - includes a security policy, for instance a public key and code to
+    check a signature.
+
+  - the app reads the message and the signature over the message (the
+    digest of the next app in the chain) from the filesystem or from
+    the client.
+
+  - if the signature provided over the message is verified to be done
+    by the corresponding private key, this app would do a `reset()`,
+    passing the digest to the firmware for control and instructing it
+    to start *just* that app.
+
+  - firmware would see the instructions about the reset in FW\_RAM:
+
+    1. Where to expect the next app from: client, a slot in the
+       filesystem?
+    2. The expected digest of the next app.
+
+#### App loaded from client
+
+Firmware waits for data coming in through the UART.
 
   1. The client sends the `FW_CMD_LOAD_APP` command with the size of
      the device app and the optional 32 byte hash of the user-supplied
@@ -212,23 +258,27 @@ Typical expected use scenario:
      firmware send back the `FW_RSP_LOAD_APP_DATA_READY` response
      containing the digest.
 
-  5. The Compound Device Identifier
+  5. If there was a digest left in resetinfo from earlier app in the
+     chain, compare the computed digest with the left digest. If it's
+     not the same, halt CPU.
+
+  6. The Compound Device Identifier
      ([CDI]((#compound-device-identifier-computation))) is then
      computed by doing a new BLAKE2s using the Unique Device Secret
      (UDS), the application digest, and any User Supplied Secret
      (USS) digest already received.
 
-  6. The start address of the device app, currently `0x4000_0000`, is
+  7. The start address of the device app, currently `0x4000_0000`, is
      written to `APP_ADDR` and the size of the binary to `APP_SIZE` to
      let the device application know where it is loaded and how large
      it is, if it wants to relocate in RAM.
 
-  7. The firmware now clears the part of the special `FW_RAM` where it
+  8. The firmware now clears the part of the special `FW_RAM` where it
      keeps it stack.
 
-  8. The interrupt handler for system calls is enabled.
+  9. The interrupt handler for system calls is enabled.
 
-  9. Firmware starts the application by jumping to the contents of
+  10. Firmware starts the application by jumping to the contents of
      `APP_ADDR`. Hardware automatically switches from firmware mode to
      application mode. In this mode some memory access is restricted,
      e.g. some addresses are inaccessible (`UDS`), and some are
