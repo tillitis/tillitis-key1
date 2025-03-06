@@ -175,8 +175,9 @@ from execution, except through the system call mechanism.
 
 ### Golden path
 
-Firmware loads the application at the start of RAM (`0x4000_0000`). It
-use a part of the special FW\_RAM for its own stack.
+Firmware loads the application at the start of RAM (`0x4000_0000`)
+from either flash or the UART. It use a part of the special FW\_RAM
+for its own stack.
 
 When reset is released, the CPU starts executing the firmware. It
 begins in `start.S` by clearing all CPU registers, clears all FW\_RAM,
@@ -189,101 +190,98 @@ and setting up the RAM address and data hardware scrambling with
 values from the True Random Number Generator (TRNG).
 
 1. Check the special resetinfo area in FW\_RAM to see if there is any
-   data about why a reset has been made. Or all zeroes(?) meaning a power
-   loss.
+   data about why a reset has been made. All zeroes(?) meaning default
+   behaviour.
 
-2. If it was reset intentende to start a device app from client, see
-   App loaded from client below.
+2. If it was reset with intention to start a device app from client,
+   see App loaded from client below.
 
-3. If it was reset to start a device app from the flash it first
-   checks which app it should start from the resetinfo (out of two
-   available). If no data is available, start with the first.
+3. Default is to start the first device app from flash. If resetinfo
+   says otherwise it starts the other one.
 
 4. Load flash app into RAM without USS.
 
 5. Compute digest of loaded app.
 
 6. Compare against stored app digest in partition table to note if app
-   has been corrupted on flash.
+   has been corrupted on flash. If corrupted, halt CPU.
 
-7. If there is an app digest in the resetinfo left from previous app,
-   compare the digests. Halt CPU if differences.
-
-8. Start the app. See details in description below.
+7. Proceed to [Start the device app](#start-the-device-app) below.
 
 If the app is the first set in a chain, it's the job of the app itself
 to reset the TKey when it has done its job. For instance, a verified
 boot loader app:
 
-  - includes a security policy, for instance a public key and code to
-    check a signature.
+- includes a security policy, for instance a public key and code to
+  check a signature.
 
-  - the app reads the message and the signature over the message (the
-    digest of the next app in the chain) from the filesystem or from
-    the client.
+- the app reads the message and the signature over the message (the
+  digest of the next app in the chain) from the filesystem or from
+  the client.
 
-  - if the signature provided over the message is verified to be done
-    by the corresponding private key, this app would do a `reset()`,
-    passing the digest to the firmware for control and instructing it
-    to start *just* that app.
+- if the signature provided over the message is verified to be done
+  by the corresponding private key, this app would do a `reset()`,
+  passing the digest to the firmware for control and instructing it
+  to start *just* that app.
 
-  - firmware would see the instructions about the reset in FW\_RAM:
+- firmware would see the instructions about the reset in FW\_RAM:
 
-    1. Where to expect the next app from: client, a slot in the
-       filesystem?
-    2. The expected digest of the next app.
+  1. Where to expect the next app from: client, a slot in the
+     filesystem?
+  2. The expected digest of the next app.
 
 #### App loaded from client
 
 Firmware waits for data coming in through the UART.
 
-  1. The client sends the `FW_CMD_LOAD_APP` command with the size of
-     the device app and the optional 32 byte hash of the user-supplied
-     secret as arguments and gets a `FW_RSP_LOAD_APP` back. After
-     using this it's not possible to restart the loading of an
-     application.
+1. The client sends the `FW_CMD_LOAD_APP` command with the size of
+   the device app and the optional 32 byte hash of the user-supplied
+   secret as arguments and gets a `FW_RSP_LOAD_APP` back. After
+   using this it's not possible to restart the loading of an
+   application.
 
-  2. If the the client receive a sucessful response, it will send
-     multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
-     full application.
+2. If the the client receive a sucessful response, it will send
+   multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
+   full application.
 
-  3. On receiving`FW_CMD_LOAD_APP_DATA` commands the firmware places
-     the data into `0x4000_0000` and upwards. The firmware replies
-     with a `FW_RSP_LOAD_APP_DATA` response to the client for each
-     received block except the last data block.
+3. On receiving`FW_CMD_LOAD_APP_DATA` commands the firmware places
+   the data into `0x4000_0000` and upwards. The firmware replies
+   with a `FW_RSP_LOAD_APP_DATA` response to the client for each
+   received block except the last data block.
 
-  4. When the final block of the application image is received with a
-     `FW_CMD_LOAD_APP_DATA`, the firmware measure the application by
-     computing a BLAKE2s digest over the entire application. Then
-     firmware send back the `FW_RSP_LOAD_APP_DATA_READY` response
-     containing the digest.
+4. When the final block of the application image is received with a
+   `FW_CMD_LOAD_APP_DATA`, the firmware measure the application by
+   computing a BLAKE2s digest over the entire application. Then
+   firmware send back the `FW_RSP_LOAD_APP_DATA_READY` response
+   containing the digest.
 
-  5. If there was a digest left in resetinfo from earlier app in the
-     chain, compare the computed digest with the left digest. If it's
-     not the same, halt CPU.
+#### Start the device app
 
-  6. The Compound Device Identifier
-     ([CDI]((#compound-device-identifier-computation))) is then
-     computed by doing a new BLAKE2s using the Unique Device Secret
-     (UDS), the application digest, and any User Supplied Secret
-     (USS) digest already received.
+1. If there is an app digest in the resetinfo left from previous app,
+   compare the digests. Halt CPU if differences.
 
-  7. The start address of the device app, currently `0x4000_0000`, is
-     written to `APP_ADDR` and the size of the binary to `APP_SIZE` to
-     let the device application know where it is loaded and how large
-     it is, if it wants to relocate in RAM.
+2. The Compound Device Identifier
+   ([CDI]((#compound-device-identifier-computation))) is then computed
+   by doing a new BLAKE2s using the Unique Device Secret (UDS), the
+   application digest, and any User Supplied Secret (USS) digest
+   already received.
 
-  8. The firmware now clears the part of the special `FW_RAM` where it
-     keeps it stack.
+3. The start address of the device app, currently `0x4000_0000`, is
+   written to `APP_ADDR` and the size of the binary to `APP_SIZE` to
+   let the device application know where it is loaded and how large it
+   is, if it wants to relocate in RAM.
 
-  9. The interrupt handler for system calls is enabled.
+4. The firmware now clears the part of the special `FW_RAM` where it
+   keeps it stack.
 
-  10. Firmware starts the application by jumping to the contents of
-     `APP_ADDR`. Hardware automatically switches from firmware mode to
-     application mode. In this mode some memory access is restricted,
-     e.g. some addresses are inaccessible (`UDS`), and some are
-     switched from read/write to read-only (see [the memory
-     map](https://dev.tillitis.se/memory/)).
+5. The interrupt handler for system calls is enabled.
+
+6. Firmware starts the application by jumping to the contents of
+   `APP_ADDR`. Hardware automatically switches from firmware mode to
+   application mode. In this mode some memory access is restricted,
+   e.g. some addresses are inaccessible (`UDS`), and some are switched
+   from read/write to read-only (see [the memory
+   map](https://dev.tillitis.se/memory/)).
 
 If during this whole time any commands are received which are not
 allowed in the current state, or any errors occur, we enter the
