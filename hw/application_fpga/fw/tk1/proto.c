@@ -9,6 +9,7 @@
 #include <tkey/io.h>
 #include <tkey/led.h>
 #include <tkey/lib.h>
+#include <tkey/tk1_mem.h>
 
 #include "proto.h"
 #include "state.h"

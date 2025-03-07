@@ -21,7 +21,7 @@ their own `README.md` file documenting them and their API in detail.
 
 Hardware functions with APIs, assets, and input/output are memory
 mapped starting at base address `0xc000_0000`. For specific offsets
-and bitmasks, see the file `fw/tk1_mem.h`.
+and bitmasks, see the file `tk1_mem.h` in tkey-libs.
 
 Rough memory map:
 

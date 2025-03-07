@@ -71,7 +71,8 @@ ASFLAGS = \
 	-target riscv32-unknown-none-elf \
 	-march=rv32iczmmul \
 	-mabi=ilp32 \
-	-mno-relax
+	-mno-relax \
+	-I $(LIBDIR)/include
 
 ICE40_SIM_CELLS = $(shell yosys-config --datdir/ice40/cells_sim.v)
 
