@@ -2,6 +2,9 @@
 
 # Tillitis TKey
 
+Read about current work in progress
+[here](#current-work-in-progress-in-this-repository).
+
 ![TK1 PCB](doc/images/tkey-open-lid.png) *The TK1 PCB, also known as
 TKey.*
 
@@ -25,11 +28,11 @@ With the right application, the TKey can be used for:
 
 If you want to know more about Tillitis and the TKey, visit:
 
-- Main web: https://tillitis.se/
-- Shop: https://shop.tillitis.se/
-- Developer Handbook: https://dev.tillitis.se/
-- Officially supported apps: https://tillitis.se/download/
-- Other known apps: https://dev.tillitis.se/projects/
+- Main web: <https://tillitis.se/>
+- Shop: <https://shop.tillitis.se/>
+- Developer Handbook: <https://dev.tillitis.se/>
+- Officially supported apps: <https://tillitis.se/download/>
+- Other known apps: <https://dev.tillitis.se/projects/>
 
 All of the TKey software, firmware, FPGA Verilog code, schematics and
 PCB design files are open source, just like all trustworthy security
@@ -56,12 +59,12 @@ releases.
 The TKey PCB [KiCad](https://www.kicad.org/) design files are kept in
 a separate repository:
 
-https://github.com/tillitis/tk1-pcba
+<https://github.com/tillitis/tk1-pcba>
 
 The TP1 (TKey programmer 1) PCB design files and the firmware sources
 are kept in:
 
-https://github.com/tillitis/tp1
+<https://github.com/tillitis/tp1>
 
 Note that the TP1 is only used for provisioning the FPGA bitstream
 into flash or the FPGA configuration memory. It's not necessary if you
@@ -104,3 +107,15 @@ deterministically generate any cryptographic keys it needs.
 The TKey unconditional measured boot is inspired by, but not exactly
 the same as part of [TCG
 DICE](https://trustedcomputinggroup.org/work-groups/dice-architectures/).
+
+# Current Work in Progress in this repository
+
+We are updating the FPGA and firmware on TKey as part of the Castor
+release. This update will simplify TKey’s usage, laying the groundwork
+for future support of U2F/FIDO authentication.
+
+You can track our progress through this
+[milestone](https://github.com/tillitis/tillitis-key1/milestone/1).
+
+Note that main branch is in development. We try to keep status of main
+branch updated in the [release notes](/doc/release_notes.md#upcoming-release-castor).
