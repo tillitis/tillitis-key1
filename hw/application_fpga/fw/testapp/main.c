@@ -8,10 +8,10 @@
 #include <tkey/io.h>
 #include <tkey/led.h>
 #include <tkey/lib.h>
+#include <tkey/tk1_mem.h>
 
 #include "../tk1/proto.h"
 #include "../tk1/syscall_num.h"
-#include "../tk1_mem.h"
 #include "syscall.h"
 
 #define USBMODE_PACKET_SIZE 64

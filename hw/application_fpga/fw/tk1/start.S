@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-2.0-only
 */
 
-#include "../tk1_mem.h"
+#include <tkey/tk1_mem.h>
 #include "picorv32/custom_ops.S"  // PicoRV32 custom instructions
 
 #define illegal_insn() .word 0

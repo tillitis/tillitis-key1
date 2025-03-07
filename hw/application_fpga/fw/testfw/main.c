@@ -8,9 +8,9 @@
 #include <tkey/assert.h>
 #include <tkey/io.h>
 #include <tkey/lib.h>
+#include <tkey/tk1_mem.h>
 
 #include "../tk1/proto.h"
-#include "../tk1_mem.h"
 
 #define USBMODE_PACKET_SIZE 64
 

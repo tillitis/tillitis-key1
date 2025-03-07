@@ -9,8 +9,7 @@
 #include <tkey/assert.h>
 #include <tkey/debug.h>
 #include <tkey/lib.h>
-
-#include "../tk1_mem.h"
+#include <tkey/tk1_mem.h>
 
 #include "blake2s/blake2s.h"
 #include "proto.h"
