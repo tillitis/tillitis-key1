@@ -104,48 +104,73 @@ is also the CPU reset vector.
 
 ### Firmware state machine
 
-This is the state diagram of the firmware. There are only four states.
+This is the state diagram of the firmware. There are only six states.
+
 Change of state occur when we receive specific I/O or a fatal error
 occurs.
 
 ```mermaid
 stateDiagram-v2
-     S1: initial
-     S2: loading
-     S3: running
-     SE: failed
+    S0: resetinfo
+    S4: loadflash
+    S1: waitcommand
+    S2: loading
+    S3: running
+    SE: failed
 
-     [*] --> S1
+    [*] --> S0
 
-     S1 --> S1: Commands
-     S1 --> S2: LOAD_APP
-     S1 --> SE: Error
+    S0 --> S4: load 1 (def) or load 2
+    S0 --> S1
 
-     S2 --> S2: LOAD_APP_DATA
-     S2 --> S3: Last block received
-     S2 --> SE: Error
+    S1 --> S1: Commands
+    S1 --> S2: LOAD_APP
+    S1 --> SE: Error
 
-     S3 --> [*]
+    S2 --> S2: LOAD_APP_DATA
+    S2 --> S3: Last block received
+    S2 --> SE: Error
+
+    S4 --> S3
+    S4 --> SE: Error
+
+    SE --> [*]
+    S3 --> [*]
 ```
 
 States:
 
-- `initial` - At start. Allows the commands `NAME_VERSION`, `GET_UDI`,
-  `LOAD_APP`.
+- `resetinfo` - We start by checking resetinfo data in `FW_RAM`
+- `waitcommand` - Waiting for initial commands from client. Allows the
+  commands `NAME_VERSION`, `GET_UDI`, `LOAD_APP`.
+- `loadflash` - Loading an app from flash.
 - `loading` - Expect application data. Allows only the command
   `LOAD_APP_DATA`.
-- `run` - Computes CDI and starts the application. Allows no commands.
-- `fail` - Stops waiting for commands, flashes LED forever. Allows no
-  commands.
+- `running` - Computes CDI and starts the application. Allows no commands.
+- `failed` - Halts CPU. Allows no commands.
 
-Commands in state `initial`:
+Allowed data in state `resetinfo`:
+
+| *startfrom*          | *next state*  |
+|----------------------|---------------|
+| `default`            | `loadflash`   |
+| `Start flash slot 1` | `loadflash`   |
+| `Start flash slot 2` | `loadflash`   |
+| `Start from client`  | `waitcommand` |
+
+I/O in state `loadflash`:
+
+| *I/O*              | *next state* |
+|--------------------|--------------|
+| Last app data read | `run`        |
+
+Commands in state `waitcommand`:
 
 | *command*             | *next state* |
 |-----------------------|--------------|
 | `FW_CMD_NAME_VERSION` | unchanged    |
 | `FW_CMD_GET_UDI`      | unchanged    |
 | `FW_CMD_LOAD_APP`     | `loading`    |
-|                       |              |
 
 Commands in state `loading`:
 
@@ -157,12 +182,24 @@ See [Firmware protocol in the Dev
 Handbook](http://dev.tillitis.se/protocol/#firmware-protocol) for the
 definition of the specific commands and their responses.
 
-State changes from "initial" to "loading" when receiving `LOAD_APP`,
-which also sets the size of the number of data blocks to expect. After
-that we expect several `LOAD_APP_DATA` commands until the last block
-is received, when state is changed to "running".
+Exection starts in state `resetinfo` where the firmware checks in
+`FW_RAM` for what to do next.
 
-In "running", the loaded device app is measured, the Compound Device
+State changes to `loadflash` if the `FW_RAM` data indicates
+that it should start one of the two flash apps.
+
+State changes to `waitcommand` if the `FW_RAM` data indicates that it
+instead should wait for commands from a client.
+
+In `loadflash` state changes to `running` if the app has been
+successfully loaded into RAM or to `failed` otherwise.
+
+State changes from `waitcommand` to `loading` when receiving
+`LOAD_APP`, which also sets the size of the number of data blocks to
+expect. After that we expect several `LOAD_APP_DATA` commands until
+the last block is received, when state is changed to `running`.
+
+In `running`, the loaded device app is measured, the Compound Device
 Identifier (CDI) is computed, we do some cleanup of firmware data
 structures, enable the system calls, and finally start the app, which
 ends the firmware state machine. Hardware guarantees that we leave
