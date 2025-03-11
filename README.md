@@ -77,6 +77,27 @@ https://github.com/tillitis/tkey-libs
 
 but keep our own copy of it in the repo. See below.
 
+## Building
+
+Building is probably easiest using make and Podman. Do this to see all
+targets:
+
+```
+cd contrib
+make
+```
+
+Build the entire FPGA bitstream, which includes the firmware, using
+Podman:
+
+```
+cd contrib
+make run-make
+```
+
+See the [Tillitis Developer Handbook](https://dev.tillitis.se) for
+more.
+
 ## Updating and working with tkey-libs
 
 A copy of [tkey-libs](https://github.com/tillitis/tkey-libs) is kept
