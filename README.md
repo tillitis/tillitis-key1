@@ -70,6 +70,39 @@ Note that the TP1 is only used for provisioning the FPGA bitstream
 into flash or the FPGA configuration memory. It's not necessary if you
 just want to develop apps for the TKey.
 
+We use the tkey-libs libraries used for device app development in the
+firmware, too:
+
+https://github.com/tillitis/tkey-libs
+
+but keep our own copy of it in the repo. See below.
+
+## Updating and working with tkey-libs
+
+A copy of [tkey-libs](https://github.com/tillitis/tkey-libs) is kept
+in `hw/application_fpga/tkey-libs`. This is mostly to avoid the
+subtleties of Git submodules.
+
+If you want to change something in tkey-libs, always change in the
+upstream library at:
+
+https://github.com/tillitis/tkey-libs
+
+You can build with an out-of-tree copy if you set `LIBDIR`, for
+example:
+
+```
+make LIBDIR=~/git/tkey-libs firmware.elf
+```
+
+When it's time to update the in-tree tkey-lib first tag the upstream
+repo with an `fw` prefix, like `fw-1` even if it already has an
+official version tag.
+
+Easiest is probably to just remove the tkey-libs directory and then
+git clone the desired tag. Use the entire repo, but remove the .-files
+like `.git`, `.github`, et cetera.
+
 ## Measured boot
 
 The key behind guaranteeing security even as a general computer is the
