@@ -12,6 +12,7 @@
 #include <tkey/tk1_mem.h>
 
 #include "blake2s/blake2s.h"
+#include "partition_table.h"
 #include "proto.h"
 #include "state.h"
 #include "syscall_enable.h"
@@ -34,6 +35,8 @@ static volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER
 static volatile uint32_t *ram_addr_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
 static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
 // clang-format on
+
+struct partition_table part_table;
 
 // Context for the loading of a TKey program
 struct context {
@@ -417,6 +420,11 @@ int main(void)
 	ctx.use_uss = false;
 
 	scramble_ram();
+
+	if (part_table_read(&part_table) != 0) {
+		// Couldn't read or create partition table
+		assert(1 == 2);
+	}
 
 #if defined(SIMULATION)
 	run(&ctx);

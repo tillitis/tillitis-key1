@@ -5,7 +5,11 @@
 
 #include <stdint.h>
 #include <tkey/assert.h>
+#include <tkey/debug.h>
 #include <tkey/led.h>
+
+#include "partition_table.h"
+#include "storage.h"
 
 #include "../tk1/syscall_num.h"
 
@@ -14,11 +18,44 @@ static volatile uint32_t *system_reset = (volatile uint32_t *)TK1_MMIO_TK1_SYSTE
 static volatile uint32_t *udi          = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
 // clang-format on
 
-int32_t syscall_handler(uint32_t number, uint32_t arg1)
+extern struct partition_table part_table;
+
+int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
+			uint32_t arg3)
 {
 	switch (number) {
 	case TK1_SYSCALL_RESET:
 		*system_reset = 1;
+		return 0;
+	case TK1_SYSCALL_ALLOC_AREA:
+		if (storage_allocate_area(&part_table) < 0) {
+			debug_puts("couldn't allocate storage area\n");
+			return -1;
+		}
+
+		return 0;
+	case TK1_SYSCALL_DEALLOC_AREA:
+		if (storage_deallocate_area(&part_table) < 0) {
+			debug_puts("couldn't deallocate storage area\n");
+			return -1;
+		}
+
+		return 0;
+	case TK1_SYSCALL_WRITE_DATA:
+		if (storage_write_data(&part_table, arg1, (uint8_t *)arg2,
+				       arg3) < 0) {
+			debug_puts("couldn't write storage area\n");
+			return -1;
+		}
+
+		return 0;
+	case TK1_SYSCALL_READ_DATA:
+		if (storage_read_data(&part_table, arg1, (uint8_t *)arg2,
+				       arg3) < 0) {
+			debug_puts("couldn't read storage area\n");
+			return -1;
+		}
+
 		return 0;
 	case TK1_SYSCALL_SET_LED:
 		led_set(arg1);
