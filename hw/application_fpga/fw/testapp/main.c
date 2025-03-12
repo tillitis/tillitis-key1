@@ -121,12 +121,47 @@ int main(void)
 	}
 
 	// But a syscall to get parts of UDI should be able to run
-	int vidpid = syscall(TK1_SYSCALL_GET_VIDPID, 0);
+	int vidpid = syscall(TK1_SYSCALL_GET_VIDPID, 0, 0, 0);
 
 	if (vidpid != 0x00010203) {
 		failmsg("Expected VID/PID to be 0x00010203");
 		anyfailed = 1;
 	}
+
+	puts(IO_CDC, "\r\nAllocating storage area...");
+
+	if (syscall(TK1_SYSCALL_ALLOC_AREA, 0, 0, 0) != 0) {
+		failmsg("Failed to allocate storage area");
+	}
+	puts(IO_CDC, "done.\r\n");
+
+	puts(IO_CDC, "\r\nWriting to storage area...");
+
+	uint8_t out_data[14] = { 0, 1, 2, 3, 4, 5, 6, 7, 8,
+		9, 10, 11, 12, 13 };
+	if (syscall(TK1_SYSCALL_WRITE_DATA, 0, (uint32_t)out_data, sizeof(out_data)) != 0) {
+		failmsg("Failed to write to storage area");
+	}
+	puts(IO_CDC, "done.\r\n");
+
+	puts(IO_CDC, "\r\nReading from storage area...");
+
+	uint8_t in_data[14] = { 0 };
+	if (syscall(TK1_SYSCALL_READ_DATA, 0, (uint32_t)in_data, sizeof(in_data)) != 0) {
+		failmsg("Failed to write to storage area");
+	}
+	if (!memeq(in_data, out_data, sizeof(in_data))) {
+		failmsg("Failed to read back data from storage area");
+		anyfailed = 1;
+	}
+	puts(IO_CDC, "done.\r\n");
+
+	puts(IO_CDC, "\r\nDeallocating storage area...");
+
+	if (syscall(TK1_SYSCALL_DEALLOC_AREA, 0, 0, 0) != 0) {
+		failmsg("Failed to deallocate storage area");
+	}
+	puts(IO_CDC, "done.\r\n");
 
 	uint32_t cdi_local[CDI_WORDS];
 	uint32_t cdi_local2[CDI_WORDS];
@@ -223,7 +258,7 @@ int main(void)
 		}
 
 		if (in == '+') {
-			syscall(TK1_SYSCALL_RESET, 0);
+			syscall(TK1_SYSCALL_RESET, 0, 0, 0);
 		}
 
 		write(IO_CDC, &in, 1);

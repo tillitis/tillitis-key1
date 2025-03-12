@@ -126,7 +126,13 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/proto.o \
 	$(P)/fw/tk1/blake2s/blake2s.o \
 	$(P)/fw/tk1/syscall_enable.o \
-	$(P)/fw/tk1/syscall_handler.o
+	$(P)/fw/tk1/syscall_handler.o \
+	$(P)/fw/tk1/spi.o \
+	$(P)/fw/tk1/flash.o \
+	$(P)/fw/tk1/storage.o \
+	$(P)/fw/tk1/partition_table.o \
+	$(P)/fw/tk1/auth_app.o \
+	$(P)/fw/tk1/rng.o
 
 FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/main.c \
