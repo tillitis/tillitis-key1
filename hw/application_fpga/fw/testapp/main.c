@@ -121,7 +121,7 @@ int main(void)
 	}
 
 	// But a syscall to get parts of UDI should be able to run
-	int vidpid = syscall(TK1_SYSCALL_GET_VIDPID, 0);
+	int vidpid = syscall(TK1_SYSCALL_GET_VIDPID, 0, 0, 0);
 
 	if (vidpid != 0x00010203) {
 		failmsg("Expected VID/PID to be 0x00010203");
@@ -223,7 +223,7 @@ int main(void)
 		}
 
 		if (in == '+') {
-			syscall(TK1_SYSCALL_RESET, 0);
+			syscall(TK1_SYSCALL_RESET, 0, 0, 0);
 		}
 
 		write(IO_CDC, &in, 1);
