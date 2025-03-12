@@ -1,8 +1,8 @@
 // Copyright (C) 2024 - Tillitis AB
 // SPDX-License-Identifier: GPL-2.0-only
 
-#include <tkey/tk1_mem.h>
 #include "rng.h"
+#include <tkey/tk1_mem.h>
 
 #include <stdint.h>
 

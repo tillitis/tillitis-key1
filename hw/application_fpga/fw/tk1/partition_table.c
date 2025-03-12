@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <tkey/lib.h>
 
-#include "partition_table.h"
 #include "flash.h"
+#include "partition_table.h"
 #include "proto.h"
 
 int part_table_read(struct partition_table *part_table)

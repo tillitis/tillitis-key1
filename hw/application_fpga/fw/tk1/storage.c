@@ -7,10 +7,10 @@
 #include <tkey/debug.h>
 #include <tkey/lib.h>
 
-#include "storage.h"
 #include "auth_app.h"
 #include "flash.h"
 #include "partition_table.h"
+#include "storage.h"
 
 /* Returns the index of the first empty area. If there is no empty area -1 is
  * returned. */

@@ -12,10 +12,10 @@
 #include <tkey/tk1_mem.h>
 
 #include "blake2s/blake2s.h"
+#include "partition_table.h"
 #include "proto.h"
 #include "state.h"
 #include "syscall_enable.h"
-#include "partition_table.h"
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;

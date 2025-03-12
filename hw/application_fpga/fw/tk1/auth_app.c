@@ -3,8 +3,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <tkey/tk1_mem.h>
 #include <tkey/lib.h>
+#include <tkey/tk1_mem.h>
 
 #include "auth_app.h"
 #include "blake2s/blake2s.h"

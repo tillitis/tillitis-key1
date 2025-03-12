@@ -1,8 +1,8 @@
 // Copyright (C) 2024 - Tillitis AB
 // SPDX-License-Identifier: GPL-2.0-only
 
-#include <tkey/tk1_mem.h>
 #include "spi.h"
+#include <tkey/tk1_mem.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -63,7 +63,6 @@ static void _spi_read(uint8_t *buf, size_t size)
 		buf[i] = (*spi_data & 0xff);
 	}
 }
-
 
 // Function to both read and write data to the connected SPI flash.
 int spi_transfer(uint8_t *cmd, size_t cmd_size, uint8_t *tx_buf, size_t tx_size,
