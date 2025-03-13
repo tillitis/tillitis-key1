@@ -1,4 +1,12 @@
+#ifdef QEMU_SYSCALL
+
+#define picorv32_maskirq_insn(...)
+
+#else
+
 #include "../tk1/picorv32/custom_ops.S"
+
+#endif
 
 	.section ".text"
 	.globl syscall_enable
