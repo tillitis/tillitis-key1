@@ -27,7 +27,6 @@ uint16_t SetupLen = 0;
 uint8_t SetupReq = 0;
 uint8_t UsbConfig = 0;
 const uint8_t *pDescr = NULL;         // USB configuration flag
-USB_SETUP_REQ SetupReqBuf = { 0 };    // Temporary Setup package
 
 #define UsbSetupBuf                   ((PUSB_SETUP_REQ)Ep0Buffer)
 
