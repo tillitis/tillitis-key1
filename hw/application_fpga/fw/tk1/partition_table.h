@@ -37,6 +37,11 @@
 #define ADDR_PRE_LOADED_APP (ADDR_PARTITION_TABLE + SIZE_PARTITION_TABLE)
 #define SIZE_PRE_LOADED_APP 0x20000UL // 128KiB
 
+// Pre-loaded app present and authenticated
+#define PRE_LOADED_STATUS_AUTH 0x01
+// Pre-loaded app present but not yet authenticated
+#define PRE_LOADED_STATUS_PRESENT 0x02
+
 #define ADDR_STORAGE_AREA (ADDR_PRE_LOADED_APP + SIZE_PRE_LOADED_APP)
 #define SIZE_STORAGE_AREA 0x20000UL // 128KiB
 #define N_STORAGE_AREA 4
