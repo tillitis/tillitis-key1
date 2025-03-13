@@ -4,7 +4,18 @@
 */
 
 #include <tkey/tk1_mem.h>
+
+#ifdef QEMU_SYSCALL
+
+#define picorv32_retirq_insn(...) \
+	mv ra, x3; \
+	ret
+
+#else
+
 #include "picorv32/custom_ops.S"  // PicoRV32 custom instructions
+
+#endif
 
 #define illegal_insn() .word 0
 
