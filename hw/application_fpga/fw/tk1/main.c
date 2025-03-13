@@ -496,6 +496,21 @@ int main(void)
 
 	scramble_ram();
 
+	// Wait for terminal program and a character to be typed
+	enum ioend endpoint = IO_NONE;
+	uint8_t available = 0;
+	uint8_t in = 0;
+
+	if (readselect(IO_CDC, &endpoint, &available) < 0) {
+		// readselect failed! I/O broken? Just redblink.
+		assert(1 == 2);
+	}
+
+	if (read(IO_CDC, &in, 1, 1) < 0) {
+		// read failed! I/O broken? Just redblink.
+		assert(1 == 2);
+	}
+
 	if (part_table_read(&part_table) != 0) {
 		// Couldn't read or create partition table
 		assert(1 == 2);
@@ -505,6 +520,10 @@ int main(void)
 #if defined(SIMULATION)
 	run(&ctx);
 #endif
+
+	// Lie and tell filesystem we have a 128 kiB device app on
+	// flash.
+	part_table.pre_app_data.size = 0x20000;
 
 	// Just start the preloaded app.
 	if (preload_load(&part_table) == -1) {
