@@ -375,10 +375,10 @@ static void run_flash(const struct context *ctx, struct partition_table *part_ta
 	// CDI = hash(uds, hash(app), uss)
 	compute_cdi(ctx->digest, ctx->use_uss, ctx->uss);
 
-	if (part_table->pre_app_data.status == 0x02) {
+	if (part_table->pre_app_data.status == PRE_LOADED_STATUS_PRESENT) {
 		debug_puts("Create auth\n");
 		auth_app_create(&part_table->pre_app_data.auth);
-		part_table->pre_app_data.status = 0x01;
+		part_table->pre_app_data.status = PRE_LOADED_STATUS_AUTH;
 		part_table_write(part_table);
 	}
 
@@ -508,7 +508,7 @@ int main(void)
 	assert(digest_err == 0);
 	print_digest(ctx.digest);
 
-	part_table.pre_app_data.status = 0x02;
+	part_table.pre_app_data.status = PRE_LOADED_STATUS_PRESENT;
 
 	state = FW_STATE_RUN_FLASH;
 

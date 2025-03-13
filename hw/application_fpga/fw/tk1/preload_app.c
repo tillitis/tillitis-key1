@@ -94,7 +94,7 @@ int preload_store_finalize(struct partition_table *part_table, bool use_uss,
 
 	part_table->pre_app_data.size = app_size;
 	part_table->pre_app_data.status =
-	    0x02; /* Stored but not yet authenticated */
+	    PRE_LOADED_STATUS_PRESENT; /* Stored but not yet authenticated */
 	debug_puts("preload_*_final: size: ");
 	debug_putinthex(app_size);
 	debug_lf();
