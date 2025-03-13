@@ -327,26 +327,8 @@ static enum state loading_commands(const struct frame_header *hdr,
 	return state;
 }
 
-static void run_flash(const struct context *ctx, struct partition_table *part_table)
+static void jump_to_app(void)
 {
-	/* At this point we expect an app to be loaded into RAM */
-	*app_addr = TK1_RAM_BASE;
-
-	// CDI = hash(uds, hash(app), uss)
-	compute_cdi(ctx->digest, ctx->use_uss, ctx->uss);
-
-	if (part_table->pre_app_data.status == 0x02) {
-		debug_puts("Create auth\n");
-		auth_app_create(&part_table->pre_app_data.auth);
-		part_table->pre_app_data.status = 0x01;
-		part_table_write(part_table);
-	}
-
-	if (!auth_app_authenticate(&part_table->pre_app_data.auth)) {
-		debug_puts("!Authenticated\n");
-		assert(1 == 2);
-	}
-
 	debug_puts("Flipping to app mode!\n");
 	debug_puts("Jumping to ");
 	debug_putinthex(*app_addr);
@@ -385,6 +367,28 @@ static void run_flash(const struct context *ctx, struct partition_table *part_ta
 	__builtin_unreachable();
 }
 
+static void run_flash(const struct context *ctx, struct partition_table *part_table)
+{
+	/* At this point we expect an app to be loaded into RAM */
+	*app_addr = TK1_RAM_BASE;
+
+	// CDI = hash(uds, hash(app), uss)
+	compute_cdi(ctx->digest, ctx->use_uss, ctx->uss);
+
+	if (part_table->pre_app_data.status == 0x02) {
+		debug_puts("Create auth\n");
+		auth_app_create(&part_table->pre_app_data.auth);
+		part_table->pre_app_data.status = 0x01;
+		part_table_write(part_table);
+	}
+
+	if (!auth_app_authenticate(&part_table->pre_app_data.auth)) {
+		debug_puts("!Authenticated\n");
+		assert(1 == 2);
+	}
+
+	jump_to_app();
+}
 
 static void run(const struct context *ctx)
 {
@@ -394,42 +398,7 @@ static void run(const struct context *ctx)
 	// CDI = hash(uds, hash(app), uss)
 	compute_cdi(ctx->digest, ctx->use_uss, ctx->uss);
 
-	debug_puts("Flipping to app mode!\n");
-	debug_puts("Jumping to ");
-	debug_putinthex(*app_addr);
-	debug_lf();
-
-	// Clear the firmware stack
-	// clang-format off
-#ifndef S_SPLINT_S
-	asm volatile(
-		"la a0, _sstack;"
-		"la a1, _estack;"
-		"loop:;"
-		"sw zero, 0(a0);"
-		"addi a0, a0, 4;"
-		"blt a0, a1, loop;"
-		::: "memory");
-#endif
-	// clang-format on
-
-	syscall_enable();
-
-	// Jump to app - doesn't return
-	// Hardware is responsible for switching to app mode
-	// clang-format off
-#ifndef S_SPLINT_S
-	asm volatile(
-		// Get value at TK1_MMIO_TK1_APP_ADDR
-		"lui a0,0xff000;"
-		"lw a0,0x030(a0);"
-		// Jump to it
-		"jalr x0,0(a0);"
-		::: "memory");
-#endif
-	// clang-format on
-
-	__builtin_unreachable();
+	jump_to_app();
 }
 
 #if !defined(SIMULATION)
@@ -525,7 +494,9 @@ int main(void)
 	// flash.
 	part_table.pre_app_data.size = 0x20000;
 
-	// Just start the preloaded app.
+	// Just start the preloaded app. This should be a part of an
+	// initial state. The initial state should check resetinfo if
+	// it should start from flash or not.
 	if (preload_load(&part_table) == -1) {
 		state = FW_STATE_FAIL;
 	}
@@ -541,7 +512,7 @@ int main(void)
 
 	state = FW_STATE_RUN_FLASH;
 
-	led_set(LED_GREEN);
+	// End of initial state.
 
 	for (;;) {
 		switch (state) {
