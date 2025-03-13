@@ -10,9 +10,12 @@
 #include <tkey/debug.h>
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
+#include <tkey/led.h>
 
+#include "auth_app.h"
 #include "blake2s/blake2s.h"
 #include "partition_table.h"
+#include "preload_app.h"
 #include "proto.h"
 #include "state.h"
 #include "syscall_enable.h"
@@ -45,6 +48,7 @@ struct context {
 	uint8_t *loadaddr;  // Where we are currently loading a TKey program
 	bool use_uss;	    // Use USS?
 	uint8_t uss[32];    // User Supplied Secret, if any
+	bool from_flash;    // App is loaded from flash
 };
 
 static void print_hw_version(void);
@@ -323,8 +327,68 @@ static enum state loading_commands(const struct frame_header *hdr,
 	return state;
 }
 
+static void run_flash(const struct context *ctx, struct partition_table *part_table)
+{
+	/* At this point we expect an app to be loaded into RAM */
+	*app_addr = TK1_RAM_BASE;
+
+	// CDI = hash(uds, hash(app), uss)
+	compute_cdi(ctx->digest, ctx->use_uss, ctx->uss);
+
+	if (part_table->pre_app_data.status == 0x02) {
+		debug_puts("Create auth\n");
+		auth_app_create(&part_table->pre_app_data.auth);
+		part_table->pre_app_data.status = 0x01;
+		part_table_write(part_table);
+	}
+
+	if (!auth_app_authenticate(&part_table->pre_app_data.auth)) {
+		debug_puts("!Authenticated\n");
+		assert(1 == 2);
+	}
+
+	debug_puts("Flipping to app mode!\n");
+	debug_puts("Jumping to ");
+	debug_putinthex(*app_addr);
+	debug_lf();
+
+	// Clear the firmware stack
+	// clang-format off
+#ifndef S_SPLINT_S
+	asm volatile(
+		"la a0, _sstack;"
+		"la a1, _estack;"
+		"loop:;"
+		"sw zero, 0(a0);"
+		"addi a0, a0, 4;"
+		"blt a0, a1, loop;"
+		::: "memory");
+#endif
+	// clang-format on
+
+	syscall_enable();
+
+	// Jump to app - doesn't return
+	// Hardware is responsible for switching to app mode
+	// clang-format off
+#ifndef S_SPLINT_S
+	asm volatile(
+		// Get value at TK1_MMIO_TK1_APP_ADDR
+		"lui a0,0xff000;"
+		"lw a0,0x030(a0);"
+		// Jump to it
+		"jalr x0,0(a0);"
+		::: "memory");
+#endif
+	// clang-format on
+
+	__builtin_unreachable();
+}
+
+
 static void run(const struct context *ctx)
 {
+	/* At this point we expect an app to be loaded into RAM */
 	*app_addr = TK1_RAM_BASE;
 
 	// CDI = hash(uds, hash(app), uss)
@@ -402,12 +466,23 @@ static void scramble_ram(void)
 	*ram_data_rand = rnd_word();
 }
 
+/* Computes the blake2s digest of the app loaded into RAM */
+static int compute_app_digest(uint8_t *digest)
+{
+	blake2s_ctx b2s_ctx = {0};
+
+	return blake2s(digest, 32, NULL, 0, (const void *)TK1_RAM_BASE,
+		       *app_size, &b2s_ctx);
+}
+
 int main(void)
 {
 	struct context ctx = {0};
 	struct frame_header hdr = {0};
 	uint8_t cmd[CMDSIZE] = {0};
 	enum state state = FW_STATE_INITIAL;
+
+	led_set(LED_BLUE);
 
 	print_hw_version();
 
@@ -426,9 +501,28 @@ int main(void)
 		assert(1 != 2);
 	}
 
+
 #if defined(SIMULATION)
 	run(&ctx);
 #endif
+
+	// Just start the preloaded app.
+	if (preload_load(&part_table) == -1) {
+		state = FW_STATE_FAIL;
+	}
+
+	*app_size = part_table.pre_app_data.size;
+	assert(*app_size <= TK1_APP_MAX_SIZE);
+
+	int digest_err = compute_app_digest(ctx.digest);
+	assert(digest_err == 0);
+	print_digest(ctx.digest);
+
+	part_table.pre_app_data.status = 0x02;
+
+	state = FW_STATE_RUN_FLASH;
+
+	led_set(LED_GREEN);
 
 	for (;;) {
 		switch (state) {
@@ -457,6 +551,10 @@ int main(void)
 			run(&ctx);
 			break; // This is never reached!
 
+		case FW_STATE_RUN_FLASH:
+			run_flash(&ctx, &part_table);
+			break; // This is never reached!
+
 		case FW_STATE_FAIL:
 			// fallthrough
 		default:
@@ -470,5 +568,6 @@ int main(void)
 
 	/*@ -compdestroy @*/
 	/* We don't care about memory leaks here. */
+
 	return (int)0xcafebabe;
 }
