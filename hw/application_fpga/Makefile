@@ -132,7 +132,9 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/storage.o \
 	$(P)/fw/tk1/partition_table.o \
 	$(P)/fw/tk1/auth_app.o \
-	$(P)/fw/tk1/rng.o
+	$(P)/fw/tk1/rng.o \
+	$(P)/fw/tk1/preload_app.o \
+	$(P)/fw/tk1/mgmt_app.o
 
 FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/main.c \
