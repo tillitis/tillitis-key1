@@ -68,6 +68,8 @@ static void run(const struct context *ctx);
 static uint32_t xorwow(uint32_t state, uint32_t acc);
 #endif
 static void scramble_ram(void);
+static int compute_app_digest(uint8_t *digest);
+static int load_flash_app(struct partition_table *part_table, uint8_t digest[32]);
 
 static void print_hw_version(void)
 {
@@ -367,6 +369,24 @@ static void jump_to_app(void)
 	__builtin_unreachable();
 }
 
+static int load_flash_app(struct partition_table *part_table, uint8_t digest[32])
+{
+	if (preload_load(part_table) == -1) {
+		return -1;
+	}
+
+	*app_size = part_table->pre_app_data.size;
+	if (*app_size > TK1_APP_MAX_SIZE) {
+			return -1;
+	}
+
+	int digest_err = compute_app_digest(digest);
+	assert(digest_err == 0);
+	print_digest(digest);
+
+	return 0;
+}
+
 static void run_flash(const struct context *ctx, struct partition_table *part_table)
 {
 	/* At this point we expect an app to be loaded into RAM */
@@ -465,6 +485,7 @@ int main(void)
 
 	scramble_ram();
 
+	// TODO Remove
 	// Wait for terminal program and a character to be typed
 	enum ioend endpoint = IO_NONE;
 	uint8_t available = 0;
@@ -480,6 +501,8 @@ int main(void)
 		assert(1 == 2);
 	}
 
+	// TODO end of remove block
+
 	if (part_table_read(&part_table) != 0) {
 		// Couldn't read or create partition table
 		assert(1 != 2);
@@ -490,33 +513,20 @@ int main(void)
 	run(&ctx);
 #endif
 
-	// Lie and tell filesystem we have a 128 kiB device app on
-	// flash.
+	// TODO Lie and tell filesystem we have a 128 kiB device app
+	// on flash.
 	part_table.pre_app_data.size = 0x20000;
 
-	// Just start the preloaded app. This should be a part of an
-	// initial state. The initial state should check resetinfo if
-	// it should start from flash or not.
-	if (preload_load(&part_table) == -1) {
-		state = FW_STATE_FAIL;
-	}
-
-	*app_size = part_table.pre_app_data.size;
-	assert(*app_size <= TK1_APP_MAX_SIZE);
-
-	int digest_err = compute_app_digest(ctx.digest);
-	assert(digest_err == 0);
-	print_digest(ctx.digest);
-
-	part_table.pre_app_data.status = PRE_LOADED_STATUS_PRESENT;
-
+	// TODO Just start something from flash without looking in
+	// FW_RAM.
 	state = FW_STATE_RUN_FLASH;
-
-	// End of initial state.
 
 	for (;;) {
 		switch (state) {
 		case FW_STATE_INITIAL:
+			// Where do we start? Read resetinfo 'startfrom'
+
+		case FW_STATE_WAITCOMMAND:
 			if (readcommand(&hdr, cmd, state) == -1) {
 				state = FW_STATE_FAIL;
 				break;
@@ -542,6 +552,16 @@ int main(void)
 			break; // This is never reached!
 
 		case FW_STATE_RUN_FLASH:
+			// TODO Just lie and say that an app is present but not yet
+			// authenticated.
+			part_table.pre_app_data.status = PRE_LOADED_STATUS_PRESENT;
+
+			if (load_flash_app(&part_table, ctx.digest) < 0) {
+				debug_puts("Couldn't load app from flash\n");
+				state = FW_STATE_FAIL;
+				break;
+			}
+
 			run_flash(&ctx, &part_table);
 			break; // This is never reached!
 
