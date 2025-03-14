@@ -15,6 +15,7 @@
 #include "proto.h"
 #include "state.h"
 #include "syscall_enable.h"
+#include "resetinfo.h"
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -33,7 +34,10 @@ static volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER
 static volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
 static volatile uint32_t *ram_addr_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
 static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
+static volatile uint8_t  *resetinfo        = (volatile uint8_t  *)TK1_MMIO_RESETINFO_BASE;
 // clang-format on
+
+#define RESETINFO ((struct reset *)TK1_MMIO_RESETINFO_BASE)
 
 // Context for the loading of a TKey program
 struct context {
@@ -405,6 +409,32 @@ int main(void)
 	struct frame_header hdr = {0};
 	uint8_t cmd[CMDSIZE] = {0};
 	enum state state = FW_STATE_INITIAL;
+
+	if (RESETINFO->type != UNKNOWN) {
+		debug_puts("\nTKEY was reset!\n");
+		debug_puts("Reset type = ");
+		debug_putinthex(RESETINFO->type);
+		debug_lf();
+		switch(RESETINFO->type) {
+			case LOAD_APP_FROM_HOST_WITH_DIGEST:
+				debug_puts("App Digest = ");
+				for(uint8_t i = 0; i<32; i++) {
+					debug_puthex(RESETINFO->app_digest[i]);
+				}
+				debug_lf();
+				break;
+			case LOAD_APP_FROM_FLASH_WITH_DIGEST:
+				debug_puts("App Digest = ");
+				for(uint8_t i = 0; i<32; i++) {
+					debug_puthex(RESETINFO->app_digest[i]);
+				}
+				debug_lf();
+				break;
+		}
+
+		// Clear resetinfo area
+		memset((uint8_t *)resetinfo, 0, TK1_MMIO_RESETINFO_SIZE);
+	}
 
 	print_hw_version();
 
