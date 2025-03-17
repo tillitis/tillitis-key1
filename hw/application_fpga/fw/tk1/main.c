@@ -19,6 +19,7 @@
 #include "proto.h"
 #include "state.h"
 #include "syscall_enable.h"
+#include "resetinfo.h"
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -37,7 +38,7 @@ static volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER
 static volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
 static volatile uint32_t *ram_addr_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
 static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
-static volatile uint8_t *startfrom    = (volatile uint8_t *)0xd0000000bb9; /// FW_RAM after stack
+static volatile struct reset  *resetinfo        = (volatile struct reset  *)TK1_MMIO_RESETINFO_BASE;
 // clang-format on
 
 struct partition_table part_table;
@@ -50,17 +51,7 @@ struct context {
 	bool use_uss;	    // Use USS?
 	uint8_t uss[32];    // User Supplied Secret, if any
 	uint8_t flash_slot;    // App is loaded from flash slot number
-	bool verify; // Verify?
-	uint8_t ver_digest[32]; // Verify loaded app against this digest
-};
-
-enum reset_start {
-	START_FLASH1 = 1,
-	START_FLASH2 = 2,
-	START_FLASH1_VER = 3,
-	START_FLASH2_VER = 4,
-	START_CLIENT = 5,
-	START_CLIENT_VER = 6,
+	volatile uint8_t *ver_digest; // Verify loaded app against this digest
 };
 
 static void print_hw_version(void);
@@ -466,36 +457,40 @@ static int compute_app_digest(uint8_t *digest)
 static enum state start_where(struct context *ctx)
 {
 	// Where do we start? Read resetinfo 'startfrom'
-	switch (*startfrom) {
+	switch (resetinfo->type) {
+	case START_DEFAULT:
+		// fallthrough
 	case START_FLASH1:
 		ctx->flash_slot = 1;
+		ctx->ver_digest = NULL;
 
 		return FW_STATE_LOAD_FLASH;
 
 	case START_FLASH2:
 		ctx->flash_slot = 2;
+		ctx->ver_digest = NULL;
 
 		return FW_STATE_LOAD_FLASH;
 
 	case START_FLASH1_VER:
 		ctx->flash_slot = 1;
-		ctx->verify = true;
-		// ctx.ver_digest = ...
+		ctx->ver_digest = resetinfo->app_digest;
 
 		return FW_STATE_LOAD_FLASH;
 
 	case START_FLASH2_VER:
 		ctx->flash_slot = 2;
-		ctx->verify = true;
-		// ctx.ver_digest = ...
+		ctx->ver_digest = resetinfo->app_digest;
 
 		return FW_STATE_LOAD_FLASH;
 
 	case START_CLIENT:
+		ctx->ver_digest = NULL;
+
 		return FW_STATE_WAITCOMMAND;
 
 	case START_CLIENT_VER:
-		ctx->verify = true;
+		ctx->ver_digest = resetinfo->app_digest;
 
 		return FW_STATE_WAITCOMMAND;
 
