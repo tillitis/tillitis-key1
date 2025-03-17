@@ -195,7 +195,7 @@ tkey-libs:
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
-firmware.elf: CFLAGS += -DTKEY_DEBUG
+# firmware.elf: CFLAGS += -DTKEY_DEBUG
 firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 

@@ -55,7 +55,7 @@ int main(void)
 
 	while (1) {
 
-		debug_puts("Waiting for command\n");
+		debug_puts("reset_test: Waiting for command\n");
 
 		memset(cmdbuf, 0, BUFSIZE);
 
@@ -68,6 +68,8 @@ int main(void)
 			// read failed! I/O broken? Just redblink.
 			assert(1 == 2);
 		}
+
+		led_set(LED_BLUE | LED_RED);
 
 		switch (cmdbuf[0]) {
 		case '1':
