@@ -7,15 +7,18 @@
 #include <tkey/assert.h>
 #include <tkey/debug.h>
 #include <tkey/led.h>
+#include <tkey/lib.h>
 
 #include "partition_table.h"
 #include "storage.h"
 
+#include "../tk1/resetinfo.h"
 #include "../tk1/syscall_num.h"
 
 // clang-format off
 static volatile uint32_t *system_reset = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;
 static volatile uint32_t *udi          = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
+static volatile uint8_t  *resetinfo    = (volatile uint8_t *) TK1_MMIO_RESETINFO_BASE;
 // clang-format on
 
 extern struct partition_table part_table;
@@ -25,7 +28,10 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 {
 	switch (number) {
 	case TK1_SYSCALL_RESET:
+		// TODO: Take length from user
+		memcpy((uint8_t *)resetinfo, (uint8_t *)arg1, sizeof(struct reset));
 		*system_reset = 1;
+
 		return 0;
 	case TK1_SYSCALL_ALLOC_AREA:
 		if (storage_allocate_area(&part_table) < 0) {

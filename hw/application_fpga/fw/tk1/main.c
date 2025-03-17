@@ -524,6 +524,7 @@ int main(void)
 
 	// TODO Remove
 	// Wait for terminal program and a character to be typed
+	/*
 	enum ioend endpoint = IO_NONE;
 	uint8_t available = 0;
 	uint8_t in = 0;
@@ -537,6 +538,7 @@ int main(void)
 		// read failed! I/O broken? Just redblink.
 		assert(1 == 2);
 	}
+	*/
 
 	// TODO end of remove block
 
@@ -556,7 +558,7 @@ int main(void)
 
 	// TODO Just start something from flash without looking in
 	// FW_RAM.
-	state = FW_STATE_LOAD_FLASH;
+	//state = FW_STATE_LOAD_FLASH;
 
 	for (;;) {
 		switch (state) {
