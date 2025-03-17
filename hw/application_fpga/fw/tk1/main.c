@@ -37,6 +37,7 @@ static volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER
 static volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
 static volatile uint32_t *ram_addr_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
 static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
+static volatile uint8_t *startfrom    = (volatile uint8_t *)0xd0000000bb9; /// FW_RAM after stack
 // clang-format on
 
 struct partition_table part_table;
@@ -48,7 +49,18 @@ struct context {
 	uint8_t *loadaddr;  // Where we are currently loading a TKey program
 	bool use_uss;	    // Use USS?
 	uint8_t uss[32];    // User Supplied Secret, if any
-	bool from_flash;    // App is loaded from flash
+	uint8_t flash_slot;    // App is loaded from flash slot number
+	bool verify; // Verify?
+	uint8_t ver_digest[32]; // Verify loaded app against this digest
+};
+
+enum reset_start {
+	START_FLASH1 = 1,
+	START_FLASH2 = 2,
+	START_FLASH1_VER = 3,
+	START_FLASH2_VER = 4,
+	START_CLIENT = 5,
+	START_CLIENT_VER = 6,
 };
 
 static void print_hw_version(void);
@@ -63,13 +75,13 @@ static enum state initial_commands(const struct frame_header *hdr,
 static enum state loading_commands(const struct frame_header *hdr,
 				   const uint8_t *cmd, enum state state,
 				   struct context *ctx);
-static void run(const struct context *ctx);
 #if !defined(SIMULATION)
 static uint32_t xorwow(uint32_t state, uint32_t acc);
 #endif
 static void scramble_ram(void);
 static int compute_app_digest(uint8_t *digest);
 static int load_flash_app(struct partition_table *part_table, uint8_t digest[32]);
+static enum state start_where(struct context *ctx);
 
 static void print_hw_version(void)
 {
@@ -309,7 +321,7 @@ static enum state loading_commands(const struct frame_header *hdr,
 			memcpy_s(&rsp[1], CMDSIZE - 1, &ctx->digest, 32);
 			fwreply(*hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
 
-			state = FW_STATE_RUN;
+			state = FW_STATE_CDI;
 			break;
 		}
 
@@ -331,6 +343,9 @@ static enum state loading_commands(const struct frame_header *hdr,
 
 static void jump_to_app(void)
 {
+	/* Start of app is always at the beginning of RAM */
+	*app_addr = TK1_RAM_BASE;
+
 	debug_puts("Flipping to app mode!\n");
 	debug_puts("Jumping to ");
 	debug_putinthex(*app_addr);
@@ -387,14 +402,8 @@ static int load_flash_app(struct partition_table *part_table, uint8_t digest[32]
 	return 0;
 }
 
-static void run_flash(const struct context *ctx, struct partition_table *part_table)
+static enum state auth_flash_app(const struct context *ctx, struct partition_table *part_table)
 {
-	/* At this point we expect an app to be loaded into RAM */
-	*app_addr = TK1_RAM_BASE;
-
-	// CDI = hash(uds, hash(app), uss)
-	compute_cdi(ctx->digest, ctx->use_uss, ctx->uss);
-
 	if (part_table->pre_app_data.status == PRE_LOADED_STATUS_PRESENT) {
 		debug_puts("Create auth\n");
 		auth_app_create(&part_table->pre_app_data.auth);
@@ -404,21 +413,11 @@ static void run_flash(const struct context *ctx, struct partition_table *part_ta
 
 	if (!auth_app_authenticate(&part_table->pre_app_data.auth)) {
 		debug_puts("!Authenticated\n");
-		assert(1 == 2);
+
+		return FW_STATE_FAIL;
 	}
 
-	jump_to_app();
-}
-
-static void run(const struct context *ctx)
-{
-	/* At this point we expect an app to be loaded into RAM */
-	*app_addr = TK1_RAM_BASE;
-
-	// CDI = hash(uds, hash(app), uss)
-	compute_cdi(ctx->digest, ctx->use_uss, ctx->uss);
-
-	jump_to_app();
+	return FW_STATE_START;
 }
 
 #if !defined(SIMULATION)
@@ -462,6 +461,49 @@ static int compute_app_digest(uint8_t *digest)
 
 	return blake2s(digest, 32, NULL, 0, (const void *)TK1_RAM_BASE,
 		       *app_size, &b2s_ctx);
+}
+
+static enum state start_where(struct context *ctx)
+{
+	// Where do we start? Read resetinfo 'startfrom'
+	switch (*startfrom) {
+	case START_FLASH1:
+		ctx->flash_slot = 1;
+
+		return FW_STATE_LOAD_FLASH;
+
+	case START_FLASH2:
+		ctx->flash_slot = 2;
+
+		return FW_STATE_LOAD_FLASH;
+
+	case START_FLASH1_VER:
+		ctx->flash_slot = 1;
+		ctx->verify = true;
+		// ctx.ver_digest = ...
+
+		return FW_STATE_LOAD_FLASH;
+
+	case START_FLASH2_VER:
+		ctx->flash_slot = 2;
+		ctx->verify = true;
+		// ctx.ver_digest = ...
+
+		return FW_STATE_LOAD_FLASH;
+
+	case START_CLIENT:
+		return FW_STATE_WAITCOMMAND;
+
+	case START_CLIENT_VER:
+		ctx->verify = true;
+
+		return FW_STATE_WAITCOMMAND;
+
+	default:
+		debug_puts("Unknown startfrom\n");
+
+		return FW_STATE_FAIL;
+	}
 }
 
 int main(void)
@@ -519,12 +561,13 @@ int main(void)
 
 	// TODO Just start something from flash without looking in
 	// FW_RAM.
-	state = FW_STATE_RUN_FLASH;
+	state = FW_STATE_LOAD_FLASH;
 
 	for (;;) {
 		switch (state) {
 		case FW_STATE_INITIAL:
-			// Where do we start? Read resetinfo 'startfrom'
+			state = start_where(&ctx);
+			break;
 
 		case FW_STATE_WAITCOMMAND:
 			if (readcommand(&hdr, cmd, state) == -1) {
@@ -547,11 +590,14 @@ int main(void)
 			state = loading_commands(&hdr, cmd, state, &ctx);
 			break;
 
-		case FW_STATE_RUN:
-			run(&ctx);
-			break; // This is never reached!
+		case FW_STATE_CDI:
+			// CDI = hash(uds, hash(app), uss)
+			compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
 
-		case FW_STATE_RUN_FLASH:
+			state = FW_STATE_START;
+			break;
+
+		case FW_STATE_LOAD_FLASH:
 			// TODO Just lie and say that an app is present but not yet
 			// authenticated.
 			part_table.pre_app_data.status = PRE_LOADED_STATUS_PRESENT;
@@ -562,8 +608,15 @@ int main(void)
 				break;
 			}
 
-			run_flash(&ctx, &part_table);
-			break; // This is never reached!
+			// CDI = hash(uds, hash(app), uss)
+			compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
+
+			state = auth_flash_app(&ctx, &part_table);
+			break;
+
+		case FW_STATE_START:
+			jump_to_app();
+			break;  // Not reached
 
 		case FW_STATE_FAIL:
 			// fallthrough
