@@ -119,67 +119,90 @@ values of the Block RAMs used to construct the `FW_ROM`. The `FW_ROM`
 start address is located at `0x0000_0000` in the CPU memory map, which
 is also the CPU reset vector.
 
+### Reset intentions
+
+We have a number of reset options we call `startfrom`:
+
+1. Start from flash slot 1 (default): `FLASH1`
+2. Start from flash slot 2: `FLASH2`.
+3. Load and start an app from flash slot 1 with a specific app hash:
+   `FLASH1_VER`
+4. Load and start an app from flash slot 2 with a specific app hash:
+   `FLASH2_VER`.
+5. Load and start a new app from client: `CLIENT`.
+6. load and start an app from client with a specific app hash:
+   `CLIENT_VER`.
+
 ### Firmware state machine
 
-This is the state diagram of the firmware. There are only six states.
-
-Change of state occur when we receive specific I/O or a fatal error
-occurs.
+This is the state diagram of the firmware. Change of state occur when
+we receive specific I/O or a fatal error occurs.
 
 ```mermaid
 stateDiagram-v2
-    S0: resetinfo
-    S4: loadflash
-    S1: waitcommand
-    S2: loading
-    S3: running
-    SE: failed
+     S0: initial
+     S1: waitcommand
+     S2: loading
+     S3: flash_loading
+     S4: auth_app
+     S5: starting
+     S6: compute_cdi
+     SE: failed
 
-    [*] --> S0
+     [*] --> S0
 
-    S0 --> S4: load 1 (def) or load 2
-    S0 --> S1
+     S0 --> S1
+     S0 --> S4: Default
 
-    S1 --> S1: Commands
-    S1 --> S2: LOAD_APP
-    S1 --> SE: Error
+     S1 --> S1: Commands
+     S1 --> S2: LOAD_APP
+     S1 --> SE: Error
 
-    S2 --> S2: LOAD_APP_DATA
-    S2 --> S3: Last block received
-    S2 --> SE: Error
+     S2 --> S2: LOAD_APP_DATA
+     S2 --> S6: Last block received
+     S2 --> SE: Error
 
-    S4 --> S3
-    S4 --> SE: Error
+     S6 --> S3
 
-    SE --> [*]
-    S3 --> [*]
+     S3 --> S5
+
+     S4 --> S5
+     S4 --> SE: Error
+
+     SE --> [*]
+     S5 --> [*]
 ```
 
 States:
 
-- `resetinfo` - We start by checking resetinfo data in `FW_RAM`
-- `waitcommand` - Waiting for initial commands from client. Allows the
+- `initial`: We start by checking resetinfo data in `FW_RAM` for
+  `startfrom`.
+- `waitcommand`: Waiting for initial commands from client. Allows the
   commands `NAME_VERSION`, `GET_UDI`, `LOAD_APP`.
-- `loadflash` - Loading an app from flash.
-- `loading` - Expect application data. Allows only the command
-  `LOAD_APP_DATA`.
-- `running` - Computes CDI and starts the application. Allows no commands.
+- `loading`: Expecting application data from client. Allows only the
+  command `LOAD_APP_DATA`.
+- `flash_loading`: Loading and authentication app from flash. Computes CDI,
+  creates or checks the authentication of the flash app. Allows no commands.
+- `starting`: Starts the application. Does not return to firmware.
+  Allows no commands.
 - `failed` - Halts CPU. Allows no commands.
 
 Allowed data in state `resetinfo`:
 
-| *startfrom*          | *next state*  |
-|----------------------|---------------|
-| `default`            | `loadflash`   |
-| `Start flash slot 1` | `loadflash`   |
-| `Start flash slot 2` | `loadflash`   |
-| `Start from client`  | `waitcommand` |
+| *startfrom*  | *next state*    |
+|--------------|-----------------|
+| `FLASH1`     | `flash_loading` |
+| `FLASH2`     | `flash_loading` |
+| `FLASH1_VER` | `flash_loading` |
+| `FLASH2_VER` | `flash_loading` |
+| `CLIENT`     | `waitcommand`   |
+| `CLIENT_VER` | `waitcommand`   |
 
-I/O in state `loadflash`:
+I/O in state `flash_loading`:
 
 | *I/O*              | *next state* |
 |--------------------|--------------|
-| Last app data read | `run`        |
+| Last app data read | `starting`   |
 
 Commands in state `waitcommand`:
 
@@ -191,41 +214,53 @@ Commands in state `waitcommand`:
 
 Commands in state `loading`:
 
-| *command*              | *next state*                     |
-|------------------------|----------------------------------|
-| `FW_CMD_LOAD_APP_DATA` | unchanged or `run` on last chunk |
+| *command*              | *next state*                          |
+|------------------------|---------------------------------------|
+| `FW_CMD_LOAD_APP_DATA` | unchanged or `starting` on last chunk |
+
+No other states allows commands.
 
 See [Firmware protocol in the Dev
 Handbook](http://dev.tillitis.se/protocol/#firmware-protocol) for the
 definition of the specific commands and their responses.
 
-Exection starts in state `resetinfo` where the firmware checks in
-`FW_RAM` for what to do next.
+Plain text explanation of the states:
 
-State changes to `loadflash` if the `FW_RAM` data indicates
-that it should start one of the two flash apps.
+- `initial`: Execution starts here. The firmware checks in the
+  `FW_RAM` for `startfrom` for what to do next.
 
-State changes to `waitcommand` if the `FW_RAM` data indicates that it
-instead should wait for commands from a client.
+  For all `startfrom` values `FLASH_*` the next state is `startflash`.
+  Otherwise it goes to `waitcommand`, indicating that it should wait
+  for further commands from the client.
 
-In `loadflash` state changes to `running` if the app has been
-successfully loaded into RAM or to `failed` otherwise.
+- `flash_loading` loads and measure an app from flash, the Compound
+  Device Identifier (CDI) is computed, then the app is authenticated
+  against a stored digest to see that no one has changed the app by
+  manipulating the flash. The compuation is done by:
 
-State changes from `waitcommand` to `loading` when receiving
-`LOAD_APP`, which also sets the size of the number of data blocks to
-expect. After that we expect several `LOAD_APP_DATA` commands until
-the last block is received, when state is changed to `running`.
+  digest = blake2s(cdi, nonce from flash)
 
-In `running`, the loaded device app is measured, the Compound Device
-Identifier (CDI) is computed, we do some cleanup of firmware data
-structures, enable the system calls, and finally start the app, which
-ends the firmware state machine. Hardware guarantees that we leave
-firmware mode automatically when the program counter leaves ROM.
+  and then compared against the stored digest in the app's flash slot.
 
-The device app is now running in application mode. We can, however,
-return to firmware mode (excepting access to the UDS) by doing system
-calls. Note that ROM is still readable, but is now hardware protected
-from execution, except through the system call mechanism.
+- `waitcommand` waits for command from the client. State changes to
+  `loading` when receiving `LOAD_APP`, which also sets the size of the
+  number of data blocks to expect. After that we expect several
+  `LOAD_APP_DATA` commands until the last block is received, when
+  state is changed to `running`.
+
+- `compute_cdi`: The the Compound Device Identifier (CDI) is computed
+  and we go to `starting`.
+
+- `starting`: Clean up firmware data structures, enable the system
+    calls, and start the app, which ends the firmware state machine.
+    Hardware guarantees that we leave firmware mode automatically when
+    the program counter leaves ROM.
+
+After `starting` the device app is now running in application mode. We
+can, however, return to firmware mode (excepting access to the UDS) by
+doing system calls. Note that ROM is still readable, but is now
+hardware protected from execution, except through the system call
+mechanism.
 
 ### Golden path
 
