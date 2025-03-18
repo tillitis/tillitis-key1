@@ -150,6 +150,12 @@ int preload_delete(struct partition_table *part_table, uint8_t slot)
 	memset(part_table->pre_app_data[slot].auth.authentication_digest, 0x00,
 	       sizeof(part_table->pre_app_data[slot].auth.authentication_digest));
 
+	memset(part_table->pre_app_data[slot].digest, 0,
+	       sizeof(part_table->pre_app_data[slot].digest));
+
+	memset(part_table->pre_app_data[slot].signature, 0,
+	       sizeof(part_table->pre_app_data[slot].signature));
+
 	part_table_write(part_table);
 
 	/* Assumes the area is 64 KiB block aligned */
