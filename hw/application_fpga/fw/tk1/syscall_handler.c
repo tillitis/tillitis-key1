@@ -9,7 +9,9 @@
 #include <tkey/led.h>
 #include <tkey/lib.h>
 
+#include "mgmt_app.h"
 #include "partition_table.h"
+#include "preload_app.h"
 #include "storage.h"
 
 #include "../tk1/resetinfo.h"
@@ -71,6 +73,25 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 		// first word. Serial is kept secret to the device
 		// app.
 		return udi[0];
+
+	case TK1_SYSCALL_PRELOAD_DELETE:
+		return preload_delete(&part_table, 1);
+
+	case TK1_SYSCALL_PRELOAD_STORE:
+		// arg1 offset
+		// arg2 data
+		// arg3 size
+		// always using slot 1
+		return preload_store(&part_table, arg1, (uint8_t *)arg2, arg3, 1);
+
+	case TK1_SYSCALL_PRELOAD_STORE_FIN:
+		// arg1 app_size
+		// always using slot 1
+		return preload_store_finalize(&part_table, arg1, 1);
+
+	case TK1_SYSCALL_REG_MGMT:
+		return mgmt_app_register(&part_table);
+
 	default:
 		assert(1 == 2);
 	}

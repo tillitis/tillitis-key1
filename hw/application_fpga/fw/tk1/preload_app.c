@@ -75,8 +75,7 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 	return flash_write_data(address, data, size);
 }
 
-int preload_store_finalize(struct partition_table *part_table, bool use_uss,
-			   uint8_t *uss, size_t app_size, uint8_t to_slot)
+int preload_store_finalize(struct partition_table *part_table, size_t app_size, uint8_t to_slot)
 {
 	/* Check if we are allowed to store */
 	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
@@ -87,8 +86,6 @@ int preload_store_finalize(struct partition_table *part_table, bool use_uss,
 	if (preload_check_valid_app(part_table, to_slot)) {
 		return -1;
 	}
-
-	// TODO: Maybe add the uss fields
 
 	if (app_size == 0 || app_size > SIZE_PRE_LOADED_APP) {
 		return -2;
