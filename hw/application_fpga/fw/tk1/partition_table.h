@@ -13,12 +13,13 @@
 /* ----		----		----		*/
 /* Partition	64KiB		0x20000		*/
 /* ----		----		----		*/
-/* Pre load	128KiB		0x30000		*/
+/* Pre load 1	128KiB		0x30000		*/
+/* Pre load 2	128KiB		0x50000		*/
 /* ----		----		----		*/
-/* storage 1	128KiB		0x50000		*/
-/* storage 2	128KiB		0x70000		*/
-/* storage 3	128KiB		0x90000		*/
-/* storage 4	128KiB		0xB0000		*/
+/* storage 1	128KiB		0x70000		*/
+/* storage 2	128KiB		0x90000		*/
+/* storage 3	128KiB		0xB0000		*/
+/* storage 4	128KiB		0xD0000		*/
 /* ----		----		----		*/
 
 /* To simplify all blocks are aligned with the 64KiB blocks on the W25Q80DL
@@ -42,7 +43,7 @@
 // Pre-loaded app present but not yet authenticated
 #define PRE_LOADED_STATUS_PRESENT 0x02
 
-#define ADDR_STORAGE_AREA (ADDR_PRE_LOADED_APP + SIZE_PRE_LOADED_APP)
+#define ADDR_STORAGE_AREA (ADDR_PRE_LOADED_APP + (2 * SIZE_PRE_LOADED_APP))
 #define SIZE_STORAGE_AREA 0x20000UL // 128KiB
 #define N_STORAGE_AREA 4
 

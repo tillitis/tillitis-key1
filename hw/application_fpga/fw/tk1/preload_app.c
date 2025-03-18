@@ -14,7 +14,8 @@
 #include "preload_app.h"
 
 /* Returns non-zero if the app is valid */
-bool preload_check_valid_app(struct partition_table *part_table)
+bool preload_check_valid_app(struct partition_table *part_table,
+			     uint8_t slot)
 {
 
 	if (part_table->pre_app_data.status == 0x00 &&
@@ -27,17 +28,18 @@ bool preload_check_valid_app(struct partition_table *part_table)
 }
 
 /* Loads a preloaded app from flash to app RAM */
-int preload_load(struct partition_table *part_table)
+int preload_load(struct partition_table *part_table, uint8_t from_slot)
 {
 	/*Check for a valid app in flash	*/
-	if (!preload_check_valid_app(part_table)) {
+	if (!preload_check_valid_app(part_table, from_slot)) {
 		return -1;
 	}
 	uint8_t *loadaddr = (uint8_t *)TK1_RAM_BASE;
 
 	/* Read from flash, straight into RAM */
-	int ret = flash_read_data(ADDR_PRE_LOADED_APP, loadaddr,
-				  part_table->pre_app_data.size);
+	int ret = flash_read_data(ADDR_PRE_LOADED_APP +
+				      from_slot * SIZE_PRE_LOADED_APP,
+				  loadaddr, part_table->pre_app_data.size);
 
 	return ret;
 }
@@ -47,7 +49,7 @@ int preload_load(struct partition_table *part_table)
  * Once done, call preload_store_finalize() with the last parameters.
  * */
 int preload_store(struct partition_table *part_table, uint32_t offset,
-		  uint8_t *data, size_t size)
+		  uint8_t *data, size_t size, uint8_t to_slot)
 {
 	/* Check if we are allowed to store */
 	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
@@ -55,7 +57,7 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 	}
 
 	/* Check for a valid app in flash, bale out if it already exists */
-	if (preload_check_valid_app(part_table)) {
+	if (preload_check_valid_app(part_table, to_slot)) {
 		return -1;
 	}
 
@@ -74,7 +76,7 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 }
 
 int preload_store_finalize(struct partition_table *part_table, bool use_uss,
-			   uint8_t *uss, size_t app_size)
+			   uint8_t *uss, size_t app_size, uint8_t to_slot)
 {
 	/* Check if we are allowed to store */
 	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
@@ -82,7 +84,7 @@ int preload_store_finalize(struct partition_table *part_table, bool use_uss,
 	}
 
 	/* Check for a valid app in flash, bale out if it already exists */
-	if (preload_check_valid_app(part_table)) {
+	if (preload_check_valid_app(part_table, to_slot)) {
 		return -1;
 	}
 
@@ -107,7 +109,7 @@ int preload_store_finalize(struct partition_table *part_table, bool use_uss,
 	return 0;
 }
 
-int preload_delete(struct partition_table *part_table)
+int preload_delete(struct partition_table *part_table, uint8_t slot)
 {
 	/* Check if we are allowed to deleted */
 	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
@@ -115,7 +117,7 @@ int preload_delete(struct partition_table *part_table)
 	}
 
 	/*Check for a valid app in flash	*/
-	if (!preload_check_valid_app(part_table)) {
+	if (!preload_check_valid_app(part_table, slot)) {
 		return 0;
 		// TODO: Nothing here, return zero like all is good?
 	}
