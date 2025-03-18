@@ -107,6 +107,26 @@ int main(void)
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 		} break;
 
+		case '6': {
+			uint8_t string[] = "0123456789abcdef0123456789abcdef012"
+					   "3456789abcdef0123456789abcdef";
+			rst.type = START_FLASH2_VER;
+			hex_string_to_bytes(string, (uint8_t *)&rst.app_digest,
+					    sizeof(rst.app_digest));
+			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
+		} break;
+
+		case '7': {
+			uint8_t tkeylibs_example_app_digest[] =
+			    "a97f6ec2112067c4b5b5860521e252a095d221652f7b3d056b"
+			    "d98eaba40b4967";
+			rst.type = START_FLASH2_VER;
+			hex_string_to_bytes(tkeylibs_example_app_digest,
+					    (uint8_t *)&rst.app_digest,
+					    sizeof(rst.app_digest));
+			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
+		} break;
+
 		default:
 			break;
 		}
