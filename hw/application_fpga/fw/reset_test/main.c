@@ -88,8 +88,8 @@ int main(void)
 			break;
 
 		case '4': {
-			uint8_t string[] = "83da11b65f9c3721879bc4d9cffa6eac236"
-					   "8dcd9562aedde4002e6108ac939b3";
+			uint8_t string[] = "0123456789abcdef0123456789abcdef012"
+					   "3456789abcdef0123456789abcdef";
 			rst.type = START_CLIENT_VER;
 			hex_string_to_bytes(string, (uint8_t *)&rst.app_digest,
 					    sizeof(rst.app_digest));
@@ -97,10 +97,12 @@ int main(void)
 		} break;
 
 		case '5': {
-			uint8_t string[] = "ef1337a922945fd87683b71ed275e02af44"
-					   "b3489057a29d14fd78daff8b73a28";
+			uint8_t tkeylibs_example_app_digest[] =
+			    "96bb4c90603dbbbe09b9a1d7259b5e9e61bedd89a897105c30"
+			    "c9d4bf66a98d97";
 			rst.type = START_CLIENT_VER;
-			hex_string_to_bytes(string, (uint8_t *)&rst.app_digest,
+			hex_string_to_bytes(tkeylibs_example_app_digest,
+					    (uint8_t *)&rst.app_digest,
 					    sizeof(rst.app_digest));
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 		} break;
