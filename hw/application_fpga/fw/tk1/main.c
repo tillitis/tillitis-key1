@@ -612,6 +612,17 @@ int main(void)
 			break;
 
 		case FW_STATE_START:
+			if (ctx.ver_digest != NULL) {
+				print_digest(ctx.digest);
+				if (!memeq(ctx.digest, (void*)ctx.ver_digest, sizeof(ctx.digest))) {
+					debug_puts("Digests do not match\n");
+					state = FW_STATE_FAIL;
+					break;
+				}
+			}
+
+			memset((void*)resetinfo->app_digest, 0, sizeof(resetinfo->app_digest));
+
 			jump_to_app();
 			break;  // Not reached
 
