@@ -86,8 +86,10 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 
 	case TK1_SYSCALL_PRELOAD_STORE_FIN:
 		// arg1 app_size
+		// arg2 app_digest
+		// arg3 app_signature
 		// always using slot 1
-		return preload_store_finalize(&part_table, arg1, 1);
+		return preload_store_finalize(&part_table, arg1, (uint8_t *)arg2, (uint8_t *)arg3, 1);
 
 	case TK1_SYSCALL_REG_MGMT:
 		return mgmt_app_register(&part_table);

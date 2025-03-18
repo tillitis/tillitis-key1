@@ -379,11 +379,15 @@ static void jump_to_app(void)
 static int load_flash_app(struct partition_table *part_table,
 			  uint8_t digest[32], uint8_t slot)
 {
+	if (slot >= N_PRELOADED_APP) {
+		return -1;
+	}
+
 	if (preload_load(part_table, slot) == -1) {
 		return -1;
 	}
 
-	*app_size = part_table->pre_app_data.size;
+	*app_size = part_table->pre_app_data[slot].size;
 	if (*app_size > TK1_APP_MAX_SIZE) {
 			return -1;
 	}
@@ -397,14 +401,18 @@ static int load_flash_app(struct partition_table *part_table,
 
 static enum state auth_flash_app(const struct context *ctx, struct partition_table *part_table)
 {
-	if (part_table->pre_app_data.status == PRE_LOADED_STATUS_PRESENT) {
+	if (ctx->flash_slot >= N_PRELOADED_APP) {
+		return FW_STATE_FAIL;
+	}
+
+	if (part_table->pre_app_data[ctx->flash_slot].status == PRE_LOADED_STATUS_PRESENT) {
 		debug_puts("Create auth\n");
-		auth_app_create(&part_table->pre_app_data.auth);
-		part_table->pre_app_data.status = PRE_LOADED_STATUS_AUTH;
+		auth_app_create(&part_table->pre_app_data[ctx->flash_slot].auth);
+		part_table->pre_app_data[ctx->flash_slot].status = PRE_LOADED_STATUS_AUTH;
 		part_table_write(part_table);
 	}
 
-	if (!auth_app_authenticate(&part_table->pre_app_data.auth)) {
+	if (!auth_app_authenticate(&part_table->pre_app_data[ctx->flash_slot].auth)) {
 		debug_puts("!Authenticated\n");
 
 		return FW_STATE_FAIL;
@@ -556,7 +564,8 @@ int main(void)
 
 	// TODO Lie and tell filesystem we have a 128 kiB device app
 	// on flash.
-	part_table.pre_app_data.size = 0x20000;
+	part_table.pre_app_data[0].size = 0x20000;
+	part_table.pre_app_data[1].size = 0x20000;
 
 	// TODO Just start something from flash without looking in
 	// FW_RAM.
@@ -599,7 +608,7 @@ int main(void)
 		case FW_STATE_LOAD_FLASH:
 			// TODO Just lie and say that an app is present but not yet
 			// authenticated.
-			part_table.pre_app_data.status = PRE_LOADED_STATUS_PRESENT;
+			part_table.pre_app_data[ctx.flash_slot].status = PRE_LOADED_STATUS_PRESENT;
 
 			if (load_flash_app(&part_table, ctx.digest, ctx.flash_slot) < 0) {
 				debug_puts("Couldn't load app from flash\n");

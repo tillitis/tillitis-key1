@@ -35,6 +35,7 @@
 	0x10000UL // 64KiB, 60 KiB reserved, 2 flash pages (2 x 4KiB) for the
 		  // partition table
 
+#define N_PRELOADED_APP 2
 #define ADDR_PRE_LOADED_APP (ADDR_PARTITION_TABLE + SIZE_PARTITION_TABLE)
 #define SIZE_PRE_LOADED_APP 0x20000UL // 128KiB
 
@@ -43,7 +44,7 @@
 // Pre-loaded app present but not yet authenticated
 #define PRE_LOADED_STATUS_PRESENT 0x02
 
-#define ADDR_STORAGE_AREA (ADDR_PRE_LOADED_APP + (2 * SIZE_PRE_LOADED_APP))
+#define ADDR_STORAGE_AREA (ADDR_PRE_LOADED_APP + (N_PRELOADED_APP * SIZE_PRE_LOADED_APP))
 #define SIZE_STORAGE_AREA 0x20000UL // 128KiB
 #define N_STORAGE_AREA 4
 
@@ -58,11 +59,21 @@
 /*  - 16 byte random nonce.		*/
 /*  - 16 byte authentication digest.	*/
 /**/
-/*- Pre-loaded device app		*/
+/*- Pre-loaded device app 1		*/
 /*  - 1 byte status.			*/
 /*  - 4 bytes length.			*/
 /*  - 16 bytes random nonce.		*/
 /*  - 16 bytes authentication digest.	*/
+/*  - 32 bytes digest.			*/
+/*  - 64 bytes signature.		*/
+/**/
+/*- Pre-loaded device app 2		*/
+/*  - 1 byte status.			*/
+/*  - 4 bytes length.			*/
+/*  - 16 bytes random nonce.		*/
+/*  - 16 bytes authentication digest.	*/
+/*  - 32 bytes digest.			*/
+/*  - 64 bytes signature.		*/
 /**/
 /*- Device app storage area		*/
 /*  - 1 byte status.			*/
@@ -85,6 +96,8 @@ struct pre_loaded_app_metadata {
 	uint8_t status;
 	uint32_t size;
 	struct auth_metadata auth;
+	uint8_t digest[32];
+	uint8_t signature[64];
 } __attribute__((packed));
 
 struct app_storage_area {
@@ -101,7 +114,7 @@ struct table_header  {
 struct partition_table {
 	struct table_header header;
 	struct management_app_metadata mgmt_app_data;
-	struct pre_loaded_app_metadata pre_app_data;
+	struct pre_loaded_app_metadata pre_app_data[N_PRELOADED_APP];
 	struct app_storage_area app_storage[N_STORAGE_AREA];
 } __attribute__((packed));
 

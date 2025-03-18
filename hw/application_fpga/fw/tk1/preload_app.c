@@ -17,9 +17,12 @@
 bool preload_check_valid_app(struct partition_table *part_table,
 			     uint8_t slot)
 {
+	if (slot >= N_PRELOADED_APP) {
+		return false;
+	}
 
-	if (part_table->pre_app_data.status == 0x00 &&
-	    part_table->pre_app_data.size == 0) {
+	if (part_table->pre_app_data[slot].status == 0x00 &&
+	    part_table->pre_app_data[slot].size == 0) {
 		/*No valid app*/
 		return false;
 	}
@@ -30,6 +33,10 @@ bool preload_check_valid_app(struct partition_table *part_table,
 /* Loads a preloaded app from flash to app RAM */
 int preload_load(struct partition_table *part_table, uint8_t from_slot)
 {
+	if (from_slot >= N_PRELOADED_APP) {
+		return -1;
+	}
+
 	/*Check for a valid app in flash	*/
 	if (!preload_check_valid_app(part_table, from_slot)) {
 		return -1;
@@ -39,7 +46,7 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 	/* Read from flash, straight into RAM */
 	int ret = flash_read_data(ADDR_PRE_LOADED_APP +
 				      from_slot * SIZE_PRE_LOADED_APP,
-				  loadaddr, part_table->pre_app_data.size);
+				  loadaddr, part_table->pre_app_data[from_slot].size);
 
 	return ret;
 }
@@ -75,8 +82,14 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 	return flash_write_data(address, data, size);
 }
 
-int preload_store_finalize(struct partition_table *part_table, size_t app_size, uint8_t to_slot)
+int preload_store_finalize(struct partition_table *part_table, size_t app_size,
+			   uint8_t app_digest[32], uint8_t app_signature[64],
+			   uint8_t to_slot)
 {
+	if (to_slot >= N_PRELOADED_APP) {
+		return -4;
+	}
+
 	/* Check if we are allowed to store */
 	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
 		return -3;
@@ -91,9 +104,15 @@ int preload_store_finalize(struct partition_table *part_table, size_t app_size, 
 		return -2;
 	}
 
-	part_table->pre_app_data.size = app_size;
-	part_table->pre_app_data.status =
+	part_table->pre_app_data[to_slot].size = app_size;
+	part_table->pre_app_data[to_slot].status =
 	    PRE_LOADED_STATUS_PRESENT; /* Stored but not yet authenticated */
+	memcpy_s(part_table->pre_app_data[to_slot].digest,
+		sizeof(part_table->pre_app_data[to_slot].digest),
+		app_digest, 32);
+	memcpy_s(part_table->pre_app_data[to_slot].signature,
+		sizeof(part_table->pre_app_data[to_slot].signature),
+		app_signature, 64);
 	debug_puts("preload_*_final: size: ");
 	debug_putinthex(app_size);
 	debug_lf();
@@ -108,6 +127,10 @@ int preload_store_finalize(struct partition_table *part_table, size_t app_size, 
 
 int preload_delete(struct partition_table *part_table, uint8_t slot)
 {
+	if (slot >= N_PRELOADED_APP) {
+		return -4;
+	}
+
 	/* Check if we are allowed to deleted */
 	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
 		return -3;
@@ -118,14 +141,14 @@ int preload_delete(struct partition_table *part_table, uint8_t slot)
 		return 0;
 		// TODO: Nothing here, return zero like all is good?
 	}
-	part_table->pre_app_data.size = 0;
-	part_table->pre_app_data.status = 0;
+	part_table->pre_app_data[slot].size = 0;
+	part_table->pre_app_data[slot].status = 0;
 
-	memset(part_table->pre_app_data.auth.nonce, 0x00,
-	       sizeof(part_table->pre_app_data.auth.nonce));
+	memset(part_table->pre_app_data[slot].auth.nonce, 0x00,
+	       sizeof(part_table->pre_app_data[slot].auth.nonce));
 
-	memset(part_table->pre_app_data.auth.authentication_digest, 0x00,
-	       sizeof(part_table->pre_app_data.auth.authentication_digest));
+	memset(part_table->pre_app_data[slot].auth.authentication_digest, 0x00,
+	       sizeof(part_table->pre_app_data[slot].auth.authentication_digest));
 
 	part_table_write(part_table);
 
