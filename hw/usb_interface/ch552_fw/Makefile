@@ -10,7 +10,7 @@ CHPROG = chprog
 
 TARGET = usb_device
 
-ROOT_DIR = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+OUT_DIR = _out
 
 XRAM_SIZE = 0x0400   # 1 KB on-chip xRAM
 XRAM_LOC  = 0x0000   # xRAM area starts at address 0 in the External Data Address Space
@@ -26,7 +26,7 @@ CFLAGS = \
          --xram-size $(XRAM_SIZE) \
          --xram-loc $(XRAM_LOC) \
          --code-size $(CODE_SIZE) \
-         -I$(ROOT_DIR)include \
+         -Iinc \
          -DFREQ_SYS=$(FREQ_SYS) \
          $(EXTRA_FLAGS)
 
@@ -34,25 +34,28 @@ LFLAGS = \
          $(CFLAGS)
 
 C_FILES = \
-          main.c \
-          include/debug.c \
-          include/print.c
+          src/main.c \
+          src/debug.c \
+          src/print.c
 
-# Create a .rel file for each .c file
-RELS = $(C_FILES:.c=.rel)
+# Create a .rel file for each .c file in $(OUT_DIR)/
+RELS = $(patsubst %.c,$(OUT_DIR)/%.rel,$(C_FILES))
 
-%.rel : %.c
-	$(CC) -c $(CFLAGS) $<
+OUT_SUBDIRS = $(sort $(dir $(RELS)))
+
+# Ensure out directory exists
+$(OUT_DIR):
+	mkdir -p $(OUT_SUBDIRS)
+
+$(OUT_DIR)/%.rel: %.c | $(OUT_DIR)
+	$(CC) -c $(CFLAGS) $< -o $@
 
 usb_strings.h: encode_usb_strings.py
 	./encode_usb_strings.py
 
-# Note: SDCC will dump all of the temporary files into this one,
-# so strip the paths from RELS
-# For now, get around this by stripping the paths off of the RELS list.
-
+# Compile the final ihx file
 $(TARGET).ihx: $(RELS)
-	$(CC) $(notdir $(RELS)) $(LFLAGS) -o $(TARGET).ihx
+	$(CC) $(RELS) $(LFLAGS) -o $(TARGET).ihx
 
 $(TARGET).hex: $(TARGET).ihx
 	$(PACK_HEX) $(TARGET).ihx > $(TARGET).hex
@@ -72,14 +75,7 @@ flash_patched: $(TARGET).bin
 all: $(TARGET).bin $(TARGET).hex
 
 clean:
-	rm -f \
-	$(notdir $(RELS:.rel=.asm)) \
-	$(notdir $(RELS:.rel=.lst)) \
-	$(notdir $(RELS:.rel=.mem)) \
-	$(notdir $(RELS:.rel=.rel)) \
-	$(notdir $(RELS:.rel=.rst)) \
-	$(notdir $(RELS:.rel=.sym)) \
-	$(notdir $(RELS:.rel=.adb)) \
+	rm -rf $(OUT_DIR) \
 	$(TARGET).lk \
 	$(TARGET).map \
 	$(TARGET).mem \

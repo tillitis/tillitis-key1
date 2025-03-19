@@ -57,7 +57,7 @@ if __name__ == "__main__":
         "TkeyCtrlInterfaceDesc": "TKEY-Ctrl"
     }
 
-    with open('include/usb_strings.h', 'w') as f:
+    with open('inc/usb_strings.h', 'w') as f:
         f.write('#ifndef __USB_STRINGS_H__\n')
         f.write('#define __USB_STRINGS_H__\n')
         f.write('\n')
