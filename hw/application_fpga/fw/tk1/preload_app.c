@@ -13,6 +13,10 @@
 #include "partition_table.h"
 #include "preload_app.h"
 
+static uint32_t slot_to_start_address(uint8_t slot) {
+	return ADDR_PRE_LOADED_APP_0 + slot * SIZE_PRE_LOADED_APP;
+}
+
 /* Returns non-zero if the app is valid */
 bool preload_check_valid_app(struct partition_table *part_table,
 			     uint8_t slot)
@@ -44,9 +48,8 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 	uint8_t *loadaddr = (uint8_t *)TK1_RAM_BASE;
 
 	/* Read from flash, straight into RAM */
-	int ret = flash_read_data(ADDR_PRE_LOADED_APP +
-				      from_slot * SIZE_PRE_LOADED_APP,
-				  loadaddr, part_table->pre_app_data[from_slot].size);
+	int ret = flash_read_data(slot_to_start_address(from_slot), loadaddr,
+			          part_table->pre_app_data[from_slot].size);
 
 	return ret;
 }
@@ -73,7 +76,7 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 		return -2;
 	}
 
-	uint32_t address = ADDR_PRE_LOADED_APP + offset;
+	uint32_t address = slot_to_start_address(to_slot) + offset;
 
 	debug_puts("preload_store: write to addr: ");
 	debug_putinthex(address);
@@ -159,9 +162,8 @@ int preload_delete(struct partition_table *part_table, uint8_t slot)
 	part_table_write(part_table);
 
 	/* Assumes the area is 64 KiB block aligned */
-	flash_block_64_erase(ADDR_PRE_LOADED_APP); // Erase first 64 KB block
-	flash_block_64_erase(ADDR_PRE_LOADED_APP +
-			     0x10000); // Erase second 64 KB block
+	flash_block_64_erase(slot_to_start_address(slot)); // Erase first 64 KB block
+	flash_block_64_erase(slot_to_start_address(slot) + 0x10000); // Erase first 64 KB block
 
 	return 0;
 }
