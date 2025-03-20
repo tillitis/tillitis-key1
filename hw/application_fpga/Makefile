@@ -205,6 +205,8 @@ simfirmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 
 qemu_firmware.elf: CFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: ASFLAGS += -DQEMU_DEBUG
+qemu_firmware.elf: CFLAGS += -DQEMU_SYSCALL
+qemu_firmware.elf: ASFLAGS += -DQEMU_SYSCALL
 qemu_firmware.elf: firmware.elf
 	mv firmware.elf qemu_firmware.elf
 

@@ -1,4 +1,4 @@
-#ifdef QEMU_DEBUG
+#ifdef QEMU_SYSCALL
 
 #define picorv32_maskirq_insn(...)
 
