@@ -565,7 +565,7 @@ int main(void)
 	// TODO Lie and tell filesystem we have a 128 kiB device app
 	// on flash.
 	part_table.pre_app_data[0].size = 0x20000;
-	part_table.pre_app_data[1].size = 0x20000;
+	// part_table.pre_app_data[1].size = 0x20000;
 
 	// TODO Just start something from flash without looking in
 	// FW_RAM.
