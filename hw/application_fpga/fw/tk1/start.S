@@ -5,7 +5,7 @@
 
 #include <tkey/tk1_mem.h>
 
-#ifdef QEMU_DEBUG
+#ifdef QEMU_SYSCALL
 
 #define picorv32_retirq_insn(...) \
 	mv ra, x3; \
