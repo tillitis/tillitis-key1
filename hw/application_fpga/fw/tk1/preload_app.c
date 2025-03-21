@@ -167,3 +167,14 @@ int preload_delete(struct partition_table *part_table, uint8_t slot)
 
 	return 0;
 }
+
+int preload_get_digsig(struct partition_table *part_table, uint8_t app_digest[32], uint8_t app_signature[64], uint8_t slot) {
+	if (slot >= N_PRELOADED_APP) {
+		return -4;
+	}
+
+	memcpy_s(app_digest, 32, part_table->pre_app_data[slot].digest, sizeof(part_table->pre_app_data[slot].digest));
+	memcpy_s(app_signature, 64, part_table->pre_app_data[slot].signature, sizeof(part_table->pre_app_data[slot].signature));
+
+	return 0;
+}
