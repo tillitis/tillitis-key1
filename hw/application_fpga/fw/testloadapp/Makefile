@@ -36,7 +36,7 @@ ASFLAGS = \
 
 LDFLAGS = \
 	-T $(LIBDIR)/app.lds \
-	-L $(LIBDIR) -lcrt0 -lcommon -lmonocypher
+	-L $(LIBDIR) -lcrt0 -lcommon -lmonocypher -lblake2s
 
 .PHONY: all
 all: testloadapp.bin
@@ -56,7 +56,6 @@ TESTLOADAPP_FMTFILES = \
 TESTLOADAPP_OBJS = \
 	$(P)/main.o \
 	../testapp/syscall.o \
-	../tk1/blake2s/blake2s.o
 
 testloadapp.elf: tkey-libs $(TESTLOADAPP_OBJS)
 	$(CC) $(CFLAGS) $(TESTLOADAPP_OBJS) $(LDFLAGS) -o $@
