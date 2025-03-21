@@ -18,5 +18,8 @@ int preload_store_finalize(struct partition_table *part_table, size_t app_size,
 			   uint8_t app_digest[32], uint8_t app_signature[64],
 			   uint8_t to_slot);
 int preload_delete(struct partition_table *part_table, uint8_t slot);
+int preload_get_digsig(struct partition_table *part_table,
+		       uint8_t app_digest[32], uint8_t app_signature[64],
+		       uint8_t slot);
 
 #endif
