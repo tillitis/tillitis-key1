@@ -1,10 +1,12 @@
 #include <blake2s/blake2s.h>
 #include <monocypher/monocypher-ed25519.h>
 #include <stdint.h>
+#include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 #include <tkey/debug.h>
 
 #include "../testapp/syscall.h"
+#include "../tk1/resetinfo.h"
 #include "../tk1/syscall_num.h"
 #include "blink.h"
 #include "tkey/assert.h"
@@ -35,6 +37,18 @@ int install_app(uint8_t secret_key[64])
 		return -1;
 	}
 
+	puts(IO_CDC, "blink: ");
+	putinthex(IO_CDC, (uint32_t)blink);
+	puts(IO_CDC, "\r\n");
+
+	puts(IO_CDC, "blink[0]: ");
+	putinthex(IO_CDC, blink[0]);
+	puts(IO_CDC, "\r\n");
+
+	puts(IO_CDC, "sizeof(blink): ");
+	putinthex(IO_CDC, sizeof(blink));
+	puts(IO_CDC, "\r\n");
+
 	if (blake2s(app_digest, 32, NULL, 0, blink, sizeof(blink)) != 0) {
 		puts(IO_CDC, "couldn't compute digest\r\n");
 		return -1;
@@ -43,9 +57,21 @@ int install_app(uint8_t secret_key[64])
 	crypto_ed25519_sign(app_signature, secret_key, app_digest,
 			    sizeof(app_digest));
 
+	puts(IO_CDC, "app_digest:\r\n");
+	hexdump(IO_CDC, app_digest, sizeof(app_digest));
+	puts(IO_CDC, "\r\n");
+
+	puts(IO_CDC, "app_signature:\r\n");
+	hexdump(IO_CDC, app_signature, sizeof(app_signature));
+	puts(IO_CDC, "\r\n");
+
+	puts(IO_CDC, "secret_key:\r\n");
+	hexdump(IO_CDC, secret_key, 64);
+	puts(IO_CDC, "\r\n");
+
 	if (syscall(TK1_SYSCALL_PRELOAD_STORE_FIN, app_size,
 		    (uint32_t)app_digest, (uint32_t)app_signature) < 0) {
-		puts(IO_CDC, "couldn't finalize storing app\n");
+		puts(IO_CDC, "couldn't finalize storing app\r\n");
 		return -1;
 	}
 
@@ -60,15 +86,39 @@ int verify(uint8_t pubkey[32])
 	// pubkey we already have
 	// read signature
 	// read digest
+	syscall(TK1_SYSCALL_PRELOAD_GET_DIGSIG, (uint32_t)app_digest,
+		(uint32_t)app_signature, 0);
 
-	if (!crypto_ed25519_check(app_signature, pubkey, app_digest,
-				  sizeof(app_digest))) {
-		// failed!!!
+	puts(IO_CDC, "app_digest:\r\n");
+	hexdump(IO_CDC, app_digest, sizeof(app_digest));
+	puts(IO_CDC, "\r\n");
+
+	puts(IO_CDC, "app_signature:\r\n");
+	hexdump(IO_CDC, app_signature, sizeof(app_signature));
+	puts(IO_CDC, "\r\n");
+
+	puts(IO_CDC, "pubkey:\r\n");
+	hexdump(IO_CDC, pubkey, 32);
+	puts(IO_CDC, "\r\n");
+
+	puts(IO_CDC, "Checking signature...\r\n");
+
+	if (crypto_ed25519_check(app_signature, pubkey, app_digest,
+				  sizeof(app_digest)) != 0) {
+		return -1;
 	}
 
-	// syscall reset flash2_ver with app_digest
+	puts(IO_CDC, "Resetting into pre loaded app (slot 2)...\r\n");
 
-	return 0;
+	// syscall reset flash2_ver with app_digest
+	struct reset rst;
+	rst.type = START_FLASH2_VER;
+	memcpy_s(rst.app_digest, sizeof(rst.app_digest), app_digest,
+		 sizeof(app_digest));
+	memset(rst.next_app_data, 0, sizeof(rst.next_app_data));
+	syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
+
+	return -2;
 }
 
 int main(void)
