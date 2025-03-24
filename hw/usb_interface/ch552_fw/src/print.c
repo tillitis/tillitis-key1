@@ -3,11 +3,10 @@
 
 #include "config.h"
 #include "debug.h"
+#include "io.h"
 #include "lib.h"
 #include "mem.h"
 #include "print.h"
-
-#define MODE_CH552        0x10
 
 void printStr(uint8_t *str)
 {
@@ -19,7 +18,7 @@ void printStr(uint8_t *str)
     }
 #elif defined(DEBUG_PRINT_SW)
     uint32_t str_len = strlen(str);
-    CH554UART1SendByte(MODE_CH552);
+    CH554UART1SendByte(IO_CH552);
     CH554UART1SendByte(str_len);
     CH554UART1SendBuffer(str, str_len);
 #endif
@@ -34,7 +33,7 @@ void printChar(uint8_t c)
 #if defined(DEBUG_PRINT_HW)
     CH554UART0SendByte(c);
 #elif defined(DEBUG_PRINT_SW)
-    CH554UART1SendByte(MODE_CH552);
+    CH554UART1SendByte(IO_CH552);
     CH554UART1SendByte(1);
     CH554UART1SendByte(c);
 #endif

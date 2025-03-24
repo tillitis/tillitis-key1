@@ -53,8 +53,8 @@ if __name__ == "__main__":
         "SerialDesc": "68de5d27-e223-4874-bc76-a54d6e84068f",
         "CdcCtrlInterfaceDesc": "CDC-Ctrl",
         "CdcDataInterfaceDesc": "CDC-Data",
-        "FidoHidInterfaceDesc": "FIDO-HID",
-        "TkeyCtrlInterfaceDesc": "TKEY-Ctrl"
+        "FidoInterfaceDesc": "FIDO",
+        "DebugInterfaceDesc": "DEBUG"
     }
 
     with open('inc/usb_strings.h', 'w') as f:

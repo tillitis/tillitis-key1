@@ -14,20 +14,21 @@
 #include "config.h"
 #include "debug.h"
 #include "flash.h"
+#include "io.h"
 #include "lib.h"
 #include "mem.h"
 #include "print.h"
 #include "usb_strings.h"
 
 XDATA AT0000 uint8_t Ep0Buffer[3*MAX_PACKET_SIZE] = { 0 }; // Endpoint 0, Default endpoint, OUT & IN buffer[64], must be an even address +
-                                                           // Endpoint 4, TKEYCTRL, buffer OUT[64]+IN[64], must be an even address
-XDATA AT00C0 uint8_t Ep1Buffer[DEFAULT_EP1_SIZE]  = { 0 }; // Endpoint 1, CDC Ctrl, IN[8] buffer
-XDATA AT00C8 uint8_t Ep2Buffer[2*MAX_PACKET_SIZE] = { 0 }; // Endpoint 2, CDC Data, buffer OUT[64]+IN[64], must be an even address
-XDATA AT0148 uint8_t Ep3Buffer[2*MAX_PACKET_SIZE] = { 0 }; // Endpoint 3, HID, buffer OUT[64]+IN[64], must be an even address
+                                                           // Endpoint 4, DEBUG endpoint, buffer OUT[64]+IN[64], must be an even address
+XDATA AT00C0 uint8_t Ep1Buffer[DEFAULT_EP1_SIZE]  = { 0 }; // Endpoint 1, CDC Ctrl endpoint, IN[8] buffer
+XDATA AT00C8 uint8_t Ep2Buffer[2*MAX_PACKET_SIZE] = { 0 }; // Endpoint 2, CDC Data endpoint, buffer OUT[64]+IN[64], must be an even address
+XDATA AT0148 uint8_t Ep3Buffer[2*MAX_PACKET_SIZE] = { 0 }; // Endpoint 3, FIDO endpoint, buffer OUT[64]+IN[64], must be an even address
 
-uint16_t SetupLen = 0;
-uint8_t SetupReq = 0;
-uint8_t UsbConfig = 0;
+IDATA uint16_t SetupLen = 0;
+IDATA uint8_t SetupReq = 0;
+IDATA uint8_t UsbConfig = 0;
 const uint8_t *pDescr = NULL;         // USB configuration flag
 
 #define UsbSetupBuf                   ((PUSB_SETUP_REQ)Ep0Buffer)
@@ -44,31 +45,37 @@ const uint8_t *pDescr = NULL;         // USB configuration flag
 #define CDC_DATA_EPIN_ADDR             0x82              // CDC Data Endpoint IN Address
 #define CDC_DATA_EPIN_SIZE             MAX_PACKET_SIZE   // CDC Data Endpoint IN Size
 
-#define HID_EPOUT_ADDR                 0x03              // HID Endpoint OUT Address
-#define HID_EPOUT_SIZE                 MAX_PACKET_SIZE   // HID Endpoint OUT Size
+#define FIDO_EPOUT_ADDR                0x03              // FIDO Endpoint OUT Address
+#define FIDO_EPOUT_SIZE                MAX_PACKET_SIZE   // FIDO Endpoint OUT Size
 
-#define HID_EPIN_ADDR                  0x83              // HID Endpoint IN Address
-#define HID_EPIN_SIZE                  MAX_PACKET_SIZE   // HID Endpoint IN Size
+#define FIDO_EPIN_ADDR                 0x83              // FIDO Endpoint IN Address
+#define FIDO_EPIN_SIZE                 MAX_PACKET_SIZE   // FIDO Endpoint IN Size
 
-#define TKEYCTRL_EPOUT_ADDR            0x04              // TKEYCTRL Endpoint OUT Address
-#define TKEYCTRL_EPOUT_SIZE            MAX_PACKET_SIZE   // TKEYCTRL Endpoint OUT Size
+#define DEBUG_EPOUT_ADDR               0x04              // DEBUG Endpoint OUT Address
+#define DEBUG_EPOUT_SIZE               MAX_PACKET_SIZE   // DEBUG Endpoint OUT Size
 
-#define TKEYCTRL_EPIN_ADDR             0x84              // TKEYCTRL Endpoint IN Address
-#define TKEYCTRL_EPIN_SIZE             MAX_PACKET_SIZE   // TKEYCTRL Endpoint IN Size
+#define DEBUG_EPIN_ADDR                0x84              // DEBUG Endpoint IN Address
+#define DEBUG_EPIN_SIZE                MAX_PACKET_SIZE   // DEBUG Endpoint IN Size
 
 #define CDC_CTRL_FS_BINTERVAL          32                // Gives 32 ms polling interval at Full Speed for interrupt transfers
 #define CDC_DATA_FS_BINTERVAL          0                 // bInterval is ignored for BULK transfers
-#define HID_FS_BINTERVAL               2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
-#define TKEYCTRL_FS_BINTERVAL          2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
+#define FIDO_FS_BINTERVAL              2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
+#define DEBUG_FS_BINTERVAL             2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
 
-#define CFGDESC_SIZE                   139U              // Size of CfgDesc
+#define CFG_DESC_SIZE                  139U              // Size of Cfg_Desc
 #define NUM_INTERFACES                 4                 // Number of interfaces
 
-#define HID_REPORT_DESC_SIZE           47                // Size of HID_ReportDesc
-#define TKEYCTRL_REPORT_DESC_SIZE      34                // Size of TKEYCTRL_ReportDesc
+#define FIDO_REPORT_DESC_SIZE          47                // Size of FidoReportDesc
+#define DEBUG_REPORT_DESC_SIZE         34                // Size of DebugReportDesc
 
 #define LOBYTE(x)  ((uint8_t)( (x) & 0x00FFU))
 #define HIBYTE(x)  ((uint8_t)(((x) & 0xFF00U) >> 8U))
+
+IDATA uint8_t FidoInterfaceNum = 0;
+IDATA uint8_t DebugInterfaceNum = 0;
+
+XDATA uint8_t ActiveCfgDesc[CFG_DESC_SIZE];
+XDATA uint8_t ActiveCfgDescSize = 0;
 
 // Device Descriptor
 FLASH uint8_t DevDesc[] = {
@@ -86,9 +93,9 @@ FLASH uint8_t DevDesc[] = {
         0x88,                             /* idProduct */           // PID HIBYTE
         0x00,                             /* bcdDevice (device release number in binary-coded decimal (BCD) format, low byte, i.e. YY) rel. XX.YY */
         0x01,                             /* bcdDevice (device release number in binary-coded decimal (BCD) format, high byte, i.e. XX) rel. XX.YY */
-        0x01,                             /* Index of manufacturer string */
-        0x02,                             /* Index of product string */
-        0x03,                             /* Index of serial number string */
+        USB_IDX_MFC_STR,                  /* Index of manufacturer string */
+        USB_IDX_PRODUCT_STR,              /* Index of product string */
+        USB_IDX_SERIAL_STR,               /* Index of serial number string */
         0x01,                             /* bNumConfigurations */
 };
 
@@ -97,16 +104,20 @@ FLASH uint8_t CfgDesc[] = {
         /******************** Configuration Descriptor ********************/
         0x09,                             /* bLength: Configuration Descriptor size */
         USB_DESC_TYPE_CONFIGURATION,      /* bDescriptorType: Configuration */
-        CFGDESC_SIZE,                     /* wTotalLength (low byte): Bytes returned */
+        CFG_DESC_SIZE,                    /* wTotalLength (low byte): Bytes returned */
         0x00,                             /* wTotalLength (high byte): Bytes returned */
-        NUM_INTERFACES,                   /* bNumInterfaces: 4 interfaces (1 CDC Ctrl, 1 CDC Data, 1 HID, 1 HID (TKEYCTRL) ) */
+        NUM_INTERFACES,                   /* bNumInterfaces: 4 interfaces (1 CDC Ctrl, 1 CDC Data, 1 FIDO, 1 DEBUG ) */
         0x01,                             /* bConfigurationValue: Configuration value */
         0x00,                             /* iConfiguration: Index of string descriptor describing the configuration */
         0xA0,                             /* bmAttributes: Bus powered and Support Remote Wake-up */
         0x32,                             /* MaxPower 100 mA: this current is used for detecting Vbus */
+        /* 9 */
+};
+
+// CDC Descriptor
+FLASH uint8_t CdcDesc[] = {
         /******************** IAD (Interface Association Descriptor), should be positioned just before the CDC interfaces ********************/
         /******************** This is to associate the two CDC interfaces with the CDC class ********************/
-        /* 9 */
         0x08,                                /* bLength: IAD Descriptor size */
         USB_DESC_TYPE_INTERFACE_ASSOCIATION, /* bDescriptorType: Interface Association */
         0x00,                                /* bFirstInterface: 0 */
@@ -116,7 +127,7 @@ FLASH uint8_t CfgDesc[] = {
         0x01,                                /* bFunctionProtocol: Common AT commands */
         0x00,                                /* iFunction: Index of string descriptor */
         /******************** Interface 0, CDC Ctrl Descriptor (one endpoint) ********************/
-        /* 17 */
+        /* 8 */
         0x09,                             /* bLength: Interface Descriptor size */
         USB_DESC_TYPE_INTERFACE,          /* bDescriptorType: Interface */
         0x00,                             /* bInterfaceNumber: Number of Interface */
@@ -125,16 +136,16 @@ FLASH uint8_t CfgDesc[] = {
         USB_DEV_CLASS_CDC_CONTROL,        /* bInterfaceClass: Communications and CDC Control */
         0x02,                             /* bInterfaceSubClass : Abstract Control Model */
         0x01,                             /* bInterfaceProtocol : AT Commands: V.250 etc */
-        0x04,                             /* iInterface: Index of string descriptor */
+        USB_IDX_INTERFACE_CDC_CTRL_STR,   /* iInterface: Index of string descriptor */
         /******************** Header Functional Descriptor ********************/
-        /* 26 */
+        /* 17 */
         0x05,                             /* bFunctionLength: Size of this descriptor in bytes */
         USB_DESC_TYPE_CS_INTERFACE,       /* bDescriptorType: CS_INTERFACE (24h) */
         0x00,                             /* bDescriptorSubtype: Header Functional Descriptor */
         0x10,                             /* bcdCDC (low byte): CDC version 1.10 */
         0x01,                             /* bcdCDC (high byte): CDC version 1.10 */
         /******************** Call Management Functional Descriptor (no data interface, bmCapabilities=03, bDataInterface=01) ********************/
-        /* 31 */
+        /* 22 */
         0x05,                             /* bFunctionLength: Size of this descriptor */
         USB_DESC_TYPE_CS_INTERFACE,       /* bDescriptorType: CS_INTERFACE (24h) */
         0x01,                             /* bDescriptorSubtype: Call Management Functional Descriptor */
@@ -146,7 +157,7 @@ FLASH uint8_t CfgDesc[] = {
                                                           1 - Device handles call management itself) */
         0x00,                             /* bDataInterface: Interface number of Data Class interface optionally used for call management */
         /******************** Abstract Control Management Functional Descriptor ********************/
-        /* 36 */
+        /* 27 */
         0x04,                             /* bLength */
         0x24,                             /* bDescriptorType: CS_INTERFACE (24h) */
         0x02,                             /* bDescriptorSubtype: Abstract Control Management Functional Descriptor */
@@ -157,14 +168,14 @@ FLASH uint8_t CfgDesc[] = {
                                              D1   : 0x01 (1 - Device supports the request combination of Set_Line_Coding, Set_Control_Line_State, Get_Line_Coding, and the notification Serial_State)
                                              D0   : 0x00 (1 - Device supports the request combination of Set_Comm_Feature, Clear_Comm_Feature, and Get_Comm_Feature) */
         /******************** Union Functional Descriptor. CDC Ctrl interface numbered 0; CDC Data interface numbered 1 ********************/
-        /* 40 */
+        /* 31 */
         0x05,                             /* bLength */
         0x24,                             /* bDescriptorType: CS_INTERFACE (24h) */
         0x06,                             /* bDescriptorSubtype: Union Functional Descriptor */
         0x00,                             /* bControlInterface: Interface number 0 (Control interface) */
         0x01,                             /* bSubordinateInterface0: Interface number 1 (Data interface) */
         /******************** CDC Ctrl Endpoint descriptor (IN) ********************/
-        /* 45 */
+        /* 36 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
         CDC_CTRL_EPIN_ADDR,               /* bEndpointAddress: Endpoint Address (IN) */
@@ -173,7 +184,7 @@ FLASH uint8_t CfgDesc[] = {
         HIBYTE(CDC_CTRL_EPIN_SIZE),       /* wMaxPacketSize (high byte): 8 Byte max */
         CDC_CTRL_FS_BINTERVAL,            /* bInterval: Polling Interval */
         /******************** Interface 1, CDC Data Descriptor (two endpoints) ********************/
-        /* 52 */
+        /* 43 */
         0x09,                             /* bLength: Interface Descriptor size */
         USB_DESC_TYPE_INTERFACE,          /* bDescriptorType: Interface */
         0x01,                             /* bInterfaceNumber: Number of Interface */
@@ -182,9 +193,9 @@ FLASH uint8_t CfgDesc[] = {
         USB_DEV_CLASS_CDC_DATA,           /* bInterfaceClass: CDC Data */
         0x00,                             /* bInterfaceSubClass : 1=BOOT, 0=no boot */
         0x00,                             /* bInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
-        0x05,                             /* iInterface: Index of string descriptor */
+        USB_IDX_INTERFACE_CDC_DATA_STR,   /* iInterface: Index of string descriptor */
         /******************** CDC Data Endpoint descriptor (OUT) ********************/
-        /* 61 */
+        /* 52 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
         CDC_DATA_EPOUT_ADDR,              /* bEndpointAddress: Endpoint Address (OUT) */
@@ -193,7 +204,7 @@ FLASH uint8_t CfgDesc[] = {
         HIBYTE(CDC_DATA_EPOUT_SIZE),      /* wMaxPacketSize (high byte): 64 Byte max */
         CDC_DATA_FS_BINTERVAL,            /* bInterval: Polling Interval */
         /******************** CDC Data Endpoint descriptor (IN) ********************/
-        /* 68 */
+        /* 59 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
         CDC_DATA_EPIN_ADDR,               /* bEndpointAddress: Endpoint Address (IN) */
@@ -201,8 +212,12 @@ FLASH uint8_t CfgDesc[] = {
         LOBYTE(CDC_DATA_EPIN_SIZE),       /* wMaxPacketSize (low byte): 64 Byte max */
         HIBYTE(CDC_DATA_EPIN_SIZE),       /* wMaxPacketSize (high byte): 64 Byte max */
         CDC_DATA_FS_BINTERVAL,            /* bInterval: Polling Interval */
-        /******************** Interface 2, HID Descriptor (two endpoints) ********************/
-        /* 75 */
+        /* 66 */
+};
+
+// FIDO Descriptor
+FLASH uint8_t FidoDesc[] = {
+        /******************** Interface 2, FIDO Descriptor (two endpoints) ********************/
         0x09,                             /* bLength: Interface Descriptor size */
         USB_DESC_TYPE_INTERFACE,          /* bDescriptorType: Interface */
         0x02,                             /* bInterfaceNumber: Number of Interface */
@@ -211,9 +226,9 @@ FLASH uint8_t CfgDesc[] = {
         USB_DEV_CLASS_HID,                /* bInterfaceClass: Human Interface Device */
         0x00,                             /* bInterfaceSubClass : 1=BOOT, 0=no boot */
         0x00,                             /* bInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
-        0x06,                             /* iInterface: Index of string descriptor */
-        /******************** HID Device Descriptor ********************/
-        /* 84 */
+        USB_IDX_INTERFACE_FIDO_STR,       /* iInterface: Index of string descriptor */
+        /******************** FIDO Device Descriptor ********************/
+        /* 9 */
         0x09,                             /* bLength: HID Descriptor size */
         USB_DESC_TYPE_HID,                /* bDescriptorType: HID */
         0x11,                             /* bcdHID (low byte): HID Class Spec release number */
@@ -221,28 +236,32 @@ FLASH uint8_t CfgDesc[] = {
         0x00,                             /* bCountryCode: Hardware target country */
         0x01,                             /* bNumDescriptors: Number of HID class descriptors to follow */
         USB_DESC_TYPE_REPORT,             /* bDescriptorType: Report */
-        LOBYTE(HID_REPORT_DESC_SIZE),     /* wDescriptorLength (low byte): Total length of Report descriptor */
-        HIBYTE(HID_REPORT_DESC_SIZE),     /* wDescriptorLength (high byte): Total length of Report descriptor */
-        /******************** HID Endpoint Descriptor (OUT) ********************/
-        /* 93 */
+        LOBYTE(FIDO_REPORT_DESC_SIZE),    /* wDescriptorLength (low byte): Total length of Report descriptor */
+        HIBYTE(FIDO_REPORT_DESC_SIZE),    /* wDescriptorLength (high byte): Total length of Report descriptor */
+        /******************** FIDO Endpoint Descriptor (OUT) ********************/
+        /* 18 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
-        HID_EPOUT_ADDR,                   /* bEndpointAddress: Endpoint Address (OUT) */
+        FIDO_EPOUT_ADDR,                  /* bEndpointAddress: Endpoint Address (OUT) */
         USB_EP_TYPE_INTERRUPT,            /* bmAttributes: Interrupt endpoint */
-        LOBYTE(HID_EPOUT_SIZE),           /* wMaxPacketSize (low byte): 64 Byte max */
-        HIBYTE(HID_EPOUT_SIZE),           /* wMaxPacketSize (high byte): 64 Byte max */
-        HID_FS_BINTERVAL,                 /* bInterval: Polling Interval */
-        /******************** HID Endpoint Descriptor (IN) ********************/
-        /* 100 */
+        LOBYTE(FIDO_EPOUT_SIZE),          /* wMaxPacketSize (low byte): 64 Byte max */
+        HIBYTE(FIDO_EPOUT_SIZE),          /* wMaxPacketSize (high byte): 64 Byte max */
+        FIDO_FS_BINTERVAL,                /* bInterval: Polling Interval */
+        /******************** FIDO Endpoint Descriptor (IN) ********************/
+        /* 25 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
-        HID_EPIN_ADDR,                    /* bEndpointAddress: Endpoint Address (IN) */
+        FIDO_EPIN_ADDR,                   /* bEndpointAddress: Endpoint Address (IN) */
         USB_EP_TYPE_INTERRUPT,            /* bmAttributes: Interrupt endpoint */
-        LOBYTE(HID_EPIN_SIZE),            /* wMaxPacketSize (low byte): 64 Byte max */
-        HIBYTE(HID_EPIN_SIZE),            /* wMaxPacketSize (high byte): 64 Byte max */
-        HID_FS_BINTERVAL,                 /* bInterval: Polling Interval */
-        /******************** Interface 3, HID (TKEYCTRL) Descriptor (two endpoints) ********************/
-        /* 107 */
+        LOBYTE(FIDO_EPIN_SIZE),           /* wMaxPacketSize (low byte): 64 Byte max */
+        HIBYTE(FIDO_EPIN_SIZE),           /* wMaxPacketSize (high byte): 64 Byte max */
+        FIDO_FS_BINTERVAL,                /* bInterval: Polling Interval */
+        /* 32 */
+};
+
+// DEBUG Descriptor
+FLASH uint8_t DebugDesc[] = {
+        /******************** Interface 3, DEBUG Descriptor (two endpoints) ********************/
         0x09,                             /* bLength: Interface Descriptor size */
         USB_DESC_TYPE_INTERFACE,          /* bDescriptorType: Interface */
         0x03,                             /* bInterfaceNumber: Number of Interface */
@@ -251,9 +270,9 @@ FLASH uint8_t CfgDesc[] = {
         USB_DEV_CLASS_HID,                /* bInterfaceClass: Human Interface Device */
         0x00,                             /* bInterfaceSubClass : 1=BOOT, 0=no boot */
         0x00,                             /* bInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
-        0x07,                             /* iInterface: Index of string descriptor */
-        /******************** HID (TKEYCTRL) Device Descriptor ********************/
-        /* 116 */
+        USB_IDX_INTERFACE_DEBUG_STR,      /* iInterface: Index of string descriptor */
+        /******************** DEBUG Device Descriptor ********************/
+        /* 9 */
         0x09,                             /* bLength: HID Descriptor size */
         USB_DESC_TYPE_HID,                /* bDescriptorType: HID */
         0x11,                             /* bcdHID (low byte): HID Class Spec release number */
@@ -261,31 +280,31 @@ FLASH uint8_t CfgDesc[] = {
         0x00,                             /* bCountryCode: Hardware target country */
         0x01,                             /* bNumDescriptors: Number of HID class descriptors to follow */
         USB_DESC_TYPE_REPORT,             /* bDescriptorType: Report */
-        LOBYTE(TKEYCTRL_REPORT_DESC_SIZE),/* wDescriptorLength (low byte): Total length of Report descriptor */
-        HIBYTE(TKEYCTRL_REPORT_DESC_SIZE),/* wDescriptorLength (high byte): Total length of Report descriptor */
-        /******************** HID (TKEYCTRL) Endpoint Descriptor (OUT) ********************/
-        /* 125 */
+        LOBYTE(DEBUG_REPORT_DESC_SIZE),   /* wDescriptorLength (low byte): Total length of Report descriptor */
+        HIBYTE(DEBUG_REPORT_DESC_SIZE),   /* wDescriptorLength (high byte): Total length of Report descriptor */
+        /******************** DEBUG Endpoint Descriptor (OUT) ********************/
+        /* 18 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
-        TKEYCTRL_EPOUT_ADDR,              /* bEndpointAddress: Endpoint Address (OUT) */
+        DEBUG_EPOUT_ADDR,                 /* bEndpointAddress: Endpoint Address (OUT) */
         USB_EP_TYPE_INTERRUPT,            /* bmAttributes: Interrupt endpoint */
-        LOBYTE(TKEYCTRL_EPOUT_SIZE),      /* wMaxPacketSize (low byte): 64 Byte max */
-        HIBYTE(TKEYCTRL_EPOUT_SIZE),      /* wMaxPacketSize (high byte): 64 Byte max */
-        TKEYCTRL_FS_BINTERVAL,            /* bInterval: Polling Interval */
-        /******************** HID (TKEYCTRL) Endpoint Descriptor (IN) ********************/
-        /* 132 */
+        LOBYTE(DEBUG_EPOUT_SIZE),         /* wMaxPacketSize (low byte): 64 Byte max */
+        HIBYTE(DEBUG_EPOUT_SIZE),         /* wMaxPacketSize (high byte): 64 Byte max */
+        DEBUG_FS_BINTERVAL,               /* bInterval: Polling Interval */
+        /******************** DEBUG Endpoint Descriptor (IN) ********************/
+        /* 25 */
         0x07,                             /* bLength: Endpoint Descriptor size */
         USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
-        TKEYCTRL_EPIN_ADDR,               /* bEndpointAddress: Endpoint Address (IN) */
+        DEBUG_EPIN_ADDR,                  /* bEndpointAddress: Endpoint Address (IN) */
         USB_EP_TYPE_INTERRUPT,            /* bmAttributes: Interrupt endpoint */
-        LOBYTE(TKEYCTRL_EPIN_SIZE),       /* wMaxPacketSize (low byte): 64 Byte max */
-        HIBYTE(TKEYCTRL_EPIN_SIZE),       /* wMaxPacketSize (high byte): 64 Byte max */
-        TKEYCTRL_FS_BINTERVAL,            /* bInterval: Polling Interval */
-        /* 139 */
+        LOBYTE(DEBUG_EPIN_SIZE),          /* wMaxPacketSize (low byte): 64 Byte max */
+        HIBYTE(DEBUG_EPIN_SIZE),          /* wMaxPacketSize (high byte): 64 Byte max */
+        DEBUG_FS_BINTERVAL,               /* bInterval: Polling Interval */
+        /* 32 */
 };
 
-// HID Device Descriptor (copy from CfgDesc)
-FLASH uint8_t HID_CfgDesc[] = {
+// FIDO Device Descriptor (copy from FidoDesc)
+FLASH uint8_t FidoCfgDesc[] = {
         0x09,                             /* bLength: HID Descriptor size */
         USB_DESC_TYPE_HID,                /* bDescriptorType: HID */
         0x11,                             /* bcdHID (low byte): HID Class Spec release number */
@@ -293,11 +312,11 @@ FLASH uint8_t HID_CfgDesc[] = {
         0x00,                             /* bCountryCode: Hardware target country */
         0x01,                             /* bNumDescriptors: Number of HID class descriptors to follow */
         USB_DESC_TYPE_REPORT,             /* bDescriptorType: Report */
-        LOBYTE(HID_REPORT_DESC_SIZE),     /* wDescriptorLength (low byte): Total length of Report descriptor */
-        HIBYTE(HID_REPORT_DESC_SIZE),     /* wDescriptorLength (high byte): Total length of Report descriptor */
+        LOBYTE(FIDO_REPORT_DESC_SIZE),    /* wDescriptorLength (low byte): Total length of Report descriptor */
+        HIBYTE(FIDO_REPORT_DESC_SIZE),    /* wDescriptorLength (high byte): Total length of Report descriptor */
 };
 
-FLASH uint8_t HID_ReportDesc[] ={
+FLASH uint8_t FidoReportDesc[] ={
         0x06, 0xD0, 0xF1,                 /* Usage Page (FIDO Alliance Page) */
         0x09, 0x01,                       /* Usage (U2F Authenticator Device) */
         0xA1, 0x01,                       /*   Collection (Application) */
@@ -327,8 +346,8 @@ FLASH uint8_t HID_ReportDesc[] ={
         /* 47 */
 };
 
-// TKEYCTRL Device Descriptor (copy from CfgDesc)
-FLASH uint8_t TKEYCTRL_CfgDesc[] = {
+// DEBUG Device Descriptor (copy from DebugDesc)
+FLASH uint8_t DebugCfgDesc[] = {
         0x09,                             /* bLength: HID Descriptor size */
         USB_DESC_TYPE_HID,                /* bDescriptorType: HID */
         0x11,                             /* bcdHID (low byte): HID Class Spec release number */
@@ -336,31 +355,31 @@ FLASH uint8_t TKEYCTRL_CfgDesc[] = {
         0x00,                             /* bCountryCode: Hardware target country */
         0x01,                             /* bNumDescriptors: Number of HID class descriptors to follow */
         USB_DESC_TYPE_REPORT,             /* bDescriptorType: Report */
-        LOBYTE(TKEYCTRL_REPORT_DESC_SIZE),/* wDescriptorLength (low byte): Total length of Report descriptor */
-        HIBYTE(TKEYCTRL_REPORT_DESC_SIZE),/* wDescriptorLength (high byte): Total length of Report descriptor */
+        LOBYTE(DEBUG_REPORT_DESC_SIZE),   /* wDescriptorLength (low byte): Total length of Report descriptor */
+        HIBYTE(DEBUG_REPORT_DESC_SIZE),   /* wDescriptorLength (high byte): Total length of Report descriptor */
 };
 
-// TKEYCTRL Report Descriptor
-FLASH uint8_t TKEYCTRL_ReportDesc[] ={
-        0x06, 0x00, 0xFF,              /* Usage Page (Vendor Defined 0xFF00) */
-        0x09, 0x01,                    /* Usage (Vendor Usage 1) */
-        0xA1, 0x01,                    /*   Collection (Application) */
+// DEBUG Report Descriptor
+FLASH uint8_t DebugReportDesc[] ={
+        0x06, 0x00, 0xFF,                 /* Usage Page (Vendor Defined 0xFF00) */
+        0x09, 0x01,                       /* Usage (Vendor Usage 1) */
+        0xA1, 0x01,                       /*   Collection (Application) */
         /* 7 */
-        0x09, 0x02,                    /*     Usage (Output Report Data), 0x02 defines that the output report carries raw data from the host to the device. */
-        0x15, 0x00,                    /*     Logical Minimum (0) */
-        0x26, 0xFF, 0x00,              /*     Logical Maximum (255) */
-        0x75, 0x08,                    /*     Report Size (8 bits) */
-        0x95, MAX_PACKET_SIZE,         /*     Report Count (64 bytes) */
-        0x91, 0x02,                    /*     Output (Data, Variable, Absolute) */
+        0x09, 0x02,                       /*     Usage (Output Report Data), 0x02 defines that the output report carries raw data from the host to the device. */
+        0x15, 0x00,                       /*     Logical Minimum (0) */
+        0x26, 0xFF, 0x00,                 /*     Logical Maximum (255) */
+        0x75, 0x08,                       /*     Report Size (8 bits) */
+        0x95, MAX_PACKET_SIZE,            /*     Report Count (64 bytes) */
+        0x91, 0x02,                       /*     Output (Data, Variable, Absolute) */
         /* 20 */
-        0x09, 0x03,                    /*     Usage (Input Report), 0x03 defines that the input report carries raw data for the host. */
-        0x15, 0x00,                    /*     Logical Minimum (0) */
-        0x26, 0xFF, 0x00,              /*     Logical Maximum (255) */
-        0x75, 0x08,                    /*     Report Size (8 bits) */
-        0x95, MAX_PACKET_SIZE,         /*     Report Count (64 bytes) */
-        0x81, 0x02,                    /*     Input (Data, Variable, Absolute) */
+        0x09, 0x03,                       /*     Usage (Input Report), 0x03 defines that the input report carries raw data for the host. */
+        0x15, 0x00,                       /*     Logical Minimum (0) */
+        0x26, 0xFF, 0x00,                 /*     Logical Maximum (255) */
+        0x75, 0x08,                       /*     Report Size (8 bits) */
+        0x95, MAX_PACKET_SIZE,            /*     Report Count (64 bytes) */
+        0x81, 0x02,                       /*     Input (Data, Variable, Absolute) */
         /* 33 */
-        0xC0                           /*   End Collection */
+        0xC0                              /*   End Collection */
         /* 34 */
 };
 
@@ -372,15 +391,11 @@ FLASH uint8_t LangDesc[] = {
 };
 
 // CDC Parameters: The initial baud rate is 500000, 1 stop bit, no parity, 8 data bits.
-XDATA uint8_t LineCoding[7] = { 0x20, 0xA1, 0x07, 0x00, /* Data terminal rate, in bits per second: 500000 */
+FLASH uint8_t LineCoding[7] = { 0x20, 0xA1, 0x07, 0x00, /* Data terminal rate, in bits per second: 500000 */
                                                   0x00, /* Stop bits: 0 - 1 Stop bit, 1 - 1.5 Stop bits, 2 - 2 Stop bits */
                                                   0x00, /* Parity: 0 - None, 1 - Odd, 2 - Even, 3 - Mark, 4 - Space */
                                                   0x08, /* Data bits (5, 6, 7, 8 or 16) */
                                 };
-
-#define TKEYCTRL_FRAME_SIZE  64
-#define HID_FRAME_SIZE       64
-#define MAX_CDC_FRAME_SIZE   64
 
 #define UART_TX_BUF_SIZE     64   // Serial transmit buffer
 #define UART_RX_BUF_SIZE     140  // Serial receive buffer
@@ -397,49 +412,46 @@ volatile IDATA uint8_t UartRxBufOutputPointer = 0;  // Take pointer out of circu
 volatile IDATA uint8_t UartRxBufByteCount = 0;      // Number of unprocessed bytes remaining in the buffer
 
 /** Debug UART */
+#ifdef DEBUG_PRINT_HW
 #define DEBUG_UART_RX_BUF_SIZE        8
 XDATA uint8_t DebugUartRxBuf[DEBUG_UART_RX_BUF_SIZE] = { 0 };
 volatile IDATA uint8_t DebugUartRxBufInputPointer = 0;
 volatile IDATA uint8_t DebugUartRxBufOutputPointer = 0;
 volatile IDATA uint8_t DebugUartRxBufByteCount = 0;
+#endif
 
 /** Endpoint handling */
 volatile IDATA uint8_t UsbEp2ByteCount = 0;     // Represents the data received by USB endpoint 2 (CDC)
-volatile IDATA uint8_t UsbEp3ByteCount = 0;     // Represents the data received by USB endpoint 3 (HID)
-volatile IDATA uint8_t UsbEp4ByteCount = 0;     // Represents the data received by USB endpoint 4 (TKEYCTRL)
+volatile IDATA uint8_t UsbEp3ByteCount = 0;     // Represents the data received by USB endpoint 3 (FIDO)
+volatile IDATA uint8_t UsbEp4ByteCount = 0;     // Represents the data received by USB endpoint 4 (DEBUG)
 
 volatile IDATA uint8_t Endpoint2UploadBusy = 0; // Whether the upload endpoint 2 (CDC) is busy
-volatile IDATA uint8_t Endpoint3UploadBusy = 0; // Whether the upload endpoint 3 (HID) is busy
-volatile IDATA uint8_t Endpoint4UploadBusy = 0; // Whether the upload endpoint 4 (TKEYCTRL) is busy
+volatile IDATA uint8_t Endpoint3UploadBusy = 0; // Whether the upload endpoint 3 (FIDO) is busy
+volatile IDATA uint8_t Endpoint4UploadBusy = 0; // Whether the upload endpoint 4 (DEBUG) is busy
 
-/** TKEYCTRL variables */
-XDATA uint8_t TkeyCtrlRxBuf[TKEYCTRL_FRAME_SIZE] = { 0 };
-IDATA uint8_t TkeyCtrlRxBufLength = 0;
-IDATA uint8_t TkeyCtrlDataAvailable = 0;
+/** CH552 variables */
+IDATA uint8_t CH552DataAvailable = 0;
+
+/** DEBUG variables */
+IDATA uint8_t DebugDataAvailable = 0;
 
 /** CDC variables */
-XDATA uint8_t CdcRxBuf[MAX_CDC_FRAME_SIZE] = { 0 };
-IDATA uint8_t CdcRxBufLength = 0;
 IDATA uint8_t CdcDataAvailable = 0;
 
-/** HID variables */
-XDATA uint8_t HidRxBuf[HID_FRAME_SIZE] = { 0 };
-IDATA uint8_t HidRxBufLength = 0;
-IDATA uint8_t HidDataAvailable = 0;
+/** FIDO variables */
+IDATA uint8_t FidoDataAvailable = 0;
 
 /** Frame data */
+#define MAX_FRAME_SIZE    64
+XDATA uint8_t FrameBuf[MAX_FRAME_SIZE] = { 0 };
+IDATA uint8_t FrameBufLength = 0;
 
-#define MODE_TKEYCTRL   0x20
-#define MODE_CDC        0x40
-#define MODE_HID        0x80
-#define MODE_MASK       0xC0
-#define NUM_MASK        0x3F
-
-volatile IDATA uint8_t FrameMode   = 0;
-volatile IDATA uint8_t FrameLength = 0;
-volatile IDATA uint8_t FrameRemainingBytes = 0;
-volatile IDATA uint8_t FrameStarted = 0;
-volatile IDATA uint8_t Halted = 0;
+IDATA uint8_t FrameMode   = 0;
+IDATA uint8_t FrameLength = 0;
+IDATA uint8_t FrameRemainingBytes = 0;
+IDATA uint8_t FrameStarted = 0;
+IDATA uint8_t FrameDiscard = 0;
+IDATA uint8_t DiscardDataAvailable = 0;
 
 uint32_t increment_pointer(uint32_t pointer, uint32_t increment, uint32_t buffer_size);
 uint32_t decrement_pointer(uint32_t pointer, uint32_t decrement, uint32_t buffer_size);
@@ -516,7 +528,48 @@ void USBDeviceEndPointCfg()
     UEP2_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK | UEP_R_RES_ACK; // Endpoint 2, automatically flips the synchronization flag, IN transaction returns NAK, OUT returns ACK
     UEP3_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK | UEP_R_RES_ACK; // Endpoint 3, automatically flips the synchronization flag, IN transaction returns NAK, OUT returns ACK
     UEP4_CTRL =                 UEP_T_RES_NAK | UEP_R_RES_ACK; // Endpoint 4, manual flip, OUT transaction returns ACK, IN transaction returns NAK
+}
 
+void CreateCfgDescriptor(uint8_t ep_config)
+{
+    uint8_t num_iface = 0;   // Interface number
+
+    FidoInterfaceNum  = 0xFF; // Set as invalid until we have parsed each interface
+    DebugInterfaceNum = 0xFF; // Set as invalid until we have parsed each interface
+
+    memset(ActiveCfgDesc, 0, CFG_DESC_SIZE); // Clean the descriptor
+
+    uint8_t cfg_desc_size = sizeof(CfgDesc);
+    memcpy(ActiveCfgDesc, CfgDesc, cfg_desc_size);
+    ActiveCfgDescSize += cfg_desc_size;
+
+    if (ep_config & IO_CDC) {
+        uint8_t cdc_desc_size = sizeof(CdcDesc);
+        memcpy(ActiveCfgDesc + ActiveCfgDescSize, CdcDesc, cdc_desc_size);
+        num_iface += 2;
+        ActiveCfgDescSize += cdc_desc_size;
+    }
+
+    if (ep_config & IO_FIDO) {
+        uint8_t fido_desc_size = sizeof(FidoDesc);
+        memcpy(ActiveCfgDesc + ActiveCfgDescSize, FidoDesc, fido_desc_size);
+        ActiveCfgDesc[ActiveCfgDescSize + 2] = num_iface;
+        FidoInterfaceNum = num_iface;
+        num_iface++;
+        ActiveCfgDescSize += fido_desc_size;
+    }
+
+    if (ep_config & IO_DEBUG) {
+        uint8_t debug_desc_size = sizeof(DebugDesc);
+        memcpy(ActiveCfgDesc + ActiveCfgDescSize, DebugDesc, debug_desc_size);
+        ActiveCfgDesc[ActiveCfgDescSize + 2] = num_iface;
+        DebugInterfaceNum = num_iface;
+        num_iface++;
+        ActiveCfgDescSize += debug_desc_size;
+    }
+
+    ActiveCfgDesc[2] = ActiveCfgDescSize;
+    ActiveCfgDesc[4] = num_iface;
 }
 
 /*******************************************************************************
@@ -606,8 +659,8 @@ void usb_irq_setup_handler(void)
                     printStrSetup("DevDesc\n");
                     break;
                 case USB_DESC_TYPE_CONFIGURATION: // Configuration descriptor
-                    pDescr = CfgDesc; // Send the configuration descriptor to the buffer to be sent
-                    len = sizeof(CfgDesc);
+                    pDescr = ActiveCfgDesc; // Send the configuration descriptor to the buffer to be sent
+                    len = sizeof(ActiveCfgDesc);
                     printStrSetup("CfgDesc\n");
                     break;
                 case USB_DESC_TYPE_STRING: // String descriptors
@@ -635,48 +688,38 @@ void usb_irq_setup_handler(void)
                         pDescr = CdcDataInterfaceDesc;
                         len = sizeof(CdcDataInterfaceDesc);
                         printStrSetup("CdcDataInterfaceDesc\n");
-                    } else if (UsbSetupBuf->wValueL == USB_IDX_INTERFACE_FIDO_HID_STR) {
-                        pDescr = FidoHidInterfaceDesc;
-                        len = sizeof(FidoHidInterfaceDesc);
+                    } else if (UsbSetupBuf->wValueL == USB_IDX_INTERFACE_FIDO_STR) {
+                        pDescr = FidoInterfaceDesc;
+                        len = sizeof(FidoInterfaceDesc);
                         printStrSetup("FidoHidInterfaceDesc\n");
-                    } else if (UsbSetupBuf->wValueL == USB_IDX_INTERFACE_TKEY_CTRL_STR) {
-                        pDescr = TkeyCtrlInterfaceDesc;
-                        len = sizeof(TkeyCtrlInterfaceDesc);
-                        printStrSetup("TkeyCtrlInterfaceDesc\n");
+                    } else if (UsbSetupBuf->wValueL == USB_IDX_INTERFACE_DEBUG_STR) {
+                        pDescr = DebugInterfaceDesc;
+                        len = sizeof(DebugInterfaceDesc);
+                        printStrSetup("DebugInterfaceDesc\n");
                     } else {
                         printStrSetup("Error: USB_DESC_TYPE_STRING\n");
                     }
                     break;
                 case USB_DESC_TYPE_HID:
-                    switch (UsbSetupBuf->wIndexL) {
-                        case 0x02: // Interface 2 (HID)
-                            pDescr = HID_CfgDesc;
-                            len = sizeof(HID_CfgDesc);
-                            printStrSetup("HID_CfgDesc\n");
-                            break;
-                        case 0x03: // Interface 3 (TKEYCTRL)
-                            pDescr = TKEYCTRL_CfgDesc;
-                            len = sizeof(TKEYCTRL_CfgDesc);
-                            printStrSetup("TKEYCTRL_CfgDesc\n");
-                            break;
-                        default:
-                            break;
+                    if (UsbSetupBuf->wIndexL == FidoInterfaceNum) { // Interface number for FIDO
+                        pDescr = FidoCfgDesc;
+                        len = sizeof(FidoCfgDesc);
+                        printStrSetup("FidoCfgDesc\n");
+                    } else if (UsbSetupBuf->wIndexL == DebugInterfaceNum) { // Interface number for DEBUG
+                        pDescr = DebugCfgDesc;
+                        len = sizeof(DebugCfgDesc);
+                        printStrSetup("DebugCfgDesc\n");
                     }
                     break;
                 case USB_DESC_TYPE_REPORT:
-                    switch (UsbSetupBuf->wIndexL) {
-                        case 0x02: // Interface 2 (HID)
-                            pDescr = HID_ReportDesc;
-                            len = sizeof(HID_ReportDesc);
-                            printStrSetup("HID_ReportDesc\n");
-                            break;
-                        case 0x03: // Interface 3 (TKEYCTRL)
-                            pDescr = TKEYCTRL_ReportDesc;
-                            len = sizeof(TKEYCTRL_ReportDesc);
-                            printStrSetup("TKEYCTRL_ReportDesc\n");
-                            break;
-                        default:
-                            break;
+                    if (UsbSetupBuf->wIndexL == FidoInterfaceNum) { // Interface number for FIDO
+                        pDescr = FidoReportDesc;
+                        len = sizeof(FidoReportDesc);
+                        printStrSetup("FidoReportDesc\n");
+                    } else if (UsbSetupBuf->wIndexL == DebugInterfaceNum) { // Interface number for DEBUG
+                        pDescr = DebugReportDesc;
+                        len = sizeof(DebugReportDesc);
+                        printStrSetup("DebugReportDesc\n");
                     }
                     break;
                 default:
@@ -1002,8 +1045,8 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
         UartRxBufOutputPointer = 0;     // Circular buffer read pointer
         UartRxBufByteCount = 0;         // The number of bytes remaining in the current buffer to be fetched
         UsbEp2ByteCount = 0;            // USB endpoint 2 (CDC) received length
-        UsbEp3ByteCount = 0;            // USB endpoint 3 (HID) received length
-        UsbEp4ByteCount = 0;            // USB endpoint 4 (TKEYCTRL) received length
+        UsbEp3ByteCount = 0;            // USB endpoint 3 (FIDO) received length
+        UsbEp4ByteCount = 0;            // USB endpoint 4 (DEBUG) received length
         Endpoint2UploadBusy = 0;        // Clear busy flag
         Endpoint3UploadBusy = 0;        // Clear busy flag
         Endpoint4UploadBusy = 0;        // Clear busy flag
@@ -1043,7 +1086,7 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
  * Function Name  : Uart0_ISR()
  * Description    : Serial debug port receiving interrupt function to realize circular buffer receiving
  *******************************************************************************/
-#if 1
+#ifdef DEBUG_PRINT_HW
 #ifdef BUILD_CODE
 #define IRQ_UART0 __interrupt(INT_NO_UART0)
 #else
@@ -1127,7 +1170,6 @@ void circular_copy(uint8_t *dest, uint8_t *src, uint32_t src_size, uint32_t star
     }
 }
 
-
 // Function to increment a pointer and wrap around the buffer
 uint32_t increment_pointer(uint32_t pointer, uint32_t increment, uint32_t buffer_size)
 {
@@ -1160,20 +1202,29 @@ void check_cts_stop(void)
 
 void main()
 {
-    // Enable GPIO signalling on p1.4 and p1.5
-    gpio_init_p1_4_in();  // Init GPIO p1.4 to input mode for FPGA_CTS
-    gpio_init_p1_5_out(); // Init GPIO p1.5 to output mode for CH552_CTS
-    cts_start();          // Signal OK to send
-
     CfgFsys();     // CH559 clock selection configuration
     mDelaymS(5);   // Modify the main frequency and wait for the internal crystal to stabilize, which must be added
-#if 0
+#ifdef DEBUG_PRINT_HW
     mInitSTDIO();  // Serial port 0, can be used for debugging
 #endif
     UART1Setup();  // For communication with FPGA
     UART1Clean();  // Clean register from spurious data
 
-    printStr("\n\nStartup...\n");
+    printStrSetup("Startup\n");
+
+    uint8_t ActiveEndpoints = RESET_KEEP;
+
+    // Always enable CDC endpoint
+    if ((ActiveEndpoints & IO_CDC) == 0x0) {
+        ActiveEndpoints |= IO_CDC;
+    }
+
+    // Always enable CH552 endpoint
+    if ((ActiveEndpoints & IO_CH552) == 0x0) {
+        ActiveEndpoints |= IO_CH552;
+    }
+
+    CreateCfgDescriptor(ActiveEndpoints);
 
     USBDeviceCfg();
     USBDeviceEndPointCfg(); // Endpoint configuration
@@ -1185,6 +1236,10 @@ void main()
     UEP3_T_LEN = 0;         // Transmit length must be cleared (Endpoint 3)
     UEP4_T_LEN = 0;         // Transmit length must be cleared (Endpoint 4)
 
+    gpio_init_p1_4_in();    // Init GPIO p1.4 to input mode for FPGA_CTS
+    gpio_init_p1_5_out();   // Init GPIO p1.5 to output mode for CH552_CTS
+    cts_start();            // Signal OK to send
+
     while (1) {
         if (UsbConfig) {
 
@@ -1194,31 +1249,31 @@ void main()
                 memcpy(UartTxBuf, Ep2Buffer, Ep2ByteLen);
 
                 UsbEp2ByteCount = 0;
-                CH554UART1SendByte(MODE_CDC);  // Send CDC mode header
+                CH554UART1SendByte(IO_CDC);  // Send CDC mode header
                 CH554UART1SendByte(Ep2ByteLen);  // Send length
                 CH554UART1SendBuffer(UartTxBuf, Ep2ByteLen);
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 2 to ACK again
             }
 
-            // Check if Endpoint 3 (HID) has received data
+            // Check if Endpoint 3 (FIDO) has received data
             if (UsbEp3ByteCount) {
                 Ep3ByteLen = UsbEp3ByteCount; // UsbEp3ByteCount can be maximum 64 bytes
                 memcpy(UartTxBuf, Ep3Buffer, Ep3ByteLen);
 
                 UsbEp3ByteCount = 0;
-                CH554UART1SendByte(MODE_HID); // Send HID mode header
+                CH554UART1SendByte(IO_FIDO); // Send FIDO mode header
                 CH554UART1SendByte(Ep3ByteLen); // Send length (always 64 bytes)
                 CH554UART1SendBuffer(UartTxBuf, Ep3ByteLen);
                 UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 3 to ACK again
             }
 
-            // Check if Endpoint 4 (TKEYCTRL) has received data
+            // Check if Endpoint 4 (DEBUG) has received data
             if (UsbEp4ByteCount) {
                 Ep4ByteLen = UsbEp4ByteCount; // UsbEp4ByteCount can be maximum 64 bytes
                 memcpy(UartTxBuf, Ep0Buffer+64, Ep4ByteLen); // Endpoint 4 receive is at address UEP0_DMA+64
 
                 UsbEp4ByteCount = 0;
-                CH554UART1SendByte(MODE_TKEYCTRL); // Send TKEYCTRL mode header
+                CH554UART1SendByte(IO_DEBUG); // Send DEBUG mode header
                 CH554UART1SendByte(Ep4ByteLen); // Send length (always 64 bytes)
                 CH554UART1SendBuffer(UartTxBuf, Ep4ByteLen);
                 UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 4 to ACK again
@@ -1228,9 +1283,11 @@ void main()
 
             if ((UartRxBufByteCount >= 2) && !FrameStarted) {  // If we have data and the header is not yet validated
                 FrameMode = UartRxBuf[UartRxBufOutputPointer]; // Extract frame mode
-                if ((FrameMode == MODE_CDC) ||
-                    (FrameMode == MODE_HID) ||
-                    (FrameMode == MODE_TKEYCTRL)) {
+                if ((FrameMode == IO_CDC)   ||
+                    (FrameMode == IO_FIDO)  ||
+                    (FrameMode == IO_DEBUG) ||
+                    (FrameMode == IO_CH552)) {
+
                     FrameLength = UartRxBuf[increment_pointer(UartRxBufOutputPointer,
                                                               1,
                                                               UART_RX_BUF_SIZE)]; // Extract frame length
@@ -1240,63 +1297,52 @@ void main()
                                                                UART_RX_BUF_SIZE); // Start at valid data so skip the mode and length byte
                     UartRxBufByteCount -= 2; // Subtract the frame mode and frame length bytes from the total byte count
                     FrameStarted = 1;
-                } else { // Invalid mode
-                    if (!Halted) {
-                        printStr("Invalid header: 0x");
-                        printNumU8Hex(FrameMode);
-                        printStr(", len = ");
-                        printNumU8Hex(UartRxBuf[increment_pointer(UartRxBufOutputPointer,
-                                                                   1,
-                                                                   UART_RX_BUF_SIZE)]);
-                        printStr("\n");
-                        uint16_t i;
-                        uint8_t print_char_count_out = 0;
-                        for (i=0; i<UART_RX_BUF_SIZE; i++) {
-                            printNumU8Hex(UartRxBuf[increment_pointer(UartRxBufOutputPointer,
-                                                                    i,
-                                                                    UART_RX_BUF_SIZE)]);
-                            print_char_count_out++;
-                            if (print_char_count_out >= 16) {
-                                printStr("\n");
-                                print_char_count_out = 0;
-                            }
-                        }
-                        if (print_char_count_out != 0) {
-                            printStr("\n");
-                        }
-                        printStr("Halting!\n");
-                        Halted = 1;
+
+                    // Mark that we should discard data if destination for the frame is not active
+                    if ((FrameMode & ActiveEndpoints) == 0) {
+                        FrameDiscard = 1;
                     }
+
+                } else { // Invalid frame mode
+
+                    cts_stop();
+
+                    // Reset CH552 to start from a known state
+                    SAFE_MOD = 0x55;
+                    SAFE_MOD = 0xAA;
+                    GLOBAL_CFG = bSW_RESET;
+                    while (1)
+                        ;
                 }
             }
 
-            // Copy CDC data from UartRxBuf to CdcRxBuf
-            if (FrameStarted && !CdcDataAvailable) {
-                if (FrameMode == MODE_CDC) {
-                    if ((FrameRemainingBytes >= MAX_PACKET_SIZE) &&
-                        (UartRxBufByteCount >= MAX_PACKET_SIZE)) {
-                        circular_copy(CdcRxBuf,
+            // Copy CDC data from UartRxBuf to FrameBuf
+            if (FrameStarted && !FrameDiscard && !CdcDataAvailable) {
+                if (FrameMode == IO_CDC) {
+                    if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+                        (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
+                        circular_copy(FrameBuf,
                                       UartRxBuf,
                                       UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
-                                      MAX_PACKET_SIZE);
-                        CdcRxBufLength = MAX_PACKET_SIZE;
+                                      MAX_FRAME_SIZE);
+                        FrameBufLength = MAX_FRAME_SIZE;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_PACKET_SIZE,
+                                                                   MAX_FRAME_SIZE,
                                                                    UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= MAX_PACKET_SIZE;
+                        FrameRemainingBytes -= MAX_FRAME_SIZE;
                         CdcDataAvailable = 1;
                         cts_start();
                     }
-                    else if ((FrameRemainingBytes < MAX_PACKET_SIZE) &&
+                    else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
                              (UartRxBufByteCount >= FrameRemainingBytes)) {
-                        circular_copy(CdcRxBuf,
+                        circular_copy(FrameBuf,
                                       UartRxBuf,
                                       UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       FrameRemainingBytes);
-                        CdcRxBufLength = FrameRemainingBytes;
+                        FrameBufLength = FrameRemainingBytes;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
                                                                    FrameRemainingBytes,
@@ -1308,62 +1354,124 @@ void main()
                 }
             }
 
-            // Copy HID data from UartRxBuf to HidRxBuf
-            if (FrameStarted && !HidDataAvailable) {
-                if (FrameMode == MODE_HID) {
+            // Copy FIDO data from UartRxBuf to FrameBuf
+            if (FrameStarted && !FrameDiscard && !FidoDataAvailable) {
+                if (FrameMode == IO_FIDO) {
                     // Check if a complete frame has been received
                     if (UartRxBufByteCount >= FrameRemainingBytes) {
-                        circular_copy(HidRxBuf,
+                        circular_copy(FrameBuf,
                                       UartRxBuf,
                                       UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       FrameRemainingBytes);
-                        HidRxBufLength = MAX_PACKET_SIZE;
+                        FrameBufLength = MAX_FRAME_SIZE;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
                                                                    FrameRemainingBytes,
                                                                    UART_RX_BUF_SIZE);
-                        HidDataAvailable = 1;
+                        FidoDataAvailable = 1;
                         cts_start();
                     }
                 }
             }
 
-            // Copy TKEYCTRL data from UartRxBuf to TkeyCtrlRxBuf
-            if (FrameStarted && !TkeyCtrlDataAvailable) {
-                if (FrameMode == MODE_TKEYCTRL) {
-                    if ((FrameRemainingBytes >= MAX_PACKET_SIZE) &&
-                        (UartRxBufByteCount >= MAX_PACKET_SIZE)) {
-                        circular_copy(TkeyCtrlRxBuf,
+            // Copy DEBUG data from UartRxBuf to FrameBuf
+            if (FrameStarted && !FrameDiscard && !DebugDataAvailable) {
+                if (FrameMode == IO_DEBUG) {
+                    if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+                        (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
+                        circular_copy(FrameBuf,
                                       UartRxBuf,
                                       UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
-                                      MAX_PACKET_SIZE);
-                        TkeyCtrlRxBufLength = MAX_PACKET_SIZE;
+                                      MAX_FRAME_SIZE);
+                        FrameBufLength = MAX_FRAME_SIZE;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_PACKET_SIZE,
+                                                                   MAX_FRAME_SIZE,
                                                                    UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= MAX_PACKET_SIZE;
-                        TkeyCtrlDataAvailable = 1;
+                        FrameRemainingBytes -= MAX_FRAME_SIZE;
+                        DebugDataAvailable = 1;
                         cts_start();
                     }
-                    else if ((FrameRemainingBytes < MAX_PACKET_SIZE) &&
+                    else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
                              (UartRxBufByteCount >= FrameRemainingBytes)) {
-                        circular_copy(TkeyCtrlRxBuf,
+                        circular_copy(FrameBuf,
                                       UartRxBuf,
                                       UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       FrameRemainingBytes);
-                        TkeyCtrlRxBufLength = FrameRemainingBytes;
+                        FrameBufLength = FrameRemainingBytes;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
                                                                    FrameRemainingBytes,
                                                                    UART_RX_BUF_SIZE);
                         FrameRemainingBytes -= FrameRemainingBytes;
-                        TkeyCtrlDataAvailable = 1;
+                        DebugDataAvailable = 1;
                         cts_start();
                     }
+                }
+            }
+
+            // Copy CH552 data from UartRxBuf to FrameBuf
+            if (FrameStarted && !FrameDiscard && !CH552DataAvailable) {
+                if (FrameMode == IO_CH552) {
+                    if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+                        (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
+                        circular_copy(FrameBuf,
+                                      UartRxBuf,
+                                      UART_RX_BUF_SIZE,
+                                      UartRxBufOutputPointer,
+                                      MAX_FRAME_SIZE);
+                        FrameBufLength = MAX_FRAME_SIZE;
+                        // Update output pointer
+                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+                                                                   MAX_FRAME_SIZE,
+                                                                   UART_RX_BUF_SIZE);
+                        FrameRemainingBytes -= MAX_FRAME_SIZE;
+                        CH552DataAvailable = 1;
+                        cts_start();
+                    }
+                    else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
+                             (UartRxBufByteCount >= FrameRemainingBytes)) {
+                        circular_copy(FrameBuf,
+                                      UartRxBuf,
+                                      UART_RX_BUF_SIZE,
+                                      UartRxBufOutputPointer,
+                                      FrameRemainingBytes);
+                        FrameBufLength = FrameRemainingBytes;
+                        // Update output pointer
+                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+                                                                   FrameRemainingBytes,
+                                                                   UART_RX_BUF_SIZE);
+                        FrameRemainingBytes -= FrameRemainingBytes;
+                        CH552DataAvailable = 1;
+                        cts_start();
+                    }
+                }
+            }
+
+            // Discard frame
+            if (FrameStarted && FrameDiscard && !DiscardDataAvailable) {
+                if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+                    (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
+                    // Update output pointer
+                    UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+                                                               MAX_FRAME_SIZE,
+                                                               UART_RX_BUF_SIZE);
+                    FrameRemainingBytes -= MAX_FRAME_SIZE;
+                    DiscardDataAvailable = 1;
+                    cts_start();
+                }
+                else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
+                        (UartRxBufByteCount >= FrameRemainingBytes)) {
+                    // Update output pointer
+                    UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+                                                               FrameRemainingBytes,
+                                                               UART_RX_BUF_SIZE);
+                    FrameRemainingBytes -= FrameRemainingBytes;
+                    DiscardDataAvailable = 1;
+                    cts_start();
                 }
             }
 
@@ -1372,15 +1480,15 @@ void main()
 
                 // Write upload endpoint
                 memcpy(Ep2Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 2 */
-                       CdcRxBuf,
-                       CdcRxBufLength);
+                       FrameBuf,
+                       FrameBufLength);
 
                 Endpoint2UploadBusy = 1; // Set busy flag
-                UEP2_T_LEN = CdcRxBufLength; // Set the number of data bytes that Endpoint 2 is ready to send
+                UEP2_T_LEN = FrameBufLength; // Set the number of data bytes that Endpoint 2 is ready to send
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
 
                 CdcDataAvailable = 0;
-                CdcRxBufLength = 0;
+                FrameBufLength = 0;
 
                 if (FrameRemainingBytes == 0) {
                     // Complete frame sent, get next header and data
@@ -1388,46 +1496,47 @@ void main()
                 }
             }
 
-            // Check if we should upload data to Endpoint 3 (HID)
-            if (HidDataAvailable && !Endpoint3UploadBusy) {
+            // Check if we should upload data to Endpoint 3 (FIDO)
+            if (FidoDataAvailable && !Endpoint3UploadBusy) {
 
                 // Write upload endpoint
                 memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
-                       HidRxBuf,
-                       HidRxBufLength);
+                       FrameBuf,
+                       FrameBufLength);
 
                 Endpoint3UploadBusy = 1; // Set busy flag
                 UEP3_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 3 is ready to send
                 UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
 
-                HidDataAvailable = 0;
+                FidoDataAvailable = 0;
+                FrameBufLength = 0;
 
                 // Get next header and data
                 FrameStarted = 0;
             }
 
-            // Check if we should upload data to Endpoint 4 (TKEYCTRL)
-            if (TkeyCtrlDataAvailable && !Endpoint4UploadBusy) {
+            // Check if we should upload data to Endpoint 4 (DEBUG)
+            if (DebugDataAvailable && !Endpoint4UploadBusy) {
 
-                if (TkeyCtrlRxBufLength == MAX_PACKET_SIZE) {
+                if (FrameBufLength == MAX_PACKET_SIZE) {
                     // Write upload endpoint
                     memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
-                           TkeyCtrlRxBuf,
-                           TkeyCtrlRxBufLength);
+                           FrameBuf,
+                           FrameBufLength);
                 } else {
                     memset(Ep0Buffer + 128, 0, MAX_PACKET_SIZE);
                     // Write upload endpoint
                     memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
-                           TkeyCtrlRxBuf,
-                           TkeyCtrlRxBufLength);
+                           FrameBuf,
+                           FrameBufLength);
                 }
 
                 Endpoint4UploadBusy = 1; // Set busy flag
                 UEP4_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 4 is ready to send
                 UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
 
-                TkeyCtrlDataAvailable = 0;
-                TkeyCtrlRxBufLength = 0;
+                DebugDataAvailable = 0;
+                FrameBufLength = 0;
 
                 if (FrameRemainingBytes == 0) {
                     // Complete frame sent, get next header and data
@@ -1435,88 +1544,52 @@ void main()
                 }
             }
 
-#if 0
-            DebugUartRxBufByteCount = debug_uart_byte_count();
-            if (DebugUartRxBufByteCount) {
-                switch(DebugUartRxBuf[DebugUartRxBufOutputPointer]) {
-                case 'h':
-                    printStr("h          Show help\n");
-                    printStr("r          Reset UART1\n");
-                    printStr("s          Show status\n");
+            // Check if we should handle CH552 data
+            if (CH552DataAvailable) {
+
+                switch (FrameBuf[0]) {
+
+                    case SET_ENDPOINTS: {
+                        cts_stop(); // Stop UART data from FPGA
+                        RESET_KEEP = FrameBuf[1]; // Save endpoints to persistent register
+                        SAFE_MOD = 0x55; // Start reset sequence
+                        SAFE_MOD = 0xAA;
+                        GLOBAL_CFG = bSW_RESET;
+                        while (1)
+                            ;
+                    }
                     break;
 
-                case 'r':
-                    /** UART */
-                    UartRxBufInputPointer = 0;
-                    UartRxBufOutputPointer = 0;
-                    /** Frame */
-                    FrameMode = 0;
-                    FrameLength = 0;
-                    FrameStarted = 0;
-                    /** CDC */
-                    CdcDataAvailable = 0;
-                    CdcRxBufLength = 0;
-                    CdcLoopCount = 0;
-                    /** HID */
-                    HidDataAvailable = 0;
-                    /** Timeout */
-                    LoopCounter = 0;
-                    LastReceiveCounter = 0;
-                    /** Endpoints */
-                    UEP2_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK | UEP_R_RES_ACK;
-                    UEP3_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK | UEP_R_RES_ACK;
-                    UEP4_CTRL =                 UEP_T_RES_NAK | UEP_R_RES_ACK;
-                    UIF_TRANSFER = 0;           // Writing 0 clears the interrupt
-                    UIF_BUS_RST = 0;            // Clear interrupt flag
-
-                    Endpoint2UploadBusy = 0;
-                    Endpoint3UploadBusy = 0;
-                    UsbEp2ByteCount = 0;            // USB endpoint 2 (CDC) received length
-                    UsbEp3ByteCount = 0;            // USB endpoint 3 (HID) received length
-
-                    /** Misc */
-                    Halted = 0;
-                    printStr("Reset done!\n");
+                    default: {
+                    }
                     break;
 
-                case 's':
-                    printStr("Endpoint2UploadBusy = ");    printNumU32(Endpoint2UploadBusy);    printStr("\n");
-                    printStr("UsbEp2ByteCount = ");        printNumU32(UsbEp2ByteCount);        printStr("\n");
-                    printStr("UEP2_CTRL = 0x");            printNumHex(UEP2_CTRL);              printStr("\n");
-
-                    printStr("Endpoint3UploadBusy = ");    printNumU32(Endpoint3UploadBusy);    printStr("\n");
-                    printStr("UsbEp3ByteCount = ");        printNumU32(UsbEp3ByteCount);        printStr("\n");
-                    printStr("UEP3_CTRL = 0x");            printNumHex(UEP3_CTRL);              printStr("\n");
-
-                    printStr("Endpoint4UploadBusy = ");    printNumU32(Endpoint4UploadBusy);    printStr("\n");
-                    printStr("UsbEp4ByteCount = ");        printNumU32(UsbEp4ByteCount);        printStr("\n");
-                    printStr("UEP4_CTRL = 0x");            printNumHex(UEP4_CTRL);              printStr("\n");
-
-                    printStr("UartRxBufInputPointer  = "); printNumU32(UartRxBufInputPointer);  printStr("\n");
-                    printStr("UartRxBufOutputPointer = "); printNumU32(UartRxBufOutputPointer); printStr("\n");
-
-                    printStr("UartRxBufByteCount = ");     printNumU32(UartRxBufByteCount);     printStr("\n");
-                    printStr("FrameMode = 0x");            printNumHex(FrameMode);              printStr("\n");
-                    printStr("FrameLength = ");            printNumU32(FrameLength);            printStr("\n");
-                    printStr("FrameStarted = ");           printNumU32(FrameStarted);           printStr("\n");
-
-                    printStr("CdcDataAvailable = ");       printNumU32(CdcDataAvailable);       printStr("\n");
-                    printStr("HidDataAvailable = ");       printNumU32(HidDataAvailable);       printStr("\n");
-
-                    printStr("Halted = ");                 printNumU32(Halted);                 printStr("\n");
-                    break;
-
-                default:
-                    printStr("\n");
-                    break;
                 }
 
-                // Update out pointer
-                DebugUartRxBufOutputPointer = increment_pointer(DebugUartRxBufOutputPointer,
-                                                                DebugUartRxBufByteCount,
-                                                                DEBUG_UART_RX_BUF_SIZE);
+                CH552DataAvailable = 0;
+                FrameBufLength = 0;
+
+                memset(FrameBuf, 0, MAX_FRAME_SIZE);
+
+                if (FrameRemainingBytes == 0) {
+                    // Complete frame sent, get next header and data
+                    FrameStarted = 0;
+                }
             }
-#endif
+
+            if (DiscardDataAvailable) {
+
+                DiscardDataAvailable = 0;
+                printStr("Frame discarded!\n");
+
+                if (FrameRemainingBytes == 0) {
+                    // Complete frame discarded, get next header and data
+                    FrameStarted = 0;
+                    // Stop discarding frames
+                    FrameDiscard = 0;
+                }
+            }
+
         } /* END if (UsbConfig) */
     } /* END while (1) */
 }
