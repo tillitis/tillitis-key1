@@ -6,13 +6,15 @@
  * Description        : CH554 as CDC device to serial port, select serial port 1
  *******************************************************************************/
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 #include <ch554.h>
 #include <ch554_usb.h>
 
 #include "debug.h"
+#include "flash.h"
+#include "lib.h"
+#include "main.h"
 #include "mem.h"
 #include "print.h"
 #include "usb_strings.h"
@@ -550,7 +552,7 @@ void usb_irq_setup_handler(void)
             printStrSetup("Class-Specific ");
             printStrSetup("SetupReq=");
             printStrSetup("0x");
-            printNumHexSetup(SetupReq);
+            printNumU8HexSetup(SetupReq);
             printStrSetup(" ");
             switch(SetupReq) {
             case USB_HID_REQ_TYPE_GET_REPORT:
@@ -984,7 +986,7 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
 
     } else if (UIF_BUS_RST) { // Check device mode USB bus reset interrupt
 
-        printStr("Reset\n");
+        printStrSetup("Reset\n");
 
         UEP0_CTRL =                 UEP_T_RES_NAK | UEP_R_RES_ACK;
         UEP1_CTRL = bUEP_AUTO_TOG | UEP_T_RES_NAK;
@@ -1016,7 +1018,7 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
 
         if (USB_MIS_ST & bUMS_SUSPEND) { // Hang
 
-            printStr("Suspend\n");
+            printStrSetup("Suspend\n");
 
             while (XBUS_AUX & bUART0_TX) {
                 ; // Wait for sending to complete
@@ -1032,7 +1034,7 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
 
         }
     } else { // Unexpected IRQ, should not happen
-        printStr("Unexpected IRQ\n");
+        printStrSetup("Unexpected IRQ\n");
         USB_INT_FG = 0xFF; // Clear interrupt flag
     }
 }
@@ -1241,16 +1243,16 @@ void main()
                 } else { // Invalid mode
                     if (!Halted) {
                         printStr("Invalid header: 0x");
-                        printNumHex(FrameMode);
+                        printNumU8Hex(FrameMode);
                         printStr(", len = ");
-                        printNumU32(UartRxBuf[increment_pointer(UartRxBufOutputPointer,
-                                                                1,
-                                                                UART_RX_BUF_SIZE)]);
+                        printNumU8Hex(UartRxBuf[increment_pointer(UartRxBufOutputPointer,
+                                                                   1,
+                                                                   UART_RX_BUF_SIZE)]);
                         printStr("\n");
                         uint16_t i;
                         uint8_t print_char_count_out = 0;
                         for (i=0; i<UART_RX_BUF_SIZE; i++) {
-                            printNumHex(UartRxBuf[increment_pointer(UartRxBufOutputPointer,
+                            printNumU8Hex(UartRxBuf[increment_pointer(UartRxBufOutputPointer,
                                                                     i,
                                                                     UART_RX_BUF_SIZE)]);
                             print_char_count_out++;
