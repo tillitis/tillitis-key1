@@ -26,6 +26,11 @@ int install_app(uint8_t secret_key[64])
 		return -1;
 	}
 
+	if (syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0) < 0) {
+		puts(IO_CDC, "couldn't delete preloaded app\r\n");
+		return -1;
+	}
+
 	int err = syscall(TK1_SYSCALL_PRELOAD_STORE, 0, (uint32_t)blink,
 			  sizeof(blink));
 
