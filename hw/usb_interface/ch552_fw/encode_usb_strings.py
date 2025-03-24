@@ -53,11 +53,11 @@ if __name__ == "__main__":
         "SerialDesc": "68de5d27-e223-4874-bc76-a54d6e84068f",
         "CdcCtrlInterfaceDesc": "CDC-Ctrl",
         "CdcDataInterfaceDesc": "CDC-Data",
-        "FidoHidInterfaceDesc": "FIDO-HID",
-        "TkeyCtrlInterfaceDesc": "TKEY-Ctrl"
+        "FidoInterfaceDesc": "FIDO",
+        "DebugInterfaceDesc": "DEBUG"
     }
 
-    with open('include/usb_strings.h', 'w') as f:
+    with open('inc/usb_strings.h', 'w') as f:
         f.write('#ifndef __USB_STRINGS_H__\n')
         f.write('#define __USB_STRINGS_H__\n')
         f.write('\n')

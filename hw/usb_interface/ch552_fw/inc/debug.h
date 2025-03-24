@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "ch554.h"
+#include "gpio.h"
 
 // UART1 baud rates
 //     Setting   Actual      % error
@@ -39,18 +40,6 @@
 void CfgFsys(void);        // CH554 clock selection and configuration
 void mDelayuS(uint16_t n); // Delay in units of uS
 void mDelaymS(uint16_t n); // Delay in mS
-
-// Set pin p1.4 and p1.5 to GPIO output mode.
-void gpio_init(void);
-void gpio_set(uint8_t pin);
-void gpio_unset(uint8_t pin);
-uint8_t gpio_get(uint8_t pin);
-
-void gpio_init_p1_4_in(void);
-void gpio_init_p1_5_out(void);
-uint8_t gpio_p1_4_get(void);
-void gpio_p1_5_set(void);
-void gpio_p1_5_unset(void);
 
 /*******************************************************************************
  * Function Name  : CH554UART0Alter()

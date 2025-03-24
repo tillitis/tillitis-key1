@@ -1,28 +1,6 @@
 #include <stdint.h>
 
-#include "debug.h"
-#include "print.h"
-
-void printStr(uint8_t *str)
-{
-#ifdef DEBUG_PRINT
-    while (*str != 0) {
-        CH554UART0SendByte(*str);
-        ++str;
-    }
-#else
-    (void)str;
-#endif
-}
-
-void printChar(uint8_t c)
-{
-#ifdef DEBUG_PRINT
-    CH554UART0SendByte(c);
-#else
-    (void)c;
-#endif
-}
+#include "main.h"
 
 #ifdef USE_NUM_U8
 int8_t uint8_to_str(uint8_t *buf, uint8_t bufsize, uint8_t n)
@@ -132,57 +110,91 @@ int8_t uint32_to_str(uint8_t *buf, uint8_t bufsize, uint32_t n)
 }
 #endif
 
-#ifdef USE_NUM_U8
-void printNumU8(uint8_t num)
+#if 0
+uint8_t hex_to_uint8(const char *hex, uint8_t len)
 {
-#ifdef DEBUG_PRINT
-    uint8_t num_str[4] = { 0 };
-    int8_t ret;
-    ret = uint8_to_str(num_str, 4, num);
-    if (!ret) {
-        printStr(num_str);
+    uint8_t val = 0;
+    while (len) {
+        char c = *hex++;
+        val <<= 4;
+        if (c >= '0' && c <= '9') {
+            val |= c - '0';
+        } else if (c >= 'A' && c <= 'F') {
+            val |= c - 'A' + 10;
+        } else if (c >= 'a' && c <= 'f') {
+            val |= c - 'a' + 10;
+        } else {
+            return 0; // Invalid character
+        }
+        len--;
     }
-#endif
+    return val;
 }
 #endif
 
-#ifdef USE_NUM_U32
-void printNumU32(uint32_t num)
+#if 0
+uint16_t hex_to_uint16(const char *hex, uint8_t len)
 {
-#ifdef DEBUG_PRINT
-    uint8_t num_str[11] = { 0 };
-    int8_t ret;
-    ret = uint32_to_str(num_str, 10, num);
-    if (!ret) {
-        printStr(num_str);
+    uint16_t val = 0;
+    while (len) {
+        char c = *hex++;
+        val <<= 4;
+        if (c >= '0' && c <= '9') {
+            val |= c - '0';
+        } else if (c >= 'A' && c <= 'F') {
+            val |= c - 'A' + 10;
+        } else if (c >= 'a' && c <= 'f') {
+            val |= c - 'a' + 10;
+        } else {
+            return 0; // Invalid character
+        }
+        len--;
     }
-#else
-    (void)num;
-#endif
+    return val;
 }
 #endif
 
-void printNumHex(uint8_t num)
+uint32_t hex_to_uint32(const char *hex, uint8_t len)
 {
-#ifdef DEBUG_PRINT
-    // High nibble
-    uint8_t val = num >> 4;
-    if (val <= 9) {
-        val = val + '0';
-    } else {
-        val = (val-10) + 'A';
+    uint32_t val = 0;
+    while (len) {
+        char c = *hex++;
+        val <<= 4;
+        if (c >= '0' && c <= '9') {
+            val |= c - '0';
+        } else if (c >= 'A' && c <= 'F') {
+            val |= c - 'A' + 10;
+        } else if (c >= 'a' && c <= 'f') {
+            val |= c - 'a' + 10;
+        } else {
+            return 0; // Invalid character
+        }
+        len--;
     }
-    printChar(val);
-
-    // Low nibble
-    val = num & 0x0F;
-    if (val <= 9) {
-        val = val + '0';
-    } else {
-        val = (val-10) + 'A';
-    }
-    printChar(val);
-#else
-    (void)num;
-#endif
+    return val;
 }
+
+uint8_t ascii_hex_char_to_byte(uint8_t c)
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    return 0; // Invalid character, should not happen if input is valid
+}
+
+#if 0
+int ascii_hex_string_to_bytes(uint8_t *hex_str, uint8_t *out_bytes, size_t out_len)
+{
+    if (!hex_str || !out_bytes || out_len < 32)
+        return -1; // Error handling
+
+    for (size_t i = 0; i < 32; i++) {
+        out_bytes[i] = (ascii_hex_char_to_byte(hex_str[i * 2]) << 4) | ascii_hex_char_to_byte(hex_str[i * 2 + 1]);
+    }
+
+    return 0; // Success
+}
+#endif
