@@ -46,19 +46,17 @@ unsigned char FLASH CdcDataInterfaceDesc[] = {  // "CDC-Data"
     'D', 0, 'a', 0, 't', 0, 'a', 0,
 };
 
-unsigned char FLASH FidoHidInterfaceDesc[] = {  // "FIDO-HID"
-    18,    // Length of this descriptor (in bytes)
+unsigned char FLASH FidoInterfaceDesc[] = {  // "FIDO"
+    10,    // Length of this descriptor (in bytes)
     0x03,  // Descriptor type (String)
     'F', 0, 'I', 0, 'D', 0, 'O', 0,
-    '-', 0, 'H', 0, 'I', 0, 'D', 0,
 };
 
-unsigned char FLASH TkeyCtrlInterfaceDesc[] = {  // "TKEY-Ctrl"
-    20,    // Length of this descriptor (in bytes)
+unsigned char FLASH DebugInterfaceDesc[] = {  // "DEBUG"
+    12,    // Length of this descriptor (in bytes)
     0x03,  // Descriptor type (String)
-    'T', 0, 'K', 0, 'E', 0, 'Y', 0,
-    '-', 0, 'C', 0, 't', 0, 'r', 0,
-    'l', 0,
+    'D', 0, 'E', 0, 'B', 0, 'U', 0,
+    'G', 0,
 };
 
 #endif

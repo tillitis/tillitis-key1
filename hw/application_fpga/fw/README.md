@@ -62,11 +62,11 @@ Mode Protocol. It is used in both directions.
 
 The different endpoints:
 
-| *Name* | *Value* | *Comment*                                                           |
-|--------|---------|---------------------------------------------------------------------|
-| CTRL   | 0x20    | A USB HID special debug pipe. Useful for debug prints.              |
-| CDC    | 0x40    | USB CDC-ACM, a serial port on the client.                           |
-| HID    | 0x80    | A USB HID security token device, useful for FIDO-type applications. |
+| *Name* | *Value* | *Comment*                                                            |
+|--------|---------|----------------------------------------------------------------------|
+| DEBUG  | 0x20    | A USB HID special debug pipe. Useful for debug prints.               |
+| CDC    | 0x40    | USB CDC-ACM, a serial port on the client.                            |
+| FIDO   | 0x80    | A USB FIDO security token device, useful for FIDO-type applications. |
 
 On top of the USB Mode Protocol is [the TKey Framing
 Protocol](https://dev.tillitis.se/protocol/) which is described in the
