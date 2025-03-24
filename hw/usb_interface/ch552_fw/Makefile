@@ -34,8 +34,11 @@ LFLAGS = \
          $(CFLAGS)
 
 C_FILES = \
-          src/main.c \
           src/debug.c \
+          src/flash.c \
+          src/gpio.c \
+          src/lib.c \
+          src/main.c \
           src/print.c
 
 # Create a .rel file for each .c file in $(OUT_DIR)/
