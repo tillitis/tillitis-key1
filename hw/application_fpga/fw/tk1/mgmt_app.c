@@ -3,73 +3,34 @@
 
 #include <tkey/lib.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "mgmt_app.h"
-#include "auth_app.h"
-#include "partition_table.h"
 
-/* Returns true if an management app is already registered */
-static bool mgmt_app_registered(struct management_app_metadata *mgmt_table)
-{
+// Locked down what app can start from first flash slot to be exactly
+// this size, producing this digest.
+//
+// To update this, compute the BLAKE2s digest of the app.bin
+// BLAKE2s digest of testloadapp.bin
+static const uint8_t allowed_app_digest[32] = {
+	0x88, 0x87, 0xf6, 0x2f, 0x71, 0x1c, 0x3f, 0xdb,
+	0x8c, 0xf7, 0x77, 0x9f, 0xeb, 0x5f, 0xb9, 0xd4,
+	0x2f, 0xfb, 0xdb, 0x1d, 0xf6, 0xdc, 0x62, 0xff,
+	0x91, 0x00, 0x1f, 0x5d, 0x98, 0xb3, 0x50, 0xd4,
+};
+static uint8_t current_app_digest[32];
 
-	if (mgmt_table->status == 0x00) {
-		/* No management app registered */
-		return false;
-		// TODO: Should we also check nonce, authentication digest for
-		// non-zero?
-	}
-
-	return true;
-}
-
-/* Authenticate an management app */
-bool mgmt_app_authenticate(struct management_app_metadata *mgmt_table)
-{
-	if (!mgmt_app_registered(mgmt_table)) {
-		return false;
-	}
-
-	return auth_app_authenticate(&mgmt_table->auth);
-}
-
-/* Register an management app, returns zero on success */
-int mgmt_app_register(struct partition_table *part_table)
-{
-	/* Check if the current app is the mgmt app */
-	if (mgmt_app_authenticate(&part_table->mgmt_app_data)) {
+int mgmt_app_init(uint8_t app_digest[32]) {
+	if (memeq(app_digest, allowed_app_digest, 32)) {
+		memcpy_s(current_app_digest, sizeof(current_app_digest), app_digest, 32);
 		return 0;
 	}
 
-	/* Check if another management app is registered */
-	if (mgmt_app_registered(&part_table->mgmt_app_data)) {
-		return -1;
-	}
-
-	auth_app_create(&part_table->mgmt_app_data.auth);
-	part_table->mgmt_app_data.status = 0x01;
-
-	part_table_write(part_table);
-
-	return 0;
+	return -1;
 }
 
-/* Unregister the currently registered app, returns zero on success */
-int mgmt_app_unregister(struct partition_table *part_table)
+/* Authenticate an management app */
+bool mgmt_app_authenticate(void)
 {
-	/* Only the management app should be able to unregister itself */
-	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
-		return -1;
-	}
-
-	part_table->mgmt_app_data.status = 0;
-
-	memset(part_table->mgmt_app_data.auth.nonce, 0x00,
-	       sizeof(part_table->mgmt_app_data.auth.nonce));
-
-	memset(part_table->mgmt_app_data.auth.authentication_digest, 0x00,
-	       sizeof(part_table->mgmt_app_data.auth.authentication_digest));
-
-	part_table_write(part_table);
-
-	return 0;
+	return memeq(current_app_digest, allowed_app_digest, 32) != 0;
 }

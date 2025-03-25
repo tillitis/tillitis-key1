@@ -13,13 +13,6 @@ type PartTable struct {
 	Header struct {
 		Version uint8
 	}
-	ManagementAppData struct {
-		Status uint8
-		Auth   struct {
-			Nonce      [16]uint8
-			AuthDigest [16]uint8
-		}
-	}
 	PreLoadedAppData [2]struct {
 		Size      uint32
 		Digest    [32]uint8
@@ -39,7 +32,7 @@ type PartTable struct {
 type Flash struct {
 	Bitstream             [0x20000]uint8
 	PartitionTable        PartTable
-	PartitionTablePadding [64*1024 - 398]uint8
+	PartitionTablePadding [64*1024 - 365]uint8
 	PreLoadedApp0         [0x20000]uint8
 	PreLoadedApp1         [0x20000]uint8
 	AppStorage            [4][0x20000]uint8
@@ -93,10 +86,6 @@ func printPartTableJson(tbl PartTable) {
 func printPartTableCondensed(tbl PartTable) {
 	fmt.Printf("Header\n")
 	fmt.Printf("  Version          : %d\n", tbl.Header.Version)
-	fmt.Printf("Management App\n")
-	fmt.Printf("  Status           : %d\n", tbl.ManagementAppData.Status)
-	fmt.Printf("  Auth.Nonce       : %x\n", tbl.ManagementAppData.Auth.Nonce)
-	fmt.Printf("  Auth.AuthDigest  : %x\n", tbl.ManagementAppData.Auth.AuthDigest)
 
 	for i, appData := range tbl.PreLoadedAppData {
 		fmt.Printf("Preloaded App %d\n", i)

@@ -56,7 +56,7 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 		  uint8_t *data, size_t size, uint8_t to_slot)
 {
 	/* Check if we are allowed to store */
-	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
+	if (!mgmt_app_authenticate()) {
 		return -3;
 	}
 
@@ -88,7 +88,7 @@ int preload_store_finalize(struct partition_table *part_table, size_t app_size,
 	}
 
 	/* Check if we are allowed to store */
-	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
+	if (!mgmt_app_authenticate()) {
 		return -3;
 	}
 
@@ -124,7 +124,7 @@ int preload_delete(struct partition_table *part_table, uint8_t slot)
 	}
 
 	/* Check if we are allowed to deleted */
-	if (!mgmt_app_authenticate(&part_table->mgmt_app_data)) {
+	if (!mgmt_app_authenticate()) {
 		return -3;
 	}
 

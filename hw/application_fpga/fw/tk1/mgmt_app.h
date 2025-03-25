@@ -4,12 +4,10 @@
 #ifndef MGMT_APP_H
 #define MGMT_APP_H
 
-#include "partition_table.h"
-
 #include <stdbool.h>
+#include <stdint.h>
 
-bool mgmt_app_authenticate(struct management_app_metadata *mgmt_table);
-int mgmt_app_register(struct partition_table *part_table);
-int mgmt_app_unregister(struct partition_table *part_table);
+int mgmt_app_init(uint8_t app_digest[32]);
+bool mgmt_app_authenticate(void);
 
 #endif
