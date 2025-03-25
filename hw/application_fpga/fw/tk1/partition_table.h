@@ -60,18 +60,12 @@
 /*  - 16 byte authentication digest.	*/
 /**/
 /*- Pre-loaded device app 1		*/
-/*  - 1 byte status.			*/
 /*  - 4 bytes length.			*/
-/*  - 16 bytes random nonce.		*/
-/*  - 16 bytes authentication digest.	*/
 /*  - 32 bytes digest.			*/
 /*  - 64 bytes signature.		*/
 /**/
 /*- Pre-loaded device app 2		*/
-/*  - 1 byte status.			*/
 /*  - 4 bytes length.			*/
-/*  - 16 bytes random nonce.		*/
-/*  - 16 bytes authentication digest.	*/
 /*  - 32 bytes digest.			*/
 /*  - 64 bytes signature.		*/
 /**/
@@ -93,9 +87,7 @@ struct management_app_metadata {
 } __attribute__((packed));
 
 struct pre_loaded_app_metadata {
-	uint8_t status;
 	uint32_t size;
-	struct auth_metadata auth;
 	uint8_t digest[32];
 	uint8_t signature[64];
 } __attribute__((packed));

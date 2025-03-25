@@ -18,20 +18,14 @@ static uint32_t slot_to_start_address(uint8_t slot) {
 }
 
 /* Returns non-zero if the app is valid */
-bool preload_check_valid_app(struct partition_table *part_table,
+bool preload_slot_is_free(struct partition_table *part_table,
 			     uint8_t slot)
 {
 	if (slot >= N_PRELOADED_APP) {
 		return false;
 	}
 
-	if (part_table->pre_app_data[slot].status == 0x00 &&
-	    part_table->pre_app_data[slot].size == 0) {
-		/*No valid app*/
-		return false;
-	}
-
-	return true;
+	return part_table->pre_app_data[slot].size == 0;
 }
 
 /* Loads a preloaded app from flash to app RAM */
@@ -42,7 +36,7 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 	}
 
 	/*Check for a valid app in flash	*/
-	if (!preload_check_valid_app(part_table, from_slot)) {
+	if (preload_slot_is_free(part_table, from_slot)) {
 		return -1;
 	}
 	uint8_t *loadaddr = (uint8_t *)TK1_RAM_BASE;
@@ -67,7 +61,7 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 	}
 
 	/* Check for a valid app in flash, bale out if it already exists */
-	if (preload_check_valid_app(part_table, to_slot)) {
+	if (!preload_slot_is_free(part_table, to_slot)) {
 		return -1;
 	}
 
@@ -99,7 +93,7 @@ int preload_store_finalize(struct partition_table *part_table, size_t app_size,
 	}
 
 	/* Check for a valid app in flash, bale out if it already exists */
-	if (preload_check_valid_app(part_table, to_slot)) {
+	if (!preload_slot_is_free(part_table, to_slot)) {
 		return -1;
 	}
 
@@ -108,8 +102,6 @@ int preload_store_finalize(struct partition_table *part_table, size_t app_size,
 	}
 
 	part_table->pre_app_data[to_slot].size = app_size;
-	part_table->pre_app_data[to_slot].status =
-	    PRE_LOADED_STATUS_PRESENT; /* Stored but not yet authenticated */
 	memcpy_s(part_table->pre_app_data[to_slot].digest,
 		sizeof(part_table->pre_app_data[to_slot].digest),
 		app_digest, 32);
@@ -121,9 +113,6 @@ int preload_store_finalize(struct partition_table *part_table, size_t app_size,
 	debug_lf();
 
 	part_table_write(part_table);
-
-	/* Force a restart to authenticate the stored app */
-	/* TODO: Should this be done by the management app or by firmware? */
 
 	return 0;
 }
@@ -140,18 +129,11 @@ int preload_delete(struct partition_table *part_table, uint8_t slot)
 	}
 
 	/*Check for a valid app in flash	*/
-	if (!preload_check_valid_app(part_table, slot)) {
+	if (preload_slot_is_free(part_table, slot)) {
 		return 0;
 		// TODO: Nothing here, return zero like all is good?
 	}
 	part_table->pre_app_data[slot].size = 0;
-	part_table->pre_app_data[slot].status = 0;
-
-	memset(part_table->pre_app_data[slot].auth.nonce, 0x00,
-	       sizeof(part_table->pre_app_data[slot].auth.nonce));
-
-	memset(part_table->pre_app_data[slot].auth.authentication_digest, 0x00,
-	       sizeof(part_table->pre_app_data[slot].auth.authentication_digest));
 
 	memset(part_table->pre_app_data[slot].digest, 0,
 	       sizeof(part_table->pre_app_data[slot].digest));

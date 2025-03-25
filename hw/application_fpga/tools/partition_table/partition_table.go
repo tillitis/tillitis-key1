@@ -21,12 +21,7 @@ type PartTable struct {
 		}
 	}
 	PreLoadedAppData [2]struct {
-		Status uint8
-		Size   uint32
-		Auth   struct {
-			Nonce      [16]uint8
-			AuthDigest [16]uint8
-		}
+		Size      uint32
 		Digest    [32]uint8
 		Signature [64]uint8
 	}
@@ -44,7 +39,7 @@ type PartTable struct {
 type Flash struct {
 	Bitstream             [0x20000]uint8
 	PartitionTable        PartTable
-	PartitionTablePadding [64*1024 - 464]uint8
+	PartitionTablePadding [64*1024 - 398]uint8
 	PreLoadedApp0         [0x20000]uint8
 	PreLoadedApp1         [0x20000]uint8
 	AppStorage            [4][0x20000]uint8
@@ -105,10 +100,7 @@ func printPartTableCondensed(tbl PartTable) {
 
 	for i, appData := range tbl.PreLoadedAppData {
 		fmt.Printf("Preloaded App %d\n", i)
-		fmt.Printf("  Status           : %d\n", appData.Status)
 		fmt.Printf("  Size             : %d\n", appData.Size)
-		fmt.Printf("  Auth.Nonce       : %x\n", appData.Auth.Nonce)
-		fmt.Printf("  Auth.AuthDigest  : %x\n", appData.Auth.AuthDigest)
 		fmt.Printf("  Digest           : %x\n", appData.Digest[:16])
 		fmt.Printf("                     %x\n", appData.Digest[16:])
 		fmt.Printf("  Signature        : %x\n", appData.Signature[:16])
