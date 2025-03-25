@@ -21,11 +21,6 @@ int install_app(uint8_t secret_key[64])
 	uint8_t app_signature[64];
 	size_t app_size = sizeof(blink);
 
-	if (syscall(TK1_SYSCALL_REG_MGMT, 0, 0, 0) < 0) {
-		puts(IO_CDC, "couldn't register as mgmt\r\n");
-		return -1;
-	}
-
 	if (syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0) < 0) {
 		puts(IO_CDC, "couldn't delete preloaded app\r\n");
 		return -1;

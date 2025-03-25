@@ -16,6 +16,7 @@
 #include "partition_table.h"
 #include "preload_app.h"
 #include "proto.h"
+#include "mgmt_app.h"
 #include "state.h"
 #include "syscall_enable.h"
 #include "resetinfo.h"
@@ -42,19 +43,7 @@ static volatile struct reset  *resetinfo        = (volatile struct reset  *)TK1_
 
 struct partition_table part_table;
 
-// Locked down what app can start from first flash slot to be exactly
-// this size, producing this digest.
-//
-// To update this, compute the BLAKE2s digest of the app.bin and
-// insert the size in bytes.
 #define APP_SIZE_SLOT0 21684
-// BLAKE2s digest of testloadapp.bin
-const uint8_t allowed_app_digest[32] = {
-    0x3a, 0x34, 0x6f, 0x1f, 0xb7, 0x7f, 0xa6, 0x71, 0x9b, 0x69, 0x8,
-    0x36, 0xa0, 0x5,  0xe,  0x26, 0x48, 0x8d, 0xab, 0x6a, 0x51, 0xa6,
-    0xe1, 0x18, 0x53, 0xa3, 0x64, 0xc6, 0x5b, 0x42, 0x49, 0xb7,
-};
-
 // Context for the loading of a TKey program
 struct context {
 	uint32_t left;	    // Bytes left to receive
@@ -600,9 +589,8 @@ int main(void)
 				break;
 			}
 
-			if (ctx.flash_slot == 0) {
-				print_digest(allowed_app_digest);
-				if (!memeq(ctx.digest, allowed_app_digest, 32)) {
+			if (ctx.flash_slot != 1) {
+				if (mgmt_app_init(ctx.digest) != 0) {
 					puts(IO_CDC, "app not allowed!\r\n");
 					assert(1 == 2);
 				}
