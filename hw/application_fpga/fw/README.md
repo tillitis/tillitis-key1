@@ -102,81 +102,154 @@ values of the Block RAMs used to construct the `FW_ROM`. The `FW_ROM`
 start address is located at `0x0000_0000` in the CPU memory map, which
 is also the CPU reset vector.
 
+### Reset intentions
+
+We have a number of reset options we call `startfrom`:
+
+1. Start from flash slot 1 (default): `FLASH1`
+2. Start from flash slot 2: `FLASH2`.
+3. Load and start an app from flash slot 1 with a specific app hash:
+   `FLASH1_VER`
+4. Load and start an app from flash slot 2 with a specific app hash:
+   `FLASH2_VER`.
+5. Load and start a new app from client: `CLIENT`.
+6. load and start an app from client with a specific app hash:
+   `CLIENT_VER`.
+
 ### Firmware state machine
 
-This is the state diagram of the firmware. There are only four states.
-Change of state occur when we receive specific I/O or a fatal error
-occurs.
+This is the state diagram of the firmware. Change of state occur when
+we receive specific I/O or a fatal error occurs.
 
 ```mermaid
 stateDiagram-v2
-     S1: initial
+     S0: initial
+     S1: waitcommand
      S2: loading
-     S3: running
+     S3: flash_loading
+     S4: auth_app
+     S5: starting
+     S6: compute_cdi
      SE: failed
 
-     [*] --> S1
+     [*] --> S0
+
+     S0 --> S1
+     S0 --> S4: Default
 
      S1 --> S1: Commands
      S1 --> S2: LOAD_APP
      S1 --> SE: Error
 
      S2 --> S2: LOAD_APP_DATA
-     S2 --> S3: Last block received
+     S2 --> S6: Last block received
      S2 --> SE: Error
 
-     S3 --> [*]
+     S6 --> S3
+
+     S3 --> S5
+
+     S4 --> S5
+     S4 --> SE: Error
+
+     SE --> [*]
+     S5 --> [*]
 ```
 
 States:
 
-- `initial` - At start. Allows the commands `NAME_VERSION`, `GET_UDI`,
-  `LOAD_APP`.
-- `loading` - Expect application data. Allows only the command
-  `LOAD_APP_DATA`.
-- `run` - Computes CDI and starts the application. Allows no commands.
-- `fail` - Stops waiting for commands, flashes LED forever. Allows no
-  commands.
+- `initial`: We start by checking resetinfo data in `FW_RAM` for
+  `startfrom`.
+- `waitcommand`: Waiting for initial commands from client. Allows the
+  commands `NAME_VERSION`, `GET_UDI`, `LOAD_APP`.
+- `loading`: Expecting application data from client. Allows only the
+  command `LOAD_APP_DATA`.
+- `flash_loading`: Loading and authentication app from flash. Computes CDI,
+  creates or checks the authentication of the flash app. Allows no commands.
+- `starting`: Starts the application. Does not return to firmware.
+  Allows no commands.
+- `failed` - Halts CPU. Allows no commands.
 
-Commands in state `initial`:
+Allowed data in state `resetinfo`:
+
+| *startfrom*  | *next state*    |
+|--------------|-----------------|
+| `FLASH1`     | `flash_loading` |
+| `FLASH2`     | `flash_loading` |
+| `FLASH1_VER` | `flash_loading` |
+| `FLASH2_VER` | `flash_loading` |
+| `CLIENT`     | `waitcommand`   |
+| `CLIENT_VER` | `waitcommand`   |
+
+I/O in state `flash_loading`:
+
+| *I/O*              | *next state* |
+|--------------------|--------------|
+| Last app data read | `starting`   |
+
+Commands in state `waitcommand`:
 
 | *command*             | *next state* |
 |-----------------------|--------------|
 | `FW_CMD_NAME_VERSION` | unchanged    |
 | `FW_CMD_GET_UDI`      | unchanged    |
 | `FW_CMD_LOAD_APP`     | `loading`    |
-|                       |              |
 
 Commands in state `loading`:
 
-| *command*              | *next state*                     |
-|------------------------|----------------------------------|
-| `FW_CMD_LOAD_APP_DATA` | unchanged or `run` on last chunk |
+| *command*              | *next state*                          |
+|------------------------|---------------------------------------|
+| `FW_CMD_LOAD_APP_DATA` | unchanged or `starting` on last chunk |
+
+No other states allows commands.
 
 See [Firmware protocol in the Dev
 Handbook](http://dev.tillitis.se/protocol/#firmware-protocol) for the
 definition of the specific commands and their responses.
 
-State changes from "initial" to "loading" when receiving `LOAD_APP`,
-which also sets the size of the number of data blocks to expect. After
-that we expect several `LOAD_APP_DATA` commands until the last block
-is received, when state is changed to "running".
+Plain text explanation of the states:
 
-In "running", the loaded device app is measured, the Compound Device
-Identifier (CDI) is computed, we do some cleanup of firmware data
-structures, enable the system calls, and finally start the app, which
-ends the firmware state machine. Hardware guarantees that we leave
-firmware mode automatically when the program counter leaves ROM.
+- `initial`: Execution starts here. The firmware checks in the
+  `FW_RAM` for `startfrom` for what to do next.
 
-The device app is now running in application mode. We can, however,
-return to firmware mode (excepting access to the UDS) by doing system
-calls. Note that ROM is still readable, but is now hardware protected
-from execution, except through the system call mechanism.
+  For all `startfrom` values `FLASH_*` the next state is `startflash`.
+  Otherwise it goes to `waitcommand`, indicating that it should wait
+  for further commands from the client.
+
+- `flash_loading` loads and measure an app from flash, the Compound
+  Device Identifier (CDI) is computed, then the app is authenticated
+  against a stored digest to see that no one has changed the app by
+  manipulating the flash. The compuation is done by:
+
+  digest = blake2s(cdi, nonce from flash)
+
+  and then compared against the stored digest in the app's flash slot.
+
+- `waitcommand` waits for command from the client. State changes to
+  `loading` when receiving `LOAD_APP`, which also sets the size of the
+  number of data blocks to expect. After that we expect several
+  `LOAD_APP_DATA` commands until the last block is received, when
+  state is changed to `running`.
+
+- `compute_cdi`: The the Compound Device Identifier (CDI) is computed
+  and we go to `starting`.
+
+- `starting`: Clean up firmware data structures, enable the system
+    calls, and start the app, which ends the firmware state machine.
+    Hardware guarantees that we leave firmware mode automatically when
+    the program counter leaves ROM.
+
+After `starting` the device app is now running in application mode. We
+can, however, return to firmware mode (excepting access to the UDS) by
+doing system calls. Note that ROM is still readable, but is now
+hardware protected from execution, except through the system call
+mechanism.
 
 ### Golden path
 
-Firmware loads the application at the start of RAM (`0x4000_0000`). It
-use a part of the special FW\_RAM for its own stack.
+Firmware loads the application at the start of RAM (`0x4000_0000`)
+from either flash or the UART. It use a part of the special FW\_RAM
+for its own stack.
 
 When reset is released, the CPU starts executing the firmware. It
 begins in `start.S` by clearing all CPU registers, clears all FW\_RAM,
@@ -186,54 +259,101 @@ the system calls, but the handler is not yet enabled.
 
 Beginning at `main()` it fills the entire RAM with pseudo random data
 and setting up the RAM address and data hardware scrambling with
-values from the True Random Number Generator (TRNG). It then waits for
-data coming in through the UART.
+values from the True Random Number Generator (TRNG).
 
-Typical expected use scenario:
+1. Check the special resetinfo area in FW\_RAM to see if there is any
+   data about why a reset has been made. All zeroes(?) meaning default
+   behaviour.
 
-  1. The client sends the `FW_CMD_LOAD_APP` command with the size of
-     the device app and the optional 32 byte hash of the user-supplied
-     secret as arguments and gets a `FW_RSP_LOAD_APP` back. After
-     using this it's not possible to restart the loading of an
-     application.
+2. If it was reset with intention to start a device app from client,
+   see App loaded from client below.
 
-  2. If the the client receive a sucessful response, it will send
-     multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
-     full application.
+3. Default is to start the first device app from flash. If resetinfo
+   says otherwise it starts the other one.
 
-  3. On receiving`FW_CMD_LOAD_APP_DATA` commands the firmware places
-     the data into `0x4000_0000` and upwards. The firmware replies
-     with a `FW_RSP_LOAD_APP_DATA` response to the client for each
-     received block except the last data block.
+4. Load flash app into RAM without USS.
 
-  4. When the final block of the application image is received with a
-     `FW_CMD_LOAD_APP_DATA`, the firmware measure the application by
-     computing a BLAKE2s digest over the entire application. Then
-     firmware send back the `FW_RSP_LOAD_APP_DATA_READY` response
-     containing the digest.
+5. Compute digest of loaded app.
 
-  5. The Compound Device Identifier
-     ([CDI]((#compound-device-identifier-computation))) is then
-     computed by doing a new BLAKE2s using the Unique Device Secret
-     (UDS), the application digest, and any User Supplied Secret
-     (USS) digest already received.
+6. Compare against stored app digest in partition table to note if app
+   has been corrupted on flash. If corrupted, halt CPU.
 
-  6. The start address of the device app, currently `0x4000_0000`, is
-     written to `APP_ADDR` and the size of the binary to `APP_SIZE` to
-     let the device application know where it is loaded and how large
-     it is, if it wants to relocate in RAM.
+7. Proceed to [Start the device app](#start-the-device-app) below.
 
-  7. The firmware now clears the part of the special `FW_RAM` where it
-     keeps it stack.
+If the app is the first set in a chain, it's the job of the app itself
+to reset the TKey when it has done its job. For instance, a verified
+boot loader app:
 
-  8. The interrupt handler for system calls is enabled.
+- includes a security policy, for instance a public key and code to
+  check a signature.
 
-  9. Firmware starts the application by jumping to the contents of
-     `APP_ADDR`. Hardware automatically switches from firmware mode to
-     application mode. In this mode some memory access is restricted,
-     e.g. some addresses are inaccessible (`UDS`), and some are
-     switched from read/write to read-only (see [the memory
-     map](https://dev.tillitis.se/memory/)).
+- the app reads the message and the signature over the message (the
+  digest of the next app in the chain) from the filesystem or from
+  the client.
+
+- if the signature provided over the message is verified to be done
+  by the corresponding private key, this app would do a `reset()`,
+  passing the digest to the firmware for control and instructing it
+  to start *just* that app.
+
+- firmware would see the instructions about the reset in FW\_RAM:
+
+  1. Where to expect the next app from: client, a slot in the
+     filesystem?
+  2. The expected digest of the next app.
+
+#### App loaded from client
+
+Firmware waits for data coming in through the UART.
+
+1. The client sends the `FW_CMD_LOAD_APP` command with the size of
+   the device app and the optional 32 byte hash of the user-supplied
+   secret as arguments and gets a `FW_RSP_LOAD_APP` back. After
+   using this it's not possible to restart the loading of an
+   application.
+
+2. If the the client receive a sucessful response, it will send
+   multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
+   full application.
+
+3. On receiving`FW_CMD_LOAD_APP_DATA` commands the firmware places
+   the data into `0x4000_0000` and upwards. The firmware replies
+   with a `FW_RSP_LOAD_APP_DATA` response to the client for each
+   received block except the last data block.
+
+4. When the final block of the application image is received with a
+   `FW_CMD_LOAD_APP_DATA`, the firmware measure the application by
+   computing a BLAKE2s digest over the entire application. Then
+   firmware send back the `FW_RSP_LOAD_APP_DATA_READY` response
+   containing the digest.
+
+#### Start the device app
+
+1. If there is an app digest in the resetinfo left from previous app,
+   compare the digests. Halt CPU if differences.
+
+2. The Compound Device Identifier
+   ([CDI]((#compound-device-identifier-computation))) is then computed
+   by doing a new BLAKE2s using the Unique Device Secret (UDS), the
+   application digest, and any User Supplied Secret (USS) digest
+   already received.
+
+3. The start address of the device app, currently `0x4000_0000`, is
+   written to `APP_ADDR` and the size of the binary to `APP_SIZE` to
+   let the device application know where it is loaded and how large it
+   is, if it wants to relocate in RAM.
+
+4. The firmware now clears the part of the special `FW_RAM` where it
+   keeps it stack.
+
+5. The interrupt handler for system calls is enabled.
+
+6. Firmware starts the application by jumping to the contents of
+   `APP_ADDR`. Hardware automatically switches from firmware mode to
+   application mode. In this mode some memory access is restricted,
+   e.g. some addresses are inaccessible (`UDS`), and some are switched
+   from read/write to read-only (see [the memory
+   map](https://dev.tillitis.se/memory/)).
 
 If during this whole time any commands are received which are not
 allowed in the current state, or any errors occur, we enter the

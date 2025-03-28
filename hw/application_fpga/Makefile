@@ -126,7 +126,15 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/proto.o \
 	$(P)/fw/tk1/blake2s/blake2s.o \
 	$(P)/fw/tk1/syscall_enable.o \
-	$(P)/fw/tk1/syscall_handler.o
+	$(P)/fw/tk1/syscall_handler.o \
+	$(P)/fw/tk1/spi.o \
+	$(P)/fw/tk1/flash.o \
+	$(P)/fw/tk1/storage.o \
+	$(P)/fw/tk1/partition_table.o \
+	$(P)/fw/tk1/auth_app.o \
+	$(P)/fw/tk1/rng.o \
+	$(P)/fw/tk1/preload_app.o \
+	$(P)/fw/tk1/mgmt_app.o
 
 FIRMWARE_SOURCES = \
 	$(P)/fw/tk1/main.c \
@@ -187,7 +195,7 @@ tkey-libs:
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
-#firmware.elf: CFLAGS += -DTKEY_DEBUG
+# firmware.elf: CFLAGS += -DTKEY_DEBUG
 firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
@@ -196,6 +204,9 @@ simfirmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 qemu_firmware.elf: CFLAGS += -DQEMU_DEBUG
+qemu_firmware.elf: ASFLAGS += -DQEMU_DEBUG
+qemu_firmware.elf: CFLAGS += -DQEMU_SYSCALL
+qemu_firmware.elf: ASFLAGS += -DQEMU_SYSCALL
 qemu_firmware.elf: firmware.elf
 	mv firmware.elf qemu_firmware.elf
 

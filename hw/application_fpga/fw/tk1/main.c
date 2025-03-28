@@ -10,11 +10,16 @@
 #include <tkey/debug.h>
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
+#include <tkey/led.h>
 
 #include "blake2s/blake2s.h"
+#include "partition_table.h"
+#include "preload_app.h"
 #include "proto.h"
+#include "mgmt_app.h"
 #include "state.h"
 #include "syscall_enable.h"
+#include "resetinfo.h"
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -33,8 +38,12 @@ static volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER
 static volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
 static volatile uint32_t *ram_addr_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
 static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
+static volatile struct reset  *resetinfo        = (volatile struct reset  *)TK1_MMIO_RESETINFO_BASE;
 // clang-format on
 
+struct partition_table part_table;
+
+#define APP_SIZE_SLOT0 21684
 // Context for the loading of a TKey program
 struct context {
 	uint32_t left;	    // Bytes left to receive
@@ -42,6 +51,8 @@ struct context {
 	uint8_t *loadaddr;  // Where we are currently loading a TKey program
 	bool use_uss;	    // Use USS?
 	uint8_t uss[32];    // User Supplied Secret, if any
+	uint8_t flash_slot;    // App is loaded from flash slot number
+	volatile uint8_t *ver_digest; // Verify loaded app against this digest
 };
 
 static void print_hw_version(void);
@@ -56,11 +67,14 @@ static enum state initial_commands(const struct frame_header *hdr,
 static enum state loading_commands(const struct frame_header *hdr,
 				   const uint8_t *cmd, enum state state,
 				   struct context *ctx);
-static void run(const struct context *ctx);
 #if !defined(SIMULATION)
 static uint32_t xorwow(uint32_t state, uint32_t acc);
 #endif
 static void scramble_ram(void);
+static int compute_app_digest(uint8_t *digest);
+static int load_flash_app(struct partition_table *part_table,
+			  uint8_t digest[32], uint8_t slot);
+static enum state start_where(struct context *ctx);
 
 static void print_hw_version(void)
 {
@@ -300,7 +314,7 @@ static enum state loading_commands(const struct frame_header *hdr,
 			memcpy_s(&rsp[1], CMDSIZE - 1, &ctx->digest, 32);
 			fwreply(*hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
 
-			state = FW_STATE_RUN;
+			state = FW_STATE_CDI;
 			break;
 		}
 
@@ -320,12 +334,10 @@ static enum state loading_commands(const struct frame_header *hdr,
 	return state;
 }
 
-static void run(const struct context *ctx)
+static void jump_to_app(void)
 {
+	/* Start of app is always at the beginning of RAM */
 	*app_addr = TK1_RAM_BASE;
-
-	// CDI = hash(uds, hash(app), uss)
-	compute_cdi(ctx->digest, ctx->use_uss, ctx->uss);
 
 	debug_puts("Flipping to app mode!\n");
 	debug_puts("Jumping to ");
@@ -365,6 +377,29 @@ static void run(const struct context *ctx)
 	__builtin_unreachable();
 }
 
+static int load_flash_app(struct partition_table *part_table,
+			  uint8_t digest[32], uint8_t slot)
+{
+	if (slot >= N_PRELOADED_APP) {
+		return -1;
+	}
+
+	if (preload_load(part_table, slot) == -1) {
+		return -1;
+	}
+
+	*app_size = part_table->pre_app_data[slot].size;
+	if (*app_size > TK1_APP_MAX_SIZE) {
+			return -1;
+	}
+
+	int digest_err = compute_app_digest(digest);
+	assert(digest_err == 0);
+	print_digest(digest);
+
+	return 0;
+}
+
 #if !defined(SIMULATION)
 static uint32_t xorwow(uint32_t state, uint32_t acc)
 {
@@ -399,12 +434,70 @@ static void scramble_ram(void)
 	*ram_data_rand = rnd_word();
 }
 
+/* Computes the blake2s digest of the app loaded into RAM */
+static int compute_app_digest(uint8_t *digest)
+{
+	blake2s_ctx b2s_ctx = {0};
+
+	return blake2s(digest, 32, NULL, 0, (const void *)TK1_RAM_BASE,
+		       *app_size, &b2s_ctx);
+}
+
+static enum state start_where(struct context *ctx)
+{
+	// Where do we start? Read resetinfo 'startfrom'
+	switch (resetinfo->type) {
+	case START_DEFAULT:
+		// fallthrough
+	case START_FLASH1:
+		ctx->flash_slot = 0;
+		ctx->ver_digest = NULL;
+
+		return FW_STATE_LOAD_FLASH;
+
+	case START_FLASH2:
+		ctx->flash_slot = 1;
+		ctx->ver_digest = NULL;
+
+		return FW_STATE_LOAD_FLASH;
+
+	case START_FLASH1_VER:
+		ctx->flash_slot = 0;
+		ctx->ver_digest = resetinfo->app_digest;
+
+		return FW_STATE_LOAD_FLASH;
+
+	case START_FLASH2_VER:
+		ctx->flash_slot = 1;
+		ctx->ver_digest = resetinfo->app_digest;
+
+		return FW_STATE_LOAD_FLASH;
+
+	case START_CLIENT:
+		ctx->ver_digest = NULL;
+
+		return FW_STATE_WAITCOMMAND;
+
+	case START_CLIENT_VER:
+		ctx->ver_digest = resetinfo->app_digest;
+
+		return FW_STATE_WAITCOMMAND;
+
+	default:
+		debug_puts("Unknown startfrom\n");
+
+		return FW_STATE_FAIL;
+	}
+}
+
 int main(void)
 {
 	struct context ctx = {0};
 	struct frame_header hdr = {0};
 	uint8_t cmd[CMDSIZE] = {0};
 	enum state state = FW_STATE_INITIAL;
+
+	led_set(LED_BLUE);
 
 	print_hw_version();
 
@@ -418,13 +511,50 @@ int main(void)
 
 	scramble_ram();
 
+	// TODO Remove
+	// Wait for terminal program and a character to be typed
+	/*
+	enum ioend endpoint = IO_NONE;
+	uint8_t available = 0;
+	uint8_t in = 0;
+
+	if (readselect(IO_CDC, &endpoint, &available) < 0) {
+		// readselect failed! I/O broken? Just redblink.
+		assert(1 == 2);
+	}
+
+	if (read(IO_CDC, &in, 1, 1) < 0) {
+		// read failed! I/O broken? Just redblink.
+		assert(1 == 2);
+	}
+	*/
+
+	// TODO end of remove block
+
+	if (part_table_read(&part_table) != 0) {
+		// Couldn't read or create partition table
+		assert(1 != 2);
+	}
+
 #if defined(SIMULATION)
 	run(&ctx);
 #endif
 
+	// Hardocde size of slot 0
+	part_table.pre_app_data[0].size = APP_SIZE_SLOT0;
+	// part_table.pre_app_data[1].size = 0x20000;
+
+	// TODO Just start something from flash without looking in
+	// FW_RAM.
+	//state = FW_STATE_LOAD_FLASH;
+
 	for (;;) {
 		switch (state) {
 		case FW_STATE_INITIAL:
+			state = start_where(&ctx);
+			break;
+
+		case FW_STATE_WAITCOMMAND:
 			if (readcommand(&hdr, cmd, state) == -1) {
 				state = FW_STATE_FAIL;
 				break;
@@ -445,9 +575,47 @@ int main(void)
 			state = loading_commands(&hdr, cmd, state, &ctx);
 			break;
 
-		case FW_STATE_RUN:
-			run(&ctx);
-			break; // This is never reached!
+		case FW_STATE_CDI:
+			// CDI = hash(uds, hash(app), uss)
+			compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
+
+			state = FW_STATE_START;
+			break;
+
+		case FW_STATE_LOAD_FLASH:
+			if (load_flash_app(&part_table, ctx.digest, ctx.flash_slot) < 0) {
+				debug_puts("Couldn't load app from flash\n");
+				state = FW_STATE_FAIL;
+				break;
+			}
+
+			if (ctx.flash_slot != 1) {
+				if (mgmt_app_init(ctx.digest) != 0) {
+					puts(IO_CDC, "app not allowed!\r\n");
+					assert(1 == 2);
+				}
+			}
+
+			// CDI = hash(uds, hash(app), uss)
+			compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
+
+			state = FW_STATE_START;
+			break;
+
+		case FW_STATE_START:
+			if (ctx.ver_digest != NULL) {
+				print_digest(ctx.digest);
+				if (!memeq(ctx.digest, (void*)ctx.ver_digest, sizeof(ctx.digest))) {
+					debug_puts("Digests do not match\n");
+					state = FW_STATE_FAIL;
+					break;
+				}
+			}
+
+			memset((void*)resetinfo->app_digest, 0, sizeof(resetinfo->app_digest));
+
+			jump_to_app();
+			break;  // Not reached
 
 		case FW_STATE_FAIL:
 			// fallthrough
@@ -462,5 +630,6 @@ int main(void)
 
 	/*@ -compdestroy @*/
 	/* We don't care about memory leaks here. */
+
 	return (int)0xcafebabe;
 }
