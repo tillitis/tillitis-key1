@@ -26,12 +26,6 @@ int part_table_read(struct partition_table *part_table)
 
 		part_table->header.version = PART_TABLE_VERSION;
 
-		for (int i = 0; i < 4; i++) {
-			part_table->app_storage[i].addr_start =
-			    (ADDR_STORAGE_AREA + i * SIZE_STORAGE_AREA);
-			part_table->app_storage[i].size = SIZE_STORAGE_AREA;
-		}
-
 		part_table_write(part_table);
 	}
 
