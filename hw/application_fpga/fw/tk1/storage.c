@@ -142,13 +142,18 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 		return -3;
 	}
 
+	/* Cannot only erase entire sectors */
+	if (offset % 4096 != 0) {
+		return -2;
+	}
+
 	/* Cannot erase less than one sector */
 	if (size < 4096 || size > SIZE_STORAGE_AREA ||
 	    size % 4096 != 0) {
 		return -2;
 	}
 
-	if ((offset) >= SIZE_STORAGE_AREA) {
+	if ((offset + size) >= SIZE_STORAGE_AREA) {
 		return -2;
 	}
 
