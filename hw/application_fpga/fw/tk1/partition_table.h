@@ -61,8 +61,6 @@
 /*  - 1 byte status.			*/
 /*  - 16 bytes random nonce.		*/
 /*  - 16 bytes authentication tag.	*/
-/*  - 4 bytes physical start address.	*/
-/*  - 4 bytes physical end address.	*/
 
 struct auth_metadata  {
 	uint8_t nonce[16];
@@ -78,8 +76,6 @@ struct pre_loaded_app_metadata {
 struct app_storage_area {
 	uint8_t status;
 	struct auth_metadata auth;
-	uint32_t addr_start;
-	uint32_t size;
 }  __attribute__((packed));
 
 struct table_header  {

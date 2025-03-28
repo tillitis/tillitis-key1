@@ -25,6 +25,16 @@ static int get_first_empty(struct partition_table *part_table)
 	return -1;
 }
 
+static int index_to_address(int index, uint32_t *address) {
+	if ((index < 0) || (index >= N_STORAGE_AREA)) {
+		return -1;
+	}
+
+	*address = ADDR_STORAGE_AREA + index * SIZE_STORAGE_AREA;
+
+	return 0;
+}
+
 /* Returns the index of the area an app has allocated. If no area is
  * authenticated -1 is returned. */
 static int storage_get_area(struct partition_table *part_table)
@@ -55,14 +65,18 @@ int storage_allocate_area(struct partition_table *part_table)
 		return -1;
 	}
 
+	uint32_t start_address = 0;
+	int err = index_to_address(index, &start_address);
+	if (err) {
+		return -3;
+	}
+
 	/* Allocate the empty index found */
 	/* Erase area first */
 
 	/* Assumes the area is 64 KiB block aligned */
-	flash_block_64_erase(part_table->app_storage[index]
-				 .addr_start); // Erase first 64 KB block
-	flash_block_64_erase(part_table->app_storage[index].addr_start +
-			     0x10000); // Erase second 64 KB block
+	flash_block_64_erase(start_address); // Erase first 64 KB block
+	flash_block_64_erase(start_address + 0x10000); // Erase second 64 KB block
 
 	/* Write partition table lastly */
 	part_table->app_storage[index].status = 0x01;
@@ -83,13 +97,17 @@ int storage_deallocate_area(struct partition_table *part_table)
 		return -1;
 	}
 
+	uint32_t start_address = 0;
+	int err = index_to_address(index, &start_address);
+	if (err) {
+		return -3;
+	}
+
 	/* Erase area first */
 
 	/* Assumes the area is 64 KiB block aligned */
-	flash_block_64_erase(part_table->app_storage[index]
-				 .addr_start); // Erase first 64 KB block
-	flash_block_64_erase(part_table->app_storage[index].addr_start +
-			     0x10000); // Erase second 64 KB block
+	flash_block_64_erase(start_address); // Erase first 64 KB block
+	flash_block_64_erase(start_address + 0x10000); // Erase second 64 KB block
 
 	/* Clear partition table lastly */
 	part_table->app_storage[index].status = 0;
@@ -118,17 +136,23 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
+	uint32_t start_address = 0;
+	int err = index_to_address(index, &start_address);
+	if (err) {
+		return -3;
+	}
+
 	/* Cannot erase less than one sector */
-	if (size < 4096 || size > part_table->app_storage[index].size ||
+	if (size < 4096 || size > SIZE_STORAGE_AREA ||
 	    size % 4096 != 0) {
 		return -2;
 	}
 
-	if ((offset) >= part_table->app_storage[index].size) {
+	if ((offset) >= SIZE_STORAGE_AREA) {
 		return -2;
 	}
 
-	uint32_t address = part_table->app_storage[index].addr_start + offset;
+	uint32_t address = start_address + offset;
 
 	debug_puts("storage: erase addr: ");
 	debug_putinthex(address);
@@ -155,13 +179,19 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
-	if ((offset + size) > part_table->app_storage[index].size ||
+	uint32_t start_address = 0;
+	int err = index_to_address(index, &start_address);
+	if (err) {
+		return -3;
+	}
+
+	if ((offset + size) > SIZE_STORAGE_AREA ||
 	    size > 4096) {
 		/* Writing outside of area */
 		return -2;
 	}
 
-	uint32_t address = part_table->app_storage[index].addr_start + offset;
+	uint32_t address = start_address + offset;
 
 	debug_puts("storage: write to addr: ");
 	debug_putinthex(address);
@@ -182,12 +212,18 @@ int storage_read_data(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
-	if ((offset + size) > part_table->app_storage[index].size) {
+	uint32_t start_address = 0;
+	int err = index_to_address(index, &start_address);
+	if (err) {
+		return -3;
+	}
+
+	if ((offset + size) > SIZE_STORAGE_AREA) {
 		/* Reading outside of area */
 		return -2;
 	}
 
-	uint32_t address = part_table->app_storage[index].addr_start + offset;
+	uint32_t address = start_address + offset;
 
 	debug_puts("storage: read from addr: ");
 	debug_putinthex(address);

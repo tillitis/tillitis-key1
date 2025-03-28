@@ -24,8 +24,6 @@ type PartTable struct {
 			Nonce      [16]uint8
 			AuthDigest [16]uint8
 		}
-		AddrStart uint32
-		Size      uint32
 	}
 }
 
