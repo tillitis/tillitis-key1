@@ -11,6 +11,7 @@
 #include <tkey/tk1_mem.h>
 
 #include "../tk1/proto.h"
+#include "../tk1/resetinfo.h"
 #include "../tk1/syscall_num.h"
 #include "syscall.h"
 
@@ -258,7 +259,10 @@ int main(void)
 		}
 
 		if (in == '+') {
-			syscall(TK1_SYSCALL_RESET, 0, 0, 0);
+			struct reset rst;
+			memset(&rst, 0, sizeof(rst));
+			rst.type = START_DEFAULT;
+			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 		}
 
 		write(IO_CDC, &in, 1);
