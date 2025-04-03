@@ -79,10 +79,12 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 	return flash_write_data(address, data, size);
 }
 
-int preload_store_finalize(struct partition_table *part_table, size_t app_size,
+int preload_store_finalize(struct partition_table_storage *part_table_storage, size_t app_size,
 			   uint8_t app_digest[32], uint8_t app_signature[64],
 			   uint8_t to_slot)
 {
+	struct partition_table *part_table = &part_table_storage->table;
+
 	if (to_slot >= N_PRELOADED_APP) {
 		return -4;
 	}
@@ -112,13 +114,15 @@ int preload_store_finalize(struct partition_table *part_table, size_t app_size,
 	debug_putinthex(app_size);
 	debug_lf();
 
-	part_table_write(part_table);
+	part_table_write(part_table_storage);
 
 	return 0;
 }
 
-int preload_delete(struct partition_table *part_table, uint8_t slot)
+int preload_delete(struct partition_table_storage *part_table_storage, uint8_t slot)
 {
+	struct partition_table *part_table = &part_table_storage->table;
+
 	if (slot >= N_PRELOADED_APP) {
 		return -4;
 	}
@@ -141,7 +145,7 @@ int preload_delete(struct partition_table *part_table, uint8_t slot)
 	memset(part_table->pre_app_data[slot].signature, 0,
 	       sizeof(part_table->pre_app_data[slot].signature));
 
-	part_table_write(part_table);
+	part_table_write(part_table_storage);
 
 	/* Assumes the area is 64 KiB block aligned */
 	flash_block_64_erase(slot_to_start_address(slot)); // Erase first 64 KB block

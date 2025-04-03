@@ -52,8 +52,10 @@ static int storage_get_area(struct partition_table *part_table)
 
 /* Allocate a new area for an app. Returns zero if a new area is allocated, one
  * if an area already was allocated, and negative values for errors. */
-int storage_allocate_area(struct partition_table *part_table)
+int storage_allocate_area(struct partition_table_storage *part_table_storage)
 {
+	struct partition_table *part_table = &part_table_storage->table;
+
 	if (storage_get_area(part_table) != -1) {
 		/* Already has an area */
 		return 1;
@@ -82,15 +84,17 @@ int storage_allocate_area(struct partition_table *part_table)
 	part_table->app_storage[index].status = 0x01;
 	auth_app_create(&part_table->app_storage[index].auth);
 
-	part_table_write(part_table);
+	part_table_write(part_table_storage);
 
 	return 0;
 }
 
 /* Dealloacate a previously allocated storage area. Returns zero on success, and
  * non-zero on errors. */
-int storage_deallocate_area(struct partition_table *part_table)
+int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 {
+	struct partition_table *part_table = &part_table_storage->table;
+
 	int index = storage_get_area(part_table);
 	if (index == -1) {
 		/* No area to deallocate */
@@ -119,7 +123,7 @@ int storage_deallocate_area(struct partition_table *part_table)
 	    part_table->app_storage[index].auth.authentication_digest, 0x00,
 	    sizeof(part_table->app_storage[index].auth.authentication_digest));
 
-	part_table_write(part_table);
+	part_table_write(part_table_storage);
 
 	return 0;
 }

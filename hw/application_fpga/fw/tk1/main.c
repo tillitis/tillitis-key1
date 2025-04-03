@@ -41,7 +41,7 @@ static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_R
 static volatile struct reset  *resetinfo        = (volatile struct reset  *)TK1_MMIO_RESETINFO_BASE;
 // clang-format on
 
-struct partition_table part_table;
+struct partition_table_storage part_table_storage;
 
 #define APP_SIZE_SLOT0 21684
 // Context for the loading of a TKey program
@@ -531,7 +531,7 @@ int main(void)
 
 	// TODO end of remove block
 
-	if (part_table_read(&part_table) != 0) {
+	if (part_table_read(&part_table_storage) != 0) {
 		// Couldn't read or create partition table
 		assert(1 == 2);
 	}
@@ -541,7 +541,7 @@ int main(void)
 #endif
 
 	// Hardocde size of slot 0
-	part_table.pre_app_data[0].size = APP_SIZE_SLOT0;
+	part_table_storage.table.pre_app_data[0].size = APP_SIZE_SLOT0;
 	// part_table.pre_app_data[1].size = 0x20000;
 
 	// TODO Just start something from flash without looking in
@@ -583,7 +583,7 @@ int main(void)
 			break;
 
 		case FW_STATE_LOAD_FLASH:
-			if (load_flash_app(&part_table, ctx.digest, ctx.flash_slot) < 0) {
+			if (load_flash_app(&part_table_storage.table, ctx.digest, ctx.flash_slot) < 0) {
 				debug_puts("Couldn't load app from flash\n");
 				state = FW_STATE_FAIL;
 				break;

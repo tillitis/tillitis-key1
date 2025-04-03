@@ -43,6 +43,8 @@
 #define SIZE_STORAGE_AREA 0x20000UL // 128KiB
 #define N_STORAGE_AREA 4
 
+#define PART_DIGEST_SIZE 16
+
 /* Partition Table			*/
 /*- Table header			*/
 /*  - 1 bytes Version			*/
@@ -88,7 +90,12 @@ struct partition_table {
 	struct app_storage_area app_storage[N_STORAGE_AREA];
 } __attribute__((packed));
 
-int part_table_read(struct partition_table *part_table);
-int part_table_write(struct partition_table *part_table);
+struct partition_table_storage {
+	struct partition_table table;
+	uint8_t check_digest[PART_DIGEST_SIZE];
+} __attribute__((packed));
+
+int part_table_read(struct partition_table_storage *storage);
+int part_table_write(struct partition_table_storage *storage);
 
 #endif
