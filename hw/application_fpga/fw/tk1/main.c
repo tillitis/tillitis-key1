@@ -418,6 +418,9 @@ int main(void)
 
 	scramble_ram();
 
+	uint8_t select_ep_cmd[2] = { 1, IO_CDC };
+	write(IO_CH552, select_ep_cmd, sizeof(select_ep_cmd));
+
 #if defined(SIMULATION)
 	run(&ctx);
 #endif
