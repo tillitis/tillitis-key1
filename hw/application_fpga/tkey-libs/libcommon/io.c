@@ -80,9 +80,9 @@ static void write_with_header(enum ioend dest, const uint8_t *buf,
 //
 // - IO_CDC: Through the UART for the CDC endpoint, with header.
 //
-// - IO_HID: Through the UART for the HID endpoint, with header.
+// - IO_FIDO: Through the UART for the FIDO endpoint, with header.
 //
-// - IO_TKEYCTRL: Through the UART for the debug HID endpoint, with
+// - IO_DEBUG: Through the UART for the DEBUG HID endpoint, with
 //   header.
 void write(enum ioend dest, const uint8_t *buf, size_t nbytes)
 {
@@ -194,18 +194,18 @@ static int discard(size_t nbytes)
 //
 // Use like this:
 //
-//   readselect(IO_CDC|IO_HID, &endpoint, &len)
+//   readselect(IO_CDC|IO_FIDO, &endpoint, &len)
 //
-// to wait for some data from either the CDC or the HID endpoint.
+// to wait for some data from either the CDC or the FIDO endpoint.
 //
 // NOTE WELL: You need to call readselect() first, before doing any
 // calls to read().
 //
 // Only endpoints available for read are:
 //
-// - IO_TKEYCTRL
+// - IO_DEBUG
 // - IO_CDC
-// - IO_HID
+// - IO_FIDO
 //
 // If you need blocking low-level UART reads, use uart_read() instead.
 //
@@ -215,7 +215,7 @@ static int discard(size_t nbytes)
 // Returns non-zero on error.
 int readselect(int bitmask, enum ioend *endpoint, uint8_t *len)
 {
-	if (bitmask & IO_UART || bitmask & IO_QEMU) {
+	if ((bitmask & IO_UART) || (bitmask & IO_QEMU)) {
 		// Not possible to use readselect() on these
 		// endpoints.
 		return -1;

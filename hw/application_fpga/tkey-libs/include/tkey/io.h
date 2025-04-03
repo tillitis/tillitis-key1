@@ -10,15 +10,16 @@
 // I/O endpoints. Keep it as bits possible to use in a bitmask in
 // readselect().
 //
-// Note that the the TKEYCTRL, CDC, and HID should be kept the same on
+// Note that the DEBUG, CDC, and FIDO should be kept the same on
 // the CH552 side.
 enum ioend {
-	IO_NONE = 0x00,	    // No endpoint
-	IO_UART = 0x01,	    // Only destination, raw UART access
-	IO_QEMU = 0x10,	    // Only destination, QEMU debug port
-	IO_TKEYCTRL = 0x20, // HID debug port
-	IO_CDC = 0x40,	    // CDC "serial port"
-	IO_HID = 0x80,	    // HID security token
+	IO_NONE = 0x00,	 // No endpoint
+	IO_UART = 0x01,	 // Only destination, raw UART access
+	IO_QEMU = 0x02,	 // Only destination, QEMU debug port
+	IO_CH552 = 0x10, // Internal CH552 control port
+	IO_DEBUG = 0x20, // HID debug port
+	IO_CDC = 0x40,	 // CDC "serial port"
+	IO_FIDO = 0x80,	 // FIDO security token port
 };
 
 void write(enum ioend dest, const uint8_t *buf, size_t nbytes);

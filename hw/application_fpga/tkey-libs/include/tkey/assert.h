@@ -14,9 +14,8 @@
 #elif defined(TKEY_DEBUG)
 
 #define assert(expr)                                                           \
-	((expr)                                                                \
-	     ? (void)(0)                                                       \
-	     : assert_fail(IO_TKEYCTRL, #expr, __FILE__, __LINE__, __func__))
+	((expr) ? (void)(0)                                                    \
+		: assert_fail(IO_DEBUG, #expr, __FILE__, __LINE__, __func__))
 
 #else
 
