@@ -210,22 +210,59 @@ int main(void)
 	}
 	puts(IO_CDC, "\r\n");
 
+	uint8_t select_ep_cmd[2] = { 1, 0 };
+	uint8_t ep = IO_CDC;
+
 	puts(IO_CDC, "Now echoing what you type...Type + to reset device\r\n");
 	for (;;) {
-		if (readselect(IO_CDC, &endpoint, &available) < 0) {
+		if (readselect(ep, &endpoint, &available) < 0) {
 			// readselect failed! I/O broken? Just redblink.
 			assert(1 == 2);
 		}
 
-		if (read(IO_CDC, &in, 1, 1) < 0) {
+		if (read(ep, &in, 1, 1) < 0) {
 			// read failed! I/O broken? Just redblink.
 			assert(1 == 2);
 		}
 
-		if (in == '+') {
+		switch (in) {
+		case '+':
 			syscall(TK1_SYSCALL_RESET, 0);
+			break;
+		case 'F':
+			puts(ep, "\r\nEnabling FIDO HID\r\n");
+			select_ep_cmd[1] |= IO_FIDO;
+			write(IO_CH552, select_ep_cmd, sizeof(select_ep_cmd));
+			break;
+		case 'f':
+			puts(ep, "\r\nDisabling FIDO HID\r\n");
+			select_ep_cmd[1] &= ~IO_FIDO;
+			write(IO_CH552, select_ep_cmd, sizeof(select_ep_cmd));
+			break;
+		case 'D':
+			puts(ep, "\r\nEnabling DEBUG HID\r\n");
+			select_ep_cmd[1] |= IO_DEBUG;
+			write(IO_CH552, select_ep_cmd, sizeof(select_ep_cmd));
+			break;
+		case 'd':
+			puts(ep, "\r\nDisabling DEBUG HID\r\n");
+			select_ep_cmd[1] &= ~IO_DEBUG;
+			write(IO_CH552, select_ep_cmd, sizeof(select_ep_cmd));
+			break;
+		case 's':
+			puts(IO_DEBUG, "This was sent to the DEBUG HID\n");
+			break;
+		case 'e':
+			puts(ep, "Switching to CDC\r\n");
+			ep = IO_CDC;
+			break;
+		case 'E':
+			puts(ep, "Switching to DEBUG\r\n");
+			ep = IO_DEBUG;
+			break;
+		default:
+			write(ep, &in, 1);
+			break;
 		}
-
-		write(IO_CDC, &in, 1);
 	}
 }
