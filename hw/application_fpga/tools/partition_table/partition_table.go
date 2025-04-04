@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -41,115 +40,69 @@ type PartTableStorage struct {
 type Flash struct {
 	Bitstream             [0x20000]uint8
 	PartitionTableStorage PartTableStorage
-	PartitionTablePadding [64*1024 - 365]uint8
+	PartitionTablePadding [64*1024 - 349]uint8
 	PreLoadedApp0         [0x20000]uint8
 	PreLoadedApp1         [0x20000]uint8
 	AppStorage            [4][0x20000]uint8
 	EndPadding            [0x10000]uint8
 }
 
-func readPartTableStorage(filename string) PartTableStorage {
-	var storage PartTableStorage
+func readStruct[T PartTableStorage | Flash](filename string) T {
+	var s T
 
-	tblFile, err := os.Open(filename)
+	file, err := os.Open(filename)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := binary.Read(tblFile, binary.LittleEndian, &storage); err != nil {
-		fmt.Println("binary.Read failed:", err)
+	if err := binary.Read(file, binary.LittleEndian, &s); err != nil {
+		panic(err)
 	}
 
-	tblStructLen, _ := tblFile.Seek(0, io.SeekCurrent)
-	fmt.Fprintf(os.Stderr, "INFO: Go partition table struct is %d byte long\n", tblStructLen)
-
-	return storage
-}
-
-func readPartTable(filename string) PartTable {
-	var tbl PartTable
-
-	tblFile, err := os.Open(filename)
+	sLen, err := file.Seek(0, io.SeekCurrent)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := binary.Read(tblFile, binary.LittleEndian, &tbl); err != nil {
-		fmt.Println("binary.Read failed:", err)
-	}
+	fmt.Fprintf(os.Stderr, "INFO: %T struct is %d byte long\n", *new(T), sLen)
 
-	tblStructLen, _ := tblFile.Seek(0, io.SeekCurrent)
-	fmt.Fprintf(os.Stderr, "INFO: Go partition table struct is %d byte long\n", tblStructLen)
-
-	return tbl
-}
-
-func readFlashDump(filename string) Flash {
-	var flash Flash
-
-	flashFile, err := os.Open(filename)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := binary.Read(flashFile, binary.LittleEndian, &flash); err != nil {
-		fmt.Println("binary.Read failed:", err)
-	}
-
-	flashStructLen, _ := flashFile.Seek(0, io.SeekCurrent)
-	fmt.Fprintf(os.Stderr, "INFO: Go flash table struct is %d Mbyte long\n", flashStructLen/1024/1024)
-
-	return flash
-}
-
-func printPartTableStorageJson(storage PartTableStorage) {
-	json, err := json.MarshalIndent(storage, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", string(json))
-}
-
-func printPartTableJson(tbl PartTable) {
-	partTableJSON, err := json.MarshalIndent(tbl, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%s\n", string(partTableJSON))
-}
-
-func printPartTableCondensed(storage PartTableStorage) {
-	fmt.Printf("Header\n")
-	fmt.Printf("  Version          : %d\n", storage.PartTable.Version)
-
-	for i, appData := range storage.PartTable.PreLoadedAppData {
-		fmt.Printf("Preloaded App %d\n", i)
-		fmt.Printf("  Size             : %d\n", appData.Size)
-		fmt.Printf("  Digest           : %x\n", appData.Digest[:16])
-		fmt.Printf("                     %x\n", appData.Digest[16:])
-		fmt.Printf("  Signature        : %x\n", appData.Signature[:16])
-		fmt.Printf("                     %x\n", appData.Signature[16:32])
-		fmt.Printf("                     %x\n", appData.Signature[32:48])
-		fmt.Printf("                     %x\n", appData.Signature[48:])
-	}
+	return s
 }
 
 func printPartTableStorageCondensed(storage PartTableStorage) {
+	fmt.Printf("Partition Table Storage\n")
+	fmt.Printf("  Partition Table\n")
+	fmt.Printf("    Header\n")
+	fmt.Printf("      Version          : %d\n", storage.PartTable.Version)
+
+	for i, appData := range storage.PartTable.PreLoadedAppData {
+		fmt.Printf("    Preloaded App %d\n", i)
+		fmt.Printf("      Size             : %d\n", appData.Size)
+		fmt.Printf("      Digest           : %x\n", appData.Digest[:16])
+		fmt.Printf("                         %x\n", appData.Digest[16:])
+		fmt.Printf("      Signature        : %x\n", appData.Signature[:16])
+		fmt.Printf("                         %x\n", appData.Signature[16:32])
+		fmt.Printf("                         %x\n", appData.Signature[32:48])
+		fmt.Printf("                         %x\n", appData.Signature[48:])
+	}
+	fmt.Printf("  Digest               : %x\n", storage.Digest)
 }
 
 func calculateStorageDigest(data []byte) []byte {
 	key := [16]byte{}
+
 	hash, err := blake2s.New128(key[:])
 	if err != nil {
 		panic(err)
 	}
+
 	hash.Write(data)
 	digest := hash.Sum([]byte{})
 
 	return digest
 }
 
-func generatePartTableStorage(filename string) {
+func generatePartTableStorage(outputFilename string, app0Filename string) {
 	storage := PartTableStorage{
 		PartTable: PartTable{
 			Version:          1,
@@ -158,54 +111,62 @@ func generatePartTableStorage(filename string) {
 		},
 	}
 
+	if app0Filename != "" {
+		stat, err := os.Stat(app0Filename)
+		if err != nil {
+			panic(err)
+		}
+		storage.PartTable.PreLoadedAppData[0].Size = uint32(stat.Size())
+	}
+
 	buf := make([]byte, 4096, 4096)
 	len, err := binary.Encode(buf, binary.LittleEndian, storage.PartTable)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("buf -  len: %d, data: %x\n", len, buf[:len])
 
 	digest := calculateStorageDigest(buf[:len])
 	copy(storage.Digest[:], digest)
+	fmt.Printf("digest: %x\n", digest)
 
-	storageFile, err := os.Create(filename)
+	storageFile, err := os.Create(outputFilename)
 	if err != nil {
 		panic(err)
 	}
 
 	if err := binary.Write(storageFile, binary.LittleEndian, storage); err != nil {
-		fmt.Println("binary.Write failed:", err)
+		panic(err)
 	}
 }
 
 func main() {
-	filename := ""
-	json := false
+	input := ""
+	output := ""
+	app0 := ""
 	flash := false
 
-	flag.StringVar(&filename, "i", "", "Partition table binary dump file.")
-	flag.BoolVar(&json, "j", false, "Print partition table in JSON format.")
+	flag.StringVar(&input, "i", "", "Input binary dump file. Cannot be used with -o.")
+	flag.StringVar(&output, "o", "", "Output binary dump file. Cannot be used with -i.")
+	flag.StringVar(&app0, "app0", "", "Binary in pre loaded app slot 0. Can be used with -o.")
 	flag.BoolVar(&flash, "f", false, "Treat input file as a dump of the entire flash memory.")
 	flag.Parse()
 
-	if filename == "" {
+	if (input == "" && output == "") || (input != "" && output != "") {
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	generatePartTableStorage(filename)
-	return
+	if input != "" {
+		var storage PartTableStorage
 
-	// var tbl PartTable
-
-	// if flash {
-	// 	tbl = readFlashDump(filename).PartitionTable
-	// } else {
-	// 	tbl = readPartTable(filename)
-	// }
-
-	// if json {
-	// 	printPartTableJson(tbl)
-	// } else {
-	// 	printPartTableCondensed(tbl)
-	// }
+		if flash {
+			storage = readStruct[Flash](input).PartitionTableStorage
+		} else {
+			storage = readStruct[PartTableStorage](input)
+		}
+		printPartTableStorageCondensed(storage)
+	} else if output != "" {
+		generatePartTableStorage(output, app0)
+	}
 }
