@@ -65,8 +65,25 @@ The different endpoints:
 | *Name* | *Value* | *Comment*                                                            |
 |--------|---------|----------------------------------------------------------------------|
 | DEBUG  | 0x20    | A USB HID special debug pipe. Useful for debug prints.               |
+| CH552  | 0x10    | USB controller control                                               |
 | CDC    | 0x40    | USB CDC-ACM, a serial port on the client.                            |
 | FIDO   | 0x80    | A USB FIDO security token device, useful for FIDO-type applications. |
+
+You can turn on and off different endpoints dynamically by sending
+commands to the `CH552` control endpoint. When the TKey starts only
+the `CH552` and the `CDC` endpoints are active. To change this, send a
+command to `CH552` in this form:
+
+| *Name*  | *Size* | *Comment*                     |
+|---------|--------|-------------------------------|
+| Command | 1B     | Command to the CH552 firmware |
+| Payload | 1B     | Data for the command          |
+
+Commands:
+
+| *Name*           | *Value* | *Argument*           |
+|------------------|---------|----------------------|
+| Enable endpoints | 0x01    | Bitmask of endpoints |
 
 On top of the USB Mode Protocol is [the TKey Framing
 Protocol](https://dev.tillitis.se/protocol/) which is described in the
