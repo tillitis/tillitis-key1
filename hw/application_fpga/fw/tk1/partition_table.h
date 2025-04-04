@@ -21,6 +21,7 @@
 /* storage 3	128KiB		0xB0000		*/
 /* storage 4	128KiB		0xD0000		*/
 /* ----		----		----		*/
+/* Partition2   64KiB		0xf0000         */
 
 /* To simplify all blocks are aligned with the 64KiB blocks on the W25Q80DL
  * flash. */
@@ -30,13 +31,14 @@
 #define ADDR_BITSTREAM 0UL
 #define SIZE_BITSTREAM 0x20000UL // 128KiB
 
-#define ADDR_PARTITION_TABLE (ADDR_BITSTREAM + SIZE_BITSTREAM)
+#define ADDR_PARTITION_TABLE_0 (ADDR_BITSTREAM + SIZE_BITSTREAM)
+#define ADDR_PARTITION_TABLE_1 0xf0000
 #define SIZE_PARTITION_TABLE                                                   \
 	0x10000UL // 64KiB, 60 KiB reserved, 2 flash pages (2 x 4KiB) for the
 		  // partition table
 
 #define N_PRELOADED_APP 2
-#define ADDR_PRE_LOADED_APP_0 (ADDR_PARTITION_TABLE + SIZE_PARTITION_TABLE)
+#define ADDR_PRE_LOADED_APP_0 (ADDR_PARTITION_TABLE_0 + SIZE_PARTITION_TABLE)
 #define SIZE_PRE_LOADED_APP 0x20000UL // 128KiB
 
 #define ADDR_STORAGE_AREA (ADDR_PRE_LOADED_APP_0 + (N_PRELOADED_APP * SIZE_PRE_LOADED_APP))

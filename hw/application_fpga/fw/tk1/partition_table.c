@@ -26,30 +26,42 @@ void part_digest(struct partition_table *part_table, uint8_t *out_digest, size_t
 
 int part_table_read(struct partition_table_storage *storage)
 {
+	uint32_t offset[2] = {
+		ADDR_PARTITION_TABLE_0,
+		ADDR_PARTITION_TABLE_1,
+	};
+	uint8_t check_digest[PART_DIGEST_SIZE];
+
 	flash_release_powerdown();
 	memset(storage, 0x00, sizeof(*storage));
 
-	flash_read_data(ADDR_PARTITION_TABLE, (uint8_t *)storage,
+	for (int i = 0; i < 2; i ++) {
+		flash_read_data(offset[i], (uint8_t *)storage,
 			sizeof(*storage));
+		part_digest(&storage->table, check_digest, sizeof(check_digest));
 
-	// TODO: Implement redundancy
-
-	uint8_t check_digest[PART_DIGEST_SIZE];
-	part_digest(&storage->table, check_digest, sizeof(check_digest));
-
-	if (!memeq(check_digest, storage->check_digest, sizeof(check_digest))) {
-		return -1;
+		if (memeq(check_digest, storage->check_digest, sizeof(check_digest))) {
+			return 0;
+		}
 	}
 
-	return 0;
+	return -1;
 }
 
 int part_table_write(struct partition_table_storage *storage)
 {
+	uint32_t offset[2] = {
+		ADDR_PARTITION_TABLE_0,
+		ADDR_PARTITION_TABLE_1,
+	};
+
 	part_digest(&storage->table, storage->check_digest, sizeof(storage->check_digest));
-	flash_sector_erase(ADDR_PARTITION_TABLE);
-	flash_write_data(ADDR_PARTITION_TABLE, (uint8_t *)storage,
-			 sizeof(*storage));
+
+	for (int i = 0; i < 2; i ++) {
+		flash_sector_erase(offset[i]);
+		flash_write_data(offset[i], (uint8_t *)storage,
+				 sizeof(*storage));
+	}
 
 	return 0;
 }
