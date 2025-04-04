@@ -46,6 +46,7 @@ verilated/
 *.o
 *.asc
 *.bin
+!/hw/application_fpga/tools/default_partition.bin
 *.elf
 *.map
 *.tmp
