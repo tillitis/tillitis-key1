@@ -23,6 +23,7 @@ static volatile uint8_t  *resetinfo    = (volatile uint8_t *) TK1_MMIO_RESETINFO
 // clang-format on
 
 extern struct partition_table_storage part_table_storage;
+extern uint8_t part_status;
 
 int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 			uint32_t arg3)
@@ -92,6 +93,9 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 
 	case TK1_SYSCALL_PRELOAD_GET_DIGSIG:
 		return preload_get_digsig(&part_table_storage.table, (uint8_t *)arg1, (uint8_t *)arg2, 1);
+
+	case TK1_SYSCALL_STATUS:
+		return part_get_status();
 
 	default:
 		assert(1 == 2);

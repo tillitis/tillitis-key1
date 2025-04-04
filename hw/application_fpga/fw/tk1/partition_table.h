@@ -47,6 +47,10 @@
 
 #define PART_DIGEST_SIZE 16
 
+enum part_status {
+	PART_SLOT0_INVALID = 1,
+};
+
 /* Partition Table			*/
 /*- Table header			*/
 /*  - 1 bytes Version			*/
@@ -97,6 +101,7 @@ struct partition_table_storage {
 	uint8_t check_digest[PART_DIGEST_SIZE];
 } __attribute__((packed));
 
+enum part_status part_get_status(void);
 int part_table_read(struct partition_table_storage *storage);
 int part_table_write(struct partition_table_storage *storage);
 

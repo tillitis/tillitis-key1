@@ -10,6 +10,12 @@
 #include "partition_table.h"
 #include "proto.h"
 
+static enum part_status part_status;
+
+enum part_status part_get_status(void) {
+	return part_status;
+}
+
 void part_digest(struct partition_table *part_table, uint8_t *out_digest, size_t out_len) {
 	blake2s_ctx b2s_ctx = {0};
 	int blake2err = 0;
@@ -30,8 +36,6 @@ void part_digest(struct partition_table *part_table, uint8_t *out_digest, size_t
 // It stores the partition table in storage.
 //
 // Returns negative values on errors.
-// Returns 0 if using slot 0.
-// Returns 1 if using slot 1, indicating that slot 0 failed verification.
 int part_table_read(struct partition_table_storage *storage)
 {
 	uint32_t offset[2] = {
@@ -49,7 +53,11 @@ int part_table_read(struct partition_table_storage *storage)
 		part_digest(&storage->table, check_digest, sizeof(check_digest));
 
 		if (memeq(check_digest, storage->check_digest, sizeof(check_digest))) {
-			return i;
+			if (i == 1) {
+				part_status = PART_SLOT0_INVALID;
+			}
+
+			return 0;
 		}
 	}
 
