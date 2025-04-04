@@ -20,11 +20,12 @@ else
     exit 1
 fi
 
-echo "WARNING: Will erase entire partition table."
+echo "WARNING: Will install default partition table."
 read -p "Press CTRL-C to abort. Press key to continue." -n1 -s
 
-# Erase partition table
-tillitis-iceprog -o 0x20000 -e 64k
+# Write both copies of the partition table
+tillitis-iceprog -o 128k default_partition.bin
+tillitis-iceprog -o 0xf0000 default_partition.bin
 
 # Erase existing pre loaded app
 tillitis-iceprog -o "$START_ADDRESS" -e 128k
