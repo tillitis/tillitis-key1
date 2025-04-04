@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: MIT
+
 #ifndef __IO_H__
 #define __IO_H__
 

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2021 Mullvad VPN AB <mullvad.se>
+# SPDX-FileCopyrightText: 2022 Tillitis AB <tillitis.se>
+# SPDX-License-Identifier: GPL-2.0-only
+
 import uuid
 import argparse
 import encode_usb_strings

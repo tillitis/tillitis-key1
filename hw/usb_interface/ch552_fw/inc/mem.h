@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: MIT
+
 #ifndef __MEM_PART_H__
 #define __MEM_PART_H__
 

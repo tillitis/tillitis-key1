@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 1999 WCH <wch-ic.com>
+// SPDX-FileCopyrightText: 2022 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: MIT
+
 /*--------------------------------------------------------------------------
 CH554.H
 Header file for CH554 microcontrollers.

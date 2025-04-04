@@ -42,3 +42,23 @@ https://github.com/Blinkinlabs/ch55x_programmer
 Note that the CH552 flash is only guaranteed for a few hundred flash
 cycles.
 
+## License
+
+Originally based on reference firmware for the CH552 by WCH released
+under the MIT license:
+
+https://www.wch-ic.com/
+
+The oldest files Copyright 1999.
+
+Much changed and added to by Tillitis.
+
+Check licenses using the reuse tool:
+
+https://github.com/fsfe/reuse-tool
+
+Note that so far you need to specify this directory as root, as in:
+
+```
+$ reuse --root . lint
+```

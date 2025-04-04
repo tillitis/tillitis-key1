@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2023 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: MIT
+
 #include <stdint.h>
 
 #include "ch554.h"

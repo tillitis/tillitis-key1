@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: MIT
+
 #ifndef __USB_STRINGS_H__
 #define __USB_STRINGS_H__
 

@@ -1,4 +1,8 @@
-﻿#ifndef __DEBUG_H__
+﻿// SPDX-FileCopyrightText: 2017 WCH <wch-ic.com>
+// SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: MIT
+
+#ifndef __DEBUG_H__
 #define __DEBUG_H__
 
 /* Debug */

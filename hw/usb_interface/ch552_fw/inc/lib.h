@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: MIT
+
 #ifndef __LIB_H__
 #define __LIB_H__
 

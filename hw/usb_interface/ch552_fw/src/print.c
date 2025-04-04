@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: MIT
+
 #include <stdint.h>
 #include <string.h>
 

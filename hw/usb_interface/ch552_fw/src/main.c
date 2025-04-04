@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2017 WCH <wch-ic.com>
+// SPDX-FileCopyrightText: 2022 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: MIT
+
 /********************************** (C) COPYRIGHT *******************************
  * File Name          : CDC.C
  * Author             : WCH

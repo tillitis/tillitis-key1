@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: MIT
+
 #ifndef __FLASH_H__
 #define __FLASH_H__
 
