@@ -24,6 +24,14 @@ void part_digest(struct partition_table *part_table, uint8_t *out_digest, size_t
 	assert(blake2err == 0);
 }
 
+// part_table_read reads and verifies the partition table storage,
+// first trying slot 0, then slot 1 if slot 0 does not verify.
+//
+// It stores the partition table in storage.
+//
+// Returns negative values on errors.
+// Returns 0 if using slot 0.
+// Returns 1 if using slot 1, indicating that slot 0 failed verification.
 int part_table_read(struct partition_table_storage *storage)
 {
 	uint32_t offset[2] = {
@@ -41,7 +49,7 @@ int part_table_read(struct partition_table_storage *storage)
 		part_digest(&storage->table, check_digest, sizeof(check_digest));
 
 		if (memeq(check_digest, storage->check_digest, sizeof(check_digest))) {
-			return 0;
+			return i;
 		}
 	}
 
