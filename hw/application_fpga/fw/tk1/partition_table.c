@@ -26,8 +26,6 @@ void part_digest(struct partition_table *part_table, uint8_t *out_digest, size_t
 
 int part_table_read(struct partition_table_storage *storage)
 {
-	// Read from flash, if it exists, otherwise create a new one.
-
 	flash_release_powerdown();
 	memset(storage, 0x00, sizeof(*storage));
 
@@ -42,17 +40,6 @@ int part_table_read(struct partition_table_storage *storage)
 	if (!memeq(check_digest, storage->check_digest, sizeof(check_digest))) {
 		return -1;
 	}
-
-	// if (part_table->header.version != PART_TABLE_VERSION) {
-	// 	// Partition table is not ours. Make a new one, and store it.
-	// 	memset(part_table, 0x00, sizeof(*part_table));
-
-	// 	part_table->header.version = PART_TABLE_VERSION;
-
-	// 	part_table_write(part_table);
-	// }
-
-	// Now the partition table is synced between flash and RAM.
 
 	return 0;
 }
