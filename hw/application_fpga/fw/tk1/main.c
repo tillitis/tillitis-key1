@@ -541,9 +541,6 @@ int main(void)
 	run(&ctx);
 #endif
 
-	// Hardocde size of slot 0
-	part_table_storage.table.pre_app_data[0].size = APP_SIZE_SLOT0;
-	// part_table.pre_app_data[1].size = 0x20000;
 
 	// TODO Just start something from flash without looking in
 	// FW_RAM.
