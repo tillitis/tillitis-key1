@@ -17,17 +17,6 @@ static uint32_t slot_to_start_address(uint8_t slot) {
 	return ADDR_PRE_LOADED_APP_0 + slot * SIZE_PRE_LOADED_APP;
 }
 
-/* Returns non-zero if the app is valid */
-bool preload_slot_is_free(struct partition_table *part_table,
-			     uint8_t slot)
-{
-	if (slot >= N_PRELOADED_APP) {
-		return false;
-	}
-
-	return part_table->pre_app_data[slot].size == 0;
-}
-
 /* Loads a preloaded app from flash to app RAM */
 int preload_load(struct partition_table *part_table, uint8_t from_slot)
 {
@@ -36,7 +25,7 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 	}
 
 	/*Check for a valid app in flash	*/
-	if (preload_slot_is_free(part_table, from_slot)) {
+	if (part_table->pre_app_data[from_slot].size == 0) {
 		return -1;
 	}
 	uint8_t *loadaddr = (uint8_t *)TK1_RAM_BASE;
@@ -55,13 +44,17 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 int preload_store(struct partition_table *part_table, uint32_t offset,
 		  uint8_t *data, size_t size, uint8_t to_slot)
 {
+	if (to_slot >= N_PRELOADED_APP) {
+		return -4;
+	}
+
 	/* Check if we are allowed to store */
 	if (!mgmt_app_authenticate()) {
 		return -3;
 	}
 
 	/* Check for a valid app in flash, bale out if it already exists */
-	if (!preload_slot_is_free(part_table, to_slot)) {
+	if (part_table->pre_app_data[to_slot].size != 0) {
 		return -1;
 	}
 
@@ -95,7 +88,7 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage, s
 	}
 
 	/* Check for a valid app in flash, bale out if it already exists */
-	if (!preload_slot_is_free(part_table, to_slot)) {
+	if (part_table->pre_app_data[to_slot].size != 0) {
 		return -1;
 	}
 
@@ -133,10 +126,11 @@ int preload_delete(struct partition_table_storage *part_table_storage, uint8_t s
 	}
 
 	/*Check for a valid app in flash	*/
-	if (preload_slot_is_free(part_table, slot)) {
+	if (part_table->pre_app_data[slot].size == 0) {
+		// Nothing to do.
 		return 0;
-		// TODO: Nothing here, return zero like all is good?
 	}
+
 	part_table->pre_app_data[slot].size = 0;
 
 	memset(part_table->pre_app_data[slot].digest, 0,
