@@ -17,9 +17,9 @@
 #include "../tk1/syscall_num.h"
 
 // clang-format off
-static volatile uint32_t *system_reset = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;
-static volatile uint32_t *udi          = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
-static volatile uint8_t  *resetinfo    = (volatile uint8_t *) TK1_MMIO_RESETINFO_BASE;
+static volatile uint32_t *system_reset  = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;
+static volatile uint32_t *udi           = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
+static volatile struct reset *resetinfo = (volatile struct reset *)TK1_MMIO_RESETINFO_BASE;
 // clang-format on
 
 extern struct partition_table_storage part_table_storage;
@@ -28,13 +28,23 @@ extern uint8_t part_status;
 int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 			uint32_t arg3)
 {
+	struct reset *userreset = (struct reset *)arg1;
+
 	switch (number) {
 	case TK1_SYSCALL_RESET:
-		// TODO: Take length from user
-		memcpy((uint8_t *)resetinfo, (uint8_t *)arg1, sizeof(struct reset));
+		if (arg2 > sizeof(resetinfo->next_app_data)) {
+			return -1;
+		}
+
+		memset((void *)resetinfo, 0, sizeof(*resetinfo));
+		resetinfo->type = userreset->type;
+		memcpy((void *)resetinfo->app_digest, userreset->app_digest, 32);
+		memcpy((void *)resetinfo->next_app_data, userreset->next_app_data, arg2);
 		*system_reset = 1;
 
-		return 0;
+		// Should not be reached.
+		assert(1 == 2);
+
 	case TK1_SYSCALL_ALLOC_AREA:
 		if (storage_allocate_area(&part_table_storage) < 0) {
 			debug_puts("couldn't allocate storage area\n");
