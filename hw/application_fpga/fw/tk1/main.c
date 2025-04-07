@@ -315,7 +315,7 @@ static enum state loading_commands(const struct frame_header *hdr,
 			memcpy_s(&rsp[1], CMDSIZE - 1, &ctx->digest, 32);
 			fwreply(*hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
 
-			state = FW_STATE_CDI;
+			state = FW_STATE_START;
 			break;
 		}
 
@@ -541,11 +541,6 @@ int main(void)
 	run(&ctx);
 #endif
 
-
-	// TODO Just start something from flash without looking in
-	// FW_RAM.
-	//state = FW_STATE_LOAD_FLASH;
-
 	for (;;) {
 		switch (state) {
 		case FW_STATE_INITIAL:
@@ -573,13 +568,6 @@ int main(void)
 			state = loading_commands(&hdr, cmd, state, &ctx);
 			break;
 
-		case FW_STATE_CDI:
-			// CDI = hash(uds, hash(app), uss)
-			compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
-
-			state = FW_STATE_START;
-			break;
-
 		case FW_STATE_LOAD_FLASH:
 			if (load_flash_app(&part_table_storage.table, ctx.digest, ctx.flash_slot) < 0) {
 				debug_puts("Couldn't load app from flash\n");
@@ -594,13 +582,13 @@ int main(void)
 				}
 			}
 
-			// CDI = hash(uds, hash(app), uss)
-			compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
-
 			state = FW_STATE_START;
 			break;
 
 		case FW_STATE_START:
+			// CDI = hash(uds, hash(app), uss)
+			compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
+
 			if (ctx.ver_digest != NULL) {
 				print_digest(ctx.digest);
 				if (!memeq(ctx.digest, (void*)ctx.ver_digest, sizeof(ctx.digest))) {
