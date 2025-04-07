@@ -17,8 +17,6 @@ static volatile uint32_t *cdi = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
  * Requires that the CDI is already calculated and stored */
 static void calculate_auth_digest(uint8_t *nonce, uint8_t *auth_digest)
 {
-	/* TODO: Check so the CDI is non-zero? */
-
 	blake2s_ctx ctx = {0};
 
 	// Generate a 16 byte authentication digest
