@@ -121,6 +121,15 @@ int verify(uint8_t pubkey[32])
 	return -2;
 }
 
+void reset_from_client(void)
+{
+	struct reset rst = {0};
+
+	rst.type = START_CLIENT;
+
+	syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
+}
+
 int main(void)
 {
 	uint8_t secret_key[64];
@@ -143,7 +152,7 @@ int main(void)
 	}
 
 	puts(IO_CDC, "Hello from testloadapp! 0 = install app in slot 1, 1 = "
-		     "verify app\r\n");
+		     "verify app, 2 == load app from client\r\n");
 
 	for (;;) {
 		if (readselect(IO_CDC, &endpoint, &available) < 0) {
@@ -173,6 +182,10 @@ int main(void)
 				puts(IO_CDC, "Verified app!\r\n");
 			}
 
+			break;
+
+		case '2':
+			reset_from_client();
 			break;
 
 		default:
