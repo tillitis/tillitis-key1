@@ -43,8 +43,6 @@ static volatile struct reset  *resetinfo        = (volatile struct reset  *)TK1_
 
 struct partition_table_storage part_table_storage;
 
-#define APP_SIZE_SLOT0 34644
-
 // Context for the loading of a TKey program
 struct context {
 	uint32_t left;	    // Bytes left to receive
