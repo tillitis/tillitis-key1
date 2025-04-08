@@ -60,6 +60,7 @@ CFLAGS = \
 	-Wall \
 	-Wpedantic \
 	-Wno-language-extension-token \
+	-Wextra \
 	-flto \
 	-g \
 	-I $(LIBDIR)/include \
@@ -136,11 +137,8 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/preload_app.o \
 	$(P)/fw/tk1/mgmt_app.o
 
-FIRMWARE_SOURCES = \
-	$(P)/fw/tk1/main.c \
-	$(P)/fw/tk1/proto.c \
-	$(P)/fw/tk1/blake2s/blake2s.c \
-	$(P)/fw/tk1/syscall_handler.c
+CHECK_SOURCES = \
+	$(P)/fw/tk1/*.[ch]
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
@@ -219,7 +217,7 @@ compile_commands.json:
 
 .PHONY: check
 check:
-	clang-tidy -header-filter=.* -checks=cert-* $(FIRMWARE_SOURCES) -- $(CFLAGS)
+	clang-tidy -header-filter=.* -checks=cert-* $(CHECK_SOURCES) -- $(CFLAGS)
 
 .PHONY: splint
 splint:
@@ -235,7 +233,7 @@ splint:
 		-unreachable \
 		-unqualifiedtrans \
 		-fullinitblock \
-		$(FIRMWARE_SOURCES)
+		$(CHECK_SOURCES)
 
 testfw.elf: tkey-libs $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
