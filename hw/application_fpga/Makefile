@@ -63,7 +63,8 @@ CFLAGS = \
 	-flto \
 	-g \
 	-I $(LIBDIR)/include \
-	-I $(LIBDIR)
+	-I $(LIBDIR) \
+	-I $(LIBDIR)/blake2s
 
 AS = clang
 
@@ -124,7 +125,6 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
 	$(P)/fw/tk1/start.o \
 	$(P)/fw/tk1/proto.o \
-	$(P)/fw/tk1/blake2s/blake2s.o \
 	$(P)/fw/tk1/syscall_enable.o \
 	$(P)/fw/tk1/syscall_handler.o
 
@@ -176,7 +176,7 @@ secret:
 LDFLAGS = \
 	-T $(P)/fw/tk1/firmware.lds \
 	-Wl,--cref,-M \
-	-L $(LIBDIR) -lcommon
+	-L $(LIBDIR) -lcommon -lblake2s
 
 # Common libraries the firmware and testfw depend on. See
 # https://github.com/tillitis/tkey-libs/
