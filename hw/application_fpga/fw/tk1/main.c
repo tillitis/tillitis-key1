@@ -279,7 +279,6 @@ static enum state loading_commands(const struct frame_header *hdr,
 		ctx->left -= nbytes;
 
 		if (ctx->left == 0) {
-			blake2s_ctx b2s_ctx = {0};
 			int blake2err = 0;
 
 			debug_puts("Fully loaded ");
@@ -288,9 +287,9 @@ static enum state loading_commands(const struct frame_header *hdr,
 
 			// Compute Blake2S digest of the app,
 			// storing it for FW_STATE_RUN
-			blake2err = blake2s(&ctx->digest, 32, NULL, 0,
-					    (const void *)TK1_RAM_BASE,
-					    *app_size, &b2s_ctx);
+			blake2err =
+			    blake2s(&ctx->digest, 32, NULL, 0,
+				    (const void *)TK1_RAM_BASE, *app_size);
 			assert(blake2err == 0);
 			print_digest(ctx->digest);
 
