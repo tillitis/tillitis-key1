@@ -4,6 +4,7 @@
 #include <tkey/lib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <tkey/io.h>
 
 #include "mgmt_app.h"
 

@@ -11,8 +11,8 @@
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 #include <tkey/led.h>
+#include <blake2s/blake2s.h>
 
-#include "blake2s/blake2s.h"
 #include "partition_table.h"
 #include "preload_app.h"
 #include "proto.h"
@@ -435,10 +435,8 @@ static void scramble_ram(void)
 /* Computes the blake2s digest of the app loaded into RAM */
 static int compute_app_digest(uint8_t *digest)
 {
-	blake2s_ctx b2s_ctx = {0};
-
 	return blake2s(digest, 32, NULL, 0, (const void *)TK1_RAM_BASE,
-		       *app_size, &b2s_ctx);
+		       *app_size);
 }
 
 static enum state start_where(struct context *ctx)

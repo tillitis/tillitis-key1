@@ -17,7 +17,6 @@ enum part_status part_get_status(void) {
 }
 
 void part_digest(struct partition_table *part_table, uint8_t *out_digest, size_t out_len) {
-	blake2s_ctx b2s_ctx = {0};
 	int blake2err = 0;
 
 	uint8_t key[16] = {
@@ -25,7 +24,7 @@ void part_digest(struct partition_table *part_table, uint8_t *out_digest, size_t
 		0, 0, 0, 0, 0, 0, 0, 0,
 	};
 	blake2err = blake2s(out_digest, out_len,
-	key, sizeof(key), part_table, sizeof(struct partition_table), &b2s_ctx);
+	key, sizeof(key), part_table, sizeof(struct partition_table));
 
 	assert(blake2err == 0);
 }
