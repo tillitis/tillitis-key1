@@ -18,12 +18,12 @@
 
 #elif defined(TKEY_DEBUG)
 
-#define debug_putchar(ch) putchar(IO_TKEYCTRL, ch)
-#define debug_lf() putchar(IO_TKEYCTRL, '\n')
-#define debug_putinthex(ch) putinthex(IO_TKEYCTRL, ch)
-#define debug_puts(s) puts(IO_TKEYCTRL, s)
-#define debug_puthex(ch) puthex(IO_TKEYCTRL, ch)
-#define debug_hexdump(buf, len) hexdump(IO_TKEYCTRL, buf, len)
+#define debug_putchar(ch) putchar(IO_DEBUG, ch)
+#define debug_lf() putchar(IO_DEBUG, '\n')
+#define debug_putinthex(ch) putinthex(IO_DEBUG, ch)
+#define debug_puts(s) puts(IO_DEBUG, s)
+#define debug_puthex(ch) puthex(IO_DEBUG, ch)
+#define debug_hexdump(buf, len) hexdump(IO_DEBUG, buf, len)
 
 #else
 

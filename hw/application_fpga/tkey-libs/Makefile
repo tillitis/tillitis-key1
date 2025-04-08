@@ -17,7 +17,7 @@ INCLUDE=include
 # either of them. You don't need to recompile tkey-libs.
 
 CFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 \
-	-mcmodel=medany -static -std=gnu99 -O2 -ffast-math -fno-common \
+	-mcmodel=medany -static -std=gnu99 -Os -ffast-math -fno-common \
 	-fno-builtin-printf -fno-builtin-putchar -nostdlib -mno-relax -flto \
 	-Wall -Werror=implicit-function-declaration \
 	-I $(INCLUDE) -I .
@@ -31,7 +31,7 @@ LDFLAGS=-T app.lds -L libcommon/ -lcommon -L libcrt0/ -lcrt0
 
 
 .PHONY: all
-all: libcrt0.a libcommon.a libmonocypher.a
+all: libcrt0.a libcommon.a libmonocypher.a libblake2s.a
 
 IMAGE=ghcr.io/tillitis/tkey-builder:4
 
@@ -48,12 +48,12 @@ libcrt0.a: libcrt0/crt0.o
 	$(AR) -qc $@ libcrt0/crt0.o
 
 # Common C functions
-LIBOBJS=libcommon/assert.o libcommon/blake2s.o libcommon/led.o libcommon/lib.o \
+LIBOBJS=libcommon/assert.o libcommon/led.o libcommon/lib.o \
 	libcommon/proto.o libcommon/touch.o libcommon/io.o
 
 libcommon.a: $(LIBOBJS)
 	$(AR) -qc $@ $(LIBOBJS)
-$(LIBOBJS): include/tkey/assert.h include/tkey/blake2s.h  include/tkey/led.h \
+$(LIBOBJS): include/tkey/assert.h include/tkey/led.h \
 	include/tkey/lib.h include/tkey/proto.h include/tkey/tk1_mem.h \
 	include/tkey/touch.h include/tkey/debug.h
 
@@ -63,12 +63,19 @@ libmonocypher.a: $(MONOOBJS)
 	$(AR) -qc $@ $(MONOOBJS)
 $MONOOBJS: monocypher/monocypher-ed25519.h monocypher/monocypher.h
 
+# blake2s
+B2OBJS=blake2s/blake2s.o
+libblake2s.a: $(B2OBJS)
+	$(AR) -qc $@ $(B2OBJS)
+$B2OBJS: blake2s/blake2s.h
+
 LIBS=libcrt0.a libcommon.a
 
 .PHONY: clean
 clean:
 	rm -f $(LIBS) $(LIBOBJS) libcrt0/crt0.o
 	rm -f libmonocypher.a $(MONOOBJS)
+	rm -f libblake2s.a $(B2OBJS)
 
 # Create compile_commands.json for clangd and LSP
 .PHONY: clangd

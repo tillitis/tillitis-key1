@@ -31,6 +31,7 @@
 /hw/application_fpga/tkey-libs/libcommon.a
 /hw/application_fpga/tkey-libs/libcrt0.a
 /hw/application_fpga/tkey-libs/libmonocypher.a
+/hw/application_fpga/tkey-libs/libblake2s.a
 synth.json
 synth.txt
 synth.v

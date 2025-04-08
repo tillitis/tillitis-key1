@@ -2,15 +2,37 @@
 
 ## Upcoming release
 
-NOTE WELL! Rewritten I/O functions with new semantics!
+- NOTE WELL! Rewritten I/O functions with new signatures and
+  semantics!
+- `blake2s()` with new signature.
+
+### BLAKE2s hash function
+
+The `blake2s()` function no longer call the firmware.
+
+- The `blake2s.h` header file has moved to `blake2s/blake2s.h`.
+
+- The `blake2s()` hash function has changed signature. It's now defined
+  as:
+
+  ```
+  // All-in-one convenience function.
+  int blake2s(void *out, size_t outlen,   // return buffer for digest
+      const void *key, size_t keylen,     // optional secret key
+      const void *in, size_t inlen);      // data to be hashed
+
+  ```
+
+- The component functions `blake2s_init()`, `blake2s_update()`, and
+  `blake2s_final()` are now available.
 
 ### I/O
 
 The Castor TKey hardware supports more USB endpoints:
 
 - CDC - the same thing as older versions.
-- HID security token, for FIDO-like apps.
-- CTRL, a HID debug port.
+- FIDO security token, for FIDO-like apps.
+- DEBUG, a HID debug port.
 
 The communication is still over a single UART. To differ between the
 endpoints we use an internal USB Mode Protocol between programs
@@ -18,7 +40,7 @@ running on the PicoRV32 and the CH552 USB Controller.
 
 The I/O functions has changed accordingly. Please use:
 
-- `readselect()` with appropriate bitmask (e.g. `IO_CDC|IO_HID`) to
+- `readselect()` with appropriate bitmask (e.g. `IO_CDC|IO_FIDO`) to
   see if there's anything to read in the endpoints you are interested
   in. Data from endpoints not mentioned in the bitmask will be
   discarded.
@@ -48,7 +70,7 @@ The optionally built debug prints have changed. You now use
 
 You define the debug output endpoint when you compile your program by
 including `debug.h` and defining `QEMU_DEBUG` for the qemu debug port
-or `TKEY_DEBUG` for output on the CTRL HID endpoint. If you don't
+or `TKEY_DEBUG` for output on the DEBUG HID endpoint. If you don't
 define either, they won't appear in your code.
 
 Similiarly, `assert()` now also follows `QEMU_DEBUG` or `TKEY_DEBUG`,
