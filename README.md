@@ -122,7 +122,17 @@ official version tag.
 
 Easiest is probably to just remove the tkey-libs directory and then
 git clone the desired tag. Use the entire repo, but remove the .-files
-like `.git`, `.github`, et cetera.
+like `.git`, `.github`, et cetera. Something like:
+
+```
+$ rm -rf tkey-libs
+$ git clone git@github.com:tillitis/tkey-libs.git
+$ cd tkey-libs
+$ git checkout fw-3
+```
+
+Note that you need to change the optimization flag in the tkey-libs'
+Makefile to `-Os`.
 
 ## Measured boot
 
