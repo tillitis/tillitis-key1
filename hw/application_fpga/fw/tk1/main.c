@@ -93,6 +93,7 @@ static void print_digest(uint8_t *md)
 	for (int j = 0; j < 4; j++) {
 		for (int i = 0; i < 8; i++) {
 			debug_puthex(md[i + 8 * j]);
+			(void)md;
 		}
 		debug_lf();
 	}
