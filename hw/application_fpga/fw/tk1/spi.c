@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 #include "spi.h"
+#include <tkey/assert.h>
 #include <tkey/tk1_mem.h>
 
 #include <stddef.h>
@@ -33,6 +34,8 @@ static void spi_disable(void)
 
 static void spi_write(uint8_t *cmd, size_t size)
 {
+	assert(cmd != NULL);
+
 	for (size_t i = 0; i < size; i++) {
 		while (!spi_ready()) {
 		}
@@ -47,6 +50,7 @@ static void spi_write(uint8_t *cmd, size_t size)
 
 static void spi_read(uint8_t *buf, size_t size)
 {
+	assert(buf != NULL);
 
 	while (!spi_ready()) {
 	}

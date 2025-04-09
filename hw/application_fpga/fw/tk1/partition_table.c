@@ -23,6 +23,10 @@ void part_digest(struct partition_table *part_table, uint8_t *out_digest, size_t
 		0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0,
 	};
+
+	assert(part_table != NULL);
+	assert(out_digest != NULL);
+
 	blake2err = blake2s(out_digest, out_len,
 	key, sizeof(key), part_table, sizeof(struct partition_table));
 
@@ -42,6 +46,10 @@ int part_table_read(struct partition_table_storage *storage)
 		ADDR_PARTITION_TABLE_1,
 	};
 	uint8_t check_digest[PART_DIGEST_SIZE];
+
+	if (storage == NULL) {
+		return -1;
+	}
 
 	flash_release_powerdown();
 	memset(storage, 0x00, sizeof(*storage));
@@ -69,6 +77,10 @@ int part_table_write(struct partition_table_storage *storage)
 		ADDR_PARTITION_TABLE_0,
 		ADDR_PARTITION_TABLE_1,
 	};
+
+	if (storage == NULL) {
+		return -1;
+	}
 
 	part_digest(&storage->table, storage->check_digest, sizeof(storage->check_digest));
 

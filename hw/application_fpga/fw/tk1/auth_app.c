@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <tkey/assert.h>
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 
@@ -17,6 +18,9 @@ static volatile uint32_t *cdi = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
  * Requires that the CDI is already calculated and stored */
 static void calculate_auth_digest(uint8_t *nonce, uint8_t *auth_digest)
 {
+	assert(nonce != NULL);
+	assert(auth_digest != NULL);
+
 	blake2s_ctx ctx = {0};
 
 	// Generate a 16 byte authentication digest
@@ -29,6 +33,7 @@ static void calculate_auth_digest(uint8_t *nonce, uint8_t *auth_digest)
 /* Generates a 16 byte nonce */
 static void generate_nonce(uint32_t *nonce)
 {
+	assert(nonce != NULL);
 
 	for (uint8_t i = 0; i < 4; i++) {
 		nonce[i] = rng_get_word();
@@ -39,6 +44,8 @@ static void generate_nonce(uint32_t *nonce)
  * already calculated and stored */
 void auth_app_create(struct auth_metadata *auth_table)
 {
+	assert(auth_table != NULL);
+
 	uint8_t nonce[16];
 	uint8_t auth_digest[16];
 
@@ -54,6 +61,8 @@ void auth_app_create(struct auth_metadata *auth_table)
 
 bool auth_app_authenticate(struct auth_metadata *auth_table)
 {
+	assert(auth_table != NULL);
+
 	uint8_t auth_digest[16];
 
 	calculate_auth_digest(auth_table->nonce, auth_digest);

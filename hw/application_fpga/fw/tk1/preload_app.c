@@ -20,6 +20,10 @@ static uint32_t slot_to_start_address(uint8_t slot) {
 /* Loads a preloaded app from flash to app RAM */
 int preload_load(struct partition_table *part_table, uint8_t from_slot)
 {
+	if (part_table == NULL) {
+		return -5;
+	}
+
 	if (from_slot >= N_PRELOADED_APP) {
 		return -4;
 	}
@@ -44,6 +48,10 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 int preload_store(struct partition_table *part_table, uint32_t offset,
 		  uint8_t *data, size_t size, uint8_t to_slot)
 {
+	if (part_table == NULL || data == NULL) {
+		return -5;
+	}
+
 	if (to_slot >= N_PRELOADED_APP) {
 		return -4;
 	}
@@ -77,6 +85,10 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage, s
 			   uint8_t to_slot)
 {
 	struct partition_table *part_table = &part_table_storage->table;
+
+	if (part_table == NULL || app_digest == NULL || app_signature == NULL) {
+		return -5;
+	}
 
 	if (to_slot >= N_PRELOADED_APP) {
 		return -4;
@@ -116,6 +128,10 @@ int preload_delete(struct partition_table_storage *part_table_storage, uint8_t s
 {
 	struct partition_table *part_table = &part_table_storage->table;
 
+	if (part_table_storage == NULL) {
+		return -5;
+	}
+
 	if (slot >= N_PRELOADED_APP) {
 		return -4;
 	}
@@ -149,6 +165,10 @@ int preload_delete(struct partition_table_storage *part_table_storage, uint8_t s
 }
 
 int preload_get_digsig(struct partition_table *part_table, uint8_t app_digest[32], uint8_t app_signature[64], uint8_t slot) {
+	if (part_table == NULL || app_digest == NULL || app_signature == NULL) {
+		return -5;
+	}
+
 	if (slot >= N_PRELOADED_APP) {
 		return -4;
 	}

@@ -16,6 +16,9 @@
  * returned. */
 static int get_first_empty(struct partition_table *part_table)
 {
+	if (part_table == NULL) {
+		return -4;
+	}
 
 	for (uint8_t i = 0; i < N_STORAGE_AREA; i++) {
 		if (part_table->app_storage[i].status == 0x00) {
@@ -26,6 +29,10 @@ static int get_first_empty(struct partition_table *part_table)
 }
 
 static int index_to_address(int index, uint32_t *address) {
+	if (address == NULL) {
+		return -4;
+	}
+
 	if ((index < 0) || (index >= N_STORAGE_AREA)) {
 		return -1;
 	}
@@ -39,6 +46,10 @@ static int index_to_address(int index, uint32_t *address) {
  * authenticated -1 is returned. */
 static int storage_get_area(struct partition_table *part_table)
 {
+	if (part_table == NULL) {
+		return -4;
+	}
+
 	for (uint8_t i = 0; i < N_STORAGE_AREA; i++) {
 		if (part_table->app_storage[i].status != 0x00) {
 			if (auth_app_authenticate(
@@ -54,6 +65,10 @@ static int storage_get_area(struct partition_table *part_table)
  * if an area already was allocated, and negative values for errors. */
 int storage_allocate_area(struct partition_table_storage *part_table_storage)
 {
+	if (part_table_storage == NULL) {
+		return -4;
+	}
+
 	struct partition_table *part_table = &part_table_storage->table;
 
 	if (storage_get_area(part_table) != -1) {
@@ -93,6 +108,10 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
  * non-zero on errors. */
 int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 {
+	if (part_table_storage == NULL) {
+		return -4;
+	}
+
 	struct partition_table *part_table = &part_table_storage->table;
 
 	int index = storage_get_area(part_table);
@@ -134,6 +153,10 @@ int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 			 size_t size)
 {
+	if (part_table == NULL) {
+		return -4;
+	}
+
 	int index = storage_get_area(part_table);
 	if (index == -1) {
 		/* No allocated area */
@@ -182,6 +205,10 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 int storage_write_data(struct partition_table *part_table, uint32_t offset,
 		       uint8_t *data, size_t size)
 {
+	if (part_table == NULL || data == NULL) {
+		return -4;
+	}
+
 	int index = storage_get_area(part_table);
 	if (index == -1) {
 		/* No allocated area */
@@ -215,6 +242,10 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 int storage_read_data(struct partition_table *part_table, uint32_t offset,
 		      uint8_t *data, size_t size)
 {
+	if (part_table == NULL || data == NULL) {
+		return -4;
+	}
+
 	int index = storage_get_area(part_table);
 	if (index == -1) {
 		/* No allocated area */

@@ -21,6 +21,10 @@ static const uint8_t allowed_app_digest[32] = {
 static uint8_t current_app_digest[32];
 
 int mgmt_app_init(uint8_t app_digest[32]) {
+	if (app_digest == NULL) {
+		return -1;
+	}
+
 	if (memeq(app_digest, allowed_app_digest, 32)) {
 		memcpy_s(current_app_digest, sizeof(current_app_digest), app_digest, 32);
 		return 0;

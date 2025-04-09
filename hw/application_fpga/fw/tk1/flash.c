@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <tkey/assert.h>
 #include <tkey/tk1_mem.h>
 
 #include "flash.h"
@@ -128,6 +129,8 @@ void flash_powerdown(void)
 
 void flash_read_manufacturer_device_id(uint8_t *device_id)
 {
+	assert(device_id != NULL);
+
 	uint8_t tx_buf[4] = {0x00};
 	tx_buf[0] = READ_MANUFACTURER_ID;
 
@@ -136,6 +139,8 @@ void flash_read_manufacturer_device_id(uint8_t *device_id)
 
 void flash_read_jedec_id(uint8_t *jedec_id)
 {
+	assert(jedec_id != NULL);
+
 	uint8_t tx_buf = READ_JEDEC_ID;
 
 	spi_transfer(&tx_buf, sizeof(tx_buf), NULL, 0, jedec_id, 3);
@@ -143,6 +148,8 @@ void flash_read_jedec_id(uint8_t *jedec_id)
 
 void flash_read_unique_id(uint8_t *unique_id)
 {
+	assert(unique_id != NULL);
+
 	uint8_t tx_buf[5] = {0x00};
 	tx_buf[0] = READ_UNIQUE_ID;
 
@@ -151,6 +158,8 @@ void flash_read_unique_id(uint8_t *unique_id)
 
 void flash_read_status(uint8_t *status_reg)
 {
+	assert(status_reg != NULL);
+
 	uint8_t tx_buf = READ_STATUS_REG_1;
 
 	spi_transfer(&tx_buf, sizeof(tx_buf), NULL, 0, status_reg, 1);
@@ -161,6 +170,10 @@ void flash_read_status(uint8_t *status_reg)
 
 int flash_read_data(uint32_t address, uint8_t *dest_buf, size_t size)
 {
+	if (dest_buf == NULL) {
+		return -1;
+	}
+
 	uint8_t tx_buf[4] = {0x00};
 	tx_buf[0] = READ_DATA;
 	tx_buf[1] = (address >> ADDR_BYTE_3_BIT) & 0xFF;
@@ -174,6 +187,10 @@ int flash_read_data(uint32_t address, uint8_t *dest_buf, size_t size)
 // zero.
 int flash_write_data(uint32_t address, uint8_t *data, size_t size)
 {
+	if (data == NULL) {
+		return -1;
+	}
+
 	if (size <= 0 || size > 4096) {
 		return -1;
 	}
