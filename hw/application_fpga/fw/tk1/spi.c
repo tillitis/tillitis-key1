@@ -76,7 +76,7 @@ int spi_transfer(uint8_t *cmd, size_t cmd_size, uint8_t *tx_buf, size_t tx_size,
 
 	spi_write(cmd, cmd_size);
 
-	if (tx_buf != NULL || tx_size != 0) {
+	if (tx_buf != NULL && tx_size != 0) {
 		spi_write(tx_buf, tx_size);
 	}
 
