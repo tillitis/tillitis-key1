@@ -31,7 +31,7 @@ static void spi_disable(void)
 	*spi_en = 0;
 }
 
-static void _spi_write(uint8_t *cmd, size_t size)
+static void spi_write(uint8_t *cmd, size_t size)
 {
 	for (size_t i = 0; i < size; i++) {
 		while (!spi_ready()) {
@@ -45,7 +45,7 @@ static void _spi_write(uint8_t *cmd, size_t size)
 	}
 }
 
-static void _spi_read(uint8_t *buf, size_t size)
+static void spi_read(uint8_t *buf, size_t size)
 {
 
 	while (!spi_ready()) {
@@ -74,14 +74,14 @@ int spi_transfer(uint8_t *cmd, size_t cmd_size, uint8_t *tx_buf, size_t tx_size,
 
 	spi_enable();
 
-	_spi_write(cmd, cmd_size);
+	spi_write(cmd, cmd_size);
 
 	if (tx_buf != NULL || tx_size != 0) {
-		_spi_write(tx_buf, tx_size);
+		spi_write(tx_buf, tx_size);
 	}
 
 	if (rx_buf != NULL && rx_size != 0) {
-		_spi_read(rx_buf, rx_size);
+		spi_read(rx_buf, rx_size);
 	}
 
 	spi_disable();
