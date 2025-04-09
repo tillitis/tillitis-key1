@@ -506,26 +506,6 @@ int main(void)
 
 	scramble_ram();
 
-	// TODO Remove
-	// Wait for terminal program and a character to be typed
-	/*
-	enum ioend endpoint = IO_NONE;
-	uint8_t available = 0;
-	uint8_t in = 0;
-
-	if (readselect(IO_CDC, &endpoint, &available) < 0) {
-		// readselect failed! I/O broken? Just redblink.
-		assert(1 == 2);
-	}
-
-	if (read(IO_CDC, &in, 1, 1) < 0) {
-		// read failed! I/O broken? Just redblink.
-		assert(1 == 2);
-	}
-	*/
-
-	// TODO end of remove block
-
 	if (part_table_read(&part_table_storage) != 0) {
 		// Couldn't read or create partition table
 		assert(1 == 2);
@@ -571,7 +551,7 @@ int main(void)
 
 			if (ctx.flash_slot != 1) {
 				if (mgmt_app_init(ctx.digest) != 0) {
-					puts(IO_CDC, "app not allowed!\r\n");
+					debug_puts("app not allowed!\n");
 					assert(1 == 2);
 				}
 			}
