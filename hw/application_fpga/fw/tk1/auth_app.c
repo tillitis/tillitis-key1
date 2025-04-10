@@ -47,8 +47,8 @@ void auth_app_create(struct auth_metadata *auth_table)
 {
 	assert(auth_table != NULL);
 
-	uint8_t nonce[16];
-	uint8_t auth_digest[16];
+	uint8_t nonce[16] = {0};
+	uint8_t auth_digest[16] = {0};
 
 	generate_nonce((uint32_t *)nonce);
 
@@ -64,7 +64,7 @@ bool auth_app_authenticate(struct auth_metadata *auth_table)
 {
 	assert(auth_table != NULL);
 
-	uint8_t auth_digest[16];
+	uint8_t auth_digest[16] = {0};
 
 	calculate_auth_digest(auth_table->nonce, auth_digest);
 
