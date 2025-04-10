@@ -447,25 +447,25 @@ static enum state start_where(struct context *ctx)
 	switch (resetinfo->type) {
 	case START_DEFAULT:
 		// fallthrough
-	case START_FLASH1:
+	case START_FLASH0:
 		ctx->flash_slot = 0;
 		ctx->ver_digest = NULL;
 
 		return FW_STATE_LOAD_FLASH;
 
-	case START_FLASH2:
+	case START_FLASH1:
 		ctx->flash_slot = 1;
 		ctx->ver_digest = NULL;
 
 		return FW_STATE_LOAD_FLASH;
 
-	case START_FLASH1_VER:
+	case START_FLASH0_VER:
 		ctx->flash_slot = 0;
 		ctx->ver_digest = resetinfo->app_digest;
 
 		return FW_STATE_LOAD_FLASH;
 
-	case START_FLASH2_VER:
+	case START_FLASH1_VER:
 		ctx->flash_slot = 1;
 		ctx->ver_digest = resetinfo->app_digest;
 

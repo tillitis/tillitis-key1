@@ -123,12 +123,12 @@ is also the CPU reset vector.
 
 We have a number of reset options we call `startfrom`:
 
-1. Start from flash slot 1 (default): `FLASH1`
-2. Start from flash slot 2: `FLASH2`.
+1. Start from flash slot 0 (default): `FLASH0`
+2. Start from flash slot 1: `FLASH1`.
 3. Load and start an app from flash slot 1 with a specific app hash:
-   `FLASH1_VER`
+   `FLASH0_VER`
 4. Load and start an app from flash slot 2 with a specific app hash:
-   `FLASH2_VER`.
+   `FLASH1_VER`.
 5. Load and start a new app from client: `CLIENT`.
 6. load and start an app from client with a specific app hash:
    `CLIENT_VER`.
@@ -191,10 +191,10 @@ Allowed data in state `resetinfo`:
 
 | *startfrom*  | *next state*    |
 |--------------|-----------------|
+| `FLASH0`     | `flash_loading` |
 | `FLASH1`     | `flash_loading` |
-| `FLASH2`     | `flash_loading` |
+| `FLASH0_VER` | `flash_loading` |
 | `FLASH1_VER` | `flash_loading` |
-| `FLASH2_VER` | `flash_loading` |
 | `CLIENT`     | `waitcommand`   |
 | `CLIENT_VER` | `waitcommand`   |
 

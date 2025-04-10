@@ -110,9 +110,9 @@ int verify(uint8_t pubkey[32])
 
 	puts(IO_CDC, "Resetting into pre loaded app (slot 2)...\r\n");
 
-	// syscall reset flash2_ver with app_digest
+	// syscall reset flash1_ver with app_digest
 	struct reset rst;
-	rst.type = START_FLASH2_VER;
+	rst.type = START_FLASH1_VER;
 	memcpy_s(rst.app_digest, sizeof(rst.app_digest), app_digest,
 		 sizeof(app_digest));
 	memset(rst.next_app_data, 0, sizeof(rst.next_app_data));

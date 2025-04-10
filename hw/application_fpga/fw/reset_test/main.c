@@ -110,7 +110,7 @@ int main(void)
 		case '6': {
 			uint8_t string[] = "0123456789abcdef0123456789abcdef012"
 					   "3456789abcdef0123456789abcdef";
-			rst.type = START_FLASH2_VER;
+			rst.type = START_FLASH1_VER;
 			hex_string_to_bytes(string, (uint8_t *)&rst.app_digest,
 					    sizeof(rst.app_digest));
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
@@ -120,7 +120,7 @@ int main(void)
 			uint8_t tkeylibs_example_app_digest[] =
 			    "96bb4c90603dbbbe09b9a1d7259b5e9e61bedd89a897105c30"
 			    "c9d4bf66a98d97";
-			rst.type = START_FLASH2_VER;
+			rst.type = START_FLASH1_VER;
 			hex_string_to_bytes(tkeylibs_example_app_digest,
 					    (uint8_t *)&rst.app_digest,
 					    sizeof(rst.app_digest));
