@@ -73,21 +73,32 @@ int main(void)
 
 		switch (cmdbuf[0]) {
 		case '1':
+			// Reset into default state
+
 			rst.type = START_DEFAULT;
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 			break;
 
 		case '2':
+			// Reset and load app from client
+
 			rst.type = START_CLIENT;
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 			break;
 
 		case '3':
+			// Reset and load app from second flash slot
+
 			rst.type = START_FLASH1;
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 			break;
 
 		case '4': {
+			// Reset and load app from client with verification
+			// using an invalid digest.
+			//
+			// Should cause firmware to refuse to start app.
+
 			uint8_t string[] = "0123456789abcdef0123456789abcdef012"
 					   "3456789abcdef0123456789abcdef";
 			rst.type = START_CLIENT_VER;
@@ -97,6 +108,10 @@ int main(void)
 		} break;
 
 		case '5': {
+			// Reset and load app from client with verification
+			// using a digest matching the example app (blue.bin)
+			// from tkey-libs
+
 			uint8_t tkeylibs_example_app_digest[] =
 			    "96bb4c90603dbbbe09b9a1d7259b5e9e61bedd89a897105c30"
 			    "c9d4bf66a98d97";
@@ -108,6 +123,11 @@ int main(void)
 		} break;
 
 		case '6': {
+			// Reset and load app from second flash slot with
+			// verification using an invalid digest.
+			//
+			// Should cause firmware to refuse to start app.
+
 			uint8_t string[] = "0123456789abcdef0123456789abcdef012"
 					   "3456789abcdef0123456789abcdef";
 			rst.type = START_FLASH1_VER;
@@ -117,6 +137,13 @@ int main(void)
 		} break;
 
 		case '7': {
+			// Reset and load app from second flash slot with
+			// verification using a digest matching the example app
+			// (blue.bin) from tkey-libs
+			//
+			// Blue.bin has to be present on flash in the second
+			// preloaded app slot (slot 1).
+
 			uint8_t tkeylibs_example_app_digest[] =
 			    "96bb4c90603dbbbe09b9a1d7259b5e9e61bedd89a897105c30"
 			    "c9d4bf66a98d97";
