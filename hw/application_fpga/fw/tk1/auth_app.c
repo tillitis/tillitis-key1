@@ -24,7 +24,8 @@ static void calculate_auth_digest(uint8_t *nonce, uint8_t *auth_digest)
 	blake2s_ctx ctx = {0};
 
 	// Generate a 16 byte authentication digest
-	blake2s_init(&ctx, 16, NULL, 0);
+	int blake2err = blake2s_init(&ctx, 16, NULL, 0);
+	assert(blake2err == 0);
 	blake2s_update(&ctx, (const void *)cdi, 32);
 	blake2s_update(&ctx, nonce, 16);
 	blake2s_final(&ctx, auth_digest);
