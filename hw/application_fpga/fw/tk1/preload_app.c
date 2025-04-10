@@ -177,6 +177,11 @@ int preload_get_digsig(struct partition_table *part_table, uint8_t app_digest[32
 		return -4;
 	}
 
+	/* Check if we are allowed to read */
+	if (!mgmt_app_authenticate()) {
+		return -3;
+	}
+
 	memcpy_s(app_digest, 32, part_table->pre_app_data[slot].digest, sizeof(part_table->pre_app_data[slot].digest));
 	memcpy_s(app_signature, 64, part_table->pre_app_data[slot].signature, sizeof(part_table->pre_app_data[slot].signature));
 
