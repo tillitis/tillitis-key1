@@ -20,18 +20,24 @@ int install_app(uint8_t secret_key[64])
 	uint8_t app_digest[32];
 	uint8_t app_signature[64];
 	size_t app_size = sizeof(blink);
+	int ret = 0;
 
-	if (syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0) < 0) {
-		puts(IO_CDC, "couldn't delete preloaded app\r\n");
+	ret = syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0);
+
+	if (ret != 0) {
+		puts(IO_CDC, "couldn't delete preloaded app. error: 0x");
+		putinthex(IO_CDC, ret);
+		puts(IO_CDC, "\r\n");
+
 		return -1;
 	}
 
-	int err = syscall(TK1_SYSCALL_PRELOAD_STORE, 0, (uint32_t)blink,
+	ret = syscall(TK1_SYSCALL_PRELOAD_STORE, 0, (uint32_t)blink,
 			  sizeof(blink));
 
-	if (err < 0) {
-		puts(IO_CDC, "couldn't store app, error: ");
-		putinthex(IO_CDC, err);
+	if (ret != 0) {
+		puts(IO_CDC, "couldn't store app, error: 0x");
+		putinthex(IO_CDC, ret);
 		puts(IO_CDC, "\r\n");
 
 		return -1;
@@ -69,9 +75,14 @@ int install_app(uint8_t secret_key[64])
 	hexdump(IO_CDC, secret_key, 64);
 	puts(IO_CDC, "\r\n");
 
-	if (syscall(TK1_SYSCALL_PRELOAD_STORE_FIN, app_size,
-		    (uint32_t)app_digest, (uint32_t)app_signature) < 0) {
-		puts(IO_CDC, "couldn't finalize storing app\r\n");
+	ret = syscall(TK1_SYSCALL_PRELOAD_STORE_FIN, app_size,
+		      (uint32_t)app_digest, (uint32_t)app_signature);
+
+	if (ret != 0) {
+		puts(IO_CDC, "couldn't finalize storing app, error:");
+		putinthex(IO_CDC, ret);
+		puts(IO_CDC, "\r\n");
+
 		return -1;
 	}
 
@@ -82,12 +93,21 @@ int verify(uint8_t pubkey[32])
 {
 	uint8_t app_digest[32];
 	uint8_t app_signature[64];
+	int ret = 0;
 
 	// pubkey we already have
 	// read signature
 	// read digest
-	syscall(TK1_SYSCALL_PRELOAD_GET_DIGSIG, (uint32_t)app_digest,
+	ret = syscall(TK1_SYSCALL_PRELOAD_GET_DIGSIG, (uint32_t)app_digest,
 		(uint32_t)app_signature, 0);
+
+	if (ret != 0) {
+		puts(IO_CDC, "couldn't get digsig, error:");
+		putinthex(IO_CDC, ret);
+		puts(IO_CDC, "\r\n");
+
+		return -1;
+	}
 
 	puts(IO_CDC, "app_digest:\r\n");
 	hexdump(IO_CDC, app_digest, sizeof(app_digest));
@@ -105,6 +125,8 @@ int verify(uint8_t pubkey[32])
 
 	if (crypto_ed25519_check(app_signature, pubkey, app_digest,
 				  sizeof(app_digest)) != 0) {
+		puts(IO_CDC, "signature check failed\r\n");
+
 		return -1;
 	}
 
@@ -116,6 +138,7 @@ int verify(uint8_t pubkey[32])
 	memcpy_s(rst.app_digest, sizeof(rst.app_digest), app_digest,
 		 sizeof(app_digest));
 	memset(rst.next_app_data, 0, sizeof(rst.next_app_data));
+
 	syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 
 	return -2;
