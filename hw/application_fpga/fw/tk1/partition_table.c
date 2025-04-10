@@ -45,7 +45,7 @@ int part_table_read(struct partition_table_storage *storage)
 		ADDR_PARTITION_TABLE_0,
 		ADDR_PARTITION_TABLE_1,
 	};
-	uint8_t check_digest[PART_DIGEST_SIZE];
+	uint8_t check_digest[PART_DIGEST_SIZE] = {0};
 
 	if (storage == NULL) {
 		return -1;
