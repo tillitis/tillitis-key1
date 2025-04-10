@@ -222,7 +222,7 @@ check:
 .PHONY: splint
 splint:
 	splint \
-		-nolib \
+		+unixlib \
 		-predboolint \
 		+boolint \
 		-nullpass \
@@ -233,6 +233,12 @@ splint:
 		-unreachable \
 		-unqualifiedtrans \
 		-fullinitblock \
+		+gnuextensions \
+		-fixedformalarray \
+		-mustfreeonly \
+		-I $(LIBDIR)/include \
+		-I $(LIBDIR) \
+		-I $(LIBDIR)/blake2s \
 		$(CHECK_SOURCES)
 
 testfw.elf: tkey-libs $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
