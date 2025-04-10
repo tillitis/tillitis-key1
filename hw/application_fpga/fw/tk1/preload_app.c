@@ -119,7 +119,9 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage, s
 	debug_putinthex(app_size);
 	debug_lf();
 
-	part_table_write(part_table_storage);
+	if (part_table_write(part_table_storage) != 0) {
+		return -6;
+	}
 
 	return 0;
 }
@@ -149,13 +151,15 @@ int preload_delete(struct partition_table_storage *part_table_storage, uint8_t s
 
 	part_table->pre_app_data[slot].size = 0;
 
-	memset(part_table->pre_app_data[slot].digest, 0,
-	       sizeof(part_table->pre_app_data[slot].digest));
+	(void)memset(part_table->pre_app_data[slot].digest, 0,
+		     sizeof(part_table->pre_app_data[slot].digest));
 
-	memset(part_table->pre_app_data[slot].signature, 0,
-	       sizeof(part_table->pre_app_data[slot].signature));
+	(void)memset(part_table->pre_app_data[slot].signature, 0,
+		     sizeof(part_table->pre_app_data[slot].signature));
 
-	part_table_write(part_table_storage);
+	if (part_table_write(part_table_storage) != 0) {
+		return -6;
+	}
 
 	/* Assumes the area is 64 KiB block aligned */
 	flash_block_64_erase(slot_to_start_address(slot)); // Erase first 64 KB block

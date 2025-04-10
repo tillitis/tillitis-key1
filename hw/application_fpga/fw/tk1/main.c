@@ -51,7 +51,7 @@ struct context {
 	bool use_uss;	    // Use USS?
 	uint8_t uss[32];    // User Supplied Secret, if any
 	uint8_t flash_slot;    // App is loaded from flash slot number
-	volatile uint8_t *ver_digest; // Verify loaded app against this digest
+	/*@null@*/ volatile uint8_t *ver_digest; // Verify loaded app against this digest
 };
 
 static void print_hw_version(void);
@@ -575,7 +575,7 @@ int main(void)
 				}
 			}
 
-			memset((void*)resetinfo->app_digest, 0, sizeof(resetinfo->app_digest));
+			(void)memset((void*)resetinfo->app_digest, 0, sizeof(resetinfo->app_digest));
 
 			jump_to_app();
 			break;  // Not reached

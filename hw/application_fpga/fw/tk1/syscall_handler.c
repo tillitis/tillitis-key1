@@ -36,7 +36,7 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 			return -1;
 		}
 
-		memset((void *)resetinfo, 0, sizeof(*resetinfo));
+		(void)memset((void *)resetinfo, 0, sizeof(*resetinfo));
 		resetinfo->type = userreset->type;
 		memcpy((void *)resetinfo->app_digest, userreset->app_digest, 32);
 		memcpy((void *)resetinfo->next_app_data, userreset->next_app_data, arg2);
@@ -44,6 +44,7 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 
 		// Should not be reached.
 		assert(1 == 2);
+		break;
 
 	case TK1_SYSCALL_ALLOC_AREA:
 		if (storage_allocate_area(&part_table_storage) < 0) {

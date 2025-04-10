@@ -39,9 +39,6 @@
 #define STATUS_REG_BUSY_BIT 0
 #define STATUS_REG_WEL_BIT 1
 
-bool flash_is_busy(void);
-void flash_wait_busy(void);
-void flash_write_enable(void);
 void flash_write_disable(void);
 void flash_sector_erase(uint32_t address);
 void flash_block_32_erase(uint32_t address);

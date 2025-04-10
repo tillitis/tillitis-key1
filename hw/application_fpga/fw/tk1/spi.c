@@ -14,10 +14,16 @@ static volatile uint32_t *spi_xfer =       (volatile uint32_t *)(TK1_MMIO_TK1_BA
 static volatile uint32_t *spi_data =       (volatile uint32_t *)(TK1_MMIO_TK1_BASE | 0x208);
 // clang-format on
 
+static int spi_ready(void);
+static void spi_enable(void);
+static void spi_disable(void);
+static void spi_write(uint8_t *cmd, size_t size);
+static void spi_read(uint8_t *buf, size_t size);
+
 // returns non-zero when the SPI-master is ready, and zero if not
 // ready. This can be used to check if the SPI-master is available
 // in the hardware.
-int spi_ready(void)
+static int spi_ready(void)
 {
 	return *spi_xfer;
 }

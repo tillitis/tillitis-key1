@@ -99,7 +99,9 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 	part_table->app_storage[index].status = 0x01;
 	auth_app_create(&part_table->app_storage[index].auth);
 
-	part_table_write(part_table_storage);
+	if (part_table_write(part_table_storage) != 0) {
+		return -5;
+	}
 
 	return 0;
 }
@@ -135,14 +137,16 @@ int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 	/* Clear partition table lastly */
 	part_table->app_storage[index].status = 0;
 
-	memset(part_table->app_storage[index].auth.nonce, 0x00,
-	       sizeof(part_table->app_storage[index].auth.nonce));
+	(void)memset(part_table->app_storage[index].auth.nonce, 0x00,
+		     sizeof(part_table->app_storage[index].auth.nonce));
 
-	memset(
-	    part_table->app_storage[index].auth.authentication_digest, 0x00,
-	    sizeof(part_table->app_storage[index].auth.authentication_digest));
+	(void)memset(
+		part_table->app_storage[index].auth.authentication_digest, 0x00,
+		sizeof(part_table->app_storage[index].auth.authentication_digest));
 
-	part_table_write(part_table_storage);
+	if (part_table_write(part_table_storage) != 0) {
+		return -5;
+	}
 
 	return 0;
 }
