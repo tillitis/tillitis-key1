@@ -440,6 +440,8 @@ static int compute_app_digest(uint8_t *digest)
 
 static enum state start_where(struct context *ctx)
 {
+	assert(ctx != NULL);
+
 	// Where do we start? Read resetinfo 'startfrom'
 	switch (resetinfo->type) {
 	case START_DEFAULT:
