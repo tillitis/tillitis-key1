@@ -118,8 +118,8 @@ int main(void)
 
 		case '7': {
 			uint8_t tkeylibs_example_app_digest[] =
-			    "a97f6ec2112067c4b5b5860521e252a095d221652f7b3d056b"
-			    "d98eaba40b4967";
+			    "96bb4c90603dbbbe09b9a1d7259b5e9e61bedd89a897105c30"
+			    "c9d4bf66a98d97";
 			rst.type = START_FLASH2_VER;
 			hex_string_to_bytes(tkeylibs_example_app_digest,
 					    (uint8_t *)&rst.app_digest,
