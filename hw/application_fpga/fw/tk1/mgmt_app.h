@@ -9,5 +9,6 @@
 
 int mgmt_app_init(uint8_t app_digest[32]);
 bool mgmt_app_authenticate(void);
+uint8_t *mgmt_app_allowed_digest(void);
 
 #endif

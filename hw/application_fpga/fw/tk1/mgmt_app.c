@@ -8,8 +8,7 @@
 
 #include "mgmt_app.h"
 
-// Locked down what app can start from first flash slot to be exactly
-// this size, producing this digest.
+// Lock down what app can start from flash slot 0.
 //
 // To update this, compute the BLAKE2s digest of the app.bin
 static const uint8_t allowed_app_digest[32] = {
@@ -25,16 +24,17 @@ int mgmt_app_init(uint8_t app_digest[32]) {
 		return -1;
 	}
 
-	if (memeq(app_digest, allowed_app_digest, 32)) {
-		memcpy_s(current_app_digest, sizeof(current_app_digest), app_digest, 32);
-		return 0;
-	}
+	memcpy_s(current_app_digest, sizeof(current_app_digest), app_digest, 32);
 
-	return -1;
+	return 0;
 }
 
 /* Authenticate an management app */
 bool mgmt_app_authenticate(void)
 {
 	return memeq(current_app_digest, allowed_app_digest, 32) != 0;
+}
+
+uint8_t *mgmt_app_allowed_digest(void) {
+	return (uint8_t *)allowed_app_digest;
 }

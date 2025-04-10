@@ -449,9 +449,9 @@ static enum state start_where(struct context *ctx)
 		// fallthrough
 	case START_FLASH0:
 		ctx->flash_slot = 0;
-		ctx->ver_digest = NULL;
+		ctx->ver_digest = mgmt_app_allowed_digest();
 
-		return FW_STATE_LOAD_FLASH;
+		return FW_STATE_LOAD_FLASH_MGMT;
 
 	case START_FLASH1:
 		ctx->flash_slot = 1;
@@ -552,11 +552,18 @@ int main(void)
 				break;
 			}
 
-			if (ctx.flash_slot != 1) {
-				if (mgmt_app_init(ctx.digest) != 0) {
-					debug_puts("app not allowed!\n");
-					assert(1 == 2);
-				}
+			state = FW_STATE_START;
+			break;
+
+		case FW_STATE_LOAD_FLASH_MGMT:
+			if (load_flash_app(&part_table_storage.table, ctx.digest, ctx.flash_slot) < 0) {
+				debug_puts("Couldn't load app from flash\n");
+				state = FW_STATE_FAIL;
+				break;
+			}
+
+			if (mgmt_app_init(ctx.digest) != 0) {
+				state = FW_STATE_FAIL;
 			}
 
 			state = FW_STATE_START;
