@@ -158,6 +158,7 @@ static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word)
 {
 	assert(bufsiz >= 4);
+	assert(buf != NULL);
 
 	buf[0] = word >> 24;
 	buf[1] = word >> 16;
