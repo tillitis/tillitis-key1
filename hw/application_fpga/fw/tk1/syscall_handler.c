@@ -6,8 +6,8 @@
 #include <stdint.h>
 #include <tkey/assert.h>
 #include <tkey/debug.h>
-#include <tkey/led.h>
 #include <tkey/lib.h>
+#include <tkey/tk1_mem.h>
 
 #include "partition_table.h"
 #include "preload_app.h"
@@ -75,9 +75,6 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 			return -1;
 		}
 
-		return 0;
-	case TK1_SYSCALL_SET_LED:
-		led_set(arg1);
 		return 0;
 	case TK1_SYSCALL_GET_VIDPID:
 		// UDI is 2 words: VID/PID & serial. Return just the
