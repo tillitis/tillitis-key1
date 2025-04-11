@@ -50,8 +50,7 @@ all: testloadapp.bin
 tkey-libs:
 	make -C $(LIBDIR)
 
-TESTLOADAPP_FMTFILES = \
-	$(P)/main.c
+TESTLOADAPP_FMTFILES = *.[ch]
 
 TESTLOADAPP_OBJS = \
 	$(P)/main.o \

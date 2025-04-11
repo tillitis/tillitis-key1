@@ -138,17 +138,18 @@ int main(void)
 
 	puts(IO_CDC, "\r\nWriting to storage area...");
 
-	uint8_t out_data[14] = { 0, 1, 2, 3, 4, 5, 6, 7, 8,
-		9, 10, 11, 12, 13 };
-	if (syscall(TK1_SYSCALL_WRITE_DATA, 0, (uint32_t)out_data, sizeof(out_data)) != 0) {
+	uint8_t out_data[14] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+	if (syscall(TK1_SYSCALL_WRITE_DATA, 0, (uint32_t)out_data,
+		    sizeof(out_data)) != 0) {
 		failmsg("Failed to write to storage area");
 	}
 	puts(IO_CDC, "done.\r\n");
 
 	puts(IO_CDC, "\r\nReading from storage area...");
 
-	uint8_t in_data[14] = { 0 };
-	if (syscall(TK1_SYSCALL_READ_DATA, 0, (uint32_t)in_data, sizeof(in_data)) != 0) {
+	uint8_t in_data[14] = {0};
+	if (syscall(TK1_SYSCALL_READ_DATA, 0, (uint32_t)in_data,
+		    sizeof(in_data)) != 0) {
 		failmsg("Failed to write to storage area");
 	}
 	if (!memeq(in_data, out_data, sizeof(in_data))) {

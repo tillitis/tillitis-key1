@@ -28,7 +28,8 @@ static int get_first_empty(struct partition_table *part_table)
 	return -1;
 }
 
-static int index_to_address(int index, uint32_t *address) {
+static int index_to_address(int index, uint32_t *address)
+{
 	if (address == NULL) {
 		return -4;
 	}
@@ -93,7 +94,8 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 
 	/* Assumes the area is 64 KiB block aligned */
 	flash_block_64_erase(start_address); // Erase first 64 KB block
-	flash_block_64_erase(start_address + 0x10000); // Erase second 64 KB block
+	flash_block_64_erase(start_address +
+			     0x10000); // Erase second 64 KB block
 
 	/* Write partition table lastly */
 	part_table->app_storage[index].status = 0x01;
@@ -132,7 +134,8 @@ int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 
 	/* Assumes the area is 64 KiB block aligned */
 	flash_block_64_erase(start_address); // Erase first 64 KB block
-	flash_block_64_erase(start_address + 0x10000); // Erase second 64 KB block
+	flash_block_64_erase(start_address +
+			     0x10000); // Erase second 64 KB block
 
 	/* Clear partition table lastly */
 	part_table->app_storage[index].status = 0;
@@ -141,8 +144,8 @@ int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 		     sizeof(part_table->app_storage[index].auth.nonce));
 
 	(void)memset(
-		part_table->app_storage[index].auth.authentication_digest, 0x00,
-		sizeof(part_table->app_storage[index].auth.authentication_digest));
+	    part_table->app_storage[index].auth.authentication_digest, 0x00,
+	    sizeof(part_table->app_storage[index].auth.authentication_digest));
 
 	if (part_table_write(part_table_storage) != 0) {
 		return -5;
@@ -179,8 +182,7 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 	}
 
 	/* Cannot erase less than one sector */
-	if (size < 4096 || size > SIZE_STORAGE_AREA ||
-	    size % 4096 != 0) {
+	if (size < 4096 || size > SIZE_STORAGE_AREA || size % 4096 != 0) {
 		return -2;
 	}
 
@@ -225,8 +227,7 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 		return -3;
 	}
 
-	if ((offset + size) > SIZE_STORAGE_AREA ||
-	    size > 4096) {
+	if ((offset + size) > SIZE_STORAGE_AREA || size > 4096) {
 		/* Writing outside of area */
 		return -2;
 	}

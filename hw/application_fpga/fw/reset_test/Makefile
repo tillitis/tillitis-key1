@@ -51,8 +51,7 @@ all: reset_test.bin
 tkey-libs:
 	make -C $(LIBDIR)
 
-RESET_TEST_FMTFILES = \
-	$(P)/main.c \
+RESET_TEST_FMTFILES = *.[ch]
 
 RESET_TEST_OBJS = \
 	$(P)/main.o \

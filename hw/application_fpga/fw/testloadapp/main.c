@@ -1,9 +1,9 @@
 #include <blake2s/blake2s.h>
 #include <monocypher/monocypher-ed25519.h>
 #include <stdint.h>
+#include <tkey/debug.h>
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
-#include <tkey/debug.h>
 
 #include "../testapp/syscall.h"
 #include "../tk1/resetinfo.h"
@@ -33,7 +33,7 @@ int install_app(uint8_t secret_key[64])
 	}
 
 	ret = syscall(TK1_SYSCALL_PRELOAD_STORE, 0, (uint32_t)blink,
-			  sizeof(blink));
+		      sizeof(blink));
 
 	if (ret != 0) {
 		puts(IO_CDC, "couldn't store app, error: 0x");
@@ -99,7 +99,7 @@ int verify(uint8_t pubkey[32])
 	// read signature
 	// read digest
 	ret = syscall(TK1_SYSCALL_PRELOAD_GET_DIGSIG, (uint32_t)app_digest,
-		(uint32_t)app_signature, 0);
+		      (uint32_t)app_signature, 0);
 
 	if (ret != 0) {
 		puts(IO_CDC, "couldn't get digsig, error:");
@@ -124,7 +124,7 @@ int verify(uint8_t pubkey[32])
 	puts(IO_CDC, "Checking signature...\r\n");
 
 	if (crypto_ed25519_check(app_signature, pubkey, app_digest,
-				  sizeof(app_digest)) != 0) {
+				 sizeof(app_digest)) != 0) {
 		puts(IO_CDC, "signature check failed\r\n");
 
 		return -1;

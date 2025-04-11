@@ -38,8 +38,10 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 
 		(void)memset((void *)resetinfo, 0, sizeof(*resetinfo));
 		resetinfo->type = userreset->type;
-		memcpy((void *)resetinfo->app_digest, userreset->app_digest, 32);
-		memcpy((void *)resetinfo->next_app_data, userreset->next_app_data, arg2);
+		memcpy((void *)resetinfo->app_digest, userreset->app_digest,
+		       32);
+		memcpy((void *)resetinfo->next_app_data,
+		       userreset->next_app_data, arg2);
 		*system_reset = 1;
 
 		// Should not be reached.
@@ -61,16 +63,16 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 
 		return 0;
 	case TK1_SYSCALL_WRITE_DATA:
-		if (storage_write_data(&part_table_storage.table, arg1, (uint8_t *)arg2,
-				       arg3) < 0) {
+		if (storage_write_data(&part_table_storage.table, arg1,
+				       (uint8_t *)arg2, arg3) < 0) {
 			debug_puts("couldn't write storage area\n");
 			return -1;
 		}
 
 		return 0;
 	case TK1_SYSCALL_READ_DATA:
-		if (storage_read_data(&part_table_storage.table, arg1, (uint8_t *)arg2,
-				       arg3) < 0) {
+		if (storage_read_data(&part_table_storage.table, arg1,
+				      (uint8_t *)arg2, arg3) < 0) {
 			debug_puts("couldn't read storage area\n");
 			return -1;
 		}
@@ -90,17 +92,21 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 		// arg2 data
 		// arg3 size
 		// always using slot 1
-		return preload_store(&part_table_storage.table, arg1, (uint8_t *)arg2, arg3, 1);
+		return preload_store(&part_table_storage.table, arg1,
+				     (uint8_t *)arg2, arg3, 1);
 
 	case TK1_SYSCALL_PRELOAD_STORE_FIN:
 		// arg1 app_size
 		// arg2 app_digest
 		// arg3 app_signature
 		// always using slot 1
-		return preload_store_finalize(&part_table_storage, arg1, (uint8_t *)arg2, (uint8_t *)arg3, 1);
+		return preload_store_finalize(&part_table_storage, arg1,
+					      (uint8_t *)arg2, (uint8_t *)arg3,
+					      1);
 
 	case TK1_SYSCALL_PRELOAD_GET_DIGSIG:
-		return preload_get_digsig(&part_table_storage.table, (uint8_t *)arg1, (uint8_t *)arg2, 1);
+		return preload_get_digsig(&part_table_storage.table,
+					  (uint8_t *)arg1, (uint8_t *)arg2, 1);
 
 	case TK1_SYSCALL_STATUS:
 		return part_get_status();

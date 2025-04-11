@@ -41,7 +41,8 @@
 #define ADDR_PRE_LOADED_APP_0 (ADDR_PARTITION_TABLE_0 + SIZE_PARTITION_TABLE)
 #define SIZE_PRE_LOADED_APP 0x20000UL // 128KiB
 
-#define ADDR_STORAGE_AREA (ADDR_PRE_LOADED_APP_0 + (N_PRELOADED_APP * SIZE_PRE_LOADED_APP))
+#define ADDR_STORAGE_AREA                                                      \
+	(ADDR_PRE_LOADED_APP_0 + (N_PRELOADED_APP * SIZE_PRE_LOADED_APP))
 #define SIZE_STORAGE_AREA 0x20000UL // 128KiB
 #define N_STORAGE_AREA 4
 
@@ -70,7 +71,7 @@ enum part_status {
 /*  - 16 bytes random nonce.		*/
 /*  - 16 bytes authentication tag.	*/
 
-struct auth_metadata  {
+struct auth_metadata {
 	uint8_t nonce[16];
 	uint8_t authentication_digest[16];
 } __attribute__((packed));
@@ -84,9 +85,9 @@ struct pre_loaded_app_metadata {
 struct app_storage_area {
 	uint8_t status;
 	struct auth_metadata auth;
-}  __attribute__((packed));
+} __attribute__((packed));
 
-struct table_header  {
+struct table_header {
 	uint8_t version;
 } __attribute__((packed));
 

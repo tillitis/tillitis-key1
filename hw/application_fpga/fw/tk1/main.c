@@ -3,23 +3,23 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
+#include <blake2s/blake2s.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <tkey/assert.h>
 #include <tkey/debug.h>
+#include <tkey/led.h>
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
-#include <tkey/led.h>
-#include <blake2s/blake2s.h>
 
+#include "mgmt_app.h"
 #include "partition_table.h"
 #include "preload_app.h"
 #include "proto.h"
-#include "mgmt_app.h"
+#include "resetinfo.h"
 #include "state.h"
 #include "syscall_enable.h"
-#include "resetinfo.h"
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -50,8 +50,9 @@ struct context {
 	uint8_t *loadaddr;  // Where we are currently loading a TKey program
 	bool use_uss;	    // Use USS?
 	uint8_t uss[32];    // User Supplied Secret, if any
-	uint8_t flash_slot;    // App is loaded from flash slot number
-	/*@null@*/ volatile uint8_t *ver_digest; // Verify loaded app against this digest
+	uint8_t flash_slot; // App is loaded from flash slot number
+	/*@null@*/ volatile uint8_t
+	    *ver_digest; // Verify loaded app against this digest
 };
 
 static void print_hw_version(void);
@@ -388,7 +389,7 @@ static int load_flash_app(struct partition_table *part_table,
 
 	*app_size = part_table->pre_app_data[slot].size;
 	if (*app_size > TK1_APP_MAX_SIZE) {
-			return -1;
+		return -1;
 	}
 
 	int digest_err = compute_app_digest(digest);
@@ -546,7 +547,8 @@ int main(void)
 			break;
 
 		case FW_STATE_LOAD_FLASH:
-			if (load_flash_app(&part_table_storage.table, ctx.digest, ctx.flash_slot) < 0) {
+			if (load_flash_app(&part_table_storage.table,
+					   ctx.digest, ctx.flash_slot) < 0) {
 				debug_puts("Couldn't load app from flash\n");
 				state = FW_STATE_FAIL;
 				break;
@@ -556,7 +558,8 @@ int main(void)
 			break;
 
 		case FW_STATE_LOAD_FLASH_MGMT:
-			if (load_flash_app(&part_table_storage.table, ctx.digest, ctx.flash_slot) < 0) {
+			if (load_flash_app(&part_table_storage.table,
+					   ctx.digest, ctx.flash_slot) < 0) {
 				debug_puts("Couldn't load app from flash\n");
 				state = FW_STATE_FAIL;
 				break;
@@ -575,17 +578,19 @@ int main(void)
 
 			if (ctx.ver_digest != NULL) {
 				print_digest(ctx.digest);
-				if (!memeq(ctx.digest, (void*)ctx.ver_digest, sizeof(ctx.digest))) {
+				if (!memeq(ctx.digest, (void *)ctx.ver_digest,
+					   sizeof(ctx.digest))) {
 					debug_puts("Digests do not match\n");
 					state = FW_STATE_FAIL;
 					break;
 				}
 			}
 
-			(void)memset((void*)resetinfo->app_digest, 0, sizeof(resetinfo->app_digest));
+			(void)memset((void *)resetinfo->app_digest, 0,
+				     sizeof(resetinfo->app_digest));
 
 			jump_to_app();
-			break;  // Not reached
+			break; // Not reached
 
 		case FW_STATE_FAIL:
 			// fallthrough

@@ -13,7 +13,8 @@
 #include "partition_table.h"
 #include "preload_app.h"
 
-static uint32_t slot_to_start_address(uint8_t slot) {
+static uint32_t slot_to_start_address(uint8_t slot)
+{
 	return ADDR_PRE_LOADED_APP_0 + slot * SIZE_PRE_LOADED_APP;
 }
 
@@ -36,7 +37,7 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 
 	/* Read from flash, straight into RAM */
 	int ret = flash_read_data(slot_to_start_address(from_slot), loadaddr,
-			          part_table->pre_app_data[from_slot].size);
+				  part_table->pre_app_data[from_slot].size);
 
 	return ret;
 }
@@ -80,9 +81,9 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 	return flash_write_data(address, data, size);
 }
 
-int preload_store_finalize(struct partition_table_storage *part_table_storage, size_t app_size,
-			   uint8_t app_digest[32], uint8_t app_signature[64],
-			   uint8_t to_slot)
+int preload_store_finalize(struct partition_table_storage *part_table_storage,
+			   size_t app_size, uint8_t app_digest[32],
+			   uint8_t app_signature[64], uint8_t to_slot)
 {
 	struct partition_table *part_table = &part_table_storage->table;
 
@@ -110,11 +111,11 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage, s
 
 	part_table->pre_app_data[to_slot].size = app_size;
 	memcpy_s(part_table->pre_app_data[to_slot].digest,
-		sizeof(part_table->pre_app_data[to_slot].digest),
-		app_digest, 32);
+		 sizeof(part_table->pre_app_data[to_slot].digest), app_digest,
+		 32);
 	memcpy_s(part_table->pre_app_data[to_slot].signature,
-		sizeof(part_table->pre_app_data[to_slot].signature),
-		app_signature, 64);
+		 sizeof(part_table->pre_app_data[to_slot].signature),
+		 app_signature, 64);
 	debug_puts("preload_*_final: size: ");
 	debug_putinthex(app_size);
 	debug_lf();
@@ -126,7 +127,8 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage, s
 	return 0;
 }
 
-int preload_delete(struct partition_table_storage *part_table_storage, uint8_t slot)
+int preload_delete(struct partition_table_storage *part_table_storage,
+		   uint8_t slot)
 {
 	struct partition_table *part_table = &part_table_storage->table;
 
@@ -162,13 +164,18 @@ int preload_delete(struct partition_table_storage *part_table_storage, uint8_t s
 	}
 
 	/* Assumes the area is 64 KiB block aligned */
-	flash_block_64_erase(slot_to_start_address(slot)); // Erase first 64 KB block
-	flash_block_64_erase(slot_to_start_address(slot) + 0x10000); // Erase first 64 KB block
+	flash_block_64_erase(
+	    slot_to_start_address(slot)); // Erase first 64 KB block
+	flash_block_64_erase(slot_to_start_address(slot) +
+			     0x10000); // Erase first 64 KB block
 
 	return 0;
 }
 
-int preload_get_digsig(struct partition_table *part_table, uint8_t app_digest[32], uint8_t app_signature[64], uint8_t slot) {
+int preload_get_digsig(struct partition_table *part_table,
+		       uint8_t app_digest[32], uint8_t app_signature[64],
+		       uint8_t slot)
+{
 	if (part_table == NULL || app_digest == NULL || app_signature == NULL) {
 		return -5;
 	}
@@ -182,8 +189,10 @@ int preload_get_digsig(struct partition_table *part_table, uint8_t app_digest[32
 		return -3;
 	}
 
-	memcpy_s(app_digest, 32, part_table->pre_app_data[slot].digest, sizeof(part_table->pre_app_data[slot].digest));
-	memcpy_s(app_signature, 64, part_table->pre_app_data[slot].signature, sizeof(part_table->pre_app_data[slot].signature));
+	memcpy_s(app_digest, 32, part_table->pre_app_data[slot].digest,
+		 sizeof(part_table->pre_app_data[slot].digest));
+	memcpy_s(app_signature, 64, part_table->pre_app_data[slot].signature,
+		 sizeof(part_table->pre_app_data[slot].signature));
 
 	return 0;
 }
