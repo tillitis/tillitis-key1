@@ -94,6 +94,13 @@ Header file for CH554 microcontrollers.
 #define USB_CDC_REQ_TYPE_SET_CONTROL_LINE_STATE  0x22
 #endif
 
+/* USB CCID (Smart Card) class request code */
+#ifndef USB_CCID_REQ_TYPE
+#define USB_CCID_REQ_TYPE_ABORT                  0x01
+#define USB_CCID_REQ_TYPE_GET_CLOCK_FREQUENCIES  0x02
+#define USB_CCID_REQ_TYPE_GET_DATA_RATES         0x03
+#endif
+
 /* USB request type for hub class request */
 #ifndef HUB_GET_HUB_DESCRIPTOR
 #define HUB_CLEAR_HUB_FEATURE   0x20
@@ -200,7 +207,8 @@ Header file for CH554 microcontrollers.
 #define USB_IDX_INTERFACE_CDC_CTRL_STR   0x04
 #define USB_IDX_INTERFACE_CDC_DATA_STR   0x05
 #define USB_IDX_INTERFACE_FIDO_STR       0x06
-#define USB_IDX_INTERFACE_DEBUG_STR      0x07
+#define USB_IDX_INTERFACE_CCID_STR       0x07
+#define USB_IDX_INTERFACE_DEBUG_STR      0x08
 #endif
 
 #ifndef USB_DEVICE_ADDR
