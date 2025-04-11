@@ -847,36 +847,37 @@ void usb_irq_setup_handler(void)
         SetupReq = UsbSetupBuf->bRequest;
 
         // Class-Specific Requests, i.e. HID request, CDC request etc.
-        if ((UsbSetupBuf->bmRequestType & USB_REQ_TYPE_MASK) != USB_REQ_TYPE_STANDARD) {
-            printStrSetup("Class-Specific ");
-            printStrSetup("SetupReq=");
-            printStrSetup("0x");
+        if ( ((UsbSetupBuf->bmRequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_CLASS) ||
+             ((UsbSetupBuf->bmRequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_VENDOR)) {
+
+            printStrSetup("Class/Vendor-Specific Request = ");
             printNumU8HexSetup(SetupReq);
-            printStrSetup(" ");
+            printStrSetup("\n\t");
+
             switch(SetupReq) {
             case USB_HID_REQ_TYPE_GET_REPORT:
-                printStrSetup("HID Get Report\n");
+                printStrSetup("HID GET_REPORT\n");
                 break;
             case USB_HID_REQ_TYPE_GET_IDLE:
-                printStrSetup("HID Get Idle\n");
+                printStrSetup("HID GET_IDLE\n");
                 break;
             case USB_HID_REQ_TYPE_GET_PROTOCOL:
-                printStrSetup("HID Get Protocol\n");
+                printStrSetup("HID GET_PROTOCOL\n");
                 break;
             case USB_HID_REQ_TYPE_SET_REPORT:
-                printStrSetup("HID Set Report\n");
+                printStrSetup("HID SET_REPORT\n");
                 break;
             case USB_HID_REQ_TYPE_SET_IDLE:
-                printStrSetup("HID Set Idle\n");
+                printStrSetup("HID SET_IDLE\n");
                 break;
             case USB_HID_REQ_TYPE_SET_PROTOCOL:
-                printStrSetup("HID Set Protocol\n");
+                printStrSetup("HID SET_PROTOCOL\n");
                 break;
             case USB_CDC_REQ_TYPE_SET_LINE_CODING:
-                printStrSetup("CDC Set Line Coding\n");
+                printStrSetup("CDC SET_LINE_CODING\n");
                 break;
             case USB_CDC_REQ_TYPE_GET_LINE_CODING:
-                printStrSetup("CDC Get Line Coding\n");
+                printStrSetup("CDC GET_LINE_CODING\n");
                 pDescr = LineCoding;
                 len = sizeof(LineCoding);
                 SetupLen = MIN(SetupLen, len); // Limit total length
@@ -885,22 +886,32 @@ void usb_irq_setup_handler(void)
                 SetupLen -= len;
                 pDescr += len;
                 break;
-            case USB_CDC_REQ_TYPE_SET_CONTROL_LINE_STATE: // Generates RS-232/V.24 style control signals
-                printStrSetup("CDC Set Control Line State\n");
+            case USB_CDC_REQ_TYPE_SET_CONTROL_LINE_STATE:
+                printStrSetup("CDC SET_CONTROL_LINE_STATE\n");
                 break;
             default:
-                len = 0xFF; // Command not supported
-                printStrSetup("Unsupported\n");
+                printStrSetup("Unsupported Request!\n");
+                len = 0xFF; // Unsupported Request
                 break;
-            }
-        } // END Non-standard request
+            } // END switch(SetupReq)
+        } // END Class/Vendor-Specific Requests
 
-        else { // Standard Requests
-            // Request code
+        // Standard Request
+        else if (((UsbSetupBuf->bmRequestType & USB_REQ_TYPE_MASK) == USB_REQ_TYPE_STANDARD)) {
+
+            printStrSetup("Standard Request = ");
+            printNumU8HexSetup(SetupReq);
+            printStrSetup("\n\t");
+
             switch (SetupReq) {
             case USB_GET_DESCRIPTOR:
+                printStrSetup("GET_DESCRIPTOR: wValueH = ");
+                printNumU8HexSetup(UsbSetupBuf->wValueH);
+                printStrSetup("\n\t\t");
+
                 switch (UsbSetupBuf->wValueH) {
-                case USB_DESC_TYPE_DEVICE: // Device descriptor
+                case USB_DESC_TYPE_DEVICE:
+                    printStrSetup("DEVICE\n");
                     pDescr = DevDesc; // Send the device descriptor to the buffer to be sent
                     len = sizeof(DevDesc);
                     SetupLen = MIN(SetupLen, len); // Limit total length
@@ -908,9 +919,14 @@ void usb_irq_setup_handler(void)
                     memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                     SetupLen -= len;
                     pDescr += len;
-                    printStrSetup("DevDesc\n");
                     break;
-                case USB_DESC_TYPE_CONFIGURATION: // Configuration descriptor
+
+                case USB_DESC_TYPE_DEVICE_QUALIFIER:
+                    printStrSetup("DEVICE_QUALIFIER\n");
+                    break;
+
+                case USB_DESC_TYPE_CONFIGURATION:
+                    printStrSetup("CONFIGURATION\n");
                     pDescr = ActiveCfgDesc; // Send the configuration descriptor to the buffer to be sent
                     len = ActiveCfgDescSize; // Dynamic value based on what endpoints are enabled
                     SetupLen = MIN(SetupLen, len); // Limit total length
@@ -918,45 +934,49 @@ void usb_irq_setup_handler(void)
                     memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                     SetupLen -= len;
                     pDescr += len;
-                    printStrSetup("CfgDesc\n");
                     break;
-                case USB_DESC_TYPE_STRING: // String descriptors
+
+                case USB_DESC_TYPE_STRING:
+                    printStrSetup("STRING: wValueL = ");
+                    printNumU8HexSetup(UsbSetupBuf->wValueL);
+                    printStrSetup("\n\t\t\t");
+
                     if (UsbSetupBuf->wValueL == USB_IDX_LANGID_STR) {
+                        printStrSetup("LangDesc\n");
                         pDescr = LangDesc;
                         len = sizeof(LangDesc);
-                        printStrSetup("LangDesc\n");
                     } else if (UsbSetupBuf->wValueL == USB_IDX_MFC_STR) {
+                        printStrSetup("ManufDesc\n");
                         pDescr = ManufDesc;
                         len = sizeof(ManufDesc);
-                        printStrSetup("ManufDesc\n");
                     } else if (UsbSetupBuf->wValueL == USB_IDX_PRODUCT_STR) {
+                        printStrSetup("ProdDesc\n");
                         pDescr = ProdDesc;
                         len = sizeof(ProdDesc);
-                        printStrSetup("ProdDesc\n");
                     } else if (UsbSetupBuf->wValueL == USB_IDX_SERIAL_STR) {
+                        printStrSetup("SerialDesc\n");
                         pDescr = SerialDesc;
                         len = sizeof(SerialDesc);
-                        printStrSetup("SerialDesc\n");
                     } else if (UsbSetupBuf->wValueL == USB_IDX_INTERFACE_CDC_CTRL_STR) {
+                        printStrSetup("CdcCtrlInterfaceDesc\n");
                         pDescr = CdcCtrlInterfaceDesc;
                         len = sizeof(CdcCtrlInterfaceDesc);
-                        printStrSetup("CdcCtrlInterfaceDesc\n");
                     } else if (UsbSetupBuf->wValueL == USB_IDX_INTERFACE_CDC_DATA_STR) {
+                        printStrSetup("CdcDataInterfaceDesc\n");
                         pDescr = CdcDataInterfaceDesc;
                         len = sizeof(CdcDataInterfaceDesc);
-                        printStrSetup("CdcDataInterfaceDesc\n");
-                    } else if (UsbSetupBuf->wValueL == USB_IDX_INTERFACE_CCID_STR) {
-                        pDescr = CcidInterfaceDesc;
-                        len = sizeof(CcidInterfaceDesc);
-                        printStrSetup("CcidInterfaceDesc\n");
                     } else if (UsbSetupBuf->wValueL == USB_IDX_INTERFACE_FIDO_STR) {
+                        printStrSetup("FidoHidInterfaceDesc\n");
                         pDescr = FidoInterfaceDesc;
                         len = sizeof(FidoInterfaceDesc);
-                        printStrSetup("FidoHidInterfaceDesc\n");
+                    } else if (UsbSetupBuf->wValueL == USB_IDX_INTERFACE_CCID_STR) {
+                        printStrSetup("CcidInterfaceDesc\n");
+                        pDescr = CcidInterfaceDesc;
+                        len = sizeof(CcidInterfaceDesc);
                     } else if (UsbSetupBuf->wValueL == USB_IDX_INTERFACE_DEBUG_STR) {
+                        printStrSetup("DebugInterfaceDesc\n");
                         pDescr = DebugInterfaceDesc;
                         len = sizeof(DebugInterfaceDesc);
-                        printStrSetup("DebugInterfaceDesc\n");
                     } else {
                         printStrSetup("Unknown String!\n");
                         len = 0xFF; // Unsupported
@@ -968,15 +988,20 @@ void usb_irq_setup_handler(void)
                     SetupLen -= len;
                     pDescr += len;
                     break;
+
                 case USB_DESC_TYPE_HID:
+                    printStrSetup("HID: wValueL = ");
+                    printNumU8HexSetup(UsbSetupBuf->wValueL);
+                    printStrSetup("\n");
+
                     if (UsbSetupBuf->wIndexL == FidoInterfaceNum) { // Interface number for FIDO
+                        printStrSetup("FidoCfgDesc\n");
                         pDescr = FidoCfgDesc;
                         len = sizeof(FidoCfgDesc);
-                        printStrSetup("FidoCfgDesc\n");
                     } else if (UsbSetupBuf->wIndexL == DebugInterfaceNum) { // Interface number for DEBUG
+                        printStrSetup("DebugCfgDesc\n");
                         pDescr = DebugCfgDesc;
                         len = sizeof(DebugCfgDesc);
-                        printStrSetup("DebugCfgDesc\n");
                     } else {
                         printStrSetup("Unknown HID Interface!\n");
                         len = 0xFF; // Unsupported
@@ -988,15 +1013,20 @@ void usb_irq_setup_handler(void)
                     SetupLen -= len;
                     pDescr += len;
                     break;
+
                 case USB_DESC_TYPE_REPORT:
+                    printStrSetup("REPORT: wIndexL = ");
+                    printNumU8HexSetup(UsbSetupBuf->wIndexL);
+                    printStrSetup("\n");
+
                     if (UsbSetupBuf->wIndexL == FidoInterfaceNum) { // Interface number for FIDO
+                        printStrSetup("FidoReportDesc\n");
                         pDescr = FidoReportDesc;
                         len = sizeof(FidoReportDesc);
-                        printStrSetup("FidoReportDesc\n");
                     } else if (UsbSetupBuf->wIndexL == DebugInterfaceNum) { // Interface number for DEBUG
+                        printStrSetup("DebugReportDesc\n");
                         pDescr = DebugReportDesc;
                         len = sizeof(DebugReportDesc);
-                        printStrSetup("DebugReportDesc\n");
                     } else {
                         printStrSetup("Unknown Report!\n");
                         len = 0xFF; // Unknown Report
@@ -1009,49 +1039,52 @@ void usb_irq_setup_handler(void)
                     pDescr += len;
                     break;
 
-                default:
-                    len = 0xFF; // Unsupported command or error
-                    printStrSetup("Unsupported\n");
+                case USB_DESC_TYPE_DEBUG:
+                    printStrSetup("DEBUG\n");
                     break;
-                }
 
+                default:
+                    printStrSetup("Unknown descriptor!\n");
+                    len = 0xFF; // Unknown descriptor
+                    break;
+                } // END switch (UsbSetupBuf->wValueH)
                 break;
 
             case USB_SET_ADDRESS:
+                printStrSetup("SET_ADDRESS\n");
                 SetupLen = UsbSetupBuf->wValueL; // Temporary storage of USB device address
-                printStrSetup("SetAddress\n");
                 break;
 
             case USB_GET_CONFIGURATION:
+                printStrSetup("GET_CONFIGURATION\n");
                 Ep0Buffer[0] = UsbConfig;
                 if (SetupLen >= 1) {
                     len = 1;
                 }
-                printStrSetup("GetConfig\n");
                 break;
 
             case USB_SET_CONFIGURATION:
+                printStrSetup("SET_CONFIGURATION\n");
                 UsbConfig = UsbSetupBuf->wValueL;
-                printStrSetup("SetConfig\n");
                 break;
 
             case USB_GET_INTERFACE:
-                printStrSetup("GetInterface\n");
+                printStrSetup("GET_INTERFACE\n");
                 break;
 
-            case USB_CLEAR_FEATURE: // Clear Feature
-                printStrSetup("ClearFeature\n");
+            case USB_CLEAR_FEATURE:
+                printStrSetup("CLEAR_FEATURE\n");
                 if ((UsbSetupBuf->bmRequestType & USB_REQ_RECIP_MASK) == USB_REQ_RECIP_DEVICE) {  // Remove device
                     if ((((uint16_t) UsbSetupBuf->wValueH << 8) | UsbSetupBuf->wValueL) == 0x01) {
                         if (CfgDesc[7] & 0x20) {
                             // Wake
                         } else {
+                            printStrSetup("Operation failed\n");
                             len = 0xFF; // Operation failed
-                            printStrSetup("Unsupported\n");
                         }
                     } else {
+                        printStrSetup("Operation failed\n");
                         len = 0xFF; // Operation failed
-                        printStrSetup("Unsupported\n");
                     }
                 } else if ((UsbSetupBuf->bmRequestType & USB_REQ_RECIP_MASK) == USB_REQ_RECIP_ENDP) { // Endpoint
                     switch (UsbSetupBuf->wIndexL) {
@@ -1080,18 +1113,18 @@ void usb_irq_setup_handler(void)
                         UEP1_CTRL = (UEP1_CTRL & ~(bUEP_R_TOG | MASK_UEP_R_RES)) | UEP_R_RES_ACK; // Set endpoint 1 OUT (RX) ACK
                         break;
                     default:
-                        len = 0xFF;  // Unsupported endpoint
-                        printStrSetup("Unsupported\n");
+                        printStrSetup("Unsupported endpoint\n");
+                        len = 0xFF; // Unsupported endpoint
                         break;
-                    }
+                    } // END switch (UsbSetupBuf->wIndexL)
                 } else {
-                    len = 0xFF; // It's not that the endpoint doesn't support it
                     printStrSetup("Unsupported\n");
+                    len = 0xFF; // It's not that the endpoint doesn't support it
                 }
                 break;
 
-            case USB_SET_FEATURE: // Set Feature
-                printStrSetup("SetFeature\n");
+            case USB_SET_FEATURE:
+                printStrSetup("SET_FEATURE\n");
                 if (( UsbSetupBuf->bmRequestType & USB_REQ_RECIP_MASK) == USB_REQ_RECIP_DEVICE) { // Set up the device
                     if ((((uint16_t) UsbSetupBuf->wValueH << 8) | UsbSetupBuf->wValueL) == 0x01) {
                         if (CfgDesc[7] & 0x20) {
@@ -1143,17 +1176,17 @@ void usb_irq_setup_handler(void)
                             break;
                         }
                     } else {
+                        printStrSetup("Operation failed\n");
                         len = 0xFF; // Operation failed
-                        printStrSetup("Unsupported\n");
                     }
                 } else {
+                    printStrSetup("Operation failed\n");
                     len = 0xFF; // Operation failed
-                    printStrSetup("Unsupported\n");
                 }
                 break;
 
             case USB_GET_STATUS:
-                printStrSetup("GetStatus\n");
+                printStrSetup("GET_STATUS\n");
                 Ep0Buffer[0] = 0x00;
                 Ep0Buffer[1] = 0x00;
                 if (SetupLen >= 2) {
@@ -1167,9 +1200,15 @@ void usb_irq_setup_handler(void)
                 len = 0xFF; // Operation failed
                 printStrSetup("Unsupported\n");
                 break;
-
             } // END switch (SetupReq)
         } // END Standard request
+
+        // Unknown Request
+        else {
+            printStrSetup("Unknown Request Type!\n");
+            len = 0xFF; // Operation failed
+        } // END Unknown Request
+
     } else {
         len = 0xFF; // Packet length error
     }
@@ -1209,7 +1248,8 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
 
         case UIS_TOKEN_IN | 0: // Endpoint 0 IN (TX)
             switch (SetupReq) {
-            case USB_GET_DESCRIPTOR: // Continue handling sending of descriptor in multiple packets if needed from SETUP routine
+            case USB_GET_DESCRIPTOR:
+                /* Continue sending descriptor in multiple packets if needed. Started from SETUP routine */
                 len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
                 memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                 SetupLen -= len;
@@ -1228,24 +1268,24 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             }
             break;
 
-        case UIS_TOKEN_IN | 1: // Endpoint 1 IN (TX), Endpoint interrupts upload
+        case UIS_TOKEN_IN | 1: // Endpoint 1 IN (TX)
             UEP1_T_LEN = 0;    // Transmit length must be cleared (Endpoint 1)
             UEP1_CTRL = (UEP1_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_NAK; // Default answer NAK
             break;
 
-        case UIS_TOKEN_IN | 2: // Endpoint 2 IN (TX), Endpoint bulk upload
+        case UIS_TOKEN_IN | 2: // Endpoint 2 IN (TX)
             UEP2_T_LEN = 0;    // Transmit length must be cleared (Endpoint 2)
             UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_NAK; // Default answer NAK
             Endpoint2UploadBusy = 0; // Clear busy flag
             break;
 
-        case UIS_TOKEN_IN | 3: // Endpoint 3 IN (TX), Endpoint bulk upload
+        case UIS_TOKEN_IN | 3: // Endpoint 3 IN (TX)
             UEP3_T_LEN = 0;    // Transmit length must be cleared (Endpoint 3)
             UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_NAK; // Default answer NAK
             Endpoint3UploadBusy = 0; // Clear busy flag
             break;
 
-        case UIS_TOKEN_IN | 4: // Endpoint 4 IN (TX), Endpoint bulk upload
+        case UIS_TOKEN_IN | 4: // Endpoint 4 IN (TX)
             UEP4_T_LEN = 0;    // Transmit length must be cleared (Endpoint 4)
             UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_NAK; // Default answer NAK
             UEP4_CTRL ^= bUEP_T_TOG; // Sync flag flip
@@ -1254,7 +1294,8 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
 
         case UIS_TOKEN_OUT | 0: // Endpoint 0 OUT (RX)
             switch (SetupReq) {
-            case USB_CDC_REQ_TYPE_SET_LINE_CODING: // We ignore line coding here because baudrate to the FPGA should not change
+            case USB_CDC_REQ_TYPE_SET_LINE_CODING:
+                /* We ignore line coding here because baudrate to the FPGA should not change */
                 if (U_TOG_OK) {
                     UEP0_T_LEN = 0;
                     UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_ACK; // Prepare to upload 0 packages
@@ -1275,7 +1316,7 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             }
             break;
 
-        case UIS_TOKEN_OUT | 2: // Endpoint 2 OUT (RX), Endpoint batch download
+        case UIS_TOKEN_OUT | 2: // Endpoint 2 OUT (RX)
             // Out-of-sync packets will be dropped
             if (U_TOG_OK) {
                 UsbEp2ByteCount = USB_RX_LEN;                              // Length of received data
@@ -1283,7 +1324,7 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             }
             break;
 
-        case UIS_TOKEN_OUT | 3: // Endpoint 3 OUT (RX), Endpoint batch download
+        case UIS_TOKEN_OUT | 3: // Endpoint 3 OUT (RX)
             // Out-of-sync packets will be dropped
             if (U_TOG_OK) {
                 UsbEp3ByteCount = USB_RX_LEN;                              // Length of received data
@@ -1291,7 +1332,7 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             }
             break;
 
-        case UIS_TOKEN_OUT | 4: // Endpoint 4 OUT (RX), Endpoint batch download
+        case UIS_TOKEN_OUT | 4: // Endpoint 4 OUT (RX)
             // Out-of-sync packets will be dropped
             if (U_TOG_OK) {
                 UsbEp4ByteCount = USB_RX_LEN;                              // Length of received data
@@ -1489,7 +1530,7 @@ void main()
     UART1Setup();  // For communication with FPGA
     UART1Clean();  // Clean register from spurious data
 
-    printStrSetup("Startup\n");
+    printStrSetup("\nStartup\n");
 
     uint8_t ActiveEndpoints = RESET_KEEP;
 
