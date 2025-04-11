@@ -50,9 +50,7 @@ all: testapp.bin
 tkey-libs:
 	make -C $(LIBDIR)
 
-TESTAPP_FMTFILES = \
-	$(P)/main.c \
-	$(P)/syscall.h
+TESTAPP_FMTFILES = *.[ch]
 
 TESTAPP_OBJS = \
 	$(P)/main.o \
