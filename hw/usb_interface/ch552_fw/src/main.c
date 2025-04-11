@@ -879,8 +879,9 @@ void usb_irq_setup_handler(void)
                 printStrSetup("CDC Get Line Coding\n");
                 pDescr = LineCoding;
                 len = sizeof(LineCoding);
-                len = SetupLen >= DEFAULT_EP0_SIZE ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
-                memcpy(Ep0Buffer, pDescr, len);
+                SetupLen = MIN(SetupLen, len); // Limit total length
+                len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                 SetupLen -= len;
                 pDescr += len;
                 break;
@@ -897,16 +898,26 @@ void usb_irq_setup_handler(void)
         else { // Standard Requests
             // Request code
             switch (SetupReq) {
-            case USB_GET_DESCRIPTOR: {
+            case USB_GET_DESCRIPTOR:
                 switch (UsbSetupBuf->wValueH) {
                 case USB_DESC_TYPE_DEVICE: // Device descriptor
                     pDescr = DevDesc; // Send the device descriptor to the buffer to be sent
                     len = sizeof(DevDesc);
+                    SetupLen = MIN(SetupLen, len); // Limit total length
+                    len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                    memcpy(Ep0Buffer, pDescr, len); // Copy upload data
+                    SetupLen -= len;
+                    pDescr += len;
                     printStrSetup("DevDesc\n");
                     break;
                 case USB_DESC_TYPE_CONFIGURATION: // Configuration descriptor
                     pDescr = ActiveCfgDesc; // Send the configuration descriptor to the buffer to be sent
-                    len = sizeof(ActiveCfgDesc);
+                    len = ActiveCfgDescSize; // Dynamic value based on what endpoints are enabled
+                    SetupLen = MIN(SetupLen, len); // Limit total length
+                    len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                    memcpy(Ep0Buffer, pDescr, len); // Copy upload data
+                    SetupLen -= len;
+                    pDescr += len;
                     printStrSetup("CfgDesc\n");
                     break;
                 case USB_DESC_TYPE_STRING: // String descriptors
@@ -947,8 +958,15 @@ void usb_irq_setup_handler(void)
                         len = sizeof(DebugInterfaceDesc);
                         printStrSetup("DebugInterfaceDesc\n");
                     } else {
-                        printStrSetup("Error: USB_DESC_TYPE_STRING\n");
+                        printStrSetup("Unknown String!\n");
+                        len = 0xFF; // Unsupported
+                        break;      // Early exit
                     }
+                    SetupLen = MIN(SetupLen, len); // Limit total length
+                    len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                    memcpy(Ep0Buffer, pDescr, len); // Copy upload data
+                    SetupLen -= len;
+                    pDescr += len;
                     break;
                 case USB_DESC_TYPE_HID:
                     if (UsbSetupBuf->wIndexL == FidoInterfaceNum) { // Interface number for FIDO
@@ -959,7 +977,16 @@ void usb_irq_setup_handler(void)
                         pDescr = DebugCfgDesc;
                         len = sizeof(DebugCfgDesc);
                         printStrSetup("DebugCfgDesc\n");
+                    } else {
+                        printStrSetup("Unknown HID Interface!\n");
+                        len = 0xFF; // Unsupported
+                        break;      // Early exit
                     }
+                    SetupLen = MIN(SetupLen, len); // Limit total length
+                    len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                    memcpy(Ep0Buffer, pDescr, len); // Copy upload data
+                    SetupLen -= len;
+                    pDescr += len;
                     break;
                 case USB_DESC_TYPE_REPORT:
                     if (UsbSetupBuf->wIndexL == FidoInterfaceNum) { // Interface number for FIDO
@@ -970,24 +997,25 @@ void usb_irq_setup_handler(void)
                         pDescr = DebugReportDesc;
                         len = sizeof(DebugReportDesc);
                         printStrSetup("DebugReportDesc\n");
+                    } else {
+                        printStrSetup("Unknown Report!\n");
+                        len = 0xFF; // Unknown Report
+                        break;      // Early exit
                     }
+                    SetupLen = MIN(SetupLen, len); // Limit total length
+                    len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                    memcpy(Ep0Buffer, pDescr, len); // Copy upload data
+                    SetupLen -= len;
+                    pDescr += len;
                     break;
+
                 default:
                     len = 0xFF; // Unsupported command or error
                     printStrSetup("Unsupported\n");
                     break;
                 }
 
-                if (SetupLen > len) {
-                    SetupLen = len; // Limit total length
-                }
-
-                len = SetupLen >= DEFAULT_EP0_SIZE ? DEFAULT_EP0_SIZE : SetupLen; // This transmission length
-                memcpy(Ep0Buffer, pDescr, len); // Copy upload data
-                SetupLen -= len;
-                pDescr += len;
-            }
-            break;
+                break;
 
             case USB_SET_ADDRESS:
                 SetupLen = UsbSetupBuf->wValueL; // Temporary storage of USB device address
@@ -1181,9 +1209,9 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
 
         case UIS_TOKEN_IN | 0: // Endpoint 0 IN (TX)
             switch (SetupReq) {
-            case USB_GET_DESCRIPTOR:
-                len = SetupLen >= DEFAULT_EP0_SIZE ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
-                memcpy(Ep0Buffer, pDescr, len); // Load upload data
+            case USB_GET_DESCRIPTOR: // Continue handling sending of descriptor in multiple packets if needed from SETUP routine
+                len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                 SetupLen -= len;
                 pDescr += len;
                 UEP0_T_LEN = len;
@@ -1235,6 +1263,7 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             default:
                 UEP0_T_LEN = 0;
                 UEP0_CTRL |= UEP_R_RES_ACK | UEP_T_RES_NAK; // Status phase, responds to IN with NAK
+                break;
             }
             break;
 
@@ -1864,9 +1893,10 @@ void main()
             // Check if we should handle CH552 data
             if (CH552DataAvailable) {
 
-                switch (FrameBuf[0]) {
-
-                    case SET_ENDPOINTS: {
+                // Check command range
+                if (FrameBuf[0] < CH552_CMD_MAX) {
+                    switch (FrameBuf[0]) {
+                    case SET_ENDPOINTS:
                         cts_stop(); // Stop UART data from FPGA
                         RESET_KEEP = FrameBuf[1]; // Save endpoints to persistent register
                         SAFE_MOD = 0x55; // Start reset sequence
@@ -1874,13 +1904,10 @@ void main()
                         GLOBAL_CFG = bSW_RESET;
                         while (1)
                             ;
-                    }
-                    break;
-
-                    default: {
-                    }
-                    break;
-
+                        break;
+                    default:
+                        break;
+                    } // END switch(FrameBuf[0])
                 }
 
                 CH552DataAvailable = 0;
