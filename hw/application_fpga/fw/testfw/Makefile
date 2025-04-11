@@ -1,5 +1,5 @@
 # Uses ../.clang-format
-FMTFILES=main.c
+FMTFILES=*.[ch]
 .PHONY: fmt
 fmt:
 	clang-format --dry-run --ferror-limit=0 $(FMTFILES)
