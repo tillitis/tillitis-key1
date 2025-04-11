@@ -30,7 +30,7 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
 
 - Security Monitor memory access checks are now more complete.
 
-- Add SPI main controller mainly to access flash.
+- Add SPI main controller mainly to access the flash chip.
 
 - Add system reset API. Device apps can reset the system and restart
   the firmware. The FPGA is not reset.
@@ -76,8 +76,16 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
 - Add support for the new USB Mode Protocol to communicate with
   different endpoints.
 
-- Introduce a system call mechanism and the first syscalls: RESET,
-  SET\_LED, GET\_VIDPID.
+- Support a filesystem on flash.
+
+- Add a system call mechanism and system calls: `RESET`, `ALLOC_AREA`,
+  `DEALLOC_AREA`, `WRITE_DATA`, `READ_DATA`, `PRELOAD_DELETE`,
+  `PRELOAD_STORE`, `PRELOAD_STORE_FIN`, `PRELOAD_GET_DIGSIG`,
+  `STATUS`, and `GET_VIDPID`. See [firmware's
+  README](../hw/application_fpga/fw/README.md) for documentation.
+
+- Harmonize with [tkey-libs](https://github.com/tillitis/tkey-libs).
+  Import tkey-libs to this repo for convenience.
 
 ### CH552
 
