@@ -8,13 +8,14 @@ see [the TKey Developer Handbook](https://dev.tillitis.se/).
 
 ## Definitions
 
-- Firmware: Software in ROM responsible for loading, measuring, and
-  starting applications. The firmware is included as part of the FPGA
-  bitstream and not replacable on a usual consumer TKey.
+- Firmware: Software in ROM responsible for loading, measuring,
+  starting applications, and providing system calls. The firmware is
+  included as part of the FPGA bitstream and not replacable on a usual
+  consumer TKey.
 - Client: Software running on a computer or a mobile phone the TKey is
   inserted into.
-- Device application or app: Software supplied by the client that runs
-  on the TKey.
+- Device application or app: Software supplied by the client or from
+  flash that runs on the TKey.
 
 ## CPU modes and firmware
 
@@ -74,10 +75,10 @@ commands to the `CH552` control endpoint. When the TKey starts only
 the `CH552` and the `CDC` endpoints are active. To change this, send a
 command to `CH552` in this form:
 
-| *Name*  | *Size* | *Comment*                     |
-|---------|--------|-------------------------------|
-| Command | 1B     | Command to the CH552 firmware |
-| Payload | 1B     | Data for the command          |
+| *Name*   | *Size* | *Comment*                     |
+|----------|--------|-------------------------------|
+| Command  | 1B     | Command to the CH552 firmware |
+| Argument | 1B     | Data for the command          |
 
 Commands:
 
@@ -90,7 +91,7 @@ Protocol](https://dev.tillitis.se/protocol/) which is described in the
 Developer Handbook.
 
 The firmware uses a protocol on top of this framing layer which is
-used to bootstrap an application. All commands are initiated by the
+used to load a device application. All commands are initiated by the
 client. All commands receive a reply. See [Firmware
 protocol](http://dev.tillitis.se/protocol/#firmware-protocol) in the
 Dev Handbook for specific details.
@@ -105,95 +106,191 @@ Dev Handbook for specific details.
 
 * FW\_RAM is divided into the following areas:
 
-- fw stack: 3824 bytes.
+- fw stack: 3000 bytes.
 - resetinfo: 256 bytes.
-- rest is available for .data and .bss.
+- .data and .bss: 840 bytes.
 
 ## Firmware behaviour
 
-The purpose of the firmware is to load, measure, and start an
-application received from the client over the USB/UART.
+The purpose of the firmware is to:
+
+1. Load, measure, and start an application received from the client
+   over the USB/UART or from one of two flash app slots.
+2. Provide functionality to run only app's with specific BLAKE2s
+   digests.
+3. Provide system calls to access the filesystem and get other data.
 
 The firmware binary is part of the FPGA bitstream as the initial
-values of the Block RAMs used to construct the `FW_ROM`. The `FW_ROM`
-start address is located at `0x0000_0000` in the CPU memory map, which
-is also the CPU reset vector.
+values of the Block RAMs used to construct the ROM. The ROM is located
+at `0x0000_0000`. This is also the CPU reset vector.
+
+### Reset type
+
+When the TKey is started or resetted it can load an app from different
+sources. We call this the reset type. Reset type is located in the
+resetinfo part of FW\_RAM. The different reset types loads and start
+an app from:
+
+1. Flash slot 0 (default): `FLASH0` with a specific app hash defined
+   in a constant in firmware.
+2. Flash slot 1: `FLASH1`.
+3. Flash slot 0 with a specific app hash left from previous app:
+   `FLASH0_VER`
+4. Flash slot 1 with a specific app hash left from previous app:
+   `FLASH1_VER`.
+5. Client: `CLIENT`.
+6. Client with a specific app hash left from previous app:
+   `CLIENT_VER`.
 
 ### Firmware state machine
 
-This is the state diagram of the firmware. There are only four states.
 Change of state occur when we receive specific I/O or a fatal error
 occurs.
 
 ```mermaid
 stateDiagram-v2
-     S1: initial
-     S2: loading
-     S3: running
-     SE: failed
+    S0: INITIAL
+    S1: WAITCOMMAND
+    S2: LOADING
+    S3: LOAD_FLASH
+    S4: LOAD_FLASH_MGMT
+    S5: START
+    SE: FAIL
 
-     [*] --> S1
+    [*] --> S0
 
-     S1 --> S1: Commands
-     S1 --> S2: LOAD_APP
-     S1 --> SE: Error
+    S0 --> S1
+    S0 --> S4: Default
+    S0 --> S3
 
-     S2 --> S2: LOAD_APP_DATA
-     S2 --> S3: Last block received
-     S2 --> SE: Error
+    S1 --> S1: Other commands
+    S1 --> S2: LOAD_APP
+    S1 --> SE: Error
 
-     S3 --> [*]
+    S2 --> S2: LOAD_APP_DATA
+    S2 --> S5: Last block received
+    S2 --> SE: Error
+
+    S3 --> S5
+    S3 --> SE
+
+    S4 --> S5
+    S4 --> SE
+
+    SE --> [*]
+    S5 --> [*]
 ```
 
 States:
 
-- `initial` - At start. Allows the commands `NAME_VERSION`, `GET_UDI`,
-  `LOAD_APP`.
-- `loading` - Expect application data. Allows only the command
-  `LOAD_APP_DATA`.
-- `run` - Computes CDI and starts the application. Allows no commands.
-- `fail` - Stops waiting for commands, flashes LED forever. Allows no
-  commands.
+- *INITIAL*: Transitions to next state through reset type left in
+  `FW_RAM`.
+- *WAITCOMMAND*: Waiting for initial commands from client. Allows the
+  commands `NAME_VERSION`, `GET_UDI`, `LOAD_APP`.
+- *LOADING*: Expecting application data from client. Allows only the
+  command `LOAD_APP_DATA` to continue loading the device app.
+- *LOAD_FLASH*: Loading an app from flash. Allows no commands.
+- *LOAD_FLASH_MGMT*: Loading and verifyiing a device app from flash.
+  Allows no commands.
+- *START*: Computes CDI. Possibly verifies app. Starts the
+  application. Does not return to firmware. Allows no commands.
+- *FAIL* - Halts CPU. Allows no commands.
 
-Commands in state `initial`:
+Allowed data in state *INITIAL*:
+
+| *reset type* | *next state*      |
+|--------------|-------------------|
+| `FLASH0`     | *LOAD_FLASH_MGMT* |
+| `FLASH1`     | *LOAD_FLASH*      |
+| `FLASH0_VER` | *LOAD_FLASH*      |
+| `FLASH1_VER` | *LOAD_FLASH*      |
+| `CLIENT`     | *WAITCOMMAND*     |
+| `CLIENT_VER` | *WAITCOMMAND*     |
+
+I/O in state *LOAD_FLASH*:
+
+| *I/O*              | *next state* |
+|--------------------|--------------|
+| Last app data read | *START*      |
+
+I/O in state *LOAD_FLASH_MGMT*:
+
+| *I/O*              | *next state* |
+|--------------------|--------------|
+| Last app data read | *START*      |
+
+Commands in state `waitcommand`:
 
 | *command*             | *next state* |
 |-----------------------|--------------|
 | `FW_CMD_NAME_VERSION` | unchanged    |
 | `FW_CMD_GET_UDI`      | unchanged    |
-| `FW_CMD_LOAD_APP`     | `loading`    |
-|                       |              |
+| `FW_CMD_LOAD_APP`     | *LOADING*    |
 
 Commands in state `loading`:
 
-| *command*              | *next state*                     |
-|------------------------|----------------------------------|
-| `FW_CMD_LOAD_APP_DATA` | unchanged or `run` on last chunk |
+| *command*              | *next state*                       |
+|------------------------|------------------------------------|
+| `FW_CMD_LOAD_APP_DATA` | unchanged or *START* on last chunk |
+
+No other states allows commands.
 
 See [Firmware protocol in the Dev
 Handbook](http://dev.tillitis.se/protocol/#firmware-protocol) for the
 definition of the specific commands and their responses.
 
-State changes from "initial" to "loading" when receiving `LOAD_APP`,
-which also sets the size of the number of data blocks to expect. After
-that we expect several `LOAD_APP_DATA` commands until the last block
-is received, when state is changed to "running".
+Plain text explanation of the states:
 
-In "running", the loaded device app is measured, the Compound Device
-Identifier (CDI) is computed, we do some cleanup of firmware data
-structures, enable the system calls, and finally start the app, which
-ends the firmware state machine. Hardware guarantees that we leave
-firmware mode automatically when the program counter leaves ROM.
+- *INITIAL*: Start here. Check the `FW_RAM` for the `resetinfo` type
+  for what to do next.
 
-The device app is now running in application mode. We can, however,
-return to firmware mode (excepting access to the UDS) by doing system
-calls. Note that ROM is still readable, but is now hardware protected
-from execution, except through the system call mechanism.
+  For all types which begins with `FLASH_*`, set next state to
+  *LOAD_FLASH*, otherwise set next state to *WAITCOMMAND*.
 
-### Golden path
+- *LOAD_FLASH*: Load device app from flash into RAM, app slot taken
+  from context. Compute a BLAKE2s digest over the entire app.
+  Transition to *START*.
 
-Firmware loads the application at the start of RAM (`0x4000_0000`). It
-use a part of the special FW\_RAM for its own stack.
+- *LOAD_FLASH_MGMT*: Load device app from flash into RAM, app slot
+  alway 0. Compute a BLAKE2s digest over the entire app. Register the
+  app as a prospective management app if it later goes through
+  verification. Transition to *START*.
+
+- *WAITCOMMAND*: Wait for commands from the client. Transition to
+  *LOADING* on `LOAD_APP` command, which also sets the size of the
+  number of data blocks to expect.
+
+- *LOADING*: Wait for several `LOAD_APP_DATA` commands until the last
+  block is received, then transition to *START*.
+
+- *START*: Compute the Compound Device Identifier (CDI). If we have a
+  registered verification digest, verify that the app we are about to
+  start is indeed the correct app.
+
+  Clean up firmware data structures, enable the system calls, and
+  start the app, which ends the firmware state machine. Hardware
+  guarantees that we leave firmware mode automatically when the
+  program counter leaves ROM.
+
+- *FAIL*: Execute an illegal instruction which traps the CPU. Hardware
+  detects a trapped CPU and blinks the status LED in red until power
+  loss. No further instructions are executed.
+
+After leaving *START* the device app is now running in application
+mode. We can, however, return to firmware mode (excepting access to
+the UDS) by doing system calls. Note that ROM is still readable, but
+is now hardware protected from execution, except through the system
+call mechanism.
+
+If during this whole time any commands are received which are not
+allowed in the current state, or any errors occur, we enter the *FAIL*
+state.
+
+### Golden path from start to default app
+
+Firmware loads the device application at the start of RAM
+(`0x4000_0000`) from either flash or from the client through the UART.
+Firmware uses a part of the FW\_RAM for its own stack.
 
 When reset is released, the CPU starts executing the firmware. It
 begins in `start.S` by clearing all CPU registers, clears all FW\_RAM,
@@ -203,60 +300,167 @@ the system calls, but the handler is not yet enabled.
 
 Beginning at `main()` it fills the entire RAM with pseudo random data
 and setting up the RAM address and data hardware scrambling with
-values from the True Random Number Generator (TRNG). It then waits for
-data coming in through the UART.
+values from the True Random Number Generator (TRNG).
 
-Typical expected use scenario:
+1. Check the special resetinfo area in FW\_RAM for reset type. Type
+   zero means default behaviour, load from flash app slot 0, expecting
+   the app there to have a specific hardcoded BLAKE2s digest.
 
-  1. The client sends the `FW_CMD_LOAD_APP` command with the size of
-     the device app and the optional 32 byte hash of the user-supplied
-     secret as arguments and gets a `FW_RSP_LOAD_APP` back. After
-     using this it's not possible to restart the loading of an
-     application.
+2. Load app data from flash slot 0 into RAM.
 
-  2. If the the client receive a sucessful response, it will send
-     multiple `FW_CMD_LOAD_APP_DATA` commands, together containing the
-     full application.
+3. Compute a BLAKE2s digest of the loaded app.
 
-  3. On receiving`FW_CMD_LOAD_APP_DATA` commands the firmware places
-     the data into `0x4000_0000` and upwards. The firmware replies
-     with a `FW_RSP_LOAD_APP_DATA` response to the client for each
-     received block except the last data block.
+4. Compare the computed digest against the allowed app digest
+   hardcoded in the firmware. If it's not equal, halt CPU.
 
-  4. When the final block of the application image is received with a
-     `FW_CMD_LOAD_APP_DATA`, the firmware measure the application by
-     computing a BLAKE2s digest over the entire application. Then
-     firmware send back the `FW_RSP_LOAD_APP_DATA_READY` response
-     containing the digest.
+7. [Start the device app](#start-the-device-app).
 
-  5. The Compound Device Identifier
-     ([CDI]((#compound-device-identifier-computation))) is then
-     computed by doing a new BLAKE2s using the Unique Device Secret
-     (UDS), the application digest, and any User Supplied Secret
-     (USS) digest already received.
+### Start the device app
 
-  6. The start address of the device app, currently `0x4000_0000`, is
-     written to `APP_ADDR` and the size of the binary to `APP_SIZE` to
-     let the device application know where it is loaded and how large
-     it is, if it wants to relocate in RAM.
+1. Check if there is a verification digest left from the previous app
+   in the resetinfo. If it is, compare with the loaded app's already
+   computed digest. Halt CPU if different.
 
-  7. The firmware now clears the part of the special `FW_RAM` where it
-     keeps it stack.
+2. Compute the Compound Device Identifier
+   ([CDI]((#compound-device-identifier-computation))) by doing a
+   BLAKE2s using the Unique Device Secret (UDS), the application
+   digest, and any User Supplied Secret (USS) digest already received.
 
-  8. The interrupt handler for system calls is enabled.
+3. Write the start address of the device app, currently `0x4000_0000`,
+   to `APP_ADDR` and the size of the loaded binary to `APP_SIZE` to
+   let the device application know where it is loaded and how large it
+   is, if it wants to relocate in RAM.
 
-  9. Firmware starts the application by jumping to the contents of
-     `APP_ADDR`. Hardware automatically switches from firmware mode to
-     application mode. In this mode some memory access is restricted,
-     e.g. some addresses are inaccessible (`UDS`), and some are
-     switched from read/write to read-only (see [the memory
-     map](https://dev.tillitis.se/memory/)).
+4. Clear the stack part of `FW_RAM`.
 
-If during this whole time any commands are received which are not
-allowed in the current state, or any errors occur, we enter the
-"failed" state and execute an illegal instruction. An illegal
-instruction traps the CPU and hardware blinks the status LED red until
-a power cycle. No further instructions are executed.
+5. Enable system call interrupt handler.
+
+6. Start the application by jumping to the contents of `APP_ADDR`.
+   Hardware automatically switch from firmware mode to application
+   mode. In this mode some memory access is restricted, e.g. some
+   addresses are inaccessible (`UDS`), and some are switched from
+   read/write to read-only (see [the memory
+   map](https://dev.tillitis.se/memory/)).
+
+### Management app, chaining apps and verified boot
+
+Normally, the TKey measures a device app and mixes it together with
+the Unique Device Secret in hardware to produce the [Compound Device
+Identifier]((#compound-device-identifier-computation)). The CDI can
+then be used for creating key material. However, since any key
+material created like this will change if the app is changed even the
+slightest, this make it hard to upgrade apps and keep the key
+material.
+
+This is where a combination of measured boot and verified boot comes
+in!
+
+To support verified boot the firmware supports reset types with
+verification. This means that the firmware will load an app as usual
+either from flash or from the client, but before starting the app it
+will verify the new app's computed digest with a verification digest.
+The verification digest can either be stored in the firmware itself or
+left to it from a previous app, a verified boot loader app.
+
+Such a verified boot loader app:
+
+- Might be loaded from either flash or client.
+
+- Typically includes a security policy, for instance a public key and
+  code to check a crytographic signature.
+
+- Can be specifically trusted by firmware to be able to do filesystem
+  management to be able to update an app slot on flash. Add the app's
+  digest to `allowed_app_digest` in `mgmt_app.c` to allow it to allow
+  it to use `PRELOAD_DELETE`, `PRELOAD_STORE`, and
+  `PRELOAD_STORE_FIN`.
+
+It works like this:
+
+- The app reads a digest of the next app in the chain and the
+  signature over the digest from either the filesystem (syscall
+  `PRELOAD_GET_DIGSIG`) or sent from the client.
+
+- If the signature provided over the digest is verified against the
+  public key the app use the system call `RESET` with the reset type
+  set to `START_FLASH0_VER`, `START_FLASH1_VER`, or `START_CLIENT_VER`
+  depending on where it wants the next app to start from. It also
+  sends the now verified app digest to the firmware in the same system
+  call.
+
+- The key is reset and firmware starts again. It checks:
+
+  1. The reset type. Start from client or a slot in the filesystem?
+  2. The expected digest of the next app.
+
+- Firmware loads the app from the expected source.
+
+- Firmware refuses to start if the loaded app has a different digest.
+
+- If the app was allowed to start it can now use something
+  deterministic left for it in resetinfo by the verified boot loader
+  app as a seed for it's key material and no longer use CDI for the
+  purpose.
+
+We propose that a loader app can derive the seed for the next app by
+creating a shared secret, perhaps something as easy as:
+
+```
+secret = blake2s(cdi, "name-of-next-app")
+```
+
+The loader shares the secret with the next app by putting it in the
+part of `resetinfo` that is reserved for inter-app communication.
+
+The next app can now use the secret as a seed for it's own key
+material. Depending on the app's behaviour and the numer of keys it
+needs it can derive more keys, for instance by having nonces stored on
+its flash area and doing:
+
+```
+secret1 = blake2s(secret, nonce1)
+secret2 = blake2s(secret, nonce2)
+...
+```
+
+Now it can create many secrets deterministically, as long as there is
+some space left on flash for the nonces and all of them can be traced
+to the measured identity of the loader app, giving all the features of
+the measured boot system.
+
+### App loaded from client
+
+The default is always to start from a verified app in flash slot
+0. To be able to load an app from the client you have to send
+something to the app to reset the TKey with a reset type of
+`START_CLIENT` or `START_CLIENT_VER`.
+
+After reset, firmware will:
+
+1. Wait for data coming in through the UART.
+
+2. The client sends the `FW_CMD_LOAD_APP` command with the size of
+   the device app and the optional 32 byte hash of the user-supplied
+   secret as arguments and gets a `FW_RSP_LOAD_APP` back. After
+   using this it's not possible to restart the loading of an
+   application.
+
+3. On a sucessful response, the client will send multiple
+   `FW_CMD_LOAD_APP_DATA` commands, together containing the full
+   application.
+
+4. On receiving`FW_CMD_LOAD_APP_DATA` commands the firmware places
+   the data into `0x4000_0000` and upwards. The firmware replies
+   with a `FW_RSP_LOAD_APP_DATA` response to the client for each
+   received block except the last data block.
+
+5. When the final block of the application image is received with a
+   `FW_CMD_LOAD_APP_DATA`, the firmware measure the application by
+   computing a BLAKE2s digest over the entire application. Then
+   firmware send back the `FW_RSP_LOAD_APP_DATA_READY` response
+   containing the digest.
+
+6. [Start the device app](#start-the-device-app).
 
 ### User-supplied Secret (USS)
 
@@ -276,7 +480,7 @@ CDI = blake2s(UDS, blake2s(app), USS)
 In an ideal world, software would never be able to read UDS at all and
 we would have a BLAKE2s function in hardware that would be the only
 thing able to read the UDS. Unfortunately, we couldn't fit a BLAKE2s
-implementation in the FPGA at this time.
+implementation in the FPGA.
 
 The firmware instead does the CDI computation using the special
 firmware-only `FW_RAM` which is invisible after switching to app mode.
@@ -294,7 +498,7 @@ Then we continue with the CDI computation by updating with an optional
 USS digest and finalizing the hash, storing the resulting digest in
 `CDI`.
 
-### Firmware system calls
+### System calls
 
 The firmware provides a system call mechanism through the use of the
 PicoRV32 interrupt handler. They are triggered by writing to the
@@ -302,10 +506,11 @@ trigger address: 0xe1000000. It's typically done with a function
 signature like this:
 
 ```
-int syscall(uint32_t number, uint32_t arg1);
+int syscall(uint32_t number, uint32_t arg1, uint32_t arg2,
+	    uint32_t arg3);
 ```
 
-Arguments are system call number and upto 6 generic arguments passed
+Arguments are system call number and up to 6 generic arguments passed
 to the system call handler. The caller should place the system call
 number in the a0 register and the arguments in registers a1 to a7
 according to the RISC-V calling convention. The caller is responsible
@@ -315,16 +520,160 @@ The syscall handler returns execution on the next instruction after
 the store instruction to the trigger address. The return value from
 the syscall is now available in x10 (a0).
 
-To add or change syscalls, see the `syscall_handler()` in
-`syscall_handler.c`.
+The syscall numbers are kept in `syscall_num.h`. The syscalls are
+handled in `syscall_handler()` in `syscall_handler.c`.
 
-Currently supported syscalls:
+#### `RESET`
 
-| *Name*      | *Number* | *Argument* | *Description*                    |
-|-------------|----------|------------|----------------------------------|
-| RESET       | 1        | Unused     | Reset the TKey                   |
-| SET\_LED    | 10       | Colour     | Set the colour of the status LED |
-| GET\_VIDPID | 12       | Unused     | Get Vendor and Product ID        |
+```
+struct reset {
+	uint32_t type;           // Reset type
+	uint8_t app_digest[32];  // Digest of next app in chain to verify
+	uint8_t next_app_data[220]; // Data to leave around for next app
+};
+
+struct reset rst;
+
+syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
+```
+
+Resets the TKey. Does not return.
+
+You can pass data to the firmware about the reset type `type` and a
+digest that the next app must have. You can also leave some data to
+the next app in the chain in `next_app_data`.
+
+The types of the reset are defined in `resetinfo.h`:
+
+| *Name*             | *Comment*                                      |
+|--------------------|------------------------------------------------|
+| `START_FLASH0`     | Load next app from flash slot 0                |
+| `START_FLASH1`     | Load next app from flash slot 1                |
+| `START_FLASH0_VER` | Load next app from flash slot 0, but verify it |
+| `START_FLASH1_VER` | Load next app from flash slot 1, but verify it |
+| `START_CLIENT`     | Load next app from client                      |
+| `START_CLIENT_VER` | Load next app from client                      |
+
+#### `ALLOC_AREA`
+
+```
+syscall(TK1_SYSCALL_ALLOC_AREA, 0, 0, 0);
+```
+
+Allocate a flash area for the current app. Returns 0 on success.
+
+#### `DEALLOC_AREA`
+
+```
+syscall(TK1_SYSCALL_DEALLOC_AREA, 0, 0, 0);
+```
+
+Free an already allocated flash area for the current app. Returns 0 on
+success.
+
+#### `WRITE_DATA`
+
+```
+uint32_t offset = 0;
+uint8_t buf[17];
+
+TK1_SYSCALL_WRITE_DATA, offset, (uint32_t)buf, sizeof(buf))
+```
+
+Write data in `buf` to the app's flash area at byte `offset` within
+the area. Returns 0 on success.
+
+#### `READ_DATA`
+
+```
+uint32_t offset = 0;
+uint8_t buf[17];
+
+syscall(TK1_SYSCALL_READ_DATA, offset, (uint32_t)buf, sizeof(buf);
+```
+
+Read into `buf` at byte `offset` from the app's flash area.
+
+#### `PRELOAD_DELETE`
+
+```
+syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0);
+```
+
+Delete the app in flash slot 1. Returns 0 on success. Only available
+for the verified management app.
+
+#### `PRELOAD_STORE`
+
+```
+uint8_t *appbinary;
+uint32_t offset;
+uint32_t size;
+
+syscall(TK1_SYSCALL_PRELOAD_STORE, offset, (uint32_t)appbinary,
+			  size);
+```
+
+Store an app, or possible just a block of an app, from the `appbinary`
+buffer in flash slot 1 at byte `offset` If you can't find your entire
+app in the buffer, call `PRELOAD_STORE` many times as you receive the
+binary from the client. Returns 0 on success.
+
+Only available for the verified management app.
+
+#### `PRELOAD_STORE_FIN`
+
+```
+uint8_t app_digest[32];
+uint8_t app_signature[64];
+size_t app_size;
+
+syscall(TK1_SYSCALL_PRELOAD_STORE_FIN, app_size,
+		    (uint32_t)app_digest, (uint32_t)app_signature)
+```
+
+Finalize storing of an app where the complete binary size is
+`app_size` in flash slot 1. Returns 0 on success. Only available for
+the verified management app.
+
+Compute the `app_digest` with BLAKE2s over the entire binary.
+
+Sign `app_digest` with your Ed25519 private key and pass the
+resulting signature in `app_signature`.
+
+#### `PRELOAD_GET_DIGSIG`
+
+```
+uint8_t app_digest[32];
+uint8_t app_signature[64];
+
+syscall(TK1_SYSCALL_PRELOAD_GET_DIGSIG, (uint32_t)app_digest,
+		(uint32_t)app_signature, 0);
+```
+
+Copies the digest and signature of app in flash slot 1 to `app_digest`
+and `app_signature`. Returns 0 on success. Only available for the
+verified management app.
+
+#### `STATUS`
+
+```
+syscall(TK1_SYSCALL_PRELOAD_STATUS, 0, 0, 0);
+```
+
+Returns filesystem status. Non-zero when problems have been detected,
+so far only that the first copy of the partition table didn't pass
+checks.
+
+#### `GET_VIDPID`
+
+```
+syscall(TK1_SYSCALL_PRELOAD_STATUS, 0, 0, 0);
+```
+
+Returns Vendor and Product ID. Notably the serial number is not
+returned, so a device app can't identify what particular TKey it is
+running on.
 
 ## Developing firmware
 
@@ -345,7 +694,10 @@ you might need to `make clean` before building, if you have already
 built before.
 
 If you want debug prints to show up on the special TKey HID debug
-endpoint instead, define `-DTKEY_DEBUG`.
+endpoint instead, define `-DTKEY_DEBUG`. This might mean you can't fit
+the firmware in the ROM space available, however. You will get a
+warning if it doesn't fit. In that case, just use explicit
+`puts(IO_DEBUG, ...)` or `puts(IO_CDC, ...)` and so on.
 
 Note that if you use `TKEY_DEBUG` you *must* have something listening
 on the corresponding HID device. It's usually the last HID device
@@ -362,6 +714,45 @@ Most of the utility functions that the firmware use lives in
 but we have vendored it in for firmware use in `../tkey-libs`. See top
 README for how to update.
 
+### Preparing the filesystem
+
+The TKey supports a simple filesystem. This filesystem must be
+initiated before starting for the first time. You need a [TKey
+Programmer Board](https://shop.tillitis.se/products/tkey-dev-kit) for
+this part.
+
+1. Choose your pre-loaded app. You /must/ have a pre-loaded app, for
+   example `testloadapp`. Build it with the OCI image we use. The
+   binary needs to produce the BLAKE2s digest in `allowed_app_digest`
+   `tk1/mgmt_app.c`.
+
+2. Write the filesystem to flash:
+
+   ```
+   $ cd ../tools
+   $ ./load_preloaded_app.sh 0 ../fw/testloadapp/testloadapp.bin
+   ```
+
+If you want to use a different pre-loaded app you have to
+
+1. Check the BLAKE2s digest of the app. You can use `tools/b2s` to
+   compute it.
+
+2. Update the `allowed_app_digest` in `tk1/mgmt_app.c`.
+
+3. Create a new `default_partition.bin` using the
+   `tools/partition_table`, typically:
+
+   ```
+   $ partition_table -app0 path/to/your/app.bin -o default_partition.bin
+   ```
+
+4. Flash the filesystem image:
+
+  ```
+  $ ./load_preloaded_app.sh 0 path/to/your/app.bin
+  ```
+
 ### Test firmware
 
 The test firmware is in `testfw`. It's currently a bit of a hack and
@@ -373,5 +764,23 @@ terminal program to the serial port device, even if it's running in
 qemu. It waits for you to type a character before starting the tests.
 
 It needs to be compiled with `-Os` instead of `-O2` in `CFLAGS` in the
-ordinary `application_fpga/Makefile` to be able to fit in the 6 kByte
-ROM.
+ordinary `application_fpga/Makefile` to be able to fit in ROM.
+
+### Test apps
+
+There are a couple of test apps. All of them are controlled through
+the USB CDC, typically by running picocom or similar terminal program,
+like:
+
+```
+$ picocom /dev/ttyACM1
+```
+
+or similar.
+
+- `fw/testapp`: Runs through a couple of tests that are now impossible
+  to do in the `testfw`.
+- `fw/reset_test`: Interactively test different reset scenarios.
+- `fw/testloadapp`: Interactively test management app things like
+  installing an app (hardcoded for a small happy blinking app, see
+  `blink.h` for the entire binary!) and to test verified boot.
