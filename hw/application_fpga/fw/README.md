@@ -64,8 +64,9 @@ The different endpoints:
 
 | *Name* | *Value* | *Comment*                                                            |
 |--------|---------|----------------------------------------------------------------------|
-| DEBUG  | 0x20    | A USB HID special debug pipe. Useful for debug prints.               |
+| CCID   | 0x08    | USB CCID, a port for emulating a smart card                          |
 | CH552  | 0x10    | USB controller control                                               |
+| DEBUG  | 0x20    | A USB HID special debug pipe. Useful for debug prints.               |
 | CDC    | 0x40    | USB CDC-ACM, a serial port on the client.                            |
 | FIDO   | 0x80    | A USB FIDO security token device, useful for FIDO-type applications. |
 
