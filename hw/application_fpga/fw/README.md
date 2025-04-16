@@ -162,6 +162,7 @@ stateDiagram-v2
     S0 --> S1
     S0 --> S4: Default
     S0 --> S3
+    S0 --> SE: Error
 
     S1 --> S1: Other commands
     S1 --> S2: LOAD_APP
