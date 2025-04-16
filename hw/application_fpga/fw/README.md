@@ -220,7 +220,7 @@ I/O in state *LOAD_FLASH_MGMT*:
 |--------------------|--------------|
 | Last app data read | *START*      |
 
-Commands in state `waitcommand`:
+Commands in state *WAITCOMMAND*:
 
 | *command*             | *next state* |
 |-----------------------|--------------|
@@ -228,7 +228,7 @@ Commands in state `waitcommand`:
 | `FW_CMD_GET_UDI`      | unchanged    |
 | `FW_CMD_LOAD_APP`     | *LOADING*    |
 
-Commands in state `loading`:
+Commands in state *LOADING*:
 
 | *command*              | *next state*                       |
 |------------------------|------------------------------------|
