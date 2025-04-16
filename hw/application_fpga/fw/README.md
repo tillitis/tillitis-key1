@@ -550,7 +550,7 @@ You can pass data to the firmware about the reset type `type` and a
 digest that the next app must have. You can also leave some data to
 the next app in the chain in `next_app_data`.
 
-The types of the reset are defined in `resetinfo.h`:
+The types of reset are defined in `resetinfo.h`:
 
 | *Name*             | *Comment*                                      |
 |--------------------|------------------------------------------------|
