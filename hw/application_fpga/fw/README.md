@@ -191,8 +191,8 @@ States:
 - *LOADING*: Expecting application data from client. Allows only the
   command `LOAD_APP_DATA` to continue loading the device app.
 - *LOAD_FLASH*: Loading an app from flash. Allows no commands.
-- *LOAD_FLASH_MGMT*: Loading and verifyiing a device app from flash.
-  Allows no commands.
+- *LOAD_FLASH_MGMT*: Loading an app from flash and registering it as a
+  prospective managment app. Allows no commands.
 - *START*: Computes CDI. Possibly verifies app. Starts the
   application. Does not return to firmware. Allows no commands.
 - *FAIL* - Halts CPU. Allows no commands.
