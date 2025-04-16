@@ -254,7 +254,7 @@ Plain text explanation of the states:
   Transition to *START*.
 
 - *LOAD_FLASH_MGMT*: Load device app from flash into RAM, app slot
-  alway 0. Compute a BLAKE2s digest over the entire app. Register the
+  always 0. Compute a BLAKE2s digest over the entire app. Register the
   app as a prospective management app. If it later goes through
   verification transition to *START*.
 
