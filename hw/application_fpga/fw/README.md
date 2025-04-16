@@ -590,6 +590,9 @@ TK1_SYSCALL_WRITE_DATA, offset, (uint32_t)buf, sizeof(buf))
 Write data in `buf` to the app's flash area at byte `offset` within
 the area. Returns 0 on success.
 
+At most 4096 bytes can be written at once and `offset` must be a
+multiple of 4096 bytes.
+
 #### `READ_DATA`
 
 ```
