@@ -295,10 +295,11 @@ Firmware loads the device application at the start of RAM
 Firmware uses a part of the FW\_RAM for its own stack.
 
 When reset is released, the CPU starts executing the firmware. It
-begins in `start.S` by clearing all CPU registers, clears all FW\_RAM,
-sets up a stack for itself there, and then jumps to `main()`. Also
-included in the assembly part of firmware is an interrupt handler for
-the system calls, but the handler is not yet enabled.
+begins in `start.S` by clearing all CPU registers, clears all FW\_RAM
+except the part reserved for the resetinfo area, sets up a stack for
+itself there, and then jumps to `main()`. Also included in the
+assembly part of firmware is an interrupt handler for the system
+calls, but the handler is not yet enabled.
 
 Beginning at `main()` it fills the entire RAM with pseudo random data
 and setting up the RAM address and data hardware scrambling with
