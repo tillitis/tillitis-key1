@@ -255,8 +255,8 @@ Plain text explanation of the states:
 
 - *LOAD_FLASH_MGMT*: Load device app from flash into RAM, app slot
   alway 0. Compute a BLAKE2s digest over the entire app. Register the
-  app as a prospective management app if it later goes through
-  verification. Transition to *START*.
+  app as a prospective management app. If it later goes through
+  verification transition to *START*.
 
 - *WAITCOMMAND*: Wait for commands from the client. Transition to
   *LOADING* on `LOAD_APP` command, which also sets the size of the
