@@ -320,7 +320,7 @@ Firmware then proceeds to:
 4. Compare the computed digest against the allowed app digest
    hardcoded in the firmware. If it's not equal, halt CPU.
 
-7. [Start the device app](#start-the-device-app).
+5. [Start the device app](#start-the-device-app).
 
 ### Start the device app
 
