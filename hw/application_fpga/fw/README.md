@@ -420,7 +420,7 @@ The loader shares the secret with the next app by putting it in the
 part of `resetinfo` that is reserved for inter-app communication.
 
 The next app can now use the secret as a seed for it's own key
-material. Depending on the app's behaviour and the numer of keys it
+material. Depending on the app's behaviour and the number of keys it
 needs it can derive more keys, for instance by having nonces stored on
 its flash area and doing:
 
