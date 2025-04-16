@@ -246,7 +246,8 @@ Plain text explanation of the states:
   for what to do next.
 
   For all types which begins with `FLASH_*`, set next state to
-  *LOAD_FLASH*, otherwise set next state to *WAITCOMMAND*.
+  *LOAD_FLASH* or *LOAD_FLASH_MGMT*, otherwise set next state to
+  *WAITCOMMAND*.
 
 - *LOAD_FLASH*: Load device app from flash into RAM, app slot taken
   from context. Compute a BLAKE2s digest over the entire app.
