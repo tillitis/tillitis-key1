@@ -629,6 +629,9 @@ buffer in flash slot 1 at byte `offset` If you can't find your entire
 app in the buffer, call `PRELOAD_STORE` many times as you receive the
 binary from the client. Returns 0 on success.
 
+At most 4096 bytes can be written at once and `offset` must be a
+multiple of 4096 bytes.
+
 Only available for the verified management app.
 
 #### `PRELOAD_STORE_FIN`
