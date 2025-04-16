@@ -378,9 +378,8 @@ Such a verified boot loader app:
 
 - Can be specifically trusted by firmware to be able to do filesystem
   management to be able to update an app slot on flash. Add the app's
-  digest to `allowed_app_digest` in `mgmt_app.c` to allow it to allow
-  it to use `PRELOAD_DELETE`, `PRELOAD_STORE`, and
-  `PRELOAD_STORE_FIN`.
+  digest to `allowed_app_digest` in `mgmt_app.c` to allow it to use
+  `PRELOAD_DELETE`, `PRELOAD_STORE`, and `PRELOAD_STORE_FIN`.
 
 It works like this:
 
