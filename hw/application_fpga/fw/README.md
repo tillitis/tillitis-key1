@@ -734,7 +734,7 @@ initiated before starting for the first time. You need a [TKey
 Programmer Board](https://shop.tillitis.se/products/tkey-dev-kit) for
 this part.
 
-1. Choose your pre-loaded app. You /must/ have a pre-loaded app, for
+1. Choose your pre-loaded app. You *must* have a pre-loaded app, for
    example `testloadapp`. Build it with the OCI image we use. The
    binary needs to produce the BLAKE2s digest in `allowed_app_digest`
    `tk1/mgmt_app.c`.
