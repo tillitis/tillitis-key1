@@ -307,6 +307,8 @@ values from the True Random Number Generator (TRNG).
 
 The partition table is then read from flash and stored in FW\_RAM.
 
+Firmware then proceeds to:
+
 1. Check the special resetinfo area in FW\_RAM for reset type. Type
    zero means default behaviour, load from flash app slot 0, expecting
    the app there to have a specific hardcoded BLAKE2s digest.
