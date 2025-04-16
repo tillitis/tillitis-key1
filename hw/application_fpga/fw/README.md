@@ -222,11 +222,11 @@ I/O in state *LOAD_FLASH_MGMT*:
 
 Commands in state *WAITCOMMAND*:
 
-| *command*             | *next state* |
-|-----------------------|--------------|
-| `FW_CMD_NAME_VERSION` | unchanged    |
-| `FW_CMD_GET_UDI`      | unchanged    |
-| `FW_CMD_LOAD_APP`     | *LOADING*    |
+| *command*             | *next state*                               |
+|-----------------------|--------------------------------------------|
+| `FW_CMD_NAME_VERSION` | unchanged                                  |
+| `FW_CMD_GET_UDI`      | unchanged                                  |
+| `FW_CMD_LOAD_APP`     | *LOADING* or unchanged on invalid app size |
 
 Commands in state *LOADING*:
 
