@@ -79,9 +79,9 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
 - Support a filesystem on flash.
 
 - Add a system call mechanism and system calls: `RESET`, `ALLOC_AREA`,
-  `DEALLOC_AREA`, `WRITE_DATA`, `READ_DATA`, `PRELOAD_DELETE`,
-  `PRELOAD_STORE`, `PRELOAD_STORE_FIN`, `PRELOAD_GET_DIGSIG`,
-  `STATUS`, and `GET_VIDPID`. See [firmware's
+  `DEALLOC_AREA`, `WRITE_DATA`, `READ_DATA`, `ERASE_DATA`,
+  `PRELOAD_DELETE`, `PRELOAD_STORE`, `PRELOAD_STORE_FIN`,
+  `PRELOAD_GET_DIGSIG`, `STATUS`, and `GET_VIDPID`. See [firmware's
   README](../hw/application_fpga/fw/README.md) for documentation.
 
 - Harmonize with [tkey-libs](https://github.com/tillitis/tkey-libs).
