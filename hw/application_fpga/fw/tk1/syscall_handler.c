@@ -78,6 +78,14 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 		}
 		return 0;
 
+	case TK1_SYSCALL_ERASE_DATA:
+		if (storage_erase_sector(&part_table_storage.table, arg1,
+					 arg2) < 0) {
+			debug_puts("couldn't erase storage area\n");
+			return -1;
+		}
+		return 0;
+
 	case TK1_SYSCALL_GET_VIDPID:
 		// UDI is 2 words: VID/PID & serial. Return just the
 		// first word. Serial is kept secret to the device
