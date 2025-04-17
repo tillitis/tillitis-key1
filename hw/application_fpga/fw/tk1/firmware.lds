@@ -7,7 +7,7 @@ OUTPUT_ARCH("riscv")
 ENTRY(_start)
 
 /* Define stack size */
-STACK_SIZE = 0xEF0; /* 3824 B */
+STACK_SIZE = 3000;
 
 MEMORY
 {

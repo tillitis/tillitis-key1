@@ -60,10 +60,12 @@ CFLAGS = \
 	-Wall \
 	-Wpedantic \
 	-Wno-language-extension-token \
+	-Wextra \
 	-flto \
 	-g \
 	-I $(LIBDIR)/include \
-	-I $(LIBDIR)
+	-I $(LIBDIR) \
+	-I $(LIBDIR)/blake2s
 
 AS = clang
 
@@ -124,15 +126,19 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
 	$(P)/fw/tk1/start.o \
 	$(P)/fw/tk1/proto.o \
-	$(P)/fw/tk1/blake2s/blake2s.o \
 	$(P)/fw/tk1/syscall_enable.o \
-	$(P)/fw/tk1/syscall_handler.o
+	$(P)/fw/tk1/syscall_handler.o \
+	$(P)/fw/tk1/spi.o \
+	$(P)/fw/tk1/flash.o \
+	$(P)/fw/tk1/storage.o \
+	$(P)/fw/tk1/partition_table.o \
+	$(P)/fw/tk1/auth_app.o \
+	$(P)/fw/tk1/rng.o \
+	$(P)/fw/tk1/preload_app.o \
+	$(P)/fw/tk1/mgmt_app.o
 
-FIRMWARE_SOURCES = \
-	$(P)/fw/tk1/main.c \
-	$(P)/fw/tk1/proto.c \
-	$(P)/fw/tk1/blake2s/blake2s.c \
-	$(P)/fw/tk1/syscall_handler.c
+CHECK_SOURCES = \
+	$(P)/fw/tk1/*.[ch]
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
@@ -176,7 +182,7 @@ secret:
 LDFLAGS = \
 	-T $(P)/fw/tk1/firmware.lds \
 	-Wl,--cref,-M \
-	-L $(LIBDIR) -lcommon
+	-L $(LIBDIR) -lcommon -lblake2s
 
 # Common libraries the firmware and testfw depend on. See
 # https://github.com/tillitis/tkey-libs/
@@ -196,6 +202,9 @@ simfirmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 qemu_firmware.elf: CFLAGS += -DQEMU_DEBUG
+qemu_firmware.elf: ASFLAGS += -DQEMU_DEBUG
+qemu_firmware.elf: CFLAGS += -DQEMU_SYSCALL
+qemu_firmware.elf: ASFLAGS += -DQEMU_SYSCALL
 qemu_firmware.elf: firmware.elf
 	mv firmware.elf qemu_firmware.elf
 
@@ -208,12 +217,12 @@ compile_commands.json:
 
 .PHONY: check
 check:
-	clang-tidy -header-filter=.* -checks=cert-* $(FIRMWARE_SOURCES) -- $(CFLAGS)
+	clang-tidy -header-filter=.* -checks=cert-* $(CHECK_SOURCES) -- $(CFLAGS)
 
 .PHONY: splint
 splint:
 	splint \
-		-nolib \
+		+unixlib \
 		-predboolint \
 		+boolint \
 		-nullpass \
@@ -224,7 +233,13 @@ splint:
 		-unreachable \
 		-unqualifiedtrans \
 		-fullinitblock \
-		$(FIRMWARE_SOURCES)
+		+gnuextensions \
+		-fixedformalarray \
+		-mustfreeonly \
+		-I $(LIBDIR)/include \
+		-I $(LIBDIR) \
+		-I $(LIBDIR)/blake2s \
+		$(CHECK_SOURCES)
 
 testfw.elf: tkey-libs $(TESTFW_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(TESTFW_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map

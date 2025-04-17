@@ -3,22 +3,22 @@
 // blake2s.c
 // ---------
 //
-// A simple blake2s Reference Implementation.
+// A simple BLAKE2s reference implementation.
+//
+// See LICENSE for license terms.
+// See README.md in the repo root for info about source code origin.
 //======================================================================
 
 #include <stdint.h>
-
 #include "blake2s.h"
-
-// Dummy printf() for verbose mode
-static void printf(const char *format, ...)
-{
-}
 
 #define VERBOSE 0
 #define SHOW_V 0
 #define SHOW_M_WORDS 0
 
+#if VERBOSE || SHOW_V || SHOW_M_WORDS
+#include <stdio.h>
+#endif
 
 // Cyclic right rotation.
 #ifndef ROTR32
@@ -41,6 +41,7 @@ static const uint32_t blake2s_iv[8] = {
 };
 
 
+#if VERBOSE || SHOW_V
 //------------------------------------------------------------------
 //------------------------------------------------------------------
 void print_v(uint32_t *v) {
@@ -71,24 +72,25 @@ void print_ctx(blake2s_ctx *ctx) {
   printf("\n");
 }
 
+#endif
 
 //------------------------------------------------------------------
 // B2S_G macro redefined as a G function.
 // Allows us to output intermediate values for debugging.
 //------------------------------------------------------------------
 void G(uint32_t *v, uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t x, uint32_t y) {
-  if (VERBOSE) {
+#if VERBOSE
     printf("G started.\n");
-  }
+#endif
 
-  if (SHOW_V) {
+#if SHOW_V
     printf("v before processing:\n");
     print_v(&v[0]);
-  }
+#endif
 
-  if (SHOW_M_WORDS) {
+#if SHOW_M_WORDS
     printf("x: 0x%08x, y: 0x%08x\n", x, y);
-  }
+#endif
 
   v[a] = v[a] + v[b] + x;
   v[d] = ROTR32(v[d] ^ v[a], 16);
@@ -99,14 +101,14 @@ void G(uint32_t *v, uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t x, 
   v[c] = v[c] + v[d];
   v[b] = ROTR32(v[b] ^ v[c], 7);
 
-  if (SHOW_V) {
+#if SHOW_V
     printf("v after processing:\n");
     print_v(&v[0]);
-  }
+#endif
 
-  if (VERBOSE) {
+#if VERBOSE
     printf("G completed.\n\n");
-  }
+#endif
 }
 
 
@@ -131,9 +133,9 @@ static void blake2s_compress(blake2s_ctx *ctx, int last)
     int i;
     uint32_t v[16], m[16];
 
-    if (VERBOSE) {
+#if VERBOSE
       printf("blake2s_compress started.\n");
-    }
+#endif
 
     // init work variables
     for (i = 0; i < 8; i++) {
@@ -143,9 +145,9 @@ static void blake2s_compress(blake2s_ctx *ctx, int last)
 
     // low 32 bits of offset
     // high 32 bits
-    if (VERBOSE) {
+#if VERBOSE
       printf("t[0]: 0x%08x, t[1]: 0x%08x\n", ctx->t[0], ctx->t[1]);
-    }
+#endif
     v[12] ^= ctx->t[0];
     v[13] ^= ctx->t[1];
 
@@ -159,52 +161,52 @@ static void blake2s_compress(blake2s_ctx *ctx, int last)
         m[i] = B2S_GET32(&ctx->b[4 * i]);
     }
 
-    if (VERBOSE) {
+#if VERBOSE
       printf("v before G processing:\n");
       print_v(&v[0]);
-    }
+#endif
 
     // Ten rounds of the G function applied on rows, diagonal.
     for (i = 0; i < 10; i++) {
-      if (VERBOSE) {
+#if VERBOSE
         printf("Round %02d:\n", (i + 1));
         printf("Row processing started.\n");
-      }
+#endif
 
       G(&v[0], 0, 4,  8, 12, m[sigma[i][ 0]], m[sigma[i][ 1]]);
       G(&v[0], 1, 5,  9, 13, m[sigma[i][ 2]], m[sigma[i][ 3]]);
       G(&v[0], 2, 6, 10, 14, m[sigma[i][ 4]], m[sigma[i][ 5]]);
       G(&v[0], 3, 7, 11, 15, m[sigma[i][ 6]], m[sigma[i][ 7]]);
 
-      if (VERBOSE) {
+#if VERBOSE
         printf("Row processing completed.\n");
         printf("Diagonal processing started.\n");
-      }
+#endif
 
       G(&v[0], 0, 5, 10, 15, m[sigma[i][ 8]], m[sigma[i][ 9]]);
       G(&v[0], 1, 6, 11, 12, m[sigma[i][10]], m[sigma[i][11]]);
       G(&v[0], 2, 7,  8, 13, m[sigma[i][12]], m[sigma[i][13]]);
       G(&v[0], 3, 4,  9, 14, m[sigma[i][14]], m[sigma[i][15]]);
 
-      if (VERBOSE) {
+#if VERBOSE
         printf("Diagonal processing completed.\n");
         printf("\n");
-      }
+#endif
     }
 
-    if (VERBOSE) {
+#if VERBOSE
       printf("v after G processing:\n");
       print_v(&v[0]);
-    }
+#endif
 
     // Update the hash state.
     for (i = 0; i < 8; ++i) {
       ctx->h[i] ^= v[i] ^ v[i + 8];
     }
 
-    if (VERBOSE) {
+#if VERBOSE
       printf("blake2s_compress completed.\n");
-    }
+#endif
 }
 
 
@@ -218,11 +220,11 @@ int blake2s_init(blake2s_ctx *ctx, size_t outlen,
 {
     size_t i;
 
-    if (VERBOSE) {
+#if VERBOSE
       printf("blake2s_init started.\n");
       printf("Context before blake2s_init processing:\n");
       print_ctx(ctx);
-    }
+#endif
 
     if (outlen == 0 || outlen > 32 || keylen > 32)
         return -1;                      // illegal parameters
@@ -243,11 +245,11 @@ int blake2s_init(blake2s_ctx *ctx, size_t outlen,
         ctx->c = 64;                    // at the end
     }
 
-    if (VERBOSE) {
+#if VERBOSE
       printf("Context after blake2s_init processing:\n");
       print_ctx(ctx);
       printf("blake2s_init completed.\n");
-    }
+#endif
 
     return 0;
 }
@@ -261,11 +263,11 @@ void blake2s_update(blake2s_ctx *ctx,
 {
     size_t i;
 
-    if (VERBOSE) {
+#if VERBOSE
       printf("blake2s_update started.\n");
       printf("Context before blake2s_update processing:\n");
       print_ctx(ctx);
-    }
+#endif
 
     for (i = 0; i < inlen; i++) {
         if (ctx->c == 64) {             // buffer full ?
@@ -278,11 +280,11 @@ void blake2s_update(blake2s_ctx *ctx,
         ctx->b[ctx->c++] = ((const uint8_t *) in)[i];
     }
 
-    if (VERBOSE) {
+#if VERBOSE
       printf("Context after blake2s_update processing:\n");
       print_ctx(ctx);
       printf("blake2s_update completed.\n");
-    }
+#endif
 }
 
 
@@ -294,11 +296,11 @@ void blake2s_final(blake2s_ctx *ctx, void *out)
 {
     size_t i;
 
-   if (VERBOSE) {
+#if VERBOSE
      printf("blake2s_final started.\n");
      printf("Context before blake2s_final processing:\n");
      print_ctx(ctx);
-   }
+#endif
 
     ctx->t[0] += ctx->c;                // mark last block offset
 
@@ -321,11 +323,11 @@ void blake2s_final(blake2s_ctx *ctx, void *out)
             (ctx->h[i >> 2] >> (8 * (i & 3))) & 0xFF;
     }
 
-   if (VERBOSE) {
+#if VERBOSE
      printf("Context after blake2s_final processing:\n");
      print_ctx(ctx);
      printf("blake2s_final completed.\n");
-   }
+#endif
 }
 
 
@@ -334,15 +336,16 @@ void blake2s_final(blake2s_ctx *ctx, void *out)
 //------------------------------------------------------------------
 int blake2s(void *out, size_t outlen,
     const void *key, size_t keylen,
-    const void *in, size_t inlen,
-    blake2s_ctx *ctx)
+    const void *in, size_t inlen)
 {
-    if (blake2s_init(ctx, outlen, key, keylen))
+    blake2s_ctx ctx;
+
+    if (blake2s_init(&ctx, outlen, key, keylen))
         return -1;
 
-    blake2s_update(ctx, in, inlen);
+    blake2s_update(&ctx, in, inlen);
 
-    blake2s_final(ctx, out);
+    blake2s_final(&ctx, out);
 
     return 0;
 }
