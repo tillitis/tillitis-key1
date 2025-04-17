@@ -21,3 +21,19 @@ path = [
 ]
 SPDX-FileCopyrightText = "2022 Tillitis AB <tillitis.se>"
 SPDX-License-Identifier = "BSD-2-Clause"
+
+[[annotations]]
+path = [
+     "blake2s/*",
+]
+
+SPDX-FileCopyrightText = "Markku-Juhani O. Saarinen"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = [
+     "blake2s/Makefile",
+]
+
+SPDX-FileCopyrightText = "2014 Secworks Sweden AB"
+SPDX-License-Identifier = "BSD-2-Clause"
