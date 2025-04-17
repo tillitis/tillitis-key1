@@ -35,8 +35,8 @@ ASFLAGS = \
 	-mno-relax
 
 LDFLAGS = \
-	-T $(P)/app.lds \
-	-L $(LIBDIR) -lcommon
+	-T $(LIBDIR)/app.lds \
+	-L $(LIBDIR) -lcrt0 -lcommon
 
 .PHONY: all
 all: testapp.bin
@@ -54,7 +54,6 @@ TESTAPP_FMTFILES = *.[ch]
 
 TESTAPP_OBJS = \
 	$(P)/main.o \
-	$(P)/crt0.o \
 	$(P)/syscall.o
 
 testapp.elf: tkey-libs $(TESTAPP_OBJS)
