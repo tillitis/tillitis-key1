@@ -595,6 +595,20 @@ syscall(TK1_SYSCALL_READ_DATA, offset, (uint32_t)buf, sizeof(buf);
 
 Read into `buf` at byte `offset` from the app's flash area.
 
+#### `ERASE_DATA`
+
+```
+uint32_t offset = 0;
+uint32_t size = 4096;
+
+syscall(TK1_SYSCALL_ERASE_DATA, offset, size, 0);
+```
+
+Erase `size` bytes from `offset` within the area. Returns 0 on
+success.
+
+Both `size` and  `offset` must be a multiple of 4096 bytes.
+
 #### `PRELOAD_DELETE`
 
 ```
