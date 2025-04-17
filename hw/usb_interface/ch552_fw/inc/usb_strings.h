@@ -55,6 +55,12 @@ unsigned char FLASH FidoInterfaceDesc[] = {  // "FIDO"
     'F', 0, 'I', 0, 'D', 0, 'O', 0,
 };
 
+unsigned char FLASH CcidInterfaceDesc[] = {  // "CCID"
+    10,    // Length of this descriptor (in bytes)
+    0x03,  // Descriptor type (String)
+    'C', 0, 'C', 0, 'I', 0, 'D', 0,
+};
+
 unsigned char FLASH DebugInterfaceDesc[] = {  // "DEBUG"
     12,    // Length of this descriptor (in bytes)
     0x03,  // Descriptor type (String)

@@ -57,6 +57,7 @@ if __name__ == "__main__":
         "CdcCtrlInterfaceDesc": "CDC-Ctrl",
         "CdcDataInterfaceDesc": "CDC-Data",
         "FidoInterfaceDesc": "FIDO",
+        "CcidInterfaceDesc": "CCID",
         "DebugInterfaceDesc": "DEBUG"
     }
 
