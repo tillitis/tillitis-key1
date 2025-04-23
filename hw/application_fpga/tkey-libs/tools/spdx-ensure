@@ -29,6 +29,7 @@ RELEASE.md
 example-app/Makefile
 monocypher/LICENSE
 monocypher/README.md
+blake2s/*
 )
 
 is_missingok() {

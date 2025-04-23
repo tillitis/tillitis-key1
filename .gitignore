@@ -28,6 +28,7 @@
 /testbench_verilator*
 /check.smt2
 /check.vcd
+/hw/application_fpga/tkey-libs/libblake2s.a
 /hw/application_fpga/tkey-libs/libcommon.a
 /hw/application_fpga/tkey-libs/libcrt0.a
 /hw/application_fpga/tkey-libs/libmonocypher.a

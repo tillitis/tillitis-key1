@@ -74,15 +74,20 @@ static void write_with_header(enum ioend dest, const uint8_t *buf,
 // write blockingly writes nbytes bytes of data from buf to dest which
 // is either:
 //
+// - IO_UART: Low-level UART access, no USB Mode Header added.
+//
 // - IO_QEMU: QEMU debug port
 //
-// - IO_UART: Low-level UART access, no USB Mode Header added.
+// - IO_CH552: Internal communication between the FPGA and the
+//   CH552, with header.
 //
 // - IO_CDC: Through the UART for the CDC endpoint, with header.
 //
-// - IO_HID: Through the UART for the HID endpoint, with header.
+// - IO_FIDO: Through the UART for the FIDO endpoint, with header.
 //
-// - IO_TKEYCTRL: Through the UART for the debug HID endpoint, with
+// - IO_CCID: Through the UART for the CCID endpoint, with header.
+//
+// - IO_DEBUG: Through the UART for the DEBUG endpoint (USB HID), with
 //   header.
 void write(enum ioend dest, const uint8_t *buf, size_t nbytes)
 {
@@ -194,18 +199,20 @@ static int discard(size_t nbytes)
 //
 // Use like this:
 //
-//   readselect(IO_CDC|IO_HID, &endpoint, &len)
+//   readselect(IO_CDC|IO_FIDO, &endpoint, &len)
 //
-// to wait for some data from either the CDC or the HID endpoint.
+// to wait for some data from either the CDC or the FIDO endpoint.
 //
 // NOTE WELL: You need to call readselect() first, before doing any
 // calls to read().
 //
 // Only endpoints available for read are:
 //
-// - IO_TKEYCTRL
+// - IO_CH552
 // - IO_CDC
-// - IO_HID
+// - IO_FIDO
+// - IO_CCID
+// - IO_DEBUG
 //
 // If you need blocking low-level UART reads, use uart_read() instead.
 //
@@ -215,7 +222,7 @@ static int discard(size_t nbytes)
 // Returns non-zero on error.
 int readselect(int bitmask, enum ioend *endpoint, uint8_t *len)
 {
-	if (bitmask & IO_UART || bitmask & IO_QEMU) {
+	if ((bitmask & IO_UART) || (bitmask & IO_QEMU)) {
 		// Not possible to use readselect() on these
 		// endpoints.
 		return -1;
@@ -347,4 +354,29 @@ void hexdump(enum ioend dest, void *buf, int len)
 		rowbuf[rowpos++] = '\n';
 		write(dest, rowbuf, rowpos);
 	}
+}
+
+// Configure USB endpoints that should be enabled/disabled
+//
+// Allowed options are:
+//   - IO_FIDO (can't be used used together with IO_CCID)
+//   - IO_CCID (can't be used used together with IO_FIDO)
+//   - IO_DEBUG
+//
+// The following are always enabled:
+//   - IO_CDC
+//   - IO_CH552
+//
+// Use like this:
+//
+//   config_endpoints(IO_FIDO|IO_DEBUG)
+//
+void config_endpoints(enum ioend endpoints)
+{
+	uint8_t cmdbuf[2] = {0};
+
+	cmdbuf[0] = SET_ENDPOINTS;
+	cmdbuf[1] = endpoints;
+
+	write(IO_CH552, cmdbuf, 2);
 }
