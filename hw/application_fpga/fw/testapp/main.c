@@ -18,6 +18,7 @@
 // clang-format off
 volatile uint32_t *tk1name0         = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
 volatile uint32_t *tk1name1         = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
+volatile uint32_t *tk1version       = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
 volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
 volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
@@ -95,6 +96,9 @@ int main(void)
 	wordcpy_s(&name, 1, (void *)tk1name1, 1);
 	reverseword(&name);
 	write(IO_CDC, (const uint8_t *)&name, 4);
+	puts(IO_CDC, "\r\n");
+	puts(IO_CDC, "Version: ");
+	putinthex(IO_CDC, *tk1version);
 	puts(IO_CDC, "\r\n");
 
 	uint32_t zeros[8];
