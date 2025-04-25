@@ -27,14 +27,10 @@ static void part_checksum(struct partition_table *part_table,
 {
 	int blake2err = 0;
 
-	uint8_t key[16] = {
-	    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	};
-
 	assert(part_table != NULL);
 	assert(out_digest != NULL);
 
-	blake2err = blake2s(out_digest, out_len, key, sizeof(key), part_table,
+	blake2err = blake2s(out_digest, out_len, NULL, 0, part_table,
 			    sizeof(struct partition_table));
 
 	assert(blake2err == 0);

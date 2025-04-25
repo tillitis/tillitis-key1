@@ -34,7 +34,7 @@ type PartTable struct {
 
 type PartTableStorage struct {
 	PartTable PartTable
-	Digest    [16]uint8
+	Checksum  [32]byte
 }
 
 type Flash struct {
@@ -85,21 +85,7 @@ func printPartTableStorageCondensed(storage PartTableStorage) {
 		fmt.Printf("                         %x\n", appData.Signature[32:48])
 		fmt.Printf("                         %x\n", appData.Signature[48:])
 	}
-	fmt.Printf("  Digest               : %x\n", storage.Digest)
-}
-
-func calculateStorageDigest(data []byte) []byte {
-	key := [16]byte{}
-
-	hash, err := blake2s.New128(key[:])
-	if err != nil {
-		panic(err)
-	}
-
-	hash.Write(data)
-	digest := hash.Sum([]byte{})
-
-	return digest
+	fmt.Printf("  Digest               : %x\n", storage.Checksum)
 }
 
 func generatePartTableStorage(outputFilename string, app0Filename string) {
@@ -125,8 +111,7 @@ func generatePartTableStorage(outputFilename string, app0Filename string) {
 		panic(err)
 	}
 
-	digest := calculateStorageDigest(buf[:len])
-	copy(storage.Digest[:], digest)
+	storage.Checksum = blake2s.Sum256(buf[:len])
 
 	storageFile, err := os.Create(outputFilename)
 	if err != nil {

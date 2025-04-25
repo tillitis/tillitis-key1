@@ -46,7 +46,7 @@
 #define SIZE_STORAGE_AREA 0x20000UL // 128KiB
 #define N_STORAGE_AREA 4
 
-#define PART_CHECKSUM_SIZE 16
+#define PART_CHECKSUM_SIZE 32
 
 enum part_status {
 	PART_SLOT0_INVALID = 1,
