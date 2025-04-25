@@ -67,7 +67,15 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
-	if ((offset + size) > SIZE_PRE_LOADED_APP || size > 4096) {
+	if (offset > SIZE_PRE_LOADED_APP) {
+		return -2;
+	}
+
+	if (size > 4096) {
+		return -2;
+	}
+
+	if ((offset + size) > SIZE_PRE_LOADED_APP) {
 		/* Writing outside of area */
 		return -2;
 	}

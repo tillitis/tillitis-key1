@@ -176,6 +176,10 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 		return -3;
 	}
 
+	if (offset > SIZE_STORAGE_AREA) {
+		return -2;
+	}
+
 	/* Cannot only erase entire sectors */
 	if (offset % 4096 != 0) {
 		return -2;
@@ -227,7 +231,15 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 		return -3;
 	}
 
-	if ((offset + size) > SIZE_STORAGE_AREA || size > 4096) {
+	if (offset > SIZE_STORAGE_AREA) {
+		return -2;
+	}
+
+	if (size > 4096) {
+		return -2;
+	}
+
+	if ((offset + size) > SIZE_STORAGE_AREA) {
 		/* Writing outside of area */
 		return -2;
 	}
@@ -261,6 +273,14 @@ int storage_read_data(struct partition_table *part_table, uint32_t offset,
 	int err = index_to_address(index, &start_address);
 	if (err) {
 		return -3;
+	}
+
+	if (offset > SIZE_STORAGE_AREA) {
+		return -2;
+	}
+
+	if (size > 4096) {
+		return -2;
 	}
 
 	if ((offset + size) > SIZE_STORAGE_AREA) {
