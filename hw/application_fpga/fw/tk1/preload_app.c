@@ -29,8 +29,9 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 		return -4;
 	}
 
-	/*Check for a valid app in flash	*/
-	if (part_table->pre_app_data[from_slot].size == 0) {
+	/* Check for a valid app in flash */
+	if (part_table->pre_app_data[from_slot].size == 0 &&
+	    part_table->pre_app_data[from_slot].size <= TK1_APP_MAX_SIZE) {
 		return -1;
 	}
 	uint8_t *loadaddr = (uint8_t *)TK1_RAM_BASE;
