@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <tkey/debug.h>
 #include <tkey/lib.h>
+#include <tkey/tk1_mem.h>
 
 #include "auth_app.h"
 #include "flash.h"
@@ -215,7 +216,13 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 int storage_write_data(struct partition_table *part_table, uint32_t offset,
 		       uint8_t *data, size_t size)
 {
-	if (part_table == NULL || data == NULL) {
+	if (part_table == NULL) {
+		return -4;
+	}
+
+	// Allow data to point only to app RAM
+	if (data < (uint8_t *)TK1_RAM_BASE ||
+	    data >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
 		return -4;
 	}
 
@@ -259,7 +266,13 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 int storage_read_data(struct partition_table *part_table, uint32_t offset,
 		      uint8_t *data, size_t size)
 {
-	if (part_table == NULL || data == NULL) {
+	if (part_table == NULL) {
+		return -4;
+	}
+
+	// Allow data to point only to app RAM
+	if (data < (uint8_t *)TK1_RAM_BASE ||
+	    data >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
 		return -4;
 	}
 

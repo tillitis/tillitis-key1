@@ -28,10 +28,17 @@ extern uint8_t part_status;
 int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 			uint32_t arg3)
 {
-	struct reset *userreset = (struct reset *)arg1;
-
 	switch (number) {
-	case TK1_SYSCALL_RESET:
+	case TK1_SYSCALL_RESET: {
+		struct reset *userreset;
+
+		if (arg1 < TK1_RAM_BASE ||
+		    arg1 >= TK1_RAM_BASE + TK1_RAM_SIZE) {
+			return -1;
+		}
+
+		userreset = (struct reset *)arg1;
+
 		if (arg2 > sizeof(resetinfo->next_app_data)) {
 			return -1;
 		}
@@ -47,6 +54,7 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 		// Should not be reached.
 		assert(1 == 2);
 		break;
+	}
 
 	case TK1_SYSCALL_ALLOC_AREA:
 		if (storage_allocate_area(&part_table_storage) < 0) {

@@ -95,7 +95,18 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage,
 {
 	struct partition_table *part_table = &part_table_storage->table;
 
-	if (part_table == NULL || app_digest == NULL || app_signature == NULL) {
+	if (part_table == NULL) {
+		return -5;
+	}
+
+	// Allow data to point only to app RAM
+	if (app_digest < (uint8_t *)TK1_RAM_BASE ||
+	    app_digest >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
+		return -5;
+	}
+
+	if (app_signature < (uint8_t *)TK1_RAM_BASE ||
+	    app_signature >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
 		return -5;
 	}
 
