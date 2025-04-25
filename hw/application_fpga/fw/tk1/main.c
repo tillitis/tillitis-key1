@@ -252,6 +252,8 @@ static enum state initial_commands(const struct frame_header *hdr,
 
 		ctx->left = *app_size;
 
+		led_set(LED_BLACK);
+
 		state = FW_STATE_LOADING;
 		break;
 	}
@@ -496,8 +498,6 @@ int main(void)
 	uint8_t cmd[CMDSIZE] = {0};
 	enum state state = FW_STATE_INITIAL;
 
-	led_set(LED_BLUE);
-
 	print_hw_version();
 
 	/*@-mustfreeonly@*/
@@ -514,6 +514,8 @@ int main(void)
 		// Couldn't read or create partition table
 		assert(1 == 2);
 	}
+
+	led_set(LED_WHITE);
 
 #if defined(SIMULATION)
 	run(&ctx);

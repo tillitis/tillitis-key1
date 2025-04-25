@@ -2,6 +2,7 @@
 #include <monocypher/monocypher-ed25519.h>
 #include <stdint.h>
 #include <tkey/debug.h>
+#include <tkey/led.h>
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 
@@ -160,6 +161,8 @@ int main(void)
 	enum ioend endpoint;
 	uint8_t available;
 	uint8_t in = 0;
+
+	led_set(LED_BLUE);
 
 	// Generate a key pair from CDI
 	crypto_ed25519_key_pair(secret_key, pubkey, (uint8_t *)cdi);
