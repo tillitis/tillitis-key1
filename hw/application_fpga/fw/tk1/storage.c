@@ -93,8 +93,8 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 	}
 
 	uint32_t start_address = 0;
-	int err = index_to_address(index, &start_address);
-	if (err) {
+
+	if (index_to_address(index, &start_address) != 0) {
 		return -3;
 	}
 
@@ -134,8 +134,7 @@ int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 	}
 
 	uint32_t start_address = 0;
-	int err = index_to_address(index, &start_address);
-	if (err) {
+	if (index_to_address(index, &start_address) != 0) {
 		return -1;
 	}
 
@@ -180,8 +179,7 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 	}
 
 	uint32_t start_address = 0;
-	int err = index_to_address(index, &start_address);
-	if (err) {
+	if (index_to_address(index, &start_address) != 0) {
 		return -1;
 	}
 
@@ -241,8 +239,7 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 	}
 
 	uint32_t start_address = 0;
-	int err = index_to_address(index, &start_address);
-	if (err) {
+	if (index_to_address(index, &start_address) != 0) {
 		return -1;
 	}
 
@@ -291,8 +288,8 @@ int storage_read_data(struct partition_table *part_table, uint32_t offset,
 	}
 
 	uint32_t start_address = 0;
-	int err = index_to_address(index, &start_address);
-	if (err) {
+
+	if (index_to_address(index, &start_address) != 0) {
 		return -1;
 	}
 
