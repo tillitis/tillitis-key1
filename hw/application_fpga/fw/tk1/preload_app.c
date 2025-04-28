@@ -22,11 +22,11 @@ static uint32_t slot_to_start_address(uint8_t slot)
 int preload_load(struct partition_table *part_table, uint8_t from_slot)
 {
 	if (part_table == NULL) {
-		return -5;
+		return -1;
 	}
 
 	if (from_slot >= N_PRELOADED_APP) {
-		return -4;
+		return -1;
 	}
 
 	/* Check for a valid app in flash */
@@ -51,16 +51,16 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 		  uint8_t *data, size_t size, uint8_t to_slot)
 {
 	if (part_table == NULL || data == NULL) {
-		return -5;
+		return -1;
 	}
 
 	if (to_slot >= N_PRELOADED_APP) {
-		return -4;
+		return -1;
 	}
 
 	/* Check if we are allowed to store */
 	if (!mgmt_app_authenticate()) {
-		return -3;
+		return -1;
 	}
 
 	/* Check for a valid app in flash, bale out if it already exists */
@@ -69,16 +69,16 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 	}
 
 	if (offset > SIZE_PRE_LOADED_APP) {
-		return -2;
+		return -1;
 	}
 
 	if (size > 4096) {
-		return -2;
+		return -1;
 	}
 
 	if ((offset + size) > SIZE_PRE_LOADED_APP) {
 		/* Writing outside of area */
-		return -2;
+		return -1;
 	}
 
 	uint32_t address = slot_to_start_address(to_slot) + offset;
@@ -97,27 +97,27 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage,
 	struct partition_table *part_table = &part_table_storage->table;
 
 	if (part_table == NULL) {
-		return -5;
+		return -1;
 	}
 
 	// Allow data to point only to app RAM
 	if (app_digest < (uint8_t *)TK1_RAM_BASE ||
 	    app_digest >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
-		return -5;
+		return -1;
 	}
 
 	if (app_signature < (uint8_t *)TK1_RAM_BASE ||
 	    app_signature >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
-		return -5;
+		return -1;
 	}
 
 	if (to_slot >= N_PRELOADED_APP) {
-		return -4;
+		return -1;
 	}
 
 	/* Check if we are allowed to store */
 	if (!mgmt_app_authenticate()) {
-		return -3;
+		return -1;
 	}
 
 	/* Check for a valid app in flash, bale out if it already exists */
@@ -126,7 +126,7 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage,
 	}
 
 	if (app_size == 0 || app_size > SIZE_PRE_LOADED_APP) {
-		return -2;
+		return -1;
 	}
 
 	part_table->pre_app_data[to_slot].size = app_size;
@@ -141,7 +141,7 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage,
 	debug_lf();
 
 	if (part_table_write(part_table_storage) != 0) {
-		return -6;
+		return -1;
 	}
 
 	return 0;
@@ -153,16 +153,16 @@ int preload_delete(struct partition_table_storage *part_table_storage,
 	struct partition_table *part_table = &part_table_storage->table;
 
 	if (part_table_storage == NULL) {
-		return -5;
+		return -1;
 	}
 
 	if (slot >= N_PRELOADED_APP) {
-		return -4;
+		return -1;
 	}
 
 	/* Check if we are allowed to deleted */
 	if (!mgmt_app_authenticate()) {
-		return -3;
+		return -1;
 	}
 
 	/*Check for a valid app in flash	*/
@@ -180,7 +180,7 @@ int preload_delete(struct partition_table_storage *part_table_storage,
 		     sizeof(part_table->pre_app_data[slot].signature));
 
 	if (part_table_write(part_table_storage) != 0) {
-		return -6;
+		return -1;
 	}
 
 	/* Assumes the area is 64 KiB block aligned */
@@ -197,16 +197,16 @@ int preload_get_digsig(struct partition_table *part_table,
 		       uint8_t slot)
 {
 	if (part_table == NULL || app_digest == NULL || app_signature == NULL) {
-		return -5;
+		return -1;
 	}
 
 	if (slot >= N_PRELOADED_APP) {
-		return -4;
+		return -1;
 	}
 
 	/* Check if we are allowed to read */
 	if (!mgmt_app_authenticate()) {
-		return -3;
+		return -1;
 	}
 
 	memcpy_s(app_digest, 32, part_table->pre_app_data[slot].digest,

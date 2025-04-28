@@ -13,12 +13,15 @@
 #include "partition_table.h"
 #include "storage.h"
 
-/* Returns the index of the first empty area. If there is no empty area -1 is
- * returned. */
+/*
+ * Returns the index of the first empty area.
+ *
+ * Returns -1 on errors.
+ */
 static int get_first_empty(struct partition_table *part_table)
 {
 	if (part_table == NULL) {
-		return -4;
+		return -1;
 	}
 
 	for (uint8_t i = 0; i < N_STORAGE_AREA; i++) {
@@ -26,13 +29,14 @@ static int get_first_empty(struct partition_table *part_table)
 			return i;
 		}
 	}
+
 	return -1;
 }
 
 static int index_to_address(int index, uint32_t *address)
 {
 	if (address == NULL) {
-		return -4;
+		return -1;
 	}
 
 	if ((index < 0) || (index >= N_STORAGE_AREA)) {
@@ -44,12 +48,15 @@ static int index_to_address(int index, uint32_t *address)
 	return 0;
 }
 
-/* Returns the index of the area an app has allocated. If no area is
- * authenticated -1 is returned. */
+/*
+ * Returns the index of the area an app has allocated.
+ *
+ * Returns -1 on errors.
+ */
 static int storage_get_area(struct partition_table *part_table)
 {
 	if (part_table == NULL) {
-		return -4;
+		return -1;
 	}
 
 	for (uint8_t i = 0; i < N_STORAGE_AREA; i++) {
@@ -60,6 +67,7 @@ static int storage_get_area(struct partition_table *part_table)
 			}
 		}
 	}
+
 	return -1;
 }
 
@@ -79,7 +87,7 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 	}
 
 	int index = get_first_empty(part_table);
-	if (index == -1) {
+	if (index < 0) {
 		/* No empty slot */
 		return -1;
 	}
@@ -114,13 +122,13 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 {
 	if (part_table_storage == NULL) {
-		return -4;
+		return -1;
 	}
 
 	struct partition_table *part_table = &part_table_storage->table;
 
 	int index = storage_get_area(part_table);
-	if (index == -1) {
+	if (index < 0) {
 		/* No area to deallocate */
 		return -1;
 	}
@@ -128,7 +136,7 @@ int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 	uint32_t start_address = 0;
 	int err = index_to_address(index, &start_address);
 	if (err) {
-		return -3;
+		return -1;
 	}
 
 	/* Erase area first */
@@ -149,7 +157,7 @@ int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 	    sizeof(part_table->app_storage[index].auth.authentication_digest));
 
 	if (part_table_write(part_table_storage) != 0) {
-		return -5;
+		return -1;
 	}
 
 	return 0;
@@ -162,7 +170,7 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 			 size_t size)
 {
 	if (part_table == NULL) {
-		return -4;
+		return -1;
 	}
 
 	int index = storage_get_area(part_table);
@@ -174,25 +182,25 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 	uint32_t start_address = 0;
 	int err = index_to_address(index, &start_address);
 	if (err) {
-		return -3;
+		return -1;
 	}
 
 	if (offset > SIZE_STORAGE_AREA) {
-		return -2;
+		return -1;
 	}
 
 	/* Cannot only erase entire sectors */
 	if (offset % 4096 != 0) {
-		return -2;
+		return -1;
 	}
 
 	/* Cannot erase less than one sector */
 	if (size < 4096 || size > SIZE_STORAGE_AREA || size % 4096 != 0) {
-		return -2;
+		return -1;
 	}
 
 	if ((offset + size) >= SIZE_STORAGE_AREA) {
-		return -2;
+		return -1;
 	}
 
 	uint32_t address = start_address + offset;
@@ -217,13 +225,13 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 		       uint8_t *data, size_t size)
 {
 	if (part_table == NULL) {
-		return -4;
+		return -1;
 	}
 
 	// Allow data to point only to app RAM
 	if (data < (uint8_t *)TK1_RAM_BASE ||
 	    data >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
-		return -4;
+		return -1;
 	}
 
 	int index = storage_get_area(part_table);
@@ -235,20 +243,20 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 	uint32_t start_address = 0;
 	int err = index_to_address(index, &start_address);
 	if (err) {
-		return -3;
+		return -1;
 	}
 
 	if (offset > SIZE_STORAGE_AREA) {
-		return -2;
+		return -1;
 	}
 
 	if (size > 4096) {
-		return -2;
+		return -1;
 	}
 
 	if ((offset + size) > SIZE_STORAGE_AREA) {
 		/* Writing outside of area */
-		return -2;
+		return -1;
 	}
 
 	uint32_t address = start_address + offset;
@@ -267,13 +275,13 @@ int storage_read_data(struct partition_table *part_table, uint32_t offset,
 		      uint8_t *data, size_t size)
 {
 	if (part_table == NULL) {
-		return -4;
+		return -1;
 	}
 
 	// Allow data to point only to app RAM
 	if (data < (uint8_t *)TK1_RAM_BASE ||
 	    data >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
-		return -4;
+		return -1;
 	}
 
 	int index = storage_get_area(part_table);
@@ -285,20 +293,20 @@ int storage_read_data(struct partition_table *part_table, uint32_t offset,
 	uint32_t start_address = 0;
 	int err = index_to_address(index, &start_address);
 	if (err) {
-		return -3;
+		return -1;
 	}
 
 	if (offset > SIZE_STORAGE_AREA) {
-		return -2;
+		return -1;
 	}
 
 	if (size > 4096) {
-		return -2;
+		return -1;
 	}
 
 	if ((offset + size) > SIZE_STORAGE_AREA) {
 		/* Reading outside of area */
-		return -2;
+		return -1;
 	}
 
 	uint32_t address = start_address + offset;
