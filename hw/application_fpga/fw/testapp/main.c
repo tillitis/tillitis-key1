@@ -19,6 +19,7 @@
 // clang-format off
 volatile uint32_t *tk1name0         = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
 volatile uint32_t *tk1name1         = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
+volatile uint32_t *tk1version       = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
 volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
 volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
@@ -97,6 +98,9 @@ int main(void)
 	reverseword(&name);
 	write(IO_CDC, (const uint8_t *)&name, 4);
 	puts(IO_CDC, "\r\n");
+	puts(IO_CDC, "Version: ");
+	putinthex(IO_CDC, *tk1version);
+	puts(IO_CDC, "\r\n");
 
 	uint32_t zeros[8];
 	memset(zeros, 0, 8 * 4);
@@ -123,8 +127,8 @@ int main(void)
 	// But a syscall to get parts of UDI should be able to run
 	int vidpid = syscall(TK1_SYSCALL_GET_VIDPID, 0);
 
-	if (vidpid != 0x00010203) {
-		failmsg("Expected VID/PID to be 0x00010203");
+	if (vidpid != 0x013370c0) {
+		failmsg("Expected VID/PID to be 0x013370c0");
 		anyfailed = 1;
 	}
 
