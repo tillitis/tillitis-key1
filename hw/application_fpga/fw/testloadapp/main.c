@@ -1,3 +1,6 @@
+// Copyright (C) 2025 - Tillitis AB
+// SPDX-License-Identifier: GPL-2.0-only
+
 #include <blake2s/blake2s.h>
 #include <monocypher/monocypher-ed25519.h>
 #include <stdint.h>

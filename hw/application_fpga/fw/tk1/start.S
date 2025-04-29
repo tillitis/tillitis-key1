@@ -1,7 +1,5 @@
-/*
- * Copyright (C) 2022-2025 - Tillitis AB
- * SPDX-License-Identifier: GPL-2.0-only
-*/
+// Copyright (C) 2022-2025 - Tillitis AB
+// SPDX-License-Identifier: GPL-2.0-only
 
 #include <tkey/tk1_mem.h>
 
@@ -28,9 +26,7 @@
 _start:
 	j init
 
-/*
- * IRQ handler
-*/
+// IRQ handler
 	.=0x10
 irq_handler:
 	// PicoRV32 stores the IRQ bitmask in x4.
@@ -112,9 +108,8 @@ x3_valid:
 
 	picorv32_retirq_insn() // Return from interrupt
 
-/*
- * Init
-*/
+// Init
+
 	.=0x100
 init:
 	li x1, 0
@@ -149,7 +144,7 @@ init:
 	li x30,0
 	li x31,0
 
-	/* Clear FW_RAM */
+	// Clear FW_RAM
 	la a0, _sfwram
 	la a1, _efwram
 clear:
@@ -157,7 +152,7 @@ clear:
 	addi a0, a0, 4
 	blt a0, a1, clear
 
-	/* Zero-init bss section */
+	// Zero-init bss section
 	la a0, _sbss
 	la a1, _ebss
 
@@ -166,7 +161,7 @@ loop_init_bss:
 	addi a0, a0, 4
 	blt a0, a1, loop_init_bss
 
-	/* Init stack */
+	// Init stack
 	la sp, _estack
 
 	call main

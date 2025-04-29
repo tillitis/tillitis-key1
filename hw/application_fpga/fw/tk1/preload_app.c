@@ -18,7 +18,7 @@ static uint32_t slot_to_start_address(uint8_t slot)
 	return ADDR_PRE_LOADED_APP_0 + slot * SIZE_PRE_LOADED_APP;
 }
 
-/* Loads a preloaded app from flash to app RAM */
+// Loads a preloaded app from flash to app RAM
 int preload_load(struct partition_table *part_table, uint8_t from_slot)
 {
 	if (part_table == NULL) {
@@ -29,24 +29,28 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 		return -1;
 	}
 
-	/* Check for a valid app in flash */
+	// Check for a valid app in flash
 	if (part_table->pre_app_data[from_slot].size == 0 &&
 	    part_table->pre_app_data[from_slot].size <= TK1_APP_MAX_SIZE) {
 		return -1;
 	}
 	uint8_t *loadaddr = (uint8_t *)TK1_RAM_BASE;
 
-	/* Read from flash, straight into RAM */
+	// Read from flash, straight into RAM
 	int ret = flash_read_data(slot_to_start_address(from_slot), loadaddr,
 				  part_table->pre_app_data[from_slot].size);
 
 	return ret;
 }
 
-/* Expects to receive chunks of data up to 4096 bytes to store into the
- * preloaded area. The offset needs to be kept and updated between each call.
- * Once done, call preload_store_finalize() with the last parameters.
- * */
+// preload_store stores chunks of an app in app slot to_slot. data is
+// a buffer of size size (max 4096 bytes) to be written at byte offset
+// in the slot. offset needs to be kept and updated between each call.
+//
+// When all data has been written call preload_store_finalize() with
+// the last parameters.
+//
+// Returns 0 on success.
 int preload_store(struct partition_table *part_table, uint32_t offset,
 		  uint8_t *data, size_t size, uint8_t to_slot)
 {
@@ -58,12 +62,13 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
-	/* Check if we are allowed to store */
+	// Check if we are allowed to store
 	if (!mgmt_app_authenticate()) {
 		return -1;
 	}
 
-	/* Check for a valid app in flash, bale out if it already exists */
+	// Check for a valid app in flash, bale out if it already
+	// exists
 	if (part_table->pre_app_data[to_slot].size != 0) {
 		return -1;
 	}
@@ -77,7 +82,7 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 	}
 
 	if ((offset + size) > SIZE_PRE_LOADED_APP) {
-		/* Writing outside of area */
+		// Writing outside of area
 		return -1;
 	}
 
@@ -115,12 +120,13 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage,
 		return -1;
 	}
 
-	/* Check if we are allowed to store */
+	// Check if we are allowed to store
 	if (!mgmt_app_authenticate()) {
 		return -1;
 	}
 
-	/* Check for a valid app in flash, bale out if it already exists */
+	// Check for a valid app in flash, bale out if it already
+	// exists
 	if (part_table->pre_app_data[to_slot].size != 0) {
 		return -1;
 	}
@@ -160,12 +166,12 @@ int preload_delete(struct partition_table_storage *part_table_storage,
 		return -1;
 	}
 
-	/* Check if we are allowed to deleted */
+	// Check if we are allowed to delete
 	if (!mgmt_app_authenticate()) {
 		return -1;
 	}
 
-	/*Check for a valid app in flash	*/
+	// Check for a valid app in flash
 	if (part_table->pre_app_data[slot].size == 0) {
 		// Nothing to do.
 		return 0;
@@ -183,7 +189,7 @@ int preload_delete(struct partition_table_storage *part_table_storage,
 		return -1;
 	}
 
-	/* Assumes the area is 64 KiB block aligned */
+	// Assumes the area is 64 KiB block aligned
 	flash_block_64_erase(
 	    slot_to_start_address(slot)); // Erase first 64 KB block
 	flash_block_64_erase(slot_to_start_address(slot) +
@@ -204,7 +210,7 @@ int preload_get_digsig(struct partition_table *part_table,
 		return -1;
 	}
 
-	/* Check if we are allowed to read */
+	// Check if we are allowed to read
 	if (!mgmt_app_authenticate()) {
 		return -1;
 	}

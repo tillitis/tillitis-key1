@@ -13,7 +13,7 @@
 
 
 syscall_enable:
-	/* Enable syscall IRQ */
+	// Enable syscall IRQ
 	li t0, 0x7fffffff // IRQ31 mask
 	picorv32_maskirq_insn(zero, t0) // Enable IRQs
 

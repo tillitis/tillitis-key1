@@ -6,25 +6,25 @@
 
 #include <stdint.h>
 
-/* ----	Flash	----		----		*/
-/* name		size		start addr	*/
-/* ----		----		----		*/
-/* bitstream	128KiB		0x00		*/
-/* ----		----		----		*/
-/* Partition	64KiB		0x20000		*/
-/* ----		----		----		*/
-/* Pre load 1	128KiB		0x30000		*/
-/* Pre load 2	128KiB		0x50000		*/
-/* ----		----		----		*/
-/* storage 1	128KiB		0x70000		*/
-/* storage 2	128KiB		0x90000		*/
-/* storage 3	128KiB		0xB0000		*/
-/* storage 4	128KiB		0xD0000		*/
-/* ----		----		----		*/
-/* Partition2   64KiB		0xf0000         */
+// ----	Flash	----		----
+// name		size		start addr
+// ----		----		----
+// bitstream	128KiB		0x00
+// ----		----		----
+// Partition	64KiB		0x20000
+// ----		----		----
+// Pre load 1	128KiB		0x30000
+// Pre load 2	128KiB		0x50000
+// ----		----		----
+// storage 1	128KiB		0x70000
+// storage 2	128KiB		0x90000
+// storage 3	128KiB		0xB0000
+// storage 4	128KiB		0xD0000
+// ----		----		----
+// Partition2   64KiB		0xf0000
 
-/* To simplify all blocks are aligned with the 64KiB blocks on the W25Q80DL
- * flash. */
+// To simplify all blocks are aligned with the 64KiB blocks on the
+// W25Q80DL flash.
 
 #define PART_TABLE_VERSION 1
 
@@ -52,26 +52,27 @@ enum part_status {
 	PART_SLOT0_INVALID = 1,
 };
 
-/* Partition Table			*/
-/*- Table header			*/
-/*  - 1 bytes Version			*/
-/**/
-/*- Pre-loaded device app 1		*/
-/*  - 4 bytes length.			*/
-/*  - 32 bytes digest.			*/
-/*  - 64 bytes signature.		*/
-/**/
-/*- Pre-loaded device app 2		*/
-/*  - 4 bytes length.			*/
-/*  - 32 bytes digest.			*/
-/*  - 64 bytes signature.		*/
-/**/
-/*- Device app storage area		*/
-/*  - 1 byte status.			*/
-/*  - 16 bytes random nonce.		*/
-/*  - 16 bytes authentication tag.	*/
-/**/
-/*- Checksum over the above             */
+// Partition Table
+// ----------------------------------------------------------------------
+// - Table header
+// - 1 bytes Version
+//
+// - Pre-loaded device app 1
+//   - 4 bytes length.
+//   - 32 bytes digest.
+//   - 64 bytes signature.
+//
+// - Pre-loaded device app 2
+//   - 4 bytes length.
+//   - 32 bytes digest.
+//   - 64 bytes signature.
+//
+// - Device app storage area
+//   - 1 byte status.
+//   - 16 bytes random nonce.
+//   - 16 bytes authentication tag.
+//
+// - Checksum over the above
 
 struct auth_metadata {
 	uint8_t nonce[16];

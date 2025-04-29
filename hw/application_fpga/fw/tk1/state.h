@@ -1,7 +1,5 @@
-/*
- * Copyright (C) 2023 - Tillitis AB
- * SPDX-License-Identifier: GPL-2.0-only
- */
+// Copyright (C) 2023 - Tillitis AB
+// SPDX-License-Identifier: GPL-2.0-only
 
 #ifndef STATE_H
 #define STATE_H

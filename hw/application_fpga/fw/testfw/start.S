@@ -1,7 +1,5 @@
-/*
- * Copyright (C) 2022, 2023 - Tillitis AB
- * SPDX-License-Identifier: GPL-2.0-only
-*/
+// Copyright (C) 2022, 2023 - Tillitis AB
+// SPDX-License-Identifier: GPL-2.0-only
 
 	.section ".text.init"
 	.globl _start
@@ -38,7 +36,7 @@ _start:
 	li x30,0
 	li x31,0
 
-	/* Clear all RAM */
+	// Clear all RAM
 	li a0, 0x40000000 // TK1_RAM_BASE
 	li a1, 0x40020000 // TK1_RAM_BASE + TK1_RAM_SIZE
 clear:
@@ -46,9 +44,9 @@ clear:
 	addi a0, a0, 4
 	blt a0, a1, clear
 
-        /*
-         * For testfw we init stack at top of RAM
-         */
+        // NOTE WELL
+        // For testfw we init stack at top of RAM
+        //
         li sp, 0x40020000 // TK1_RAM_BASE + TK1_RAM_SIZE
 
 	call main

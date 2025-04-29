@@ -14,8 +14,8 @@
 
 static volatile uint32_t *cdi = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 
-/* Calculates the authentication digest based on a supplied nonce and the CDI.
- * Requires that the CDI is already calculated and stored */
+// Calculates the authentication digest based on a supplied nonce and
+// the CDI. Requires that the CDI is already calculated and stored
 static void calculate_auth_digest(uint8_t *nonce, uint8_t *auth_digest)
 {
 	assert(nonce != NULL);
@@ -31,7 +31,7 @@ static void calculate_auth_digest(uint8_t *nonce, uint8_t *auth_digest)
 	blake2s_final(&ctx, auth_digest);
 }
 
-/* Generates a 16 byte nonce */
+// Generates a 16 byte nonce
 static void generate_nonce(uint32_t *nonce)
 {
 	assert(nonce != NULL);
@@ -42,8 +42,8 @@ static void generate_nonce(uint32_t *nonce)
 	return;
 }
 
-/* Returns the authentication digest and random nonce. Requires that the CDI is
- * already calculated and stored */
+// Returns the authentication digest and random nonce. Requires that
+// the CDI is already calculated and stored
 void auth_app_create(struct auth_metadata *auth_table)
 {
 	assert(auth_table != NULL);

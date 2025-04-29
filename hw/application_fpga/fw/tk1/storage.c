@@ -13,11 +13,9 @@
 #include "partition_table.h"
 #include "storage.h"
 
-/*
- * Returns the index of the first empty area.
- *
- * Returns -1 on errors.
- */
+// Returns the index of the first empty area.
+//
+// Returns -1 on errors.
 static int get_first_empty(struct partition_table *part_table)
 {
 	if (part_table == NULL) {
@@ -48,11 +46,9 @@ static int index_to_address(int index, uint32_t *address)
 	return 0;
 }
 
-/*
- * Returns the index of the area an app has allocated.
- *
- * Returns -1 on errors.
- */
+// Returns the index of the area an app has allocated.
+//
+// Returns -1 on errors.
 static int storage_get_area(struct partition_table *part_table)
 {
 	if (part_table == NULL) {
@@ -71,8 +67,9 @@ static int storage_get_area(struct partition_table *part_table)
 	return -1;
 }
 
-/* Allocate a new area for an app. Returns zero if a new area is allocated, one
- * if an area already was allocated, and negative values for errors. */
+// Allocate a new area for an app. Returns zero if a new area is
+// allocated, one if an area already was allocated, and negative
+// values for errors.
 int storage_allocate_area(struct partition_table_storage *part_table_storage)
 {
 	if (part_table_storage == NULL) {
@@ -98,15 +95,15 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 		return -3;
 	}
 
-	/* Allocate the empty index found */
-	/* Erase area first */
+	// Allocate the empty index found
+	// Erase area first
 
-	/* Assumes the area is 64 KiB block aligned */
+	// Assumes the area is 64 KiB block aligned
 	flash_block_64_erase(start_address); // Erase first 64 KB block
 	flash_block_64_erase(start_address +
 			     0x10000); // Erase second 64 KB block
 
-	/* Write partition table lastly */
+	// Write partition table lastly
 	part_table->app_storage[index].status = 0x01;
 	auth_app_create(&part_table->app_storage[index].auth);
 
@@ -117,8 +114,9 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 	return 0;
 }
 
-/* Dealloacate a previously allocated storage area. Returns zero on success, and
- * non-zero on errors. */
+// Dealloacate a previously allocated storage area.
+//
+// Returns zero on success, and non-zero on errors.
 int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 {
 	if (part_table_storage == NULL) {
@@ -129,7 +127,7 @@ int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 
 	int index = storage_get_area(part_table);
 	if (index < 0) {
-		/* No area to deallocate */
+		// No area to deallocate
 		return -1;
 	}
 
@@ -138,14 +136,14 @@ int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 		return -1;
 	}
 
-	/* Erase area first */
+	// Erase area first
 
-	/* Assumes the area is 64 KiB block aligned */
+	// Assumes the area is 64 KiB block aligned
 	flash_block_64_erase(start_address); // Erase first 64 KB block
 	flash_block_64_erase(start_address +
 			     0x10000); // Erase second 64 KB block
 
-	/* Clear partition table lastly */
+	// Clear partition table lastly
 	part_table->app_storage[index].status = 0;
 
 	(void)memset(part_table->app_storage[index].auth.nonce, 0x00,
@@ -162,9 +160,11 @@ int storage_deallocate_area(struct partition_table_storage *part_table_storage)
 	return 0;
 }
 
-/*  Erases sector. Offset of a sector to begin erasing, must be a multiple of
- * the sector size. Size to erase in bytes, must be a multiple of the sector *
- * size. Returns zero on success, negative error code on failure */
+// Erases sector. Offset of a sector to begin erasing, must be a
+// multiple of the sector size. Size to erase in bytes, must be a
+// multiple of the sector size.
+//
+// Returns zero on success, negative error code on failure
 int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 			 size_t size)
 {
@@ -174,7 +174,7 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 
 	int index = storage_get_area(part_table);
 	if (index == -1) {
-		/* No allocated area */
+		// No allocated area
 		return -1;
 	}
 
@@ -187,12 +187,12 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
-	/* Cannot only erase entire sectors */
+	// Cannot only erase entire sectors
 	if (offset % 4096 != 0) {
 		return -1;
 	}
 
-	/* Cannot erase less than one sector */
+	// Cannot erase less than one sector
 	if (size < 4096 || size > SIZE_STORAGE_AREA || size % 4096 != 0) {
 		return -1;
 	}
@@ -215,10 +215,11 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 	return 0;
 }
 
-/* Writes the specified data to the offset inside of the
- * allocated area. Assumes area has been erased before hand.
- * Currently only handles writes to one sector, hence max size of 4096 bytes.
- * Returns zero on success. */
+// Writes the specified data to the offset inside of the allocated
+// area. Assumes area has been erased before hand. Currently only
+// handles writes to one sector, hence max size of 4096 bytes.
+//
+// Returns zero on success.
 int storage_write_data(struct partition_table *part_table, uint32_t offset,
 		       uint8_t *data, size_t size)
 {
@@ -234,7 +235,7 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 
 	int index = storage_get_area(part_table);
 	if (index == -1) {
-		/* No allocated area */
+		// No allocated area
 		return -1;
 	}
 
@@ -252,7 +253,7 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 	}
 
 	if ((offset + size) > SIZE_STORAGE_AREA) {
-		/* Writing outside of area */
+		// Writing outside of area
 		return -1;
 	}
 
@@ -265,9 +266,12 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 	return flash_write_data(address, data, size);
 }
 
-/* Reads size bytes of data at the specified offset inside of
- * the allocated area. Returns zero on success. Only read limit
- * is the size of the allocated area */
+// Reads size bytes of data at the specified offset inside of the
+// allocated area.
+//
+// Only read limit is the size of the allocated area.
+//
+// Returns zero on success.
 int storage_read_data(struct partition_table *part_table, uint32_t offset,
 		      uint8_t *data, size_t size)
 {
@@ -283,7 +287,7 @@ int storage_read_data(struct partition_table *part_table, uint32_t offset,
 
 	int index = storage_get_area(part_table);
 	if (index == -1) {
-		/* No allocated area */
+		// No allocated area
 		return -1;
 	}
 
@@ -302,7 +306,7 @@ int storage_read_data(struct partition_table *part_table, uint32_t offset,
 	}
 
 	if ((offset + size) > SIZE_STORAGE_AREA) {
-		/* Reading outside of area */
+		// Reading outside of area
 		return -1;
 	}
 

@@ -31,7 +31,7 @@ int mgmt_app_init(uint8_t app_digest[32])
 	return 0;
 }
 
-/* Authenticate an management app */
+// Authenticate an management app
 bool mgmt_app_authenticate(void)
 {
 	return memeq(current_app_digest, allowed_app_digest, 32) != 0;
