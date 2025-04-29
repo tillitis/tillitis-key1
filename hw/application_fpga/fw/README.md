@@ -794,6 +794,9 @@ $ picocom /dev/ttyACM1
 
 or similar.
 
+- `fw/defaultapp`: Immediately resets the TKey with the intention to
+  start an app from the client, replicating the behaviour of earlier
+  generations.
 - `fw/testapp`: Runs through a couple of tests that are now impossible
   to do in the `testfw`.
 - `fw/reset_test`: Interactively test different reset scenarios.
