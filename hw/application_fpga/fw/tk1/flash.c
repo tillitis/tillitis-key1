@@ -10,35 +10,11 @@
 #include "flash.h"
 #include "spi.h"
 
-// clang-format off
-static volatile uint32_t *timer		        = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
-static volatile uint32_t *timer_prescaler	= (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
-static volatile uint32_t *timer_status		= (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
-static volatile uint32_t *timer_ctrl		= (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
-// clang-format on
-
-// CPU clock frequency in Hz
-#define CPUFREQ 24000000
 #define PAGE_SIZE 256
 
 static bool flash_is_busy(void);
 static void flash_wait_busy(void);
 static void flash_write_enable(void);
-
-static void delay(int timeout_ms)
-{
-	// Tick once every centisecond
-	*timer_prescaler = CPUFREQ / 100;
-	*timer = timeout_ms / 10;
-
-	*timer_ctrl |= (1 << TK1_MMIO_TIMER_CTRL_START_BIT);
-
-	while (*timer_status != 0) {
-	}
-
-	// Stop timer
-	*timer_ctrl |= (1 << TK1_MMIO_TIMER_CTRL_STOP_BIT);
-}
 
 static bool flash_is_busy(void)
 {
@@ -58,9 +34,8 @@ static bool flash_is_busy(void)
 // Blocking until !busy
 static void flash_wait_busy(void)
 {
-	while (flash_is_busy()) {
-		delay(10);
-	}
+	while (flash_is_busy())
+		;
 }
 
 static void flash_write_enable(void)
