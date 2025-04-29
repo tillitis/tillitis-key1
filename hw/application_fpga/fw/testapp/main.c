@@ -11,7 +11,7 @@
 #include <tkey/tk1_mem.h>
 
 #include "../tk1/proto.h"
-#include "../tk1/resetinfo.h"
+#include "../tk1/reset.h"
 #include "../tk1/syscall_num.h"
 #include "syscall.h"
 

@@ -13,7 +13,7 @@
 
 #include "../testapp/syscall.h"
 #include "../tk1/proto.h"
-#include "../tk1/resetinfo.h"
+#include "../tk1/reset.h"
 #include "../tk1/syscall_num.h"
 
 // Converts a single hex character to its integer value

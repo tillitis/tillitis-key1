@@ -534,8 +534,9 @@ struct reset {
 };
 
 struct reset rst;
+uint32_t len; // Length of data in next_app_data.
 
-syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
+syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, len, 0);
 ```
 
 Resets the TKey. Does not return.
@@ -544,7 +545,7 @@ You can pass data to the firmware about the reset type `type` and a
 digest that the next app must have. You can also leave some data to
 the next app in the chain in `next_app_data`.
 
-The types of the reset are defined in `resetinfo.h`:
+The types of the reset are defined in `reset.h`:
 
 | *Name*             | *Comment*                                      |
 |--------------------|------------------------------------------------|

@@ -17,7 +17,7 @@
 #include "partition_table.h"
 #include "preload_app.h"
 #include "proto.h"
-#include "resetinfo.h"
+#include "reset.h"
 #include "state.h"
 #include "syscall_enable.h"
 

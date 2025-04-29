@@ -7,7 +7,7 @@
 #include <tkey/tk1_mem.h>
 
 #include "../testapp/syscall.h"
-#include "../tk1/resetinfo.h"
+#include "../tk1/reset.h"
 #include "../tk1/syscall_num.h"
 #include "blink.h"
 #include "tkey/assert.h"
