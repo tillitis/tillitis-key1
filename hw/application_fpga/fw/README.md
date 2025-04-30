@@ -163,6 +163,7 @@ stateDiagram-v2
     S0 --> S1
     S0 --> S4: Default
     S0 --> S3
+    S0 --> SE: Unknown reset type
 
     S1 --> S1: Other commands
     S1 --> S2: LOAD_APP
@@ -191,8 +192,8 @@ States:
 - *LOADING*: Expecting application data from client. Allows only the
   command `LOAD_APP_DATA` to continue loading the device app.
 - *LOAD_FLASH*: Loading an app from flash. Allows no commands.
-- *LOAD_FLASH_MGMT*: Loading and verifyiing a device app from flash.
-  Allows no commands.
+- *LOAD_FLASH_MGMT*: Loading an app from flash and registering it as a
+  prospective managment app. Allows no commands.
 - *START*: Computes CDI. Possibly verifies app. Starts the
   application. Does not return to firmware. Allows no commands.
 - *FAIL* - Halts CPU. Allows no commands.
@@ -207,6 +208,7 @@ Allowed data in state *INITIAL*:
 | `FLASH1_VER` | *LOAD_FLASH*      |
 | `CLIENT`     | *WAITCOMMAND*     |
 | `CLIENT_VER` | *WAITCOMMAND*     |
+| unknown      | *FAIL*            |
 
 I/O in state *LOAD_FLASH*:
 
@@ -220,15 +222,16 @@ I/O in state *LOAD_FLASH_MGMT*:
 |--------------------|--------------|
 | Last app data read | *START*      |
 
-Commands in state `waitcommand`:
+Commands in state *WAITCOMMAND*:
 
-| *command*             | *next state* |
-|-----------------------|--------------|
-| `FW_CMD_NAME_VERSION` | unchanged    |
-| `FW_CMD_GET_UDI`      | unchanged    |
-| `FW_CMD_LOAD_APP`     | *LOADING*    |
+| *command*             | *next state*                               |
+|-----------------------|--------------------------------------------|
+| `FW_CMD_NAME_VERSION` | unchanged                                  |
+| `FW_CMD_GET_UDI`      | unchanged                                  |
+| `FW_CMD_LOAD_APP`     | *LOADING* or unchanged on invalid app size |
+|                       |                                            |
 
-Commands in state `loading`:
+Commands in state *LOADING*:
 
 | *command*              | *next state*                       |
 |------------------------|------------------------------------|
@@ -245,17 +248,23 @@ Plain text explanation of the states:
 - *INITIAL*: Start here. Check the `FW_RAM` for the `resetinfo` type
   for what to do next.
 
-  For all types which begins with `FLASH_*`, set next state to
-  *LOAD_FLASH*, otherwise set next state to *WAITCOMMAND*.
+  For type `FLASH0` transition to *LOAD_FLASH_MGMT* because the app in
+  slot 0 is considered a special management app. For all other types
+  beginning with `FLASH*` transition to *LOAD_FLASH* to load an
+  ordinary app from flash.
+
+  For type `CLIENT*` transitionto *WAITCOMMAND* to expect a device app
+  from the client.
+
+  If type is unknown, error out.
 
 - *LOAD_FLASH*: Load device app from flash into RAM, app slot taken
   from context. Compute a BLAKE2s digest over the entire app.
   Transition to *START*.
 
 - *LOAD_FLASH_MGMT*: Load device app from flash into RAM, app slot
-  alway 0. Compute a BLAKE2s digest over the entire app. Register the
-  app as a prospective management app if it later goes through
-  verification. Transition to *START*.
+  always 0. Compute a BLAKE2s digest over the entire app. Register the
+  app as a prospective management app. Transition to *START*.
 
 - *WAITCOMMAND*: Wait for commands from the client. Transition to
   *LOADING* on `LOAD_APP` command, which also sets the size of the
@@ -266,7 +275,8 @@ Plain text explanation of the states:
 
 - *START*: Compute the Compound Device Identifier (CDI). If we have a
   registered verification digest, verify that the app we are about to
-  start is indeed the correct app.
+  start is indeed the correct app. This also means that a prospective
+  management app is now verified.
 
   Clean up firmware data structures, enable the system calls, and
   start the app, which ends the firmware state machine. Hardware
@@ -289,32 +299,37 @@ state.
 
 ### Golden path from start to default app
 
-Firmware loads the device application at the start of RAM
+Firmware will load the device application at the start of RAM
 (`0x4000_0000`) from either flash or from the client through the UART.
-Firmware uses a part of the FW\_RAM for its own stack.
+Firmware is using a part of the FW\_RAM for its own stack.
 
 When reset is released, the CPU starts executing the firmware. It
 begins in `start.S` by clearing all CPU registers, clears all FW\_RAM,
-sets up a stack for itself there, and then jumps to `main()`. Also
-included in the assembly part of firmware is an interrupt handler for
-the system calls, but the handler is not yet enabled.
+except the part reserved for the resetinfo area, sets up a stack for
+itself there, and then jumps to `main()`. Also included in the
+assembly part of firmware is an interrupt handler for the system
+calls, but the handler is not yet enabled.
 
 Beginning at `main()` it fills the entire RAM with pseudo random data
 and setting up the RAM address and data hardware scrambling with
 values from the True Random Number Generator (TRNG).
 
-1. Check the special resetinfo area in FW\_RAM for reset type. Type
+Firmware then proceeds to:
+
+1. Read the partition table from flash and store in FW\_RAM.
+
+2. Check the special resetinfo area in FW\_RAM for reset type. Type
    zero means default behaviour, load from flash app slot 0, expecting
    the app there to have a specific hardcoded BLAKE2s digest.
 
-2. Load app data from flash slot 0 into RAM.
+3. Load app data from flash slot 0 into RAM.
 
-3. Compute a BLAKE2s digest of the loaded app.
+4. Compute a BLAKE2s digest of the loaded app.
 
-4. Compare the computed digest against the allowed app digest
+5. Compare the computed digest against the allowed app digest
    hardcoded in the firmware. If it's not equal, halt CPU.
 
-7. [Start the device app](#start-the-device-app).
+6. [Start the device app](#start-the-device-app).
 
 ### Start the device app
 
@@ -372,9 +387,9 @@ Such a verified boot loader app:
 
 - Can be specifically trusted by firmware to be able to do filesystem
   management to be able to update an app slot on flash. Add the app's
-  digest to `allowed_app_digest` in `mgmt_app.c` to allow it to allow
-  it to use `PRELOAD_DELETE`, `PRELOAD_STORE`, and
-  `PRELOAD_STORE_FIN`.
+  digest to `allowed_app_digest` in `mgmt_app.c` to allow it to use
+  `PRELOAD_DELETE`, `PRELOAD_STORE`, `PRELOAD_STORE_FIN`, and
+  `PRELOAD_GET_DIGSIG`.
 
 It works like this:
 
@@ -414,7 +429,7 @@ The loader shares the secret with the next app by putting it in the
 part of `resetinfo` that is reserved for inter-app communication.
 
 The next app can now use the secret as a seed for it's own key
-material. Depending on the app's behaviour and the numer of keys it
+material. Depending on the app's behaviour and the number of keys it
 needs it can derive more keys, for instance by having nonces stored on
 its flash area and doing:
 
@@ -545,7 +560,7 @@ You can pass data to the firmware about the reset type `type` and a
 digest that the next app must have. You can also leave some data to
 the next app in the chain in `next_app_data`.
 
-The types of the reset are defined in `reset.h`:
+The types of reset are defined in `reset.h`:
 
 | *Name*             | *Comment*                                      |
 |--------------------|------------------------------------------------|
@@ -579,11 +594,14 @@ success.
 uint32_t offset = 0;
 uint8_t buf[17];
 
-TK1_SYSCALL_WRITE_DATA, offset, (uint32_t)buf, sizeof(buf))
+syscall(TK1_SYSCALL_WRITE_DATA, offset, (uint32_t)buf, sizeof(buf))
 ```
 
 Write data in `buf` to the app's flash area at byte `offset` within
 the area. Returns 0 on success.
+
+At most 4096 bytes can be written at once and `offset` must be a
+multiple of 4096 bytes.
 
 #### `READ_DATA`
 
@@ -631,9 +649,14 @@ syscall(TK1_SYSCALL_PRELOAD_STORE, offset, (uint32_t)appbinary,
 ```
 
 Store an app, or possible just a block of an app, from the `appbinary`
-buffer in flash slot 1 at byte `offset` If you can't find your entire
-app in the buffer, call `PRELOAD_STORE` many times as you receive the
-binary from the client. Returns 0 on success.
+buffer in flash slot 1 at byte `offset`.
+
+If you can't fit your entire app in the buffer, call `PRELOAD_STORE`
+many times as you receive the binary from the client. Returns 0 on
+success.
+
+At most 4096 bytes can be written at once and `offset` must be a
+multiple of 4096 bytes.
 
 Only available for the verified management app.
 
@@ -652,7 +675,8 @@ Finalize storing of an app where the complete binary size is
 `app_size` in flash slot 1. Returns 0 on success. Only available for
 the verified management app.
 
-Compute the `app_digest` with BLAKE2s over the entire binary.
+Compute a BLAKE2s hash digest over the entire binary. Pass the result
+in `app_digest`.
 
 Sign `app_digest` with your Ed25519 private key and pass the
 resulting signature in `app_signature`.
@@ -737,7 +761,7 @@ initiated before starting for the first time. You need a [TKey
 Programmer Board](https://shop.tillitis.se/products/tkey-dev-kit) for
 this part.
 
-1. Choose your pre-loaded app. You /must/ have a pre-loaded app, for
+1. Choose your pre-loaded app. You *must* have a pre-loaded app, for
    example `testloadapp`. Build it with the OCI image we use. The
    binary needs to produce the BLAKE2s digest in `allowed_app_digest`
    `tk1/mgmt_app.c`.
