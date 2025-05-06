@@ -65,11 +65,11 @@ The different endpoints:
 
 | *Name* | *Value* | *Comment*                                                            |
 |--------|---------|----------------------------------------------------------------------|
-| CCID   | 0x08    | USB CCID, a port for emulating a smart card                          |
-| CH552  | 0x10    | USB controller control                                               |
-| DEBUG  | 0x20    | A USB HID special debug pipe. Useful for debug prints.               |
-| CDC    | 0x40    | USB CDC-ACM, a serial port on the client.                            |
-| FIDO   | 0x80    | A USB FIDO security token device, useful for FIDO-type applications. |
+| CH552  | 0x04    | USB controller control                                               |
+| CDC    | 0x08    | USB CDC-ACM, a serial port on the client.                            |
+| FIDO   | 0x10    | A USB FIDO security token device, useful for FIDO-type applications. |
+| CCID   | 0x20    | USB CCID, a port for emulating a smart card                          |
+| DEBUG  | 0x40    | A USB HID special debug pipe. Useful for debug prints.               |
 
 You can turn on and off different endpoints dynamically by sending
 commands to the `CH552` control endpoint. When the TKey starts only
