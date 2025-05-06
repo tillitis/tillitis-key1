@@ -1687,18 +1687,19 @@ void main()
             // Copy FIDO data from UartRxBuf to FrameBuf
             if (FrameStarted && !FrameDiscard && !FidoDataAvailable) {
                 if (FrameMode == IO_FIDO) {
-                    // Check if a complete frame has been received
-                    if (UartRxBufByteCount >= FrameRemainingBytes) {
+                    if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+                        (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
                         circular_copy(FrameBuf,
                                       UartRxBuf,
                                       UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
-                                      FrameRemainingBytes);
+                                      MAX_FRAME_SIZE);
                         FrameBufLength = MAX_FRAME_SIZE;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   FrameRemainingBytes,
+                                                                   MAX_FRAME_SIZE,
                                                                    UART_RX_BUF_SIZE);
+                        FrameRemainingBytes -= MAX_FRAME_SIZE;
                         FidoDataAvailable = 1;
                         cts_start();
                     }
