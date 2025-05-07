@@ -318,18 +318,22 @@ Firmware then proceeds to:
 
 1. Read the partition table from flash and store in FW\_RAM.
 
-2. Check the special resetinfo area in FW\_RAM for reset type. Type
+2. Reset the CH552 USB controller to a known state, only allowing the
+   CDC USB endpoint and the internal command channel between the CPU
+   and the CH552.
+
+3. Check the special resetinfo area in FW\_RAM for reset type. Type
    zero means default behaviour, load from flash app slot 0, expecting
    the app there to have a specific hardcoded BLAKE2s digest.
 
-3. Load app data from flash slot 0 into RAM.
+4. Load app data from flash slot 0 into RAM.
 
-4. Compute a BLAKE2s digest of the loaded app.
+5. Compute a BLAKE2s digest of the loaded app.
 
-5. Compare the computed digest against the allowed app digest
+6. Compare the computed digest against the allowed app digest
    hardcoded in the firmware. If it's not equal, halt CPU.
 
-6. [Start the device app](#start-the-device-app).
+7. [Start the device app](#start-the-device-app).
 
 ### Start the device app
 
