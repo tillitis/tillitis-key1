@@ -34,7 +34,8 @@ TARGET_FREQ ?= 24
 # bits wide; an EBR is 128 32-bits words)
 BRAM_FW_SIZE ?= 2048
 
-PIN_FILE ?= application_fpga_tk1.pcf
+PIN_FILE ?= application_fpga_tk1_uwg30.pcf
+FPGA_PACKAGE ?= uwg30
 
 SIZE ?= llvm-size
 OBJCOPY ?= llvm-objcopy
@@ -445,7 +446,7 @@ application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
 		--freq $(TARGET_FREQ) \
 		--ignore-loops \
 		--up5k \
-		--package sg48 \
+		--package $(FPGA_PACKAGE) \
 		--json $< \
 		--pcf $(P)/data/$(PIN_FILE) \
 		--write $@ \
@@ -458,7 +459,7 @@ application_fpga.asc: application_fpga_par.json $(P)/data/uds.hex $(P)/data/udi.
 	OUT_ASC=$@ \
 	$(NEXTPNR_PATH)nextpnr-ice40 \
 		--up5k \
-		--package sg48 \
+		--package $(FPGA_PACKAGE) \
 		--ignore-loops \
 		--json $< \
 		--run tools/patch_uds_udi.py
@@ -540,7 +541,7 @@ check-hardware:
 # Post build analysis.
 #-------------------------------------------------------------------
 timing: application_fpga.asc $(P)/data/$(PIN_FILE)
-	$(ICESTORM_PATH)icetime -c 18 -tmd up5k -P sg48 -p $(P)/data/$(PIN_FILE) -t $<
+	$(ICESTORM_PATH)icetime -c 18 -tmd up5k -P $(FPGA_PACKAGE) -p $(P)/data/$(PIN_FILE) -t $<
 
 view: tb_application_fpga_vcd
 	gtkwave $< application_fpga.gtkw
