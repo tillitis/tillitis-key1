@@ -1,0 +1,47 @@
+#=======================================================================
+#
+# application_fpga_tk1_uwg30.pcf
+# ------------------------------
+# Pin constraints file for the Application FPGA design to be used
+# on the tk1 board with the CH552 MCU used as a USB-serial chip.
+# This version targets the UWG30 package.
+#
+#
+# SPDX-FileCopyrightText: 2022 Tillitis AB <tillitis.se>
+# SPDX-License-Identifier: BSD-2-Clause
+#
+#=======================================================================
+
+# UART.
+set_io interface_rx A2
+set_io interface_tx A1
+set_io interface_ch552_cts A4
+set_io interface_fpga_cts B3
+
+
+# SPI master to flash memory.
+set_io spi_miso E1
+set_io spi_sck  D1
+set_io spi_ss   C1
+set_io spi_mosi F1
+
+
+# Touch sense.
+set_io touch_event B1
+
+
+# GPIOs.
+#set_io app_gpio1 36
+#set_io app_gpio2 38
+#set_io app_gpio3 45
+#set_io app_gpio4 46
+
+
+# LEDs
+set_io led_r A5
+set_io led_b B5
+set_io led_g C5
+
+#=======================================================================
+# EOF application_fpga_tk1_uwg30.pcf
+#=======================================================================
