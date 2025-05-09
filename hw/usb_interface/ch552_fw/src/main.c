@@ -1504,12 +1504,12 @@ uint32_t decrement_pointer(uint32_t pointer, uint32_t decrement, uint32_t buffer
 
 void cts_start(void)
 {
-    gpio_p1_5_set(); // Signal to FPGA to send more data
+    gpio_set(PIN_CH552_CTS); // Signal to FPGA to send more data
 }
 
 void cts_stop(void)
 {
-    gpio_p1_5_unset(); // Signal to FPGA to not send more data
+    gpio_unset(PIN_CH552_CTS); // Signal to FPGA to not send more data
 }
 
 void check_cts_stop(void)
@@ -1561,8 +1561,8 @@ void main()
     UEP3_T_LEN = 0;         // Transmit length must be cleared (Endpoint 3)
     UEP4_T_LEN = 0;         // Transmit length must be cleared (Endpoint 4)
 
-    gpio_init_p1_4_in();    // Init GPIO p1.4 to input mode for FPGA_CTS
-    gpio_init_p1_5_out();   // Init GPIO p1.5 to output mode for CH552_CTS
+    gpio_dir_in(PIN_FPGA_CTS);
+    gpio_dir_out(PIN_CH552_CTS);
     cts_start();            // Signal OK to send
 
     while (1) {

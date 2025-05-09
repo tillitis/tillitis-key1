@@ -6,16 +6,16 @@
 
 #include <stdint.h>
 
-// Set pin p1.4 and p1.5 to GPIO output mode.
-void gpio_init(void);
+#define PIN_P1_4 0x10
+#define PIN_P1_5 0x20
+
+#define PIN_FPGA_CTS PIN_P1_4
+#define PIN_CH552_CTS PIN_P1_5
+
 void gpio_set(uint8_t pin);
 void gpio_unset(uint8_t pin);
 uint8_t gpio_get(uint8_t pin);
 
-void gpio_init_p1_4_in(void);
-void gpio_init_p1_5_out(void);
-uint8_t gpio_p1_4_get(void);
-void gpio_p1_5_set(void);
-void gpio_p1_5_unset(void);
-
+void gpio_dir_in(uint8_t pin);
+void gpio_dir_out(uint8_t pin);
 #endif
