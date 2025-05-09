@@ -43,10 +43,10 @@ module application_fpga_sim (
 
     input wire touch_event,
 
-    input  wire app_gpio1,
-    input  wire app_gpio2,
-    output wire app_gpio3,
-    output wire app_gpio4,
+    // input  wire app_gpio1,
+    // input  wire app_gpio2,
+    // output wire app_gpio3,
+    // output wire app_gpio4,
 
     output wire led_r,
     output wire led_g,
@@ -377,10 +377,10 @@ module application_fpga_sim (
       .led_g(led_g),
       .led_b(led_b),
 
-      .gpio1(app_gpio1),
-      .gpio2(app_gpio2),
-      .gpio3(app_gpio3),
-      .gpio4(app_gpio4),
+      .gpio1(),
+      .gpio2(),
+      .gpio3(),
+      .gpio4(),
 
       .syscall(irq31_eoi),
 
