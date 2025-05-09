@@ -14,8 +14,8 @@
 # UART.
 set_io interface_rx 26
 set_io interface_tx 25
-set_io interface_ch552_cts 27
-set_io interface_fpga_cts 28
+set_io interface_ch552_cts 28
+set_io interface_fpga_cts 27
 
 
 # SPI master to flash memory.
