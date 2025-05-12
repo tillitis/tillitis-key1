@@ -24,8 +24,8 @@ export LOCK_DIR=$(mktemp -u -p $TOP_DIR)
 
 export LOG_FILE=../application_fpga_par.txt
 export OUT_FILE=../application_fpga_par.json
-export PACKAGE=sg48
-export PIN_FILE=../data/application_fpga_tk1.pcf
+export PACKAGE=uwg30
+export PIN_FILE=../data/application_fpga_tk1_uwg30.pcf
 export SYNTH_FILE=../synth.json
 
 export PNR_DEBUG=/dev/null
