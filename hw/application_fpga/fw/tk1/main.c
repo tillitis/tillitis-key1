@@ -521,7 +521,8 @@ int main(void)
 	scramble_ram();
 
 	if (part_table_read(&part_table_storage) != 0) {
-		// Couldn't read or create partition table
+		// Couldn't read partition table
+		debug_puts("Couldn't read partition table\n");
 		assert(1 == 2);
 	}
 
