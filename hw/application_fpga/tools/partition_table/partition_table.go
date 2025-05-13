@@ -10,6 +10,13 @@ import (
 	"golang.org/x/crypto/blake2s"
 )
 
+// Maximum allowed size in bytes of a preloaded app.
+const MaxAppSize = (128 * 1024)
+
+// Size in bytes of the partition table binary. Find out with -o and
+// check the file size.
+const PartitionSize = 365
+
 type PreLoadedAppData struct {
 	Size      uint32
 	Digest    [32]uint8
@@ -37,14 +44,40 @@ type PartTableStorage struct {
 	Checksum  [32]byte
 }
 
+func (p *PartTableStorage) GenChecksum() {
+	buf := make([]byte, 4096)
+	len, err := binary.Encode(buf, binary.LittleEndian, p.PartTable)
+	if err != nil {
+		panic(err)
+	}
+
+	p.Checksum = blake2s.Sum256(buf[:len])
+}
+
+// Name		Size		Start addr
+// ----		----		----
+// Bitstream	128KiB		0x00
+// ----		----		----
+// Partition	64KiB		0x20000
+// ----		----		----
+// Pre load 0	128KiB		0x30000
+// Pre load 1	128KiB		0x50000
+// ----		----		----
+// storage 0	128KiB		0x70000
+// storage 1	128KiB		0x90000
+// storage 2	128KiB		0xB0000
+// storage 3	128KiB		0xD0000
+// ----		----		----
+// Partition2   64KiB		0xf0000
 type Flash struct {
-	Bitstream             [0x20000]uint8
-	PartitionTableStorage PartTableStorage
-	PartitionTablePadding [64*1024 - 349]uint8
-	PreLoadedApp0         [0x20000]uint8
-	PreLoadedApp1         [0x20000]uint8
-	AppStorage            [4][0x20000]uint8
-	EndPadding            [0x10000]uint8
+	Bitstream              [0x20000]uint8                 // Reserved for FPGA bitstream
+	PartitionTable         PartTableStorage               // 0x20000 partition table
+	PartitionTablePadding  [64*1024 - PartitionSize]uint8 // ~64k padding
+	PreLoadedApp0          [0x20000]uint8                 // 0x30000
+	PreLoadedApp1          [0x20000]uint8                 // 0x50000
+	AppStorage             [4][0x20000]uint8              // 0x70000, 4 * 128 storage for apps
+	PartitionTable2        PartTableStorage               // 0xf0000 second copy of table
+	PartitionTablePadding2 [64*1024 - PartitionSize]uint8 // ~64k padding
 }
 
 func readStruct[T PartTableStorage | Flash](filename string) T {
@@ -88,7 +121,28 @@ func printPartTableStorageCondensed(storage PartTableStorage) {
 	fmt.Printf("  Digest               : %x\n", storage.Checksum)
 }
 
-func generatePartTableStorage(outputFilename string, app0Filename string) {
+func genPartitionFile(outputFilename string, app0Filename string) {
+	partition := newPartTable(app0Filename)
+	partition.GenChecksum()
+
+	storageFile, err := os.Create(outputFilename)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := binary.Write(storageFile, binary.LittleEndian, partition); err != nil {
+		panic(err)
+	}
+}
+
+// newPartTable generates a new partition table suitable for storage.
+// If given app0Filename it also fills in the size of the file.
+//
+// When you're done with filling in the struct, remember to call
+// GenChecksum().
+//
+// It returns the partition table.
+func newPartTable(app0Filename string) PartTableStorage {
 	storage := PartTableStorage{
 		PartTable: PartTable{
 			Version:          1,
@@ -105,35 +159,77 @@ func generatePartTableStorage(outputFilename string, app0Filename string) {
 		storage.PartTable.PreLoadedAppData[0].Size = uint32(stat.Size())
 	}
 
-	buf := make([]byte, 4096, 4096)
-	len, err := binary.Encode(buf, binary.LittleEndian, storage.PartTable)
+	return storage
+}
+
+func memset(s []byte, c byte) {
+	for i := range s {
+		s[i] = c
+	}
+}
+
+func genFlashFile(outputFilename string, app0Filename string) {
+	var flash Flash
+
+	// Set all bits in flash to erased.
+	memset(flash.Bitstream[:], 0xff)
+	// partition0 will be filled in below
+	memset(flash.PartitionTablePadding[:], 0xff)
+	memset(flash.PreLoadedApp0[:], 0xff)
+	memset(flash.PreLoadedApp1[:], 0xff)
+	memset(flash.AppStorage[0][:], 0xff)
+	memset(flash.AppStorage[1][:], 0xff)
+	memset(flash.AppStorage[2][:], 0xff)
+	memset(flash.AppStorage[3][:], 0xff)
+	// partition1 will be filled in below
+	memset(flash.PartitionTablePadding2[:], 0xff)
+
+	partition := newPartTable(app0Filename)
+	partition.GenChecksum()
+
+	flash.PartitionTable = partition
+	flash.PartitionTable2 = partition
+
+	// Read the entire file.
+	appBuf, err := os.ReadFile(app0Filename)
 	if err != nil {
 		panic(err)
 	}
 
-	storage.Checksum = blake2s.Sum256(buf[:len])
+	if len(appBuf) > MaxAppSize {
+		fmt.Printf("max app size is 128 k")
+		os.Exit(1)
+	}
+
+	copy(flash.PreLoadedApp0[:], appBuf)
 
 	storageFile, err := os.Create(outputFilename)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := binary.Write(storageFile, binary.LittleEndian, storage); err != nil {
+	if err := binary.Write(storageFile, binary.LittleEndian, flash); err != nil {
 		panic(err)
 	}
 }
 
 func main() {
-	input := ""
-	output := ""
-	app0 := ""
-	flash := false
+	var input string
+	var output string
+	var app0 string
+	var flash bool
 
-	flag.StringVar(&input, "i", "", "Input binary dump file. Cannot be used with -o.")
-	flag.StringVar(&output, "o", "", "Output binary dump file. Cannot be used with -i.")
+	flag.StringVar(&input, "i", "", "Input binary file. Cannot be used with -o.")
+	flag.StringVar(&output, "o", "", "Output binary file. Cannot be used with -i. If used with -f, -app0 must also be specified.")
 	flag.StringVar(&app0, "app0", "", "Binary in pre loaded app slot 0. Can be used with -o.")
-	flag.BoolVar(&flash, "f", false, "Treat input file as a dump of the entire flash memory.")
+	flag.BoolVar(&flash, "f", false, "Treat file as a dump of the entire flash memory.")
 	flag.Parse()
+
+	if len(flag.Args()) > 0 {
+		fmt.Printf("superfluous args\n")
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	if (input == "" && output == "") || (input != "" && output != "") {
 		flag.Usage()
@@ -144,12 +240,24 @@ func main() {
 		var storage PartTableStorage
 
 		if flash {
-			storage = readStruct[Flash](input).PartitionTableStorage
+			storage = readStruct[Flash](input).PartitionTable
 		} else {
 			storage = readStruct[PartTableStorage](input)
 		}
 		printPartTableStorageCondensed(storage)
-	} else if output != "" {
-		generatePartTableStorage(output, app0)
+		os.Exit(0)
+	}
+
+	if output != "" {
+		if flash {
+			if app0 == "" {
+				fmt.Printf("need -app0 path/to/app\n")
+				os.Exit(1)
+			}
+
+			genFlashFile(output, app0)
+		} else {
+			genPartitionFile(output, app0)
+		}
 	}
 }
