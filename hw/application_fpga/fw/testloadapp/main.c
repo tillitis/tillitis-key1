@@ -154,7 +154,10 @@ void reset_from_client(void)
 
 	rst.type = START_CLIENT;
 
-	syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
+	// Give the next in chain something to look at.
+	memset(rst.next_app_data, 17, sizeof(rst.next_app_data));
+
+	syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, sizeof(rst.next_app_data), 0);
 }
 
 int main(void)

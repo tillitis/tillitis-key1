@@ -9,6 +9,8 @@
 
 #define TK1_MMIO_RESETINFO_BASE 0xd0000f00
 #define TK1_MMIO_RESETINFO_SIZE 0x100
+#define RESET_DIGEST_SIZE 32
+#define RESET_DATA_SIZE 220
 
 enum reset_start {
 	START_DEFAULT = 0, // Probably cold boot
@@ -21,10 +23,11 @@ enum reset_start {
 };
 
 struct reset {
-	uint32_t type;		    // Reset type
-	uint8_t app_digest[32];	    // Program digest
-	uint8_t next_app_data[220]; // Data to leave around for next app
+	enum reset_start type;
+	uint8_t app_digest[RESET_DIGEST_SIZE];
+	uint8_t next_app_data[RESET_DATA_SIZE];
 };
 
 int reset(struct reset *userreset, size_t nextlen);
+int reset_data(uint8_t *next_app_data);
 #endif

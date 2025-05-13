@@ -9,10 +9,9 @@
 
 #include "partition_table.h"
 #include "preload_app.h"
+#include "reset.h"
 #include "storage.h"
-
-#include "../tk1/reset.h"
-#include "../tk1/syscall_num.h"
+#include "syscall_num.h"
 
 // clang-format off
 static volatile uint32_t *udi           = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
@@ -99,6 +98,10 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 
 	case TK1_SYSCALL_STATUS:
 		return part_get_status();
+
+	case TK1_SYSCALL_GET_APP_DATA:
+		// arg1 next_app_data
+		return reset_data((uint8_t *)arg1);
 
 	default:
 		assert(1 == 2);

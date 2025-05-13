@@ -444,7 +444,19 @@ static enum state start_where(struct context *ctx)
 {
 	assert(ctx != NULL);
 
-	// Where do we start? Read resetinfo 'startfrom'
+	debug_puts("resetinfo->type: ");
+	debug_putinthex(resetinfo->type);
+	debug_lf();
+
+	debug_puts("  ->app_digest: \n");
+	debug_hexdump(resetinfo->app_digest, RESET_DIGEST_SIZE);
+	debug_lf();
+
+	debug_puts("  ->next_app_data: \n");
+	debug_hexdump(resetinfo->next_app_data, RESET_DATA_SIZE);
+	debug_lf();
+
+	// Where do we start?
 	switch (resetinfo->type) {
 	case START_DEFAULT:
 		// fallthrough

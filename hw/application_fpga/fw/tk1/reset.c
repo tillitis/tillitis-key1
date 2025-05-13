@@ -38,3 +38,21 @@ int reset(struct reset *userreset, size_t nextlen)
 
 	__builtin_unreachable();
 }
+
+int reset_data(uint8_t *next_app_data)
+{
+	if ((uint32_t)next_app_data < TK1_RAM_BASE ||
+	    (uint32_t)next_app_data >= TK1_RAM_BASE + TK1_RAM_SIZE) {
+		return -1;
+	}
+
+	if ((uint32_t)next_app_data + RESET_DATA_SIZE >
+	    TK1_RAM_BASE + TK1_RAM_SIZE) {
+		return -1;
+	}
+
+	memcpy(next_app_data, (void *)resetinfo->next_app_data,
+	       RESET_DATA_SIZE);
+
+	return 0;
+}
