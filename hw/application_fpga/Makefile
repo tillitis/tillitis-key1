@@ -185,6 +185,11 @@ LDFLAGS = \
 	-Wl,--cref,-M \
 	-L $(LIBDIR) -lcommon -lblake2s
 
+QEMU_LDFLAGS = \
+	-T $(P)/fw/tk1/qemu_firmware.lds \
+	-Wl,--cref,-M \
+	-L $(LIBDIR) -lcommon -lblake2s
+
 # Common libraries the firmware and testfw depend on. See
 # https://github.com/tillitis/tkey-libs/
 .PHONY: tkey-libs
@@ -206,8 +211,8 @@ qemu_firmware.elf: CFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: ASFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: CFLAGS += -DQEMU_SYSCALL
 qemu_firmware.elf: ASFLAGS += -DQEMU_SYSCALL
-qemu_firmware.elf: firmware.elf
-	mv firmware.elf qemu_firmware.elf
+qemu_firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/qemu_firmware.lds
+	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(QEMU_LDFLAGS) -o $@ > $(basename $@).map
 
 # Create compile_commands.json for clangd and LSP
 .PHONY: clangd
