@@ -197,7 +197,7 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
-	if ((offset + size) >= SIZE_STORAGE_AREA) {
+	if ((offset + size) > SIZE_STORAGE_AREA) {
 		return -1;
 	}
 
