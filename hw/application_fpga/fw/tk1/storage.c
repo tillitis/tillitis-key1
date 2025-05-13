@@ -67,20 +67,18 @@ static int storage_get_area(struct partition_table *part_table)
 	return -1;
 }
 
-// Allocate a new area for an app. Returns zero if a new area is
-// allocated, one if an area already was allocated, and negative
-// values for errors.
+// Allocate a new area for an app. Returns zero on success.
 int storage_allocate_area(struct partition_table_storage *part_table_storage)
 {
 	if (part_table_storage == NULL) {
-		return -4;
+		return -1;
 	}
 
 	struct partition_table *part_table = &part_table_storage->table;
 
 	if (storage_get_area(part_table) != -1) {
 		/* Already has an area */
-		return 1;
+		return 0;
 	}
 
 	int index = get_first_empty(part_table);
@@ -92,7 +90,7 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 	uint32_t start_address = 0;
 
 	if (index_to_address(index, &start_address) != 0) {
-		return -3;
+		return -1;
 	}
 
 	// Allocate the empty index found
@@ -108,7 +106,7 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 	auth_app_create(&part_table->app_storage[index].auth);
 
 	if (part_table_write(part_table_storage) != 0) {
-		return -5;
+		return -1;
 	}
 
 	return 0;
