@@ -43,12 +43,12 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 	return ret;
 }
 
-// preload_store stores chunks of an app in app slot to_slot. data is
-// a buffer of size size (max 4096 bytes) to be written at byte offset
-// in the slot. offset needs to be kept and updated between each call.
+// preload_store stores chunks of an app in app slot to_slot. data is a buffer
+// of size size to be written at byte offset in the slot. offset needs to be
+// kept and updated between each call. offset must be a multiple of 256.
 //
-// When all data has been written call preload_store_finalize() with
-// the last parameters.
+// When all data has been written call preload_store_finalize() with the last
+// parameters.
 //
 // Returns 0 on success.
 int preload_store(struct partition_table *part_table, uint32_t offset,
@@ -77,7 +77,7 @@ int preload_store(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
-	if (size > 4096) {
+	if (size > SIZE_PRE_LOADED_APP) {
 		return -1;
 	}
 

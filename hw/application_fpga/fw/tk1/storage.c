@@ -213,9 +213,8 @@ int storage_erase_sector(struct partition_table *part_table, uint32_t offset,
 	return 0;
 }
 
-// Writes the specified data to the offset inside of the allocated
-// area. Assumes area has been erased before hand. Currently only
-// handles writes to one sector, hence max size of 4096 bytes.
+// Writes the specified data to the offset inside of the allocated area.
+// Assumes area has been erased before hand. Offset must be a multiple of 256.
 //
 // Returns zero on success.
 int storage_write_data(struct partition_table *part_table, uint32_t offset,
@@ -246,7 +245,7 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
-	if (size > 4096) {
+	if (size > SIZE_STORAGE_AREA) {
 		return -1;
 	}
 

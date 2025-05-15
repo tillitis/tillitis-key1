@@ -176,7 +176,11 @@ int flash_write_data(uint32_t address, uint8_t *data, size_t size)
 		return -1;
 	}
 
-	if (size <= 0 || size > 4096) {
+	if (size <= 0) {
+		return -1;
+	}
+
+	if (address % 256 != 0) {
 		return -1;
 	}
 
@@ -184,6 +188,12 @@ int flash_write_data(uint32_t address, uint8_t *data, size_t size)
 	uint8_t *p_data = data;
 	size_t n_bytes = 0;
 
+	// Page Program allows 1-256 bytes of a page to be written. A page is
+	// 256 bytes. Behavior when writing past the end of a page is device
+	// specific.
+	//
+	// We set the address LSByte to 0 and only write 256 bytes or less in
+	// each transfer.
 	uint8_t tx_buf[4] = {
 	    PAGE_PROGRAM,			 /* tx_buf[0] */
 	    (address >> ADDR_BYTE_3_BIT) & 0xFF, /* tx_buf[1] */
