@@ -26,7 +26,8 @@ int reset(struct reset *userreset, size_t nextlen)
 
 	(void)memset((void *)resetinfo, 0, sizeof(*resetinfo));
 	resetinfo->type = userreset->type;
-	memcpy((void *)resetinfo->app_digest, userreset->app_digest, 32);
+	memcpy((void *)resetinfo->app_digest, userreset->app_digest,
+	       sizeof(resetinfo->app_digest));
 	memcpy((void *)resetinfo->next_app_data, userreset->next_app_data,
 	       nextlen);
 
