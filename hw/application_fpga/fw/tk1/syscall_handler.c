@@ -25,7 +25,7 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 {
 	switch (number) {
 	case TK1_SYSCALL_RESET:
-		reset((struct reset *)arg1, (size_t)arg2);
+		return reset((struct reset *)arg1, (size_t)arg2);
 		break;
 
 	case TK1_SYSCALL_ALLOC_AREA:
