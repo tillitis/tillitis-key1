@@ -525,6 +525,10 @@ int main(void)
 		assert(1 == 2);
 	}
 
+	// Reset the USB controller to only enable the USB CDC
+	// endpoint and the internal command channel.
+	config_endpoints(IO_CDC | IO_CH552);
+
 	led_set(LED_WHITE);
 
 #if defined(SIMULATION)
