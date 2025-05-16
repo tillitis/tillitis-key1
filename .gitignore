@@ -32,7 +32,7 @@
 /hw/application_fpga/tkey-libs/libcommon.a
 /hw/application_fpga/tkey-libs/libcrt0.a
 /hw/application_fpga/tkey-libs/libmonocypher.a
-/hw/application_fpga/tools/partition_table/partition_table
+/hw/application_fpga/tools/tkeyimage/tkeyimage
 /hw/application_fpga/tools/b2s/b2s
 synth.json
 synth.txt

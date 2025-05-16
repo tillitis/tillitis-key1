@@ -1,4 +1,4 @@
-module partition_table
+module tkeyimage
 
 go 1.23.0
 

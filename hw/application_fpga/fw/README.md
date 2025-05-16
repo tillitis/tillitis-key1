@@ -785,10 +785,10 @@ If you want to use a different pre-loaded app you have to
 2. Update the `allowed_app_digest` in `tk1/mgmt_app.c`.
 
 3. Create a new `default_partition.bin` using the
-   `tools/partition_table`, typically:
+   `tools/tkeyimage`, typically:
 
    ```
-   $ partition_table -app0 path/to/your/app.bin -o default_partition.bin
+   $ tkeyimage -app0 path/to/your/app.bin -o default_partition.bin
    ```
 
 4. Flash the filesystem image:
