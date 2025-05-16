@@ -1,4 +1,4 @@
-# partition\_table
+# tkeyimage
 
 A tool to parse or generate partition table or entire filesystems for
 the TKey.
@@ -16,7 +16,7 @@ Dump the entire data from flash, then inspect:
 
 ```
 $ tillitis-iceprog -R 1M dump.bin
-$ ./partition_table -i dump.bin -f
+$ ./tkeyimage -i dump.bin -f
 INFO: main.Flash struct is 1048576 byte long
 Partition Table Storage
   Partition Table
@@ -46,7 +46,7 @@ then inspect:
 
 ```
 $ tillitis-iceprog -o 128k -r partition.bin
-$ ./partition_table -i partition.bin
+$ ./tkeyimage -i partition.bin
 INFO: main.PartTableStorage struct is 365 byte long
 Partition Table Storage
   Partition Table
@@ -76,13 +76,13 @@ Partition Table Storage
 If you want to generate just a partition table:
 
 ```
-$ ./partition_table -o partition.bin
+$ ./tkeyimage -o partition.bin
 ```
 
 With an app in slot 0, filling in the size in the partition table:
 
 ```
-$ ./partition_table -o partition.bin -app0 ../../fw/testloadapp/testloadapp.bin
+$ ./tkeyimage -o partition.bin -app0 ../../fw/testloadapp/testloadapp.bin
 ```
 
 ### Generate flash image
@@ -93,7 +93,7 @@ with real hardware or qemu.
 Generate like this:
 
 ```
-$ ./partition_table -o flash.bin -f -app0 ../../fw/testloadapp/testloadapp.bin
+$ ./tkeyimage -o flash.bin -f -app0 ../../fw/testloadapp/testloadapp.bin
 ```
 
 Using `-app0` is mandatory because TKey firmware won't start without
