@@ -28,24 +28,24 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
 
 ### FPGA
 
-- Security Monitor memory access checks are now more complete.
+- Make Security Monitor memory access checks more complete.
 
 - Add SPI main controller mainly to access the flash chip.
 
-- Add system reset API. Device apps can reset the system and restart
-  the firmware. The FPGA is not reset.
+- Add system reset API. Device apps can reset the FPGA and restart
+  the firmware.
 
 - Increase clock frequence to 24 MHz.
 
 - Increase UART baudrate to 500,000.
 
+- Fix UART baudrate counter issues noticable at higher baudrates.
+
 - Fix missing clock cycles in timer core.
 
 - Remove the UART runtime configuration API.
 
-- Several clean ups and testbench changes.
-
-- Make Verilator simulation work again.
+- Several minor clean ups of design and testbench.
 
 - Add hardware clear to send (CTS) signals for communication between
   UART and CH552.
@@ -54,19 +54,19 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
 
 - Make ROM non-executable in app mode.
 
-- Remove support for access to the firmware blake2s() function from
-  apps.
+- Remove MMIO address for access to the firmware blake2s() function
+  from apps.
 
 - Automatically leave firmware mode when execution leaves ROM and
   remove the now unnecessary APP\_MODE\_CTRL register.
 
-- Add extra protection of UDS: When execution leaves ROM the first
-  time, UDS is hardware protected from reading, as well as already
-  existing UDS protection after first read and UDS being unreadable in
-  app mode.
+- Change UDS read protection: When execution leaves ROM the first
+  time, UDS is hardware protected from reads. The already existing
+  protection that UDS is protected after the first read is also still
+  available.
 
-- Introduce interrupt handler for hardware-based privilege raising for
-  system calls.
+- Introduce interrupt handler for hardware-based privilege raising and
+  automatically privelege lowering for system calls.
 
 ### Firmware
 
@@ -74,27 +74,65 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
   by TRNG.
 
 - Add support for the new USB Mode Protocol to communicate with
-  different endpoints.
+  different USB endpoints in the USB controller.
 
-- Support a filesystem on flash.
+- Support a filesystem on flash: There's space for two pre-loaded
+  apps and four storage areas for device apps.
 
-- Add a system call mechanism and system calls: `RESET`, `ALLOC_AREA`,
-  `DEALLOC_AREA`, `WRITE_DATA`, `READ_DATA`, `ERASE_DATA`,
-  `PRELOAD_DELETE`, `PRELOAD_STORE`, `PRELOAD_STORE_FIN`,
-  `PRELOAD_GET_DIGSIG`, `STATUS`, and `GET_VIDPID`. See [firmware's
-  README](../hw/application_fpga/fw/README.md) for documentation.
+  A typical use is that app slot 0 will contain a loader app for
+  verified boot and app slot 1 contains the app to be verified.
+
+- Automatically start an app in flash app slot 0 after power cycle and
+  when instructed to by reset intentions.
+
+  The automatically started app is trusted by the firmware by
+  including an app digest in the firmware ROM. This means we extend
+  the user's trust in the firmware to the first app, but only if it's
+  measured to the correct digest by the firmware. Anything else is a
+  hard error which halts the CPU.
+
+- Support chaining of apps through soft resets, including support for
+  verifying that the next app is the expected one (exact measured
+  digest the previous app expected), and leaving data for the next app
+  to use.
+
+- Add a system call mechanism and system calls. See [firmware's
+  README](../hw/application_fpga/fw/README.md) for documentation, but
+  its probably easier to use the the syscall wrappers in libsyscall in
+  [tkey-libs](https://github.com/tillitis/tkey-libs) if you're writing
+  in C.
 
 - Harmonize with [tkey-libs](https://github.com/tillitis/tkey-libs).
   Import tkey-libs to this repo for convenience.
 
-### CH552
+- Rewrite test firmware to work with the new leaving ROM-scenario.
+  Introduce a separate `testapp` for the app mode parts.
+
+### Device apps
+
+Introduce some device apps mostly for testing.
+
+- `reset_test`: Test the different types of soft reset.
+
+- `testapp`: Tests in app mode that used to live in `testfw`.
+
+- `testloadapp`: A simple loader app for management and verification
+  of a second app.
+
+- `defaultapp`: An app that immediately resets the TKey to load an app
+  from the client, just like earlier releases.
+
+### CH552 firmware
 
 - Use the new CTS signals for communication over the UART.
 
-- Add support for two HID endpoints.
+- Add support for two HID endpoints (security token and our debug
+  HID).
 
-- Add protocol to communicate with the three different endpoints: CDC,
-  HID, debug.
+- Add support for CCID endpoint.
+
+- Add a protocol to communicate with the different endpoints: CDC,
+  CCID, FIDO, debug.
 
 - Change USB frame sending from a software timer to instead be
   controlled by the USB Controller Protocol.
@@ -105,6 +143,13 @@ the Blinkinlabs CH55x Reset Controller:
 https://shop-nl.blinkinlabs.com/products/ch55x-reset-controller
 
 https://github.com/Blinkinlabs/ch55x_programmer
+
+### Tooling
+
+- Add tools to parse and generate partition tables and flash images.
+
+- Add tool to compute a print a BLAKE2s digest, optionally as C code.
+
 
 ### tkey-builder
 
@@ -130,6 +175,9 @@ https://github.com/Blinkinlabs/ch55x_programmer
   TP1 is now in https://github.com/tillitis/tp1
 
 - Remove Go compiler support.
+
+- Introduce buildtools.sh for building upstream tools for inclusion
+  in the image.
 
 ### Docs
 
