@@ -78,23 +78,25 @@ For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-
 
 - Support a filesystem on flash.
 
-- Add a system call mechanism and system calls: `RESET`, `ALLOC_AREA`,
-  `DEALLOC_AREA`, `WRITE_DATA`, `READ_DATA`, `ERASE_DATA`,
-  `PRELOAD_DELETE`, `PRELOAD_STORE`, `PRELOAD_STORE_FIN`,
-  `PRELOAD_GET_DIGSIG`, `STATUS`, and `GET_VIDPID`. See [firmware's
-  README](../hw/application_fpga/fw/README.md) for documentation.
+- Add a system call mechanism and system calls. See [firmware's
+  README](../hw/application_fpga/fw/README.md) for documentation, but
+  please use the syscall wrappers in
+  [tkey-libs](https://github.com/tillitis/tkey-libs) if writing in C.
 
 - Harmonize with [tkey-libs](https://github.com/tillitis/tkey-libs).
   Import tkey-libs to this repo for convenience.
 
-### CH552
+### CH552 firmware
 
 - Use the new CTS signals for communication over the UART.
 
-- Add support for two HID endpoints.
+- Add support for two HID endpoints (security token and our debug
+  HID).
 
-- Add protocol to communicate with the three different endpoints: CDC,
-  HID, debug.
+- Add support for CCID endpoint.
+
+- Add a protocol to communicate with the different endpoints: CDC,
+  CCID, HID, debug.
 
 - Change USB frame sending from a software timer to instead be
   controlled by the USB Controller Protocol.
@@ -105,6 +107,10 @@ the Blinkinlabs CH55x Reset Controller:
 https://shop-nl.blinkinlabs.com/products/ch55x-reset-controller
 
 https://github.com/Blinkinlabs/ch55x_programmer
+
+### Tooling
+
+- Added tools to parse and generate partition tables and flash images.
 
 ### tkey-builder
 
