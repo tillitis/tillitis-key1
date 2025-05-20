@@ -41,7 +41,7 @@ hw/application_fpga/firmware.bin.sha512
 hw/application_fpga/fw/.clang-format
 hw/application_fpga/fw/testfw/Makefile
 hw/application_fpga/fw/tk1/Makefile
-hw/application_fpga/tools/makehex/makehex.py
+hw/application_fpga/tools/makehex.py
 hw/application_fpga/tools/reset-tk1
 hw/application_fpga/tools/tpt/README.md
 )

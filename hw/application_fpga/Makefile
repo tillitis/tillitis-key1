@@ -255,11 +255,11 @@ bram_fw.hex:
 	$(ICESTORM_PATH)icebram -v -g 32 $(BRAM_FW_SIZE) > $@
 
 firmware.hex: firmware.bin firmware_size_mismatch
-	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
+	python3 $(P)/tools/makehex.py $< $(BRAM_FW_SIZE) > $@
 simfirmware.hex: simfirmware.bin simfirmware_size_mismatch
-	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
+	python3 $(P)/tools/makehex.py $< $(BRAM_FW_SIZE) > $@
 testfw.hex: testfw.bin testfw_size_mismatch
-	python3 $(P)/tools/makehex/makehex.py $< $(BRAM_FW_SIZE) > $@
+	python3 $(P)/tools/makehex.py $< $(BRAM_FW_SIZE) > $@
 
 .PHONY: check-binary-hashes
 check-binary-hashes:
