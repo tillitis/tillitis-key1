@@ -1,4 +1,4 @@
-# TKey hardware design
+## TKey hardware design
 
 ![The Application FPGA block diagram](../../doc/images/application_fpga_block_diagram.png)
 
@@ -16,8 +16,9 @@ firmware, application and system call. Each mode give access to a
 different set of resources. Where app mode is the most restrictive and
 firmware mode is the least restrictive.
 
-The rest of the components are under `cores`. They typically have
-their own `README.md` file documenting them and their API in detail.
+The rest of the components are under `cores`, except the firmware,
+which is under `fw/tk1`. They typically have their own `README.md`
+file documenting them and their API in detail.
 
 Hardware functions with APIs, assets, and input/output are memory
 mapped starting at base address `0xc000_0000`. For specific offsets
@@ -37,6 +38,11 @@ Rough memory map:
 | FW\_RAM | 0xd0     |
 | Syscall | 0xe1     |
 | TK1     | 0xff     |
+
+## Firmware
+
+Firmware is kept in ROM. See the [Firmware implementation
+notes](fw/README.md).
 
 ## `clk_reset_gen`
 
