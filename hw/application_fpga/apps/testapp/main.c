@@ -1,6 +1,9 @@
 // Copyright (C) 2022, 2023 - Tillitis AB
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include <fw/tk1/proto.h>
+#include <fw/tk1/reset.h>
+#include <fw/tk1/syscall_num.h>
 #include <stdint.h>
 #include <tkey/assert.h>
 #include <tkey/io.h>
@@ -8,9 +11,6 @@
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 
-#include "../tk1/proto.h"
-#include "../tk1/reset.h"
-#include "../tk1/syscall_num.h"
 #include "syscall.h"
 
 #define USBMODE_PACKET_SIZE 64

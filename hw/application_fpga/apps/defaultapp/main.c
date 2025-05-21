@@ -1,12 +1,11 @@
 // Copyright (C) 2025 - Tillitis AB
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include <fw/tk1/reset.h>
+#include <fw/tk1/syscall_num.h>
+#include <syscall.h>
 #include <tkey/debug.h>
 #include <tkey/led.h>
-
-#include "../testapp/syscall.h"
-#include "../tk1/reset.h"
-#include "../tk1/syscall_num.h"
 
 int main(void)
 {

@@ -2,18 +2,18 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 #include <blake2s/blake2s.h>
+#include <fw/tk1/reset.h>
+#include <fw/tk1/syscall_num.h>
 #include <monocypher/monocypher-ed25519.h>
 #include <stdint.h>
+#include <tkey/assert.h>
 #include <tkey/debug.h>
 #include <tkey/led.h>
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 
-#include "../testapp/syscall.h"
-#include "../tk1/reset.h"
-#include "../tk1/syscall_num.h"
 #include "blink.h"
-#include "tkey/assert.h"
+#include "syscall.h"
 
 // clang-format off
 static volatile uint32_t *cdi           = (volatile uint32_t *) TK1_MMIO_TK1_CDI_FIRST;
@@ -157,7 +157,8 @@ void reset_from_client(void)
 	// Give the next in chain something to look at.
 	memset(rst.next_app_data, 17, sizeof(rst.next_app_data));
 
-	syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, sizeof(rst.next_app_data), 0);
+	syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, sizeof(rst.next_app_data),
+		0);
 }
 
 int main(void)

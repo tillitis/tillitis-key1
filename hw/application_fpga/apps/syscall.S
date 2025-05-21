@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 Tillitis AB <tillitis.se>
 // SPDX-License-Identifier: BSD-2-Clause
 
-#include "../tk1/picorv32/custom_ops.S"
+#include "../fw/tk1/picorv32/custom_ops.S"
 
 	.section ".text"
 	.globl syscall
