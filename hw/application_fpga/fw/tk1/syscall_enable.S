@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
+// SPDX-License-Identifier: GPL-2.0-only
+
 #ifdef QEMU_SYSCALL
 
 #define picorv32_maskirq_insn(...)

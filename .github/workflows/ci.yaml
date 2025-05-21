@@ -31,6 +31,9 @@ jobs:
         run: |
           make checkfmt
 
+      - name: check for SPDX tags
+        run: ./LICENSES/spdx-ensure
+
   check-firmware:
     runs-on: ubuntu-latest
     container:
@@ -148,8 +151,3 @@ jobs:
       - name: check matching hashes for firmware.bin & application_fpga.bin
         working-directory: hw/application_fpga
         run: make check-binary-hashes
-
-
-      # TODO? first deal with hw/boards/ and hw/production_test/
-      # - name: check for SPDX tags
-      #   run: ./LICENSES/spdx-ensure

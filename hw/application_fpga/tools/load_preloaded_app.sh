@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+# SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
+# SPDX-License-Identifier: GPL-2.0-only
 if [ $# != 2 ]
 then
     echo "Usage: $0 slot_num app_file"

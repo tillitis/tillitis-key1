@@ -40,8 +40,16 @@ software and hardware should be.
 
 ## Licensing
 
+Unless otherwise noted, the project sources are copyright Tillitis AB.
+but you can redistribute it and/or modify it under the terms of the
+GNU General Public License version 2 as published by the Free Software
+Foundation.
+
 See [LICENSES](./LICENSES/README.md) for more information about
 the projects' licenses.
+
+Each imported project is typically kept in its own directory with its
+own LICENSE file.
 
 ## Repositories
 

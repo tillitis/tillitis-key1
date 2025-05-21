@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
+# SPDX-License-Identifier: GPL-2.0-only
+
 help() {
     echo "Usage: $(basename $0) [OPTION]"
     echo "Run multiple place and route threads with nextpnr-ice40"

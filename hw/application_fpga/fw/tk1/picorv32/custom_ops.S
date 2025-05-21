@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Claire Xenia Wolf <claire@yosyshq.com>
+// SPDX-License-Identifier: CC0-1.0
+
 // This is free and unencumbered software released into the public domain.
 //
 // Anyone is free to copy, modify, publish, use, compile, sell, or
