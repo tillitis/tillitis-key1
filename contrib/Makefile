@@ -14,7 +14,7 @@ all:
 	@echo "run-tb                Run all the testbenches using image '$(IMAGE)' (Podman)"
 	@echo "run-make-no-clean     Like run-make but without cleaning first, useful for iterative firmware dev"
 	@echo "run-make-clean_fw     Like run-make but cleans only firmware"
-	@echo "flash                 Program the SPI flash on the TKey - needs an existing bitstream"
+	@echo "flash                 Build bitstream and testloadapp.bin then program them and the partition table onto the TKey SPI flash"
 	@echo "pull                  Pull down the image '$(IMAGE)' (Podman)"
 	@echo "build-image           Build a toolchain image named '$(BUILDIMAGE)' (Podman)"
 	@echo "                      A newly built image can be used like: make IMAGE=$(BUILDIMAGE) run"
@@ -54,7 +54,7 @@ flash:
 	--device /dev/bus/usb/$(lsusb | grep -m 1 1209:8886 | awk '{ printf "%s/%s", $2, substr($4,1,3) }') \
 	--mount type=bind,source="`pwd`/../hw/application_fpga",target=/build \
 	-w /build \
-	-it $(IMAGE) tillitis-iceprog /build/application_fpga.bin
+	-it $(IMAGE) make prog_flash
 
 
 pull:
