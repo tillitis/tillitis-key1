@@ -214,8 +214,8 @@ int main(void)
 	}
 
 	puts(IO_CDC, "\r\nTesting timer... 3");
-	// Matching clock at 21 MHz, giving us timer in seconds
-	*timer_prescaler = 21 * 1000000;
+	// Matching clock at 24 MHz, giving us timer in seconds
+	*timer_prescaler = 24 * 1000000;
 
 	// Test timer expiration after 1s
 	*timer = 1;
