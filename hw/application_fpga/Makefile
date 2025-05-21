@@ -331,6 +331,7 @@ fmt: $(FPGA_VERILOG_SRCS) $(SIM_VERILOG_SRCS) $(VERILATOR_VERILOG_SRCS) $(VERILO
 checkfmt: $(FPGA_VERILOG_SRCS) $(SIM_VERILOG_SRCS) $(VERILATOR_VERILOG_SRCS) $(VERILOG_SRCS)
 	make -C fw/tk1 checkfmt
 	make -C fw/testfw checkfmt
+	make -C apps checkfmt
 	$(FORMAT) $(CHECK_FORMAT_FLAGS) $^ 2>&1 | \
 		grep "Needs formatting" && exit 1 || true
 .PHONY: checkfmt
