@@ -85,7 +85,13 @@ https://github.com/tillitis/tkey-libs
 
 but keep our own copy of it in the repo. See below.
 
-## Building
+## Building & flashing
+
+You need a [TKey
+Unlocked](https://shop.tillitis.se/products/tkey-not-provisioned) and
+a [TKey Programmer
+Board](https://shop.tillitis.se/products/tkey-dev-kit) to use this on
+real hardware.
 
 Building is probably easiest using make and Podman. Do this to see all
 targets:
@@ -102,6 +108,18 @@ Podman:
 cd contrib
 make run-make
 ```
+
+To flash the bitstream, the testloadapp in app slot 0 and the
+partition table copies in one go, place the TKey Unlocked in the TP1,
+then do:
+
+```
+make flash
+```
+
+This uses the make target `prog_flash` in
+`hw/application_fpga/Makefile` behind the scenes, but mounts your TP1
+device into the container.
 
 See the [Tillitis Developer Handbook](https://dev.tillitis.se) for
 more.
