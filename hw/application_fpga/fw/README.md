@@ -737,6 +737,9 @@ functions. Note that these functions are only usable in QEMU and that
 you might need to `make clean` before building, if you have already
 built before.
 
+To build a flash image file suitable for use with qemu, use the
+`tools/tkeyimage` program. See its documentation.
+
 If you want debug prints to show up on the special TKey HID debug
 endpoint instead, define `-DTKEY_DEBUG`. This might mean you can't fit
 the firmware in the ROM space available, however. You will get a
