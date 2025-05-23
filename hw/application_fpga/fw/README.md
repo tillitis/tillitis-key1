@@ -737,6 +737,9 @@ functions. Note that these functions are only usable in QEMU and that
 you might need to `make clean` before building, if you have already
 built before.
 
+To build a flash image file suitable for use with qemu, use the
+`tools/tkeyimage` program. See its documentation.
+
 If you want debug prints to show up on the special TKey HID debug
 endpoint instead, define `-DTKEY_DEBUG`. This might mean you can't fit
 the firmware in the ROM space available, however. You will get a
@@ -764,6 +767,26 @@ The TKey supports a simple filesystem. This filesystem must be
 initiated before starting for the first time. You need a [TKey
 Programmer Board](https://shop.tillitis.se/products/tkey-dev-kit) for
 this part.
+
+If you just want to build and flash the bitstream, the testloadapp in
+app slot 0, and the partition table copies in one go, place the TKey
+Unlocked in the TP1, then:
+
+Using Podman, from the top level directory:
+
+```
+cd contrib
+make flash
+```
+
+Using native tools:
+
+```
+cd hw/application_fpga
+make prog_flash
+```
+
+If you want to prepare the filesystem yourself:
 
 1. Choose your pre-loaded app. You *must* have a pre-loaded app, for
    example `testloadapp`. Build it with the OCI image we use. The

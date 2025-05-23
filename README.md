@@ -85,7 +85,15 @@ https://github.com/tillitis/tkey-libs
 
 but keep our own copy of it in the repo. See below.
 
-## Building
+## Building & flashing
+
+### FPGA
+
+You need a [TKey
+Unlocked](https://shop.tillitis.se/products/tkey-not-provisioned) and
+a [TKey Programmer
+Board](https://shop.tillitis.se/products/tkey-dev-kit) to use this on
+real hardware.
 
 Building is probably easiest using make and Podman. Do this to see all
 targets:
@@ -103,8 +111,46 @@ cd contrib
 make run-make
 ```
 
+To flash the bitstream, the testloadapp in app slot 0 and the
+partition table copies in one go, place the TKey Unlocked in the TP1,
+then do:
+
+```
+make flash
+```
+
+This uses the make target `prog_flash` in
+`hw/application_fpga/Makefile` behind the scenes, but mounts your TP1
+device into the container.
+
 See the [Tillitis Developer Handbook](https://dev.tillitis.se) for
 more.
+
+### USB Controller
+
+Build:
+
+```
+cd contrib
+make run
+cd hw/usb_interface/ch552_fw
+make
+```
+
+To flash the controller you need hardware like the [Blinkinlabs CH55x
+Reset
+Controller](https://shop-nl.blinkinlabs.com/products/ch55x-reset-controller)
+and a USB-A to USB-C converter.
+
+[Reset Controller source](https://github.com/Blinkinlabs/ch55x_programmer).
+
+You also need [chprog](https://github.com/ole00/chprog).
+
+1. Connect the Reset Controller to your computer through the "DUT\_IN".
+2. Connect the TKey to "DUT\_OUT".
+3. Press the "BOOTLOADER" button.
+4. Run `make flash_patched` in `hw/usb_interface/ch552_fw` outside of
+   a container.
 
 ## Updating and working with tkey-libs
 
