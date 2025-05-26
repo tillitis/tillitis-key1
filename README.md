@@ -146,9 +146,9 @@ and a USB-A to USB-C converter.
 
 You also need [chprog](https://github.com/ole00/chprog).
 
-1. Connect the Reset Controller to your computer through the "DUT\_IN".
-2. Connect the TKey to "DUT\_OUT".
-3. Press the "BOOTLOADER" button.
+1. Connect the Reset Controller to your computer through "DUT\_IN"/"PC".
+2. Connect the TKey to "DUT\_OUT"/"DUT".
+3. Press the "Bootloader" button.
 4. Run `make flash_patched` in `hw/usb_interface/ch552_fw` outside of
    a container.
 
