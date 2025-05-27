@@ -4,8 +4,12 @@ Descriptions of the tagged TKey releases.
 
 ## Upcoming release: Castor
 
-Overview of changes since TK TK1-24.03 for the Castor milestone so
-far.
+Overview of changes since [TK1-24.03
+Bellatrix](https://github.com/tillitis/tillitis-key1/releases/tag/TK1-24.03)
+for the Castor milestone so far.
+
+Main branch in the repository contains Castor design and specifically
+the tag `TK1-Castor-alpha-1` reflects the upcoming release.
 
 **Note well**: BREAKING CHANGE! Older device apps WILL NOT WORK.
 
@@ -14,15 +18,27 @@ on the PicoRV32 CPU and the CH552 means that device apps that have not
 been changed to use the protocol will not have any way to communicate
 with the outside world.
 
+### How to test TK1-Castor-alpha
+
+To test this alpha release you will need:
+
+- Tkey Unlocked
+- TKey Programmer Board
+- CH55x Reset Controller from [Blinkinlabs](https://shop-nl.blinkinlabs.com/products/ch55x-reset-controller)
+
+Read
+[here](https://github.com/tillitis/tillitis-key1/blob/main/README.md#building--flashing)
+for instructions.
+
 ### General
 
 - Split repo:
 
-    - tk1, mta1-usb-dev, mta-usb-v1 and mta1-library moves to
-      https://github.com/tillitis/tk1-pcba
+  - tk1, mta1-usb-dev, mta-usb-v1 and mta1-library moves to
+    <https://github.com/tillitis/tk1-pcba>
 
-    - tp1, mta1-usb-programmer, mta1-library and KiCad-RP Pico moves to
-      https://github.com/tillitis/tp1
+  - tp1, mta1-usb-programmer, mta1-library and KiCad-RP Pico moves to
+    <https://github.com/tillitis/tp1>
 
 For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-23.03.2...coming-tag)
 
@@ -140,16 +156,15 @@ Introduce some device apps mostly for testing.
 Note that to update the CH552 firmware you will need something like
 the Blinkinlabs CH55x Reset Controller:
 
-https://shop-nl.blinkinlabs.com/products/ch55x-reset-controller
+<https://shop-nl.blinkinlabs.com/products/ch55x-reset-controller>
 
-https://github.com/Blinkinlabs/ch55x_programmer
+<https://github.com/Blinkinlabs/ch55x_programmer>
 
 ### Tooling
 
 - Add tools to parse and generate partition tables and flash images.
 
 - Add tool to compute a print a BLAKE2s digest, optionally as C code.
-
 
 ### tkey-builder
 
@@ -172,7 +187,7 @@ https://github.com/Blinkinlabs/ch55x_programmer
   - libstdc++-arm-none-eabi-newlib
   - pico-sdk
 
-  TP1 is now in https://github.com/tillitis/tp1
+  TP1 is now in <https://github.com/tillitis/tp1>
 
 - Remove Go compiler support.
 
@@ -203,6 +218,7 @@ the following digest:
 ```
 
 ### FPGA
+
 - Security Monitor now prevents access to RAM outside of the physical
   memory. If it detects an access outside of the RAM address space, it
   will halt the CPU.
@@ -214,6 +230,7 @@ the following digest:
 - Complete testbenches and add 9 tests for the FPGA cores.
 
 ### Firmware
+
 - Protect zeroisation against compiler optimisation by using
   secure_wipe(), fixing a memset() that was removed during
   compilation.
@@ -228,30 +245,34 @@ the following digest:
 - Fix warnings from splint.
 
 ### TP1
+
 - New plastic clip o and update of BOM.
 - Build TP1 firmware in CI.
 
 ### CH552
+
 - Fixed a bug where a byte of data could in some rare circumstances be
   dropped, causing a client app to hang.
 - General clean-up of code, translated all comments to English.
 
 ### TK1
+
 - New injection moulded plastic case
 
 ### tkey-builder
+
 - Updated to version 3. Bumping Ubuntu to 23.10, Yosys to 0.36 and
   nextpnr to 0.6.
 - Updated to version 4. Bumping pico-sdk to 1.5.1, adding clang-tidy
   and splint.
 
 ### Docs
+
 - Fixing broken links, cleaning up docs and READMEs.
 - Clarify warm boot attack mitigations and scope for Bellatrix in
   threat model.
 
 For full change log [see](https://github.com/tillitis/tillitis-key1/compare/TK1-23.03.2...TK1-24.03)
-
 
 ## TK1-23.03.2
 
@@ -282,8 +303,8 @@ This bug fix release contains the following changes:
 - Change the firmware protocol max frame size back to 128 bytes
 - Correct a bug with the reading out of UDS
 
-
 ## TK1-23.03
+
 This is the official release of the "Bellatrix" version of
 the Tillitis TKey device. This version is ready for general
 use.
@@ -296,7 +317,6 @@ build should generate the following digest:
 shasum -a256 application_fpga.bin
 f11d6b0f57c5405598206dcfea284008413391a2c51f124a2e2ae8600cb78f0b  application_fpga.bin
 ```
-
 
 ### New and improved functionality
 
@@ -361,17 +381,15 @@ f11d6b0f57c5405598206dcfea284008413391a2c51f124a2e2ae8600cb78f0b  application_fp
 - (TOOLS) There is now a version of iceprog able to write to the FPGA
   bitstream to the NVCM and lock the NVCM from external access
 
-
 ### Bugs fixed
-- No known bugs have been fixed. Numerous issues has been closed.
 
+- No known bugs have been fixed. Numerous issues has been closed.
 
 ### Limitations
 
 - The RAM address and data scrambling in this release is not
   cryptographically secure. It his however randomized every time
   a TKey device is powered up.
-
 
 ## engineering-release-2
 
