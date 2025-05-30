@@ -87,35 +87,30 @@ but keep our own copy of it in the repo. See below.
 
 ## Building & flashing
 
+These instructions assume you're using a Linux distribution. Most of
+them also assume you're using our OCI image
+[tkey-builder](https://ghcr.io/tillitis/tkey-builder). If you want to
+run native tools, look in `contrib/Dockerfile` and
+`contrib/buildtools.sh` for the tools and versions to use.
+
 ### FPGA
 
 You need a [TKey
-Unlocked](https://shop.tillitis.se/products/tkey-not-provisioned) and
-a [TKey Programmer
-Board](https://shop.tillitis.se/products/tkey-dev-kit) to use this on
-real hardware.
+Unlocked](https://shop.tillitis.se/products/tkey-not-provisioned), a
+[the TP1 TKey Programmer
+board](https://shop.tillitis.se/products/tkey-dev-kit), and probably a
+[Blinkinlabs CH55x Reset
+Controller](https://shop-nl.blinkinlabs.com/products/ch55x-reset-controller)
+to use this on real hardware.
 
-Building is probably easiest using make and Podman. Do this to see all
-targets:
+Building is probably easiest using make and Podman.
 
-```
-cd contrib
-make
-```
-
-Build the entire FPGA bitstream, which includes the firmware, using
-Podman:
+To build everything and then flash the resulting bitstream with the
+testloadapp in app slot 0 and the partition table copies in one go,
+place the TKey Unlocked in the TP1, then do:
 
 ```
 cd contrib
-make run-make
-```
-
-To flash the bitstream, the testloadapp in app slot 0 and the
-partition table copies in one go, place the TKey Unlocked in the TP1,
-then do:
-
-```
 make flash
 ```
 
@@ -123,10 +118,20 @@ This uses the make target `prog_flash` in
 `hw/application_fpga/Makefile` behind the scenes, but mounts your TP1
 device into the container.
 
+To see all targets:
+
+```
+cd contrib
+make
+```
+
 See the [Tillitis Developer Handbook](https://dev.tillitis.se) for
 more.
 
 ### USB Controller
+
+The TKey uses a WCH CH552 chip as a USB controller. It has its own
+firmware.
 
 Build:
 
@@ -137,14 +142,20 @@ cd hw/usb_interface/ch552_fw
 make
 ```
 
-To flash the controller you need hardware like the [Blinkinlabs CH55x
-Reset
+To flash the controller with new firmware you need hardware like the
+[Blinkinlabs CH55x Reset
 Controller](https://shop-nl.blinkinlabs.com/products/ch55x-reset-controller)
 and a USB-A to USB-C converter.
 
 [Reset Controller source](https://github.com/Blinkinlabs/ch55x_programmer).
 
 You also need [chprog](https://github.com/ole00/chprog).
+
+The bootloader identifies itself as USB VID 4348, PID 55e0. To be able
+to access it and run `chprog` without root you need to allow your user
+to access it. Place `contrib/99-tillitis.rules` in `/etc/udev/rules.d`
+and run `udevadm control --reload`. Now you can add your user to the
+`dialout` group and access it.
 
 1. Connect the Reset Controller to your computer through "DUT\_IN"/"PC".
 2. Connect the TKey to "DUT\_OUT"/"DUT".
