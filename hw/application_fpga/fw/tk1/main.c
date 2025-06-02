@@ -449,11 +449,11 @@ static enum state start_where(struct context *ctx)
 	debug_lf();
 
 	debug_puts("  ->app_digest: \n");
-	debug_hexdump(resetinfo->app_digest, RESET_DIGEST_SIZE);
+	debug_hexdump((void *)resetinfo->app_digest, RESET_DIGEST_SIZE);
 	debug_lf();
 
 	debug_puts("  ->next_app_data: \n");
-	debug_hexdump(resetinfo->next_app_data, RESET_DATA_SIZE);
+	debug_hexdump((void *)resetinfo->next_app_data, RESET_DATA_SIZE);
 	debug_lf();
 
 	// Where do we start?
