@@ -20,7 +20,7 @@ func printCDigest(digest [blake2s.Size]byte, fileName string) {
 	fmt.Printf("const uint8_t digest[32] = {\n")
 
 	for _, n := range digest {
-		fmt.Printf("0x%x, ", n)
+		fmt.Printf("0x%02x, ", n)
 	}
 
 	fmt.Printf("\n}; \n")
