@@ -6,12 +6,14 @@
 
 #include "mem.h"
 
-unsigned char FLASH ProdDesc[] = {  // "MTA1-USB-V1"
-    24,    // Length of this descriptor (in bytes)
+unsigned char FLASH ProdDesc[] = {  // "Tillitis TKEY-USB-V2"
+    42,    // Length of this descriptor (in bytes)
     0x03,  // Descriptor type (String)
-    'M', 0, 'T', 0, 'A', 0, '1', 0,
-    '-', 0, 'U', 0, 'S', 0, 'B', 0,
-    '-', 0, 'V', 0, '1', 0,
+    'T', 0, 'i', 0, 'l', 0, 'l', 0,
+    'i', 0, 't', 0, 'i', 0, 's', 0,
+    ' ', 0, 'T', 0, 'K', 0, 'E', 0,
+    'Y', 0, '-', 0, 'U', 0, 'S', 0,
+    'B', 0, '-', 0, 'V', 0, '2', 0,
 };
 
 unsigned char FLASH ManufDesc[] = {  // "Tillitis"

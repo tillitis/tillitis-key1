@@ -51,7 +51,7 @@ def format_descriptor(name, value):
 
 if __name__ == "__main__":
     strings = {
-        "ProdDesc": "MTA1-USB-V1",
+        "ProdDesc": "Tillitis TKEY-USB-V2",
         "ManufDesc": "Tillitis",
         "SerialDesc": "68de5d27-e223-4874-bc76-a54d6e84068f",
         "CdcCtrlInterfaceDesc": "CDC-Ctrl",
@@ -62,6 +62,9 @@ if __name__ == "__main__":
     }
 
     with open('inc/usb_strings.h', 'w') as f:
+        f.write('// SPDX-FileCopyrightText: 2024 Tillitis AB <tillitis.se>\n')
+        f.write('// SPDX-License-Identifier: MIT\n')
+        f.write('\n')
         f.write('#ifndef __USB_STRINGS_H__\n')
         f.write('#define __USB_STRINGS_H__\n')
         f.write('\n')
