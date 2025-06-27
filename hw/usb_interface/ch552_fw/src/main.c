@@ -123,9 +123,9 @@ FLASH uint8_t DevDesc[] = {
         0x02,                             /* bDeviceSubClass: Common Class */
         0x01,                             /* bDeviceProtocol: IAD (Interface Association Descriptor) */
         DEFAULT_EP0_SIZE,                 /* bMaxPacketSize */
-        0x07,                             /* idVendor */            // VID LOBYTE
+        0x09,                             /* idVendor */            // VID LOBYTE
         0x12,                             /* idVendor */            // VID HIBYTE
-        0x87,                             /* idProduct */           // PID LOBYTE
+        0x85,                             /* idProduct */           // PID LOBYTE
         0x88,                             /* idProduct */           // PID HIBYTE
         0x00,                             /* bcdDevice (device release number in binary-coded decimal (BCD) format, low byte, i.e. YY) rel. XX.YY */
         0x01,                             /* bcdDevice (device release number in binary-coded decimal (BCD) format, high byte, i.e. XX) rel. XX.YY */
