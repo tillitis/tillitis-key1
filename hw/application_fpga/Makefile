@@ -207,6 +207,8 @@ simfirmware.elf: CFLAGS += -DSIMULATION
 simfirmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
+qemu_firmware.elf: CFLAGS += -DBUILD_FOR_QEMU
+qemu_firmware.elf: ASFLAGS += -DBUILD_FOR_QEMU
 qemu_firmware.elf: CFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: ASFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: CFLAGS += -DQEMU_SYSCALL

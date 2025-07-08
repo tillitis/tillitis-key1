@@ -64,7 +64,7 @@ irq_source_ok:
 	// Verify that interrupt return address (x3) is in app RAM
 	li t0, TK1_RAM_BASE // 0x40000000
 	blt x3, t0, x3_invalid
-	li t0, TK1_RAM_BASE + TK1_RAM_SIZE // 0x40020000
+	li t0, TK1_RAM_BASE + TK1_RAM_SIZE
 	bge x3, t0, x3_invalid
 	j x3_valid
 x3_invalid:
