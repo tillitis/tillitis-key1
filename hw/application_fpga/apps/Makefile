@@ -41,7 +41,7 @@ LDFLAGS = \
 	-L $(LIBDIR) -lcrt0 -lcommon -lmonocypher -lblake2s
 
 .PHONY: all
-all: defaultapp.bin reset_test.bin testapp.bin testloadapp.bin
+all: defaultapp.bin loopbackapp.bin reset_test.bin testapp.bin testloadapp.bin
 
 # Turn elf into bin for device
 %.bin: %.elf
@@ -65,6 +65,14 @@ DEFAULTAPP_OBJS = \
 
 defaultapp.elf: tkey-libs $(OBJS) $(DEFAULTAPP_OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(DEFAULTAPP_OBJS) $(LDFLAGS) -o $@
+
+# loopbackapp
+
+LOOPBACKAPP_OBJS = \
+	$(P)/loopbackapp/main.o
+
+loopbackapp.elf: tkey-libs $(LOOPBACKAPP_OBJS)
+	$(CC) $(CFLAGS) $(LOOPBACKAPP_OBJS) $(LDFLAGS) -o $@
 
 # reset_test
 
@@ -97,6 +105,9 @@ fmt:
 	clang-format --dry-run --ferror-limit=0 defaultapp/*.[ch]
 	clang-format --verbose -i defaultapp/*.[ch]
 
+	clang-format --dry-run --ferror-limit=0 loopbackapp/*.[ch]
+	clang-format --verbose -i loopbackapp/*.[ch]
+
 	clang-format --dry-run --ferror-limit=0 reset_test/*.[ch]
 	clang-format --verbose -i reset_test/*.[ch]
 
@@ -110,6 +121,8 @@ fmt:
 checkfmt:
 	clang-format --dry-run --ferror-limit=0 defaultapp/*.[ch]
 
+	clang-format --dry-run --ferror-limit=0 loopbackapp/*.[ch]
+
 	clang-format --dry-run --ferror-limit=0 reset_test/*.[ch]
 
 	clang-format --dry-run --ferror-limit=0 testapp/*.[ch]
@@ -118,6 +131,6 @@ checkfmt:
 
 .PHONY: clean
 clean:
-	rm -f *.elf *.bin $(OBJS) $(DEFAULTAPP_OBJS) $(RESET_TEST_OBJS) \
-	$(TESTAPP_OBJS) $(TESTLOADAPP_OBJS)
+	rm -f *.elf *.bin $(OBJS) $(DEFAULTAPP_OBJS) $(LOOPBACKAPP_OBJS) \
+	$(RESET_TEST_OBJS) $(TESTAPP_OBJS) $(TESTLOADAPP_OBJS)
 
