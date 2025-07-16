@@ -18,6 +18,7 @@ RUN apt-get -qq update -y \
                gawk \
                gcc \
                git \
+               golang-1.23 \
                gperf \
                graphviz \
                help2man \
@@ -68,3 +69,4 @@ RUN /buildtools.sh
 FROM base
 LABEL org.opencontainers.image.description="Toolchain for building TKey FPGA bitstream"
 COPY --from=toolsbuilder /usr/local/ /usr/local
+ENV PATH="$PATH:/usr/lib/go-1.23/bin"
