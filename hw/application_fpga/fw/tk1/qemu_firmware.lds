@@ -11,10 +11,10 @@ STACK_SIZE = 3000;
 
 MEMORY
 {
-	ROM       (rx)  : ORIGIN = 0x00000000, LENGTH = 128k
-	FWRAM     (rw)  : ORIGIN = 0xd0000000, LENGTH = 0xF00   /* 3840 B */
-	RESETINFO (rw)  : ORIGIN = 0xd0000F00, LENGTH = 0x100   /* 256 B (part of FW_RAM area) */
-	RAM       (rwx) : ORIGIN = 0x40000000, LENGTH = 0x20000 /* 128 KB */
+	ROM       (rx)  : ORIGIN = 0x00000000, LENGTH = 0x20000  /* 128 KB */
+	FWRAM     (rw)  : ORIGIN = 0xd0000000, LENGTH = 0xF00    /* 3840 B */
+	RESETINFO (rw)  : ORIGIN = 0xd0000F00, LENGTH = 0x100    /* 256 B (part of FW_RAM area) */
+	RAM       (rwx) : ORIGIN = 0x40000000, LENGTH = 0x100000 /* 1 MB */
 }
 
 SECTIONS
