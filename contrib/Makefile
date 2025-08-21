@@ -16,7 +16,7 @@ all:
 	@echo "run-make-no-clean          Like run-make but without cleaning first, useful for iterative firmware dev"
 	@echo "run-make-ch552-no-clean    Like run-make-ch552 but without cleaning first, useful for iterative firmware dev"
 	@echo "run-make-clean_fw          Like run-make but cleans only firmware"
-	@echo "flash                      Build bitstream and testloadapp.bin then program them and the partition table onto the TKey SPI flash"
+	@echo "flash                      Build bitstream and defaultapp.bin then program them and the partition table onto the TKey SPI flash"
 	@echo "pull                       Pull down the image '$(IMAGE)' (Podman)"
 	@echo "build-image                Build a toolchain image named '$(BUILDIMAGE)' (Podman)"
 	@echo "                           A newly built image can be used like: make IMAGE=$(BUILDIMAGE) run"

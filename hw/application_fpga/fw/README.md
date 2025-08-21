@@ -768,7 +768,7 @@ initiated before starting for the first time. You need a [TKey
 Programmer Board](https://shop.tillitis.se/products/tkey-dev-kit) for
 this part.
 
-If you just want to build and flash the bitstream, the testloadapp in
+If you just want to build and flash the bitstream, the defaultapp in
 app slot 0, and the partition table copies in one go, place the TKey
 Unlocked in the TP1, then:
 
@@ -789,7 +789,7 @@ make prog_flash
 If you want to prepare the filesystem yourself:
 
 1. Choose your pre-loaded app. You *must* have a pre-loaded app, for
-   example `testloadapp`. Build it with the OCI image we use. The
+   example `defaultapp`. Build it with the OCI image we use. The
    binary needs to produce the BLAKE2s digest in `allowed_app_digest`
    `tk1/mgmt_app.c`.
 
@@ -797,7 +797,7 @@ If you want to prepare the filesystem yourself:
 
    ```
    $ cd ../tools
-   $ ./load_preloaded_app.sh 0 ../fw/testloadapp/testloadapp.bin
+   $ ./load_preloaded_app.sh 0 ../apps/defaultapp.bin
    ```
 
 If you want to use a different pre-loaded app you have to

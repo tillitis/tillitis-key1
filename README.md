@@ -106,7 +106,7 @@ to use this on real hardware.
 Building is probably easiest using make and Podman.
 
 To build everything and then flash the resulting bitstream with the
-testloadapp in app slot 0 and the partition table copies in one go,
+defaultapp in app slot 0 and the partition table copies in one go,
 place the TKey Unlocked in the TP1, then do:
 
 ```

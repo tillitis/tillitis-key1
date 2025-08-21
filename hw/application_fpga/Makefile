@@ -474,7 +474,7 @@ tb_application_fpga: $(SIM_VERILOG_SRCS) \
 prog_flash: check-hardware application_fpga.bin
 	tillitis-iceprog application_fpga.bin
 	make -C apps
-	(cd tools && ./load_preloaded_app.sh 0 ../apps/testloadapp.bin)
+	(cd tools && ./load_preloaded_app.sh 0 ../apps/defaultapp.bin)
 .PHONY: prog_flash
 
 prog_flash_bs: check-hardware application_fpga.bin
@@ -561,7 +561,7 @@ help:
 	@echo "tb_application_fpga  Build testbench simulation for the design"
 	@echo "lint                 Run lint on Verilog source files."
 	@echo "tb                   Run all testbenches"
-	@echo "prog_flash           Program device flash with FGPA bitstream (including firmware), partition table, and testloadapp.bin (using the RPi Pico-based programmer)."
+	@echo "prog_flash           Program device flash with FGPA bitstream (including firmware), partition table, and defaultapp.bin (using the RPi Pico-based programmer)."
 	@echo "prog_flash_bs        Program device flash with FGPA bitstream including firmware (using the RPi Pico-based programmer)."
 	@echo "prog_flash_testfw    Program device flash as above, but with testfw."
 	@echo "clean                Delete all generated files."
