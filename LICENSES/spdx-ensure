@@ -79,7 +79,6 @@ hw/application_fpga/tools/README.md
 hw/application_fpga/tools/b2s/README.md
 hw/application_fpga/tools/b2s/go.mod
 hw/application_fpga/tools/b2s/go.sum
-hw/application_fpga/tools/default_partition.bin
 hw/application_fpga/tools/tkeyimage/README.md
 hw/application_fpga/tools/tkeyimage/go.mod
 hw/application_fpga/tools/tkeyimage/go.sum
