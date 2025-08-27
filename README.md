@@ -118,7 +118,10 @@ This uses the make target `prog_flash` in
 `hw/application_fpga/Makefile` behind the scenes, but mounts your TP1
 device into the container.
 
-To see all targets:
+If you want to change the default app the TKey uses, change
+`DEFAULT_APP` in the `hw/application_fpga/Makefile`.
+
+To see all container targets:
 
 ```
 cd contrib
