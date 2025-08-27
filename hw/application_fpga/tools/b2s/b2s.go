@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 
 	"golang.org/x/crypto/blake2s"
 )
@@ -16,8 +17,9 @@ func usage() {
 }
 
 func printCDigest(digest [blake2s.Size]byte, fileName string) {
-	fmt.Printf("// BLAKE2s digest of %v\n", fileName)
-	fmt.Printf("const uint8_t digest[32] = {\n")
+	fmt.Printf("#include <stdint.h>\n\n")
+	fmt.Printf("// BLAKE2s digest of %v\n", path.Base(fileName))
+	fmt.Printf("const uint8_t allowed_app_digest[32] = {\n")
 
 	for _, n := range digest {
 		fmt.Printf("0x%02x, ", n)
