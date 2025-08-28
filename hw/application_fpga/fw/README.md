@@ -761,64 +761,6 @@ Most of the utility functions that the firmware use lives in
 but we have vendored it in for firmware use in `../tkey-libs`. See top
 README for how to update.
 
-### Preparing the filesystem
-
-The TKey supports a simple filesystem. This filesystem must be
-initiated before starting for the first time. You need a [TKey
-Programmer Board](https://shop.tillitis.se/products/tkey-dev-kit) for
-this part.
-
-If you just want to build and flash the bitstream, the defaultapp in
-app slot 0, and the partition table copies in one go, place the TKey
-Unlocked in the TP1, then:
-
-Using Podman, from the top level directory:
-
-```
-cd contrib
-make flash
-```
-
-Using native tools:
-
-```
-cd hw/application_fpga
-make prog_flash
-```
-
-If you want to prepare the filesystem yourself:
-
-1. Choose your pre-loaded app. You *must* have a pre-loaded app, for
-   example `defaultapp`. Build it with the OCI image we use. The
-   binary needs to produce the BLAKE2s digest in `allowed_app_digest`
-   `tk1/mgmt_app.c`.
-
-2. Write the filesystem to flash:
-
-   ```
-   $ cd ../tools
-   $ ./load_preloaded_app.sh 0 ../apps/defaultapp.bin
-   ```
-
-If you want to use a different pre-loaded app you have to
-
-1. Check the BLAKE2s digest of the app. You can use `tools/b2s` to
-   compute it.
-
-2. Update the `allowed_app_digest` in `tk1/mgmt_app.c`.
-
-3. Create a new `default_partition.bin` using the
-   `tools/tkeyimage`, typically:
-
-   ```
-   $ tkeyimage -app0 path/to/your/app.bin -o default_partition.bin
-   ```
-
-4. Flash the filesystem image:
-
-  ```
-  $ ./load_preloaded_app.sh 0 path/to/your/app.bin
-  ```
 
 ### Test firmware
 
@@ -837,3 +779,62 @@ ordinary `application_fpga/Makefile` to be able to fit in ROM.
 
 There are a couple of test apps, see `../apps`.
 
+## Filesystem
+
+The TKey supports a simple filesystem.
+
+The `tkeyimage` tool is used to parse or generate partition table or
+entire filesystems for the TKey.
+
+The table and the pre-loaded app can loaded on flash with the
+`load_preloaded_app.sh` tool.
+
+The fileystem layout looks like this:
+
+| **name**    | **size** | **start address** | **comment**               |
+|-------------|----------|-------------------|---------------------------|
+| Bitstream   | 128 kiB  | 0x00              | The FPGA bitstream        |
+| Partition   | 64 kiB   | 0x20000           | Partition table           |
+| Slot 0      | 128 kiB  | 0x30000           | 1st pre-loaded app        |
+| Slot 1      | 128 kiB  | 0x50000           | 2nd pre-loaded app        |
+| Storage 0   | 128 kiB  | 0x70000           | Storage for app           |
+| Storage 1   | 128 kiB  | 0x90000           | Storage for app           |
+| Storage 2   | 128 kiB  | 0xB0000           | Storage for app           |
+| Storage 3   | 128 kiB  | 0xD0000           | Storage for app           |
+| Partition 2 | 64 kiB   | 0xf0000           | Backup of parititon table |
+
+The partition table is made up of:
+
+| **name**  | **size**                                |
+|-----------|-----------------------------------------|
+| Version   | 1 B                                     |
+| App 0     | 4 B length, 32 B digest, 64 B signature |
+| App 1     | 4 B length, 32 B digest, 64 B signature |
+| Storage 0 | 1 B status, 16 B nonce, 16 B auth tag   |
+| Storage 1 | 1 B status, 16 B nonce, 16 B auth tag   |
+| Storage 2 | 1 B status, 16 B nonce, 16 B auth tag   |
+| Storage 3 | 1 B status, 16 B nonce, 16 B auth tag   |
+| Checksum  | 32 B                                    |
+
+- Digest is a BLAKE2s hash digest of the app.
+- Signature is an Ed25519 signature of the above digest.
+- Checksum is a BLAKE2s hash digest of everything that came before.
+  Usual to detect broken flash and a signal to use the backup copy.
+
+The digest and signature are reported from the `PRELOAD_GET_DIGSIG`
+syscall as a part of chaining of apps. See Management app, chaining
+apps and verified boot.
+
+The storage status field is 0 if not allocated by an app and 1 if
+allocated.
+
+The storage auth tag is a way of controlling if a a device app can
+access a storage area. It's computed with the 16 byte version of the
+BLAKE2s hash function like this:
+
+```
+digest = BLAKE2s_16(CDI, nonce)
+```
+
+The auth tag is filled in when a device app first allocates an area.
+It is then checked on all calls to access the app storage area.
