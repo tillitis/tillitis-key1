@@ -124,8 +124,9 @@ PICORV32_SRCS = \
 	$(P)/core/picorv32/rtl/picorv32.v
 
 
+# Mention mgmt_app_digest.h explicitly since it needs to be generated.
 FIRMWARE_DEPS = \
-	$(P)/fw/tk1/proto.h \
+	$(P)/fw/tk1/*.h \
 	$(P)/fw/tk1/mgmt_app_digest.h
 
 FIRMWARE_OBJS = \
