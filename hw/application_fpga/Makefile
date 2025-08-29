@@ -554,7 +554,7 @@ clean_fw:
 	rm -f $(FIRMWARE_OBJS)
 	rm -f testfw.{elf,map,bin,hex}
 	rm -f $(TESTFW_OBJS)
-	rm -f qemu_firmware.elf
+	rm -f qemu_firmware.{elf,map,bin,hex}
 	make -C tkey-libs clean
 .PHONY: clean_fw
 
