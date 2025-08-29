@@ -784,10 +784,7 @@ There are a couple of test apps, see `../apps`.
 The TKey supports a simple filesystem.
 
 The `tkeyimage` tool is used to parse or generate partition table or
-entire filesystems for the TKey.
-
-The table and the pre-loaded app can loaded on flash with the
-`load_preloaded_app.sh` tool.
+entire filesystem images for the TKey.
 
 The fileystem layout looks like this:
 
