@@ -43,6 +43,10 @@ CC = clang
 
 LIBDIR ?= tkey-libs
 
+# The preloaded app in slot 0. Must be defined used. Firmware depends
+# on it. Change this if you want another first preloaded app.
+DEFAULT_APP ?= $(P)/apps/defaultapp.bin
+
 CFLAGS = \
 	-target riscv32-unknown-none-elf \
 	-march=rv32iczmmul \
@@ -119,8 +123,11 @@ VERILOG_SRCS = \
 PICORV32_SRCS = \
 	$(P)/core/picorv32/rtl/picorv32.v
 
+
+# Mention mgmt_app_digest.h explicitly since it needs to be generated.
 FIRMWARE_DEPS = \
-	$(P)/fw/tk1/proto.h
+	$(P)/fw/tk1/*.h \
+	$(P)/fw/tk1/mgmt_app_digest.h
 
 FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
@@ -176,6 +183,19 @@ secret:
 	cd data;../tools/tpt/tpt.py
 .PHONY: secret
 
+# -------------------------------------------------------------------
+# Build tools
+# -------------------------------------------------------------------
+
+# .PHONY to let go build handle deps and rebuilds
+.PHONY: tools/tkeyimage/tkeyimage
+tools/tkeyimage/tkeyimage:
+	go build -C $(P)/tools/tkeyimage
+
+.PHONY: tools/b2s/b2s
+tools/b2s/b2s:
+	go build -C $(P)/tools/b2s
+
 #-------------------------------------------------------------------
 # Firmware generation.
 # Included in the bitstream.
@@ -196,11 +216,19 @@ QEMU_LDFLAGS = \
 tkey-libs:
 	make -C $(LIBDIR)
 
+# Device app used as preloaded app
+$(DEFAULT_APP):
+	make -C apps
+
+# Build a complete filesystem image
+flash_image.bin: tools/tkeyimage/tkeyimage $(DEFAULT_APP)
+	./tools/tkeyimage/tkeyimage -f -app0 $(DEFAULT_APP) -o $@
+
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
 #firmware.elf: CFLAGS += -DTKEY_DEBUG
-firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
+firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds flash_image.bin
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 simfirmware.elf: CFLAGS += -DSIMULATION
@@ -211,8 +239,13 @@ qemu_firmware.elf: CFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: ASFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: CFLAGS += -DQEMU_SYSCALL
 qemu_firmware.elf: ASFLAGS += -DQEMU_SYSCALL
-qemu_firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/qemu_firmware.lds
+qemu_firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/qemu_firmware.lds flash_image.bin
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(QEMU_LDFLAGS) -o $@ > $(basename $@).map
+
+# Generate the file containing the digest for the obligatory default
+# app in slot 0.
+$(P)/fw/tk1/mgmt_app_digest.h: $(DEFAULT_APP) tools/b2s/b2s
+	./tools/b2s/b2s -c -m $(DEFAULT_APP) > $@
 
 # Create compile_commands.json for clangd and LSP
 .PHONY: clangd
@@ -471,10 +504,9 @@ tb_application_fpga: $(SIM_VERILOG_SRCS) \
 # FPGA device programming.
 #-------------------------------------------------------------------
 
-prog_flash: check-hardware application_fpga.bin
+prog_flash: check-hardware application_fpga.bin flash_image.bin
+	tillitis-iceprog flash_image.bin
 	tillitis-iceprog application_fpga.bin
-	make -C apps
-	(cd tools && ./load_preloaded_app.sh 0 ../apps/defaultapp.bin)
 .PHONY: prog_flash
 
 prog_flash_bs: check-hardware application_fpga.bin
@@ -513,6 +545,9 @@ clean: clean_sim clean_fw clean_tb
 	rm -f tools/tpt/*.hex
 	rm -rf tools/tpt/__pycache__
 	make -C apps clean
+	rm -f fw/tk1/mgmt_app_digest.h
+	rm -f flash_image.bin
+
 .PHONY: clean
 
 clean_fw:
@@ -520,7 +555,7 @@ clean_fw:
 	rm -f $(FIRMWARE_OBJS)
 	rm -f testfw.{elf,map,bin,hex}
 	rm -f $(TESTFW_OBJS)
-	rm -f qemu_firmware.elf
+	rm -f qemu_firmware.{elf,map,bin,hex}
 	make -C tkey-libs clean
 .PHONY: clean_fw
 
