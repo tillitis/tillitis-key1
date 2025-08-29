@@ -8,13 +8,15 @@ We have developed some tools necessary for the build.
 - `b2s`: Compute and print a BLAKE2s digest over a file. Used for the
   digest of the app in app slot 0 included in the firmware.
 
-- `default_partition.bin`: Default partition table for the flash.
-
 - `load_preloaded_app.sh`: Script to load two copies of the partition
   table to flash and a pre-loaded to app slot 0 or 1. Needs
   `default_partition.bin`, generated with `tkeyimage` and the binary
-  of the device app to load. Call like: `./load_preloaded_app 0
-  path/to/binary`.
+  of the device app to load. Call like:
+
+  ```
+  ./tkeyimage/tkeyimage -app0 path/to/binary -o default_partition.bin
+  ./load_preloaded_app 0 path/to/binary
+  ```
 
 - `makehex.py`: Used to build hex version of firmware ROM for FPGA
   bitstream build.
@@ -26,8 +28,10 @@ We have developed some tools necessary for the build.
 - `run_pnr.sh`: Script to run place and route with `nextpnr` in order
   to find a routing seed that will meet desired timing.
 
-- `tkeyimage`: Utility to create and parse flash images with a TKey
-  filesystem or the partition table
+- `tkeyimage`: Utility to create and parse a partition table or entire
+  flash images with a TKey filesystem. You can flash the image with
+  the [iceprog tool](https://github.com/tillitis/icestorm/). Remember
+  to flash the flash image first and the FPGA bitstream afterwards.
 
 - `tpt/tpt.py`: Utility to create the Unique Device Secret (UDS) and
   Unique Device Identity (UDI) interactively.

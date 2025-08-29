@@ -126,8 +126,7 @@ PICORV32_SRCS = \
 
 FIRMWARE_DEPS = \
 	$(P)/fw/tk1/proto.h \
-	$(P)/fw/tk1/mgmt_app_digest.h \
-	tools/default_partition.bin
+	$(P)/fw/tk1/mgmt_app_digest.h
 
 FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
@@ -220,15 +219,15 @@ tkey-libs:
 $(DEFAULT_APP):
 	make -C apps
 
-# Partititon table for the firmware's filesystem
-tools/default_partition.bin: tools/tkeyimage/tkeyimage $(DEFAULT_APP)
-	./tools/tkeyimage/tkeyimage -app0 $(DEFAULT_APP) -o $@
+# Build a complete filesystem image
+flash_image.bin: tools/tkeyimage/tkeyimage $(DEFAULT_APP)
+	./tools/tkeyimage/tkeyimage -f -app0 $(DEFAULT_APP) -o $@
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
 #firmware.elf: CFLAGS += -DTKEY_DEBUG
-firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
+firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds flash_image.bin
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 simfirmware.elf: CFLAGS += -DSIMULATION
@@ -239,7 +238,7 @@ qemu_firmware.elf: CFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: ASFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: CFLAGS += -DQEMU_SYSCALL
 qemu_firmware.elf: ASFLAGS += -DQEMU_SYSCALL
-qemu_firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/qemu_firmware.lds
+qemu_firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/qemu_firmware.lds flash_image.bin
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(QEMU_LDFLAGS) -o $@ > $(basename $@).map
 
 # Generate the file containing the digest for the obligatory default
@@ -504,9 +503,9 @@ tb_application_fpga: $(SIM_VERILOG_SRCS) \
 # FPGA device programming.
 #-------------------------------------------------------------------
 
-prog_flash: check-hardware application_fpga.bin tools/default_partition.bin
+prog_flash: check-hardware application_fpga.bin flash_image.bin
+	tillitis-iceprog flash_image.bin
 	tillitis-iceprog application_fpga.bin
-	(cd tools && ./load_preloaded_app.sh 0 $(DEFAULT_APP))
 .PHONY: prog_flash
 
 prog_flash_bs: check-hardware application_fpga.bin
@@ -546,7 +545,7 @@ clean: clean_sim clean_fw clean_tb
 	rm -rf tools/tpt/__pycache__
 	make -C apps clean
 	rm -f fw/tk1/mgmt_app_digest.h
-	rm -f tools/default_partition.bin
+	rm -f flash_image.bin
 
 .PHONY: clean
 
