@@ -367,11 +367,11 @@ void hexdump(enum ioend dest, void *buf, int len)
 //   - IO_CDC
 //   - IO_CH552
 //
-// Use like this:
+// Use like this in the bitmask:
 //
 //   config_endpoints(IO_FIDO|IO_DEBUG)
 //
-void config_endpoints(enum ioend endpoints)
+void config_endpoints(uint8_t endpoints)
 {
 	uint8_t cmdbuf[2] = {0};
 

@@ -17,7 +17,7 @@ path = [
      "Makefile",
      "README-DIST.txt",
      "README.md",
-     "RELEASE.md"
+     "RELEASE.md",
 ]
 SPDX-FileCopyrightText = "2022 Tillitis AB <tillitis.se>"
 SPDX-License-Identifier = "BSD-2-Clause"

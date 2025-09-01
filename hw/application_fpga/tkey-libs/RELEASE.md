@@ -5,6 +5,7 @@
 - NOTE WELL! Rewritten I/O functions with new signatures and
   semantics!
 - `blake2s()` with new signature.
+- System call support.
 
 ### BLAKE2s hash function
 
