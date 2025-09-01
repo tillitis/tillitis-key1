@@ -50,14 +50,14 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      - name: compile firmware and testfw
+        working-directory: hw/application_fpga
+        run: make firmware.bin testfw.bin
+
       - name: run static analysis on firmware C code
         working-directory: hw/application_fpga
         run: |
           make check
-
-      - name: compile firmware and testfw
-        working-directory: hw/application_fpga
-        run: make firmware.bin testfw.bin
 
   check-verilog:
     runs-on: ubuntu-latest
