@@ -36,6 +36,8 @@ https://spdx.org/licenses/
 
 - PicoRV32 custom ops: `hw/application_fpga/fw/tk1/picorv32/`
 
+  CC-1.
+
 - tkey-libs: `hw/application_fpga/tkey-libs/`
 
   BSD2. From https://github.com/tillitis/tkey-libs

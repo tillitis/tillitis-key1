@@ -38,6 +38,7 @@ hw/application_fpga/core/tk1/tb/udi.hex
 hw/application_fpga/core/uds/README.md
 hw/application_fpga/fw/README.md
 hw/application_fpga/fw/tk1/picorv32/README.md
+hw/application_fpga/fw/tk1/picorv32/LICENSE
 hw/application_fpga/apps/Makefile
 hw/application_fpga/apps/README.md
 hw/application_fpga/application_fpga.bin.sha256
