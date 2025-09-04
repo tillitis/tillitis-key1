@@ -66,6 +66,10 @@ flash:
 	-w /build \
 	-it $(IMAGE) make prog_flash
 
+build-unlocked:
+	podman run --rm --mount type=bind,source="`pwd`/../hw/application_fpga",target=/build -w /build -it \
+	 $(IMAGE) make clean secret application_fpga.bin
+
 
 pull:
 	podman pull $(IMAGE)
