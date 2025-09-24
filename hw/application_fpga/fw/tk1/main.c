@@ -520,11 +520,13 @@ int main(void)
 
 	scramble_ram();
 
+#if !defined(SIMULATION)
 	if (part_table_read(&part_table_storage) != 0) {
 		// Couldn't read partition table
 		debug_puts("Couldn't read partition table\n");
 		assert(1 == 2);
 	}
+#endif
 
 	// Reset the USB controller to only enable the USB CDC
 	// endpoint and the internal command channel.
@@ -533,7 +535,7 @@ int main(void)
 	led_set(LED_WHITE);
 
 #if defined(SIMULATION)
-	run(&ctx);
+	state = FW_STATE_START;
 #endif
 
 	for (;;) {
@@ -594,6 +596,7 @@ int main(void)
 			// CDI = hash(uds, hash(app), uss)
 			compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
 
+#if !defined(SIMULATION)
 			if (ctx.ver_digest != NULL) {
 				print_digest(ctx.digest);
 				if (!memeq(ctx.digest, (void *)ctx.ver_digest,
@@ -603,6 +606,7 @@ int main(void)
 					break;
 				}
 			}
+#endif
 
 			(void)memset((void *)resetinfo->app_digest, 0,
 				     sizeof(resetinfo->app_digest));

@@ -15,16 +15,20 @@
 
 `default_nettype none
 
-//`define VERBOSE
+//`define DEBUG
 
-`ifdef VERBOSE
-`define verbose(debug_command) debug_command
+`ifdef DEBUG
+`define debug(debug_command) debug_command
 `else
-`define verbose(debug_command)
+`define debug(debug_command)
 `endif
 
 `ifndef APP_SIZE
 `define APP_SIZE 0
+`endif
+
+`ifndef APP_HASH
+`define APP_HASH "null"
 `endif
 
 module application_fpga_sim (
@@ -33,8 +37,8 @@ module application_fpga_sim (
     output wire interface_rx,
     input  wire interface_tx,
 
-    input  wire interface_ch552_cts,
-    output wire interface_fpga_cts,
+    input  wire interface_ch552_cts, // CH552 clear to send,  1 = OK, 0 = NOK
+    output wire interface_fpga_cts, // FPGA clear to send, 1 = OK, 0 = NOK
 
     output wire spi_ss,
     output wire spi_sck,
@@ -87,7 +91,8 @@ module application_fpga_sim (
   reg           muxed_ready_reg;
   reg           muxed_ready_new;
 
-
+  reg           program_ready_reg;
+  reg           program_ready_new;
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
@@ -323,7 +328,7 @@ module application_fpga_sim (
       .txd(interface_rx),
 
       .ch552_cts(interface_ch552_cts),
-      .fpga_cts (interface_fpga_cts),
+      .fpga_cts(interface_fpga_cts),
 
       .cs(uart_cs),
       .we(uart_we),
@@ -401,10 +406,16 @@ module application_fpga_sim (
     if (!reset_n) begin
       muxed_rdata_reg <= 32'h0;
       muxed_ready_reg <= 1'h0;
+      program_ready_reg <=  1'h0;
     end
     else begin
       muxed_rdata_reg <= muxed_rdata_new;
       muxed_ready_reg <= muxed_ready_new;
+
+      if (!program_ready_reg && program_ready_new) begin
+        $display("program ready");
+        program_ready_reg <= 1;
+      end
     end
   end
 
@@ -482,12 +493,14 @@ module application_fpga_sim (
     tk1_address         = cpu_addr[9 : 2];
     tk1_write_data      = cpu_wdata;
 
+    program_ready_new = 0;
+
     // Two stage mux implementing read and
     // write access performed based on the address
     // from the CPU.
     if (cpu_valid && !muxed_ready_reg) begin
       if (force_trap) begin
-        `verbose($display("Force trap");)
+        `debug($display("Force trap");)
         ascii_state     = "Force trap";
         muxed_rdata_new = ILLEGAL_INSTRUCTION;
         muxed_ready_new = 1'h1;
@@ -495,7 +508,7 @@ module application_fpga_sim (
       else begin
         case (area_prefix)
           ROM_PREFIX: begin
-            `verbose($display("Access to ROM area");)
+            `debug($display("Access to ROM area");)
             ascii_state     = "ROM area";
             rom_cs          = 1'h1;
             muxed_rdata_new = rom_read_data;
@@ -503,7 +516,7 @@ module application_fpga_sim (
           end
 
           RAM_PREFIX: begin
-            `verbose($display("Access to RAM area");)
+            `debug($display("Access to RAM area");)
             ascii_state     = "RAM area";
             ram_cs          = 1'h1;
             ram_we          = cpu_wstrb;
@@ -512,17 +525,17 @@ module application_fpga_sim (
           end
 
           RESERVED_PREFIX: begin
-            `verbose($display("Access to RESERVED area");)
+            `debug($display("Access to RESERVED area");)
             ascii_state     = "RESERVED area";
             muxed_rdata_new = 32'h0;
             muxed_ready_new = 1'h1;
           end
 
           MMIO_PREFIX: begin
-            `verbose($display("Access to MMIO area");)
+            `debug($display("Access to MMIO area");)
             case (core_prefix)
               TRNG_PREFIX: begin
-                `verbose($display("Access to TRNG core");)
+                `debug($display("Access to TRNG core");)
                 ascii_state     = "TRNG core";
                 trng_cs         = 1'h1;
                 muxed_rdata_new = trng_read_data;
@@ -530,7 +543,7 @@ module application_fpga_sim (
               end
 
               TIMER_PREFIX: begin
-                `verbose($display("Access to TIMER core");)
+                `debug($display("Access to TIMER core");)
                 ascii_state     = "TIMER core";
                 timer_cs        = 1'h1;
                 muxed_rdata_new = timer_read_data;
@@ -538,7 +551,7 @@ module application_fpga_sim (
               end
 
               UDS_PREFIX: begin
-                `verbose($display("Access to UDS core");)
+                `debug($display("Access to UDS core");)
                 ascii_state     = "UDS core";
                 uds_cs          = 1'h1;
                 muxed_rdata_new = uds_read_data;
@@ -546,7 +559,10 @@ module application_fpga_sim (
               end
 
               UART_PREFIX: begin
-                `verbose($display("Access to UART core");)
+                if (!program_ready_reg) begin
+                  program_ready_new = 1;
+                end
+                `debug($display("Access to UART core");)
                 ascii_state     = "UART core";
                 uart_cs         = 1'h1;
                 muxed_rdata_new = uart_read_data;
@@ -554,7 +570,7 @@ module application_fpga_sim (
               end
 
               TOUCH_SENSE_PREFIX: begin
-                `verbose($display("Access to TOUCH_SENSE core");)
+                `debug($display("Access to TOUCH_SENSE core");)
                 ascii_state     = "TOUCH_SENSE core";
                 touch_sense_cs  = 1'h1;
                 muxed_rdata_new = touch_sense_read_data;
@@ -562,7 +578,7 @@ module application_fpga_sim (
               end
 
               FW_RAM_PREFIX: begin
-                `verbose($display("Access to FW_RAM core");)
+                `debug($display("Access to FW_RAM core");)
                 ascii_state     = "FW_RAM core";
                 fw_ram_cs       = 1'h1;
                 muxed_rdata_new = fw_ram_read_data;
@@ -570,14 +586,14 @@ module application_fpga_sim (
               end
 
               SYSCALL_PREFIX: begin
-                `verbose($display("Access to syscall interrupt trigger");)
+                `debug($display("Access to syscall interrupt trigger");)
                 ascii_state     = "Syscall IRQ trigger";
                 irq31_cs        = 1'h1;
                 muxed_ready_new = 1'h1;
               end
 
               TK1_PREFIX: begin
-                `verbose($display("Access to TK1 core");)
+                `debug($display("Access to TK1 core");)
                 ascii_state     = "TK1 core";
                 tk1_cs          = 1'h1;
                 muxed_rdata_new = tk1_read_data;
@@ -585,7 +601,7 @@ module application_fpga_sim (
               end
 
               default: begin
-                `verbose($display("UNDEFINED MMIO");)
+                `debug($display("UNDEFINED MMIO");)
                 ascii_state     = "UNDEFINED MMIO";
                 muxed_rdata_new = 32'h0;
                 muxed_ready_new = 1'h1;
@@ -594,7 +610,7 @@ module application_fpga_sim (
           end  // case: MMIO_PREFIX
 
           default: begin
-            `verbose($display("UNDEFINED AREA");)
+            `debug($display("UNDEFINED AREA");)
             ascii_state     = "UNDEFINED AREA";
             muxed_rdata_new = 32'h0;
             muxed_ready_new = 1'h1;
@@ -603,6 +619,69 @@ module application_fpga_sim (
       end  // if (force_trap) begin end else begin
     end  // if (cpu_valid && !muxed_ready_reg) begin
   end
+
+`ifdef APP_PRELOADED
+  initial begin
+    $readmemh("tb/output_spram0.hex", ram_inst.spram0.mem);
+    $readmemh("tb/output_spram1.hex", ram_inst.spram1.mem);
+    $readmemh("tb/output_spram2.hex", ram_inst.spram2.mem);
+    $readmemh("tb/output_spram3.hex", ram_inst.spram3.mem);
+    $display("app sha512 hash: %s", `APP_HASH);
+    $display("wait for program ready...");
+  end
+`endif
+
+`ifdef DUMP_WAVE_FILE
+  initial begin
+    $display("Starting application_fpga_sim.fst dump");
+    $dumpfile("application_fpga_sim.fst");
+    $dumpvars(0, application_fpga_sim);
+    #20000 // #2000 equals 20000000 time units in simulation time
+    $display("TIMEOUT");
+    $finish;
+  end
+`endif
+
+/*
+`ifdef SIMULATION_HAS_TIMEOUT
+  initial begin
+    wait (interface_tx == 0);  // Wait until uart data is beeing received
+    $display("Wait condition passed at time: %0t", $time);
+    #2000 // #2000 equals 2000000 time units in simulation time
+    $display("TIMEOUT");
+    $finish;
+  end
+`endif
+*/
+
+/*
+`ifdef SIMULATION_HAS_TIMEOUT
+  initial begin
+    wait (touch_event == 1);  // Wait until touch event
+    $display("Wait condition passed at time: %0t", $time);
+    $display("Starting application_fpga_sim.fst dump");
+    $dumpfile("application_fpga_sim.fst");
+    $dumpvars(0, application_fpga_sim);
+    #2000 // #2000 equals 2000000 time units in simulation time
+    $display("TIMEOUT");
+    $finish;
+  end
+`endif
+*/
+
+/*
+`ifdef DUMP_WAVE_FILE
+  initial begin
+    // Enable dumping when `interface_tx` goes low
+    wait (interface_tx == 0);  // Wait until uart data is beeing received
+    $display("Starting application_fpga_sim.fst dump");
+    $dumpfile("application_fpga_sim.fst");
+    $dumpvars(0, application_fpga_sim);
+    //$dumpon;
+    //$dumpoff;
+  end
+`endif
+*/
 
 endmodule  // application_fpga
 

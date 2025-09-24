@@ -24,12 +24,17 @@
 #include "Vapplication_fpga_sim.h"
 #include "verilated.h"
 
-// Clock: 21 MHz, 62500 bps
-// Divisor = 21E6 / 62500 = 336
-#define CPU_CLOCK 21000000
-#define BAUD_RATE 62500
+// Clock: 24 MHz, 500000 bps
+// Divisor = 24E6 / 500000 = 48
+#define CPU_CLOCK 24000000
+#define BAUD_RATE 500000
 #define BIT_DIV (CPU_CLOCK/BAUD_RATE)
 
+#if defined(VERILOG_BITRATE)
+#define VERILOG_BAUDRATE (CPU_CLOCK/VERILOG_BITRATE)
+#else
+#define VERILOG_BAUDRATE (0)
+#endif
 
 struct uart {
 	int bit_div;
@@ -48,13 +53,13 @@ struct uart {
 	uint8_t *rx;
 };
 
-void uart_init(struct uart *u,	uint8_t *tx, uint8_t *rx, int bit_div);
+void uart_init(struct uart *u, uint8_t *tx, uint8_t *rx, int bit_div);
 void uart_tick(struct uart *u);
 int uart_can_send(struct uart *u);
 int uart_send(struct uart *u, uint8_t data);
 int uart_recv(struct uart *u, uint8_t *data);
 
-void uart_init(struct uart *u,	uint8_t *tx, uint8_t *rx, int bit_div)
+void uart_init(struct uart *u, uint8_t *tx, uint8_t *rx, int bit_div)
 {
 	u->bit_div = bit_div;
 	u->ts = 0;
@@ -119,7 +124,7 @@ void uart_rx_tick(struct uart *u)
 			return;
 		}
 
-		u->rx_next_ts += u->bit_div/2;
+		u->rx_next_ts += u->bit_div / 2;
 		u->rx_has_data = 1;
 		u->rx_state = 11;
 		return;
@@ -251,7 +256,7 @@ int pty_init(struct pty *p)
 
 int pty_can_recv(struct pty *p)
 {
-	struct pollfd fds = {p->amaster, POLLIN, 0};
+	struct pollfd fds = { p->amaster, POLLIN, 0 };
 	char c;
 
 	return poll(&fds, 1, 0) == 1;
@@ -288,6 +293,8 @@ void touch(uint8_t *touch_event)
 }
 
 vluint64_t main_time = 0;
+
+// Callback function to provide the simulation time when requested
 double sc_time_stamp()
 {
 	return main_time;
@@ -295,38 +302,53 @@ double sc_time_stamp()
 
 int main(int argc, char **argv, char **env)
 {
-	Verilated::commandArgs(argc, argv);
-	int r = 0, g = 0, b = 0;
-	Vapplication_fpga_sim top;
+	Verilated::debug(0);
+	const std::unique_ptr<VerilatedContext> contextp { new VerilatedContext };
+	contextp->traceEverOn(true);
+	contextp->commandArgs(argc, argv);
+
+	int r = 0;
+	int g = 0;
+	int b = 0;
+
+	// Construct the Verilated model, from Vtop.h generated from Verilating
+	const std::unique_ptr<Vapplication_fpga_sim> topp { new Vapplication_fpga_sim { contextp.get() } };
+
 	struct uart u;
 	struct pty p;
 	int err;
 
-	if (signal(SIGUSR1, sighandler) == SIG_ERR)
+	if (signal(SIGUSR1, sighandler) == SIG_ERR) {
 		return -1;
-	printf("cpu clock: %d\n", CPU_CLOCK);
-	printf("baud rate: %d\n", BAUD_RATE);
-	printf("generate touch event: \"$ kill -USR1 %d\"\n", (int)getpid());
+	}
+	printf("verilator cpu clock: %d\n", CPU_CLOCK);
+	printf("verilator baud rate: %d\n", BAUD_RATE);
+	printf("verilog baud rate: %d\n", VERILOG_BAUDRATE);
+	printf("generate touch event: \"$ kill -USR1 %d\"\n", (int) getpid());
 
 	err = pty_init(&p);
-	if (err)
+	if (err) {
 		return -1;
+	}
 
-	uart_init(&u, &top.interface_tx, &top.interface_rx, BIT_DIV);
+	uart_init(&u, &topp->interface_tx, &topp->interface_rx, BIT_DIV);
 
-	top.clk = 0;
-	top.interface_ch552_cts = 1;
+	topp->clk = 0;
 
-	while (!Verilated::gotFinish()) {
+	topp->interface_ch552_cts = 1;
+
+	// Simulate until $finish
+	while (!contextp->gotFinish()) {
+
 		uint8_t to_host = 0;
 
-		top.clk = !top.clk;
+		topp->clk = !topp->clk;
 
 		if (main_time < 10)
 			goto skip;
 
-		if (!top.clk) {
-			touch(&top.touch_event);
+		if (!topp->clk) {
+			touch(&topp->touch_event);
 			uart_tick(&u);
 		}
 
@@ -340,9 +362,32 @@ int main(int argc, char **argv, char **env)
 		if (uart_recv(&u, &to_host) == 1) {
 			pty_send(&p, to_host);
 		}
-	skip:
+
+skip:
 		main_time++;
-		top.eval();
+		// Evaluate model
+		topp->eval();
+
+		// Advance time
+		/*
+		if (!topp->eventsPending()) {
+			printf("No events pending!\n");
+			break;
+		}
+		contextp->time(topp->nextTimeSlot());
+		*/
 
 	}
+
+	if (!contextp->gotFinish()) {
+		VL_DEBUG_IF(VL_PRINTF("+ Exiting without $finish; no events left\n"););
+	}
+
+	// Execute 'final' processes
+	topp->final();
+
+	// Print statistical summary report
+	contextp->statsPrintSummary();
+
+	return 0;
 }

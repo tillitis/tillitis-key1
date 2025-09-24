@@ -232,7 +232,7 @@ firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds flash_image.bi
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 simfirmware.elf: CFLAGS += -DSIMULATION
-simfirmware.elf: $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
+simfirmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 qemu_firmware.elf: CFLAGS += -DQEMU_DEBUG
@@ -372,28 +372,96 @@ checkfmt: $(FPGA_VERILOG_SRCS) $(SIM_VERILOG_SRCS) $(VERILATOR_VERILOG_SRCS) $(V
 #-------------------------------------------------------------------
 # Build Verilator compiled simulation for the design.
 #-------------------------------------------------------------------
-verilator: $(VERILATOR_VERILOG_SRCS) $(VERILOG_SRCS) $(PICORV32_SRCS) \
-		firmware.hex $(ICE40_SIM_CELLS) \
-		$(P)/tb/application_fpga_verilator.cc
+# Simulation of a preloaded app. Saves a wavefile and terminates after a specific time.
+# Put app to be preloaded into "tb" directory as "app.bin".
+# Wait for the "program ready" before trying to communicate with the simulation over uart.
+verilator_app: $(VERILATOR_VERILOG_SRCS) \
+			$(VERILOG_SRCS) \
+			$(PICORV32_SRCS) \
+			$(ICE40_SIM_CELLS) \
+			simfirmware.hex \
+			$(P)/tb/application_fpga_verilator.cc
+	python3 ./tools/app_bin_to_spram_hex.py \
+			./tb/app.bin \
+			./tb/output_spram0.hex \
+			./tb/output_spram1.hex \
+			./tb/output_spram2.hex \
+			./tb/output_spram3.hex \
+			|| { echo -e "\n -- Put your app.bin to simulate in the \"tb\" directory\n"; false; }
 	verilator \
+		-j $(shell nproc --ignore=1) \
+		--cc \
+		--exe \
+		--Mdir verilated \
 		--timescale 1ns/1ns \
-		-DNO_ICE40_DEFAULT_ASSIGNMENTS \
+		--timing \
+		--trace-fst \
+		--trace-structs \
+		--top-module application_fpga_sim \
 		-Wall \
 		-Wno-COMBDLY \
 		-Wno-lint \
 		-Wno-UNOPTFLAT \
+		-CFLAGS "-DVERILOG_BITRATE=$(shell grep "DEFAULT_BIT_RATE.*=" core/uart/rtl/uart.v | awk '{print $$4}' | cut -b 5- | tr -d ';')" \
+		-DAPP_HASH=$(shell sha512sum tb/app.bin | awk '{print "\\" "\"" $$1 "\\" "\"" }') \
+		-DAPP_SIZE=$(shell ls -l tb/app.bin | awk '{print $$5}') \
+		-DAPP_PRELOADED \
 		-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
-		-DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
+		-DDUMP_WAVE_FILE \
+		-DFIRMWARE_HEX=\"$(P)/simfirmware.hex\" \
+		-DNO_ICE40_DEFAULT_ASSIGNMENTS \
+		-DSIMULATION_HAS_TIMEOUT \
 		-DUDS_HEX=\"$(P)/data/uds.hex\" \
 		-DUDI_HEX=\"$(P)/data/udi.hex\" \
-		--cc \
-		--exe \
-		--Mdir verilated \
-		--top-module application_fpga_sim \
 		$(filter %.v, $^) \
 		$(filter %.cc, $^)
 	make -C verilated -f Vapplication_fpga_sim.mk
-.PHONY: verilator
+.PHONY: verilator_app
+
+# Simulation of a preloaded app. No wavefile generation and no termination.
+# Can be used for long uart communication tests.
+# Put app to be preloaded into "tb" directory as "app.bin".
+# Wait for the "program ready" before trying to communicate with the simulation over uart.
+verilator_uart: $(VERILATOR_VERILOG_SRCS) \
+			$(VERILOG_SRCS) \
+			$(PICORV32_SRCS) \
+			$(ICE40_SIM_CELLS) \
+			simfirmware.hex \
+			$(P)/tb/application_fpga_verilator.cc
+	python3 ./tools/app_bin_to_spram_hex.py \
+			./tb/app.bin \
+			./tb/output_spram0.hex \
+			./tb/output_spram1.hex \
+			./tb/output_spram2.hex \
+			./tb/output_spram3.hex \
+			|| { echo -e "\n -- Put your app.bin to simulate in the \"tb\" directory\n"; false; }
+	verilator \
+		-j $(shell nproc --ignore=1) \
+		--cc \
+		--exe \
+		--Mdir verilated \
+		--timescale 1ns/1ns \
+		--timing \
+		--trace-fst \
+		--trace-structs \
+		--top-module application_fpga_sim \
+		-Wall \
+		-Wno-COMBDLY \
+		-Wno-lint \
+		-Wno-UNOPTFLAT \
+		-CFLAGS "-DVERILOG_BITRATE=$(shell grep "DEFAULT_BIT_RATE.*=" core/uart/rtl/uart.v | awk '{print $$4}' | cut -b 5- | tr -d ';')" \
+		-DAPP_HASH=$(shell sha512sum tb/app.bin | awk '{print "\\" "\"" $$1 "\\" "\"" }') \
+		-DAPP_SIZE=$(shell ls -l tb/app.bin | awk '{print $$5}') \
+		-DAPP_PRELOADED \
+		-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
+		-DFIRMWARE_HEX=\"$(P)/simfirmware.hex\" \
+		-DNO_ICE40_DEFAULT_ASSIGNMENTS \
+		-DUDS_HEX=\"$(P)/data/uds.hex\" \
+		-DUDI_HEX=\"$(P)/data/udi.hex\" \
+		$(filter %.v, $^) \
+		$(filter %.cc, $^)
+	make -C verilated -f Vapplication_fpga_sim.mk
+.PHONY: verilator_uart
 
 #-------------------------------------------------------------------
 # Run all testbenches
@@ -489,10 +557,10 @@ tb_application_fpga: $(SIM_VERILOG_SRCS) \
 		--timing \
 		-Wno-WIDTHEXPAND \
 		-Wno-UNOPTFLAT \
-		-DNO_ICE40_DEFAULT_ASSIGNMENTS \
-		-DAPP_SIZE=$(shell ls -l tb/app.bin| awk '{print $$5}') \
+		-DAPP_SIZE=$(shell ls -l tb/app.bin | awk '{print $$5}') \
 		-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 		-DFIRMWARE_HEX=\"$(P)/simfirmware.hex\" \
+		-DNO_ICE40_DEFAULT_ASSIGNMENTS \
 		-DUDS_HEX=\"$(P)/data/uds.hex\" \
 		-DUDI_HEX=\"$(P)/data/udi.hex\" \
 		$(filter %.v, $^)
@@ -564,6 +632,7 @@ clean_sim:
 	rm -f tb_application_fpga_sim.fst
 	rm -f tb_application_fpga_sim.fst.hier
 	rm -f tb/output_spram*.hex
+	rm -f application_fpga_sim.fst
 	rm -rf tb_verilated
 	rm -rf verilated
 .PHONY: clean_sim
