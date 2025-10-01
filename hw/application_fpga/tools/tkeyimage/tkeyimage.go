@@ -4,6 +4,7 @@
 package main
 
 import (
+	"crypto/ed25519"
 	"encoding/binary"
 	"flag"
 	"fmt"
@@ -124,8 +125,8 @@ func printPartTableStorageCondensed(storage PartTableStorage) {
 	fmt.Printf("  Digest               : %x\n", storage.Checksum)
 }
 
-func genPartitionFile(outputFilename string, app0Filename string) {
-	partition := newPartTable(app0Filename)
+func genPartitionFile(outputFilename string, app0Filename string, app1Filename string) {
+	partition := newPartTable(app0Filename, app1Filename)
 	partition.GenChecksum()
 
 	storageFile, err := os.Create(outputFilename)
@@ -145,7 +146,7 @@ func genPartitionFile(outputFilename string, app0Filename string) {
 // GenChecksum().
 //
 // It returns the partition table.
-func newPartTable(app0Filename string) PartTableStorage {
+func newPartTable(app0Filename string, app1Filename string) PartTableStorage {
 	storage := PartTableStorage{
 		PartTable: PartTable{
 			Version:          1,
@@ -162,6 +163,14 @@ func newPartTable(app0Filename string) PartTableStorage {
 		storage.PartTable.PreLoadedAppData[0].Size = uint32(stat.Size())
 	}
 
+	if app1Filename != "" {
+		stat, err := os.Stat(app1Filename)
+		if err != nil {
+			panic(err)
+		}
+		storage.PartTable.PreLoadedAppData[1].Size = uint32(stat.Size())
+	}
+
 	return storage
 }
 
@@ -171,7 +180,7 @@ func memset(s []byte, c byte) {
 	}
 }
 
-func genFlashFile(outputFilename string, app0Filename string) {
+func genFlashFile(outputFilename string, app0Filename string, app1Filename string) {
 	var flash Flash
 
 	// Set all bits in flash to erased.
@@ -187,11 +196,7 @@ func genFlashFile(outputFilename string, app0Filename string) {
 	// partition1 will be filled in below
 	memset(flash.PartitionTablePadding2[:], 0xff)
 
-	partition := newPartTable(app0Filename)
-	partition.GenChecksum()
-
-	flash.PartitionTable = partition
-	flash.PartitionTable2 = partition
+	partition := newPartTable(app0Filename, app1Filename)
 
 	// Read the entire file.
 	appBuf, err := os.ReadFile(app0Filename)
@@ -205,6 +210,47 @@ func genFlashFile(outputFilename string, app0Filename string) {
 	}
 
 	copy(flash.PreLoadedApp0[:], appBuf)
+
+	if app1Filename != "" {
+		// Read the entire file.
+		appBuf, err = os.ReadFile(app1Filename)
+		if err != nil {
+			panic(err)
+		}
+
+		if len(appBuf) > MaxAppSize {
+			fmt.Printf("max app size is 128 k")
+			os.Exit(1)
+		}
+
+		copy(flash.PreLoadedApp1[:], appBuf)
+
+		partition.PartTable.PreLoadedAppData[1].Digest = blake2s.Sum256(appBuf)
+
+		seed := []byte{
+			0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+			0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+		}
+
+		privateKey := ed25519.NewKeyFromSeed(seed)
+		fmt.Printf("Public key for app signatures: %x\n", privateKey.Public())
+
+		pubKey := privateKey.Public().(ed25519.PublicKey)
+
+		for _, n := range pubKey {
+			fmt.Printf("0x%02x, ", n)
+		}
+
+		fmt.Printf("\n")
+
+		sig := ed25519.Sign(privateKey, partition.PartTable.PreLoadedAppData[1].Digest[:])
+		partition.PartTable.PreLoadedAppData[1].Signature = [64]uint8(sig)
+	}
+
+	partition.GenChecksum()
+
+	flash.PartitionTable = partition
+	flash.PartitionTable2 = partition
 
 	storageFile, err := os.Create(outputFilename)
 	if err != nil {
@@ -220,11 +266,13 @@ func main() {
 	var input string
 	var output string
 	var app0 string
+	var app1 string
 	var flash bool
 
 	flag.StringVar(&input, "i", "", "Input binary file. Cannot be used with -o.")
 	flag.StringVar(&output, "o", "", "Output binary file. Cannot be used with -i. If used with -f, -app0 must also be specified.")
 	flag.StringVar(&app0, "app0", "", "Binary in pre loaded app slot 0. Can be used with -o.")
+	flag.StringVar(&app1, "app1", "", "Binary in pre loaded app slot 1. Can be used with -o.")
 	flag.BoolVar(&flash, "f", false, "Treat file as a dump of the entire flash memory.")
 	flag.Parse()
 
@@ -258,9 +306,9 @@ func main() {
 				os.Exit(1)
 			}
 
-			genFlashFile(output, app0)
+			genFlashFile(output, app0, app1)
 		} else {
-			genPartitionFile(output, app0)
+			genPartitionFile(output, app0, app1)
 		}
 	}
 }
