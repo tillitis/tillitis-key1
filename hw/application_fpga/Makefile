@@ -228,7 +228,7 @@ $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
 #firmware.elf: CFLAGS += -DTKEY_DEBUG
-firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds flash_image.bin
+firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds $(P)/fw/tk1/mgmt_app_digest.h
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
 
 simfirmware.elf: CFLAGS += -DSIMULATION
@@ -239,7 +239,7 @@ qemu_firmware.elf: CFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: ASFLAGS += -DQEMU_DEBUG
 qemu_firmware.elf: CFLAGS += -DQEMU_SYSCALL
 qemu_firmware.elf: ASFLAGS += -DQEMU_SYSCALL
-qemu_firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/qemu_firmware.lds flash_image.bin
+qemu_firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/qemu_firmware.lds $(P)/fw/tk1/mgmt_app_digest.h
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(QEMU_LDFLAGS) -o $@ > $(basename $@).map
 
 # Generate the file containing the digest for the obligatory default
