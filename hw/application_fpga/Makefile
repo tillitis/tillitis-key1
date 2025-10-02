@@ -45,7 +45,14 @@ LIBDIR ?= tkey-libs
 
 # The preloaded app in slot 0. Must be defined. Firmware depends on
 # it. Change this if you want another first preloaded app.
-DEFAULT_APP ?= $(P)/apps/defaultapp.bin
+FLASH_APP_0 ?= $(P)/apps/defaultapp.bin
+TKEYIMAGE_FLAGS = -app0 $(FLASH_APP_0)
+FLASH_IMAGE_DEPS = $(FLASH_APP_0)
+
+ifdef FLASH_APP_1
+	TKEYIMAGE_FLAGS +=-app1 $(FLASH_APP_1)
+	FLASH_IMAGE_DEPS += $(FLASH_APP_1)
+endif
 
 CFLAGS = \
 	-target riscv32-unknown-none-elf \
@@ -217,12 +224,12 @@ tkey-libs:
 	make -C $(LIBDIR)
 
 # Device app used as preloaded app
-$(DEFAULT_APP):
+$(FLASH_APP_0):
 	make -C apps
 
 # Build a complete filesystem image
-flash_image.bin: tools/tkeyimage/tkeyimage $(DEFAULT_APP)
-	./tools/tkeyimage/tkeyimage -f -app0 $(DEFAULT_APP) -o $@
+flash_image.bin: tools/tkeyimage/tkeyimage $(FLASH_IMAGE_DEPS)
+	./tools/tkeyimage/tkeyimage -f $(TKEYIMAGE_FLAGS) -o $@
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
@@ -244,8 +251,8 @@ qemu_firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/qemu_firmware.lds $(P)
 
 # Generate the file containing the digest for the obligatory default
 # app in slot 0.
-$(P)/fw/tk1/mgmt_app_digest.h: $(DEFAULT_APP) tools/b2s/b2s
-	./tools/b2s/b2s -c -m $(DEFAULT_APP) > $@
+$(P)/fw/tk1/mgmt_app_digest.h: $(FLASH_APP_0) tools/b2s/b2s
+	./tools/b2s/b2s -c -m $(FLASH_APP_0) > $@
 
 # Create compile_commands.json for clangd and LSP
 .PHONY: clangd

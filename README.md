@@ -152,7 +152,7 @@ This uses the make target `prog_flash` in
 device into the container.
 
 If you want to change the default app the TKey uses, change
-`DEFAULT_APP` in the `hw/application_fpga/Makefile`.
+`FLASH_APP_0` in the `hw/application_fpga/Makefile`.
 
 To see all container targets:
 
