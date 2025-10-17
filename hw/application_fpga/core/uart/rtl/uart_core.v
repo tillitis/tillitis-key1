@@ -79,6 +79,7 @@ module uart_core (
   parameter ERX_BITS = 2;
   parameter ERX_STOP = 3;
   parameter ERX_SYN = 4;
+  parameter ERX_ERR = 5;
 
   parameter ETX_IDLE = 0;
   parameter ETX_START = 1;
@@ -110,6 +111,9 @@ module uart_core (
   reg           rxd_syn_reg;
   reg           rxd_syn_new;
   reg           rxd_syn_we;
+
+  reg           rxd_stop_bit_reg;
+  reg           rxd_stop_bit_we;
 
   reg  [ 2 : 0] erx_ctrl_reg;
   reg  [ 2 : 0] erx_ctrl_new;
@@ -176,7 +180,9 @@ module uart_core (
       rxd_bit_ctr_reg     <= 4'h0;
       rxd_bitrate_ctr_reg <= 16'h0;
       rxd_syn_reg         <= 0;
-      erx_ctrl_reg        <= ERX_IDLE;
+      erx_ctrl_reg        <= ERX_ERR;
+      rxd_stop_bit_reg    <= 1'h0;
+
 
       txd_reg             <= 1;
       txd_byte_reg        <= 8'h0;
@@ -208,6 +214,10 @@ module uart_core (
 
       if (erx_ctrl_we) begin
         erx_ctrl_reg <= erx_ctrl_new;
+      end
+
+      if (rxd_stop_bit_we) begin
+        rxd_stop_bit_reg <= rxd_reg;
       end
 
       if (txd_we) begin
@@ -341,10 +351,23 @@ module uart_core (
     rxd_byte_we         = 0;
     rxd_syn_new         = 0;
     rxd_syn_we          = 0;
-    erx_ctrl_new        = ERX_IDLE;
+    erx_ctrl_new        = ERX_ERR;
     erx_ctrl_we         = 0;
+    rxd_stop_bit_we     = 0;
+
 
     case (erx_ctrl_reg)
+
+      // Wait until the RX lines goes high before accepting new frames
+      ERX_ERR: begin
+        if (rxd_reg) begin
+          // RX line in idle state
+          erx_ctrl_new = ERX_IDLE;
+          erx_ctrl_we  = 1;
+        end
+
+      end
+
       ERX_IDLE: begin
         if (!rxd_reg) begin
           // Possible start bit detected.
@@ -387,32 +410,36 @@ module uart_core (
         end
 
         else begin
+          rxd_bitrate_ctr_rst = 1;
+
           if (rxd_bit_ctr_reg < data_bits) begin
-            rxd_bitrate_ctr_rst = 1;
-            rxd_bit_ctr_inc     = 1;
-            rxd_byte_we         = 1;  // We are in the middle of a data bit, make a sample
+            rxd_bit_ctr_inc = 1;
+            rxd_byte_we     = 1;  // We are in the middle of a data bit, make a sample
           end
 
           else begin
             erx_ctrl_new = ERX_STOP;  // We are now in the middle of the stop bit
-            erx_ctrl_we  = 1;
+            erx_ctrl_we = 1;
+            rxd_stop_bit_we = 1;  // sample stop bit
           end
         end
       end
 
 
       ERX_STOP: begin
-        // stop_bits can be removed from line below if we are only using one stop bit
-        if (rxd_bitrate_ctr_reg < (bit_rate * stop_bits)) begin
-          rxd_bitrate_ctr_inc = 1;
-        end
+        // Check if the first stop bit is valid.
+        // Note: Ignores stop bit 1.5 and 2, if present.
 
+        if (rxd_stop_bit_reg) begin
+          rxd_syn_new  = 1;
+          rxd_syn_we   = 1;
+          erx_ctrl_new = ERX_SYN;
+          erx_ctrl_we  = 1;
+        end
         else begin
-          rxd_bitrate_ctr_rst = 1;
-          rxd_syn_new         = 1;
-          rxd_syn_we          = 1;
-          erx_ctrl_new        = ERX_SYN;
-          erx_ctrl_we         = 1;
+          // Framing error, go to ERR state
+          erx_ctrl_new = ERX_ERR;
+          erx_ctrl_we  = 1;
         end
       end
 
