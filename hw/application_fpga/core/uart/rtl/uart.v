@@ -227,7 +227,7 @@ module uart (
           end
 
           ADDR_TX_STATUS: begin
-            tmp_read_data = {31'h0, core_txd_ready & ch552_cts_reg[1]};
+            tmp_read_data = {31'h0, core_txd_ready & !ch552_cts_reg[1]};
           end
 
           default: begin

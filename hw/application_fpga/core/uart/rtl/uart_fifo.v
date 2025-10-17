@@ -105,7 +105,7 @@ module uart_fifo (
       out_ptr_reg  <= 9'h0;
       byte_ctr_reg <= 9'h0;
       in_ack_reg   <= 1'h0;
-      fpga_cts_reg <= 1'h1;
+      fpga_cts_reg <= 1'h0;
     end
     else begin
       in_ack_reg <= in_ack_new;
@@ -127,10 +127,10 @@ module uart_fifo (
       end
 
       if (byte_ctr_reg >= 9'd486) begin  // FIFO is filled to ~95% or more
-        fpga_cts_reg <= 0;  // Signal to not send more data
+        fpga_cts_reg <= 1;  // Signal to not send more data
       end
       else begin
-        fpga_cts_reg <= 1;  // Signal to send more data
+        fpga_cts_reg <= 0;  // Signal to send more data
       end
 
     end

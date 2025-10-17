@@ -24,6 +24,11 @@ in order to hit the center of the bits. For example, a clock of 18 MHz
 and a target bit rate of 62500 bps yields:
 Divisor = 18E6 / 62500 = 288
 
+The UART core includes hardware flow control in the form of two CTS
+lines. One input that the core will check before sending bytes, and
+one output to signal to a connected device that the internal FIFO is
+full. The CTS are active-low.
+
 ## API
 
 ```
