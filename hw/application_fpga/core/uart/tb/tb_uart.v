@@ -238,9 +238,10 @@ module tb_uart ();
   //----------------------------------------------------------------
   // transmit_byte
   //
-  // Transmit a byte of data to the DUT receive port.
+  // Transmit a byte of data to the DUT receive port. With or without a valid
+  // stop bit.
   //----------------------------------------------------------------
-  task transmit_byte(input [7 : 0] data);
+  task transmit_byte(input [7 : 0] data, input invalid_stop_bit);
     integer i;
     begin
       $display("*** Transmitting byte 0x%02x to the dut.", data);
@@ -260,8 +261,13 @@ module tb_uart ();
       end
 
       // Send two stop bits. I.e. two bit times high (mark) value.
-      $display("*** Transmitting two stop bits.");
-      tb_rxd = 1;
+      if (invalid_stop_bit) begin
+        $display("*** Transmitting INVALID stop bits.");
+        tb_rxd = 0;
+      end else begin
+        $display("*** Transmitting stop bits.");
+        tb_rxd = 1;
+      end
       #(2 * CLK_PERIOD * dut.DEFAULT_BIT_RATE * dut.DEFAULT_STOP_BITS);
       $display("*** End of transmission.");
     end
@@ -272,25 +278,45 @@ module tb_uart ();
   // check_transmit
   //
   // Transmits a byte and checks that it was captured internally
-  // by the dut.
+  // by the dut. Include option to set stop bit to invalid.
   //----------------------------------------------------------------
-  task check_transmit(input [7 : 0] data);
+  task check_transmit(input [7 : 0] data, input invalid_stop_bit);
     begin
       tc_ctr = tc_ctr + 1;
 
-      transmit_byte(data);
+      transmit_byte(data, invalid_stop_bit);
 
-      if (dut.core.rxd_byte_reg == data) begin
-        $display("*** Correct data: 0x%01x captured by the dut.", dut.core.rxd_byte_reg);
+      if (!invalid_stop_bit) begin // Valid stop bit
+        if (dut.core.rxd_byte_reg == data & dut.core.erx_ctrl_reg == 0 ) begin
+          // Data OK, ctrl state idle OK.
+
+          $display("*** Correct data: 0x%01x captured by the dut.", dut.core.rxd_byte_reg);
+          $display("*** Correct state after transmission: 0x%01x (IDLE) .", dut.core.erx_ctrl_reg);
+
+        end
+        else begin
+          $display("*** Incorrect:");
+          $display("*** Data: 0x%01x captured by the dut. Expected: 0x%01x.",dut.core.rxd_byte_reg, data);
+          $display("*** State after transmission: 0x%01x.", dut.core.erx_ctrl_reg);
+
+          error_ctr = error_ctr + 1;
+        end
+      end else begin
+        if ( dut.core.erx_ctrl_reg == 5) begin
+          $display("*** Correct state after transmission: 0x%01x (ERR).", dut.core.erx_ctrl_reg);
+        end else begin
+
+          $display("*** Incorrect state: 0x%01x. Expected: 0x%01x.", dut.core.erx_ctrl_reg, 5);
+          error_ctr = error_ctr + 1;
+        end
       end
-      else begin
-        $display("*** Incorrect data: 0x%01x captured by the dut Should be: 0x%01x.",
-                 dut.core.rxd_byte_reg, data);
-        error_ctr = error_ctr + 1;
-      end
+
+      // Reset to a valid rx line
+      tb_rxd = 1;
+      #(CLK_PERIOD * dut.DEFAULT_BIT_RATE);
+
     end
   endtask  // check_transmit
-
 
   //----------------------------------------------------------------
   // test_transmit
@@ -299,12 +325,69 @@ module tb_uart ();
   //----------------------------------------------------------------
   task test_transmit;
     begin
-      check_transmit(8'h55);
-      check_transmit(8'h42);
-      check_transmit(8'hde);
-      check_transmit(8'had);
+      check_transmit(8'h55, 0);
+      check_transmit(8'h42, 0);
+      check_transmit(8'hde, 0);
+      check_transmit(8'h55, 1);
+      check_transmit(8'had, 0);
     end
   endtask  // test_transmit
+
+
+
+  //----------------------------------------------------------------
+  // send_framing_error
+  //
+  // Sets the rx line low, and clocks an entire frame, checks the
+  // UARTs core ctrl state. Sets rx line to idle again, and checks
+  // that the core returns to idle state.
+  //----------------------------------------------------------------
+
+  task send_framing_error();
+    integer i;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("*** Simulating a constant low rx-line.");
+      tb_rxd = 0;
+
+      // Clock start bit
+      #(CLK_PERIOD * dut.DEFAULT_BIT_RATE);
+
+      // Clock data bits
+      for (i = 0; i < 8; i = i + 1) begin
+        tb_rxd = 0;
+        #(CLK_PERIOD * dut.DEFAULT_BIT_RATE);
+      end
+
+      // Clock stop bit
+      #(CLK_PERIOD * dut.DEFAULT_BIT_RATE);
+      // Clock extra to be outside of frame
+      #(CLK_PERIOD * dut.DEFAULT_BIT_RATE * 3);
+
+      if ( dut.core.erx_ctrl_reg == 5) begin
+        $display("*** Correct state after frame: 0x%01x (ERR).", dut.core.erx_ctrl_reg);
+      end
+      else begin
+        $display("*** Incorrect state: 0x%01x. Expected: 0x%01x.", dut.core.erx_ctrl_reg, 5);
+        error_ctr = error_ctr + 1;
+      end
+
+
+      $display("*** Simulate rx-line return to a valid idle state.");
+      tb_rxd = 1;
+      #(CLK_PERIOD * dut.DEFAULT_BIT_RATE);
+
+      if ( dut.core.erx_ctrl_reg == 0) begin
+        $display("*** Correct state after rx line returns to valid: 0x%01x (IDLE).", dut.core.erx_ctrl_reg);
+      end
+      else begin
+        $display("*** Incorrect state: 0x%01x. Expected: 0x%01x.", dut.core.erx_ctrl_reg, 0);
+        error_ctr = error_ctr + 1;
+      end
+
+    end
+  endtask
 
 
   //----------------------------------------------------------------
@@ -354,6 +437,8 @@ module tb_uart ();
     dump_dut_state();
 
     test_transmit();
+
+    send_framing_error();
 
     display_test_result();
     $display("*** Simulation done.");
