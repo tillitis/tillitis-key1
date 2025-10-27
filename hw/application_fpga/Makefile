@@ -429,7 +429,7 @@ synth.json: $(FPGA_VERILOG_SRCS) $(VERILOG_SRCS) $(PICORV32_SRCS) bram_fw.hex
 application_fpga_par.json: synth.json $(P)/data/$(PIN_FILE)
 	$(NEXTPNR_PATH)nextpnr-ice40 \
 		-l application_fpga_par.txt \
-		--seed 18160564147838858264 \
+		--seed 2945058561865725735 \
 		--freq $(TARGET_FREQ) \
 		--ignore-loops \
 		--up5k \
