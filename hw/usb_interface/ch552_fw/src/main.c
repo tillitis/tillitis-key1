@@ -1504,12 +1504,12 @@ uint32_t decrement_pointer(uint32_t pointer, uint32_t decrement, uint32_t buffer
 
 void cts_start(void)
 {
-    gpio_p1_5_set(); // Signal to FPGA to send more data
+    gpio_p1_5_unset(); // Signal to FPGA to send more data
 }
 
 void cts_stop(void)
 {
-    gpio_p1_5_unset(); // Signal to FPGA to not send more data
+    gpio_p1_5_set(); // Signal to FPGA to not send more data
 }
 
 void check_cts_stop(void)
