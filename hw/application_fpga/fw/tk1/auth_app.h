@@ -1,4 +1,4 @@
-// Copyright (C) 2024 - Tillitis AB
+// SPDX-FileCopyrightText: 2024 Tillitis AB <tillitis.se>
 // SPDX-License-Identifier: BSD-2-Clause
 
 #ifndef AUTH_APP_H

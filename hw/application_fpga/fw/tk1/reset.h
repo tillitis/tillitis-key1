@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - Tillitis AB
+// SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
 // SPDX-License-Identifier: BSD-2-Clause
 
 #ifndef TKEY_RESET_H

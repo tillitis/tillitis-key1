@@ -1,0 +1,62 @@
+# SPDX-FileCopyrightText: 2024 Tillitis AB <tillitis.se>
+# SPDX-License-Identifier: BSD-2-Clause
+version = 1
+
+[[annotations]]
+path = ".github/workflows/*"
+SPDX-FileCopyrightText = "2022 Tillitis AB <tillitis.se>"
+SPDX-License-Identifier = "BSD-2-Clause"
+
+[[annotations]]
+path = [
+     ".clang-format",
+     ".editorconfig",
+     ".gitattributes",
+     ".gitignore",
+     "README.md",
+     "contrib/99-tillitis.rules",
+     "contrib/Dockerfile",
+     "contrib/verible.sha512",
+     "doc/images/application_fpga_block_diagram.png",
+     "doc/images/tkey-open-lid.png",
+     "doc/release_notes.md",
+     "doc/threat_model/threat_model.md",
+     "hw/application_fpga/README.md",
+     "hw/application_fpga/application_fpga.bin.sha256",
+     "hw/application_fpga/apps/README.md",
+     "hw/application_fpga/config.vlt",
+     "hw/application_fpga/core/clk_reset_gen/README.md",
+     "hw/application_fpga/core/fw_ram/README.md",
+     "hw/application_fpga/core/picorv32/README.md",
+     "hw/application_fpga/core/ram/README.md",
+     "hw/application_fpga/core/rom/README.md",
+     "hw/application_fpga/core/timer/README.md",
+     "hw/application_fpga/core/tk1/README.md",
+     "hw/application_fpga/core/tk1/tb/README.txt",
+     "hw/application_fpga/core/tk1/tb/udi.hex",
+     "hw/application_fpga/core/touch_sense/README.md",
+     "hw/application_fpga/core/trng/README.md",
+     "hw/application_fpga/core/uart/README.md",
+     "hw/application_fpga/core/uds/README.md",
+     "hw/application_fpga/data/udi.hex",
+     "hw/application_fpga/data/uds.hex",
+     "hw/application_fpga/firmware.bin.sha512",
+     "hw/application_fpga/fw/README.md",
+     "hw/application_fpga/fw/tk1/picorv32/README.md",
+     "hw/application_fpga/tools/README.md",
+     "hw/application_fpga/tools/b2s/README.md",
+     "hw/application_fpga/tools/b2s/go.mod",
+     "hw/application_fpga/tools/b2s/go.sum",
+     "hw/application_fpga/tools/tkeyimage/README.md",
+     "hw/application_fpga/tools/tkeyimage/go.mod",
+     "hw/application_fpga/tools/tkeyimage/go.sum",
+     "hw/application_fpga/tools/tpt/README.md",
+]
+SPDX-FileCopyrightText = "2022 Tillitis AB <tillitis.se>"
+SPDX-License-Identifier = "BSD-2-Clause"
+
+
+
+[[annotations]]
+path = "hw/application_fpga/core/picorv32/rtl/picorv32.v"
+SPDX-License-Identifier = "ISC"

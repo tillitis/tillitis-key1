@@ -1,6 +1,6 @@
 #! /bin/sh -e
 
-# Copyright (C) 2025 Tillitis AB
+# SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
 # SPDX-License-Identifier: BSD-2-Clause
 
 ## Build the specific versions of the tools we need to build the TKey

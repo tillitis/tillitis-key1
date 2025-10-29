@@ -46,11 +46,43 @@ BSD-2-Clause license.
 
 Until Oct 29, 2025, the license was GPL-2.0 Only.
 
-See [LICENSES](./LICENSES/README.md) for more information about
-the projects' licenses.
-
 Each imported project is typically kept in its own directory with its
 own LICENSE file.
+
+### SPDX
+
+The project uses single-line references to Unique License Identifiers
+as defined by the Linux Foundation's [SPDX project](https://spdx.org/).
+The line in each individual source file identifies the license
+applicable to that file.
+
+The current set of valid, predefined SPDX identifiers can be found on
+the SPDX License List at:
+
+https://spdx.org/licenses/
+
+We attempt to follow the [REUSE
+specification](https://reuse.software/).
+
+### Notable imported projects
+
+- ch552 firmware: `hw/usb_interface/ch552_fw/`
+
+  Originally by WCH under MIT. Much changed by Tillitis.
+
+- picorv32: `hw/application_fpga/core/picorv32`
+
+  From https://github.com/YosysHQ/picorv32
+
+  ISC.
+
+- PicoRV32 custom ops: `hw/application_fpga/fw/tk1/picorv32/`
+
+  CC-1.
+
+- tkey-libs: `hw/application_fpga/tkey-libs/`
+
+  BSD2. From https://github.com/tillitis/tkey-libs
 
 ## Repositories
 

@@ -6,7 +6,7 @@
 # on the tk1 board with the CH552 MCU used as a USB-serial chip.
 #
 #
-# Copyright (C) 2022 - Tillitis AB
+# SPDX-FileCopyrightText: 2022 Tillitis AB <tillitis.se>
 # SPDX-License-Identifier: BSD-2-Clause
 #
 #=======================================================================

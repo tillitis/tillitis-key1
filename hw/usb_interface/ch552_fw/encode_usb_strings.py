@@ -63,8 +63,8 @@ if __name__ == "__main__":
     }
 
     with open('inc/usb_strings.h', 'w') as f:
-        f.write('// SPDX-FileCopyrightText: 2024 Tillitis AB <tillitis.se>\n')
-        f.write('// SPDX-License-Identifier: MIT\n')
+        f.write('// SPDX-FileCopyrightText: 2022 Tillitis AB <tillitis.se>\n')
+        f.write('// SPDX-License-Identifier: BSD-2-Clause\n')
         f.write('\n')
         f.write('#ifndef __USB_STRINGS_H__\n')
         f.write('#define __USB_STRINGS_H__\n')
