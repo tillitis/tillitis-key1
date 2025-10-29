@@ -40,10 +40,11 @@ software and hardware should be.
 
 ## Licensing
 
-Unless otherwise noted, the project sources are copyright Tillitis AB.
+Unless otherwise noted, the project sources are copyright Tillitis AB,
 but you can redistribute it and/or modify it under the terms of the
-GNU General Public License version 2 as published by the Free Software
-Foundation.
+BSD-2-Clause license.
+
+Until Oct 29, 2025, the license was GPL-2.0 Only.
 
 See [LICENSES](./LICENSES/README.md) for more information about
 the projects' licenses.

@@ -1,5 +1,5 @@
 // Copyright (C) 2023 - Tillitis AB
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: BSD-2-Clause
 
 #ifndef STATE_H
 #define STATE_H

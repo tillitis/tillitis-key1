@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2021 Mullvad VPN AB <mullvad.se>
 # SPDX-FileCopyrightText: 2022 Tillitis AB <tillitis.se>
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: BSD-2-Clause
+
 
 def descriptor_to_string(descriptor):
     """ Convert a bytes object containing a USB string descriptor into a python string"""

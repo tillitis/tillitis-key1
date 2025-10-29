@@ -1,5 +1,5 @@
 # Copyright (c) 2012 Christopher H. Casebeer. All rights reserved.
-# SPDX-License-Identifier: BSD-2
+# SPDX-License-Identifier: BSD-2-Clause
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:

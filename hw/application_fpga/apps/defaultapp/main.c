@@ -1,5 +1,5 @@
 // Copyright (C) 2025 - Tillitis AB
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: BSD-2-Clause
 
 #include <fw/tk1/reset.h>
 #include <fw/tk1/syscall_num.h>

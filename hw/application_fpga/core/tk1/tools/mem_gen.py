@@ -7,7 +7,7 @@
 # Program that generates hex memory file read by the memory model.
 #
 # Copyright (C) 2024 - Tillitis AB
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: BSD-2-Clause
 #
 #=======================================================================
 

@@ -4,8 +4,9 @@
 
 Unless otherwise noted, the project sources are copyright Tillitis AB,
 but you can redistribute it and/or modify it under the terms of the
-GNU General Public License version 2 as published by the Free Software
-Foundation. See `gpl-2.0.txt`.
+BSD-2-Clause license. See `BSD-2-Clause.txt`.
+
+Until Oct 29, 2025, the license was GPL-2.0 Only.
 
 This directory contains copies of the license texts used by the
 sources included in the project source tree.

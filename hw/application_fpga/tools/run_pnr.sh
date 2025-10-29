@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: BSD-2-Clause
 
 help() {
     echo "Usage: $(basename $0) [OPTION]"

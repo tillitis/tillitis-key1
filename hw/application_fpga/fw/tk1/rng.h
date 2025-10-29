@@ -1,5 +1,6 @@
 // Copyright (C) 2024 - Tillitis AB
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: BSD-2-Clause
+
 #ifndef RNG_H
 #define RNG_H
 

@@ -9,7 +9,7 @@
 //
 // Author: Joachim Strombergson
 // Copyright (C) 2023 - Tillitis AB
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: BSD-2-Clause
 //
 //======================================================================
 

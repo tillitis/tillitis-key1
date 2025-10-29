@@ -3,7 +3,7 @@
 #
 # Copyright (C) 2023 Tillitis AB
 # Written by Myrtle Shah <gatecat@ds0.me>
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: BSD-2-Clause
 #
 # Script to patch in a Unique Device Secret (UDS) and a Unique Device
 # Identifier (UDI) from files into a bitstream.

@@ -7,7 +7,7 @@
 #
 #
 # Copyright (C) 2022-2024 - Tillitis AB
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: BSD-2-Clause
 #
 #
 # Please note: When creating a new cores and adding more testbenches,

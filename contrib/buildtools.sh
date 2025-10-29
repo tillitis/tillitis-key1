@@ -1,7 +1,7 @@
 #! /bin/sh -e
 
 # Copyright (C) 2025 Tillitis AB
-# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-License-Identifier: BSD-2-Clause
 
 ## Build the specific versions of the tools we need to build the TKey
 ## FPGA bitstream and apps.
