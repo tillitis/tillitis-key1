@@ -47,7 +47,7 @@ memory access control.
 ## Communication
 
 The firmware communicates with the client using the
-`UART_{RX,TX}_{STATUS,DATA}` registers. On top of that is uses three
+`UART_{RX,TX}_{STATUS,DATA}` registers. On top of that it uses three
 protocols: The USB Mode protocol, the TKey framing protocol, and the
 firmware's own protocol.
 
@@ -117,9 +117,11 @@ The purpose of the firmware is to:
 
 1. Load, measure, and start an application received from the client
    over the USB/UART or from one of two flash app slots.
-2. Provide functionality to run only app's with specific BLAKE2s
+2. Provide functionality to run only apps with specific BLAKE2s
    digests.
 3. Provide system calls to access the filesystem and get other data.
+4. To help measure data into the new Compound Device Identifier when
+   chaining apps.
 
 The firmware binary is part of the FPGA bitstream as the initial
 values of the Block RAMs used to construct the ROM. The ROM is located
@@ -129,7 +131,7 @@ at `0x0000_0000`. This is also the CPU reset vector.
 
 When the TKey is started or resetted it can load an app from different
 sources. We call this the reset type. Reset type is located in the
-resetinfo part of FW\_RAM. The different reset types loads and start
+`resetinfo` part of FW\_RAM. The different reset types loads and start
 an app from:
 
 1. Flash slot 0 (default): `FLASH0` with a specific app hash defined
@@ -278,6 +280,9 @@ Plain text explanation of the states:
   start is indeed the correct app. This also means that a prospective
   management app is now verified.
 
+  We can compute the CDI in two different ways. See [Compound Device
+  Identifier computation](#compound-device-identifier-computation) below
+
   Clean up firmware data structures, enable the system calls, and
   start the app, which ends the firmware state machine. Hardware
   guarantees that we leave firmware mode automatically when the
@@ -342,9 +347,7 @@ Firmware then proceeds to:
    computed digest. Halt CPU if different.
 
 2. Compute the Compound Device Identifier
-   ([CDI]((#compound-device-identifier-computation))) by doing a
-   BLAKE2s using the Unique Device Secret (UDS), the application
-   digest, and any User Supplied Secret (USS) digest already received.
+   ([CDI](#compound-device-identifier-computation)).
 
 3. Write the start address of the device app, currently `0x4000_0000`,
    to `APP_ADDR` and the size of the loaded binary to `APP_SIZE` to
@@ -379,8 +382,6 @@ To support verified boot the firmware supports reset types with
 verification. This means that the firmware will load an app as usual
 either from flash or from the client, but before starting the app it
 will verify the new app's computed digest with a verification digest.
-The verification digest can either be stored in the firmware itself or
-left to it from a previous app, a verified boot loader app.
 
 Such a verified boot loader app:
 
@@ -408,6 +409,10 @@ It works like this:
   sends the now verified app digest to the firmware in the same system
   call.
 
+- The app leaves something it want's to be measured by the firmware
+  for the coming CDI, typically a digest of its own security policy,
+  like a vendor public key.
+
 - The key is reset and firmware starts again. It checks:
 
   1. The reset type. Start from client or a slot in the filesystem?
@@ -417,36 +422,10 @@ It works like this:
 
 - Firmware refuses to start if the loaded app has a different digest.
 
-- If the app was allowed to start it can now use something
-  deterministic left for it in resetinfo by the verified boot loader
-  app as a seed for it's key material and no longer use CDI for the
-  purpose.
-
-We propose that a loader app can derive the seed for the next app by
-creating a shared secret, perhaps something as easy as:
-
-```
-secret = blake2s(cdi, "name-of-next-app")
-```
-
-The loader shares the secret with the next app by putting it in the
-part of `resetinfo` that is reserved for inter-app communication.
-
-The next app can now use the secret as a seed for it's own key
-material. Depending on the app's behaviour and the number of keys it
-needs it can derive more keys, for instance by having nonces stored on
-its flash area and doing:
-
-```
-secret1 = blake2s(secret, nonce1)
-secret2 = blake2s(secret, nonce2)
-...
-```
-
-Now it can create many secrets deterministically, as long as there is
-some space left on flash for the nonces and all of them can be traced
-to the measured identity of the loader app, giving all the features of
-the measured boot system.
+- If the app was allowed to start it can use the CDI as usual for its
+  key material. See the [Compound Device Identifier
+  computation](#compound-device-identifier-computation) for more about
+  the different CDI computations.
 
 ### App loaded from client
 
@@ -491,11 +470,44 @@ it sends to the firmware to be part of the CDI computation.
 
 ### Compound Device Identifier computation
 
-The CDI is computed by:
+The CDI is computed in one of two ways.
 
-```
-CDI = blake2s(UDS, blake2s(app), USS)
-```
+1. CDI is a result of a hash of the Unique Device Secret, the digest
+   of the entire loaded app, and optionally the User Supplied Secret,
+   if sent from the client:
+
+   ```
+   CDI = blake2s(UDS, blake2s(app), USS)
+   ```
+
+   This is the default case.
+
+2. CDI is a result of a hash of the Unique Device Secret, something
+   left by the previous app, and optionally the User Supplied Secret,
+   if sent from the client:
+
+   ```C
+   CDI = blake2s(UDS, blake2s(previous-CDI, measured_id_seed)*, USS)
+   ```
+
+  This alternative computation is only done if the `mask` in `struct
+  reset` includes `RESET_SEED`.
+
+  Note that this is done in two parts, before and after reset, in
+  order not to leak CDI between resets.
+
+  1. Before reset (marked with an asterisk above): Typically a calling
+     app would do a `TK1_SYSCALL_RESET` system call and fill in
+     something it wants to be mixed into the new CDI in
+     `measured_id_seed`, The firmware will then mix a new
+     `measured_id` before doing the actual reset:
+
+     ```C
+     measured_id = blake2s(CDI, measured_id_seed)
+      ```
+
+  2. After reset: `measured_id` will survive the reset and will then
+     be used in the actual CDI computation after the reset.
 
 In an ideal world, software would never be able to read UDS at all and
 we would have a BLAKE2s function in hardware that would be the only
@@ -503,9 +515,9 @@ thing able to read the UDS. Unfortunately, we couldn't fit a BLAKE2s
 implementation in the FPGA.
 
 The firmware instead does the CDI computation using the special
-firmware-only `FW_RAM` which is invisible after switching to app mode.
-We keep the entire firmware stack in `FW_RAM` and clear the stack just
-before switching to app mode just in case.
+firmware-only `FW_RAM` which is invisible in app mode. We keep the
+entire firmware stack in `FW_RAM` and clear the stack just before
+switching to app mode just in case.
 
 We sleep for a random number of cycles before reading out the UDS,
 call `blake2s_update()` with it and then immediately call
@@ -547,9 +559,11 @@ handled in `syscall_handler()` in `syscall_handler.c`.
 
 ```
 struct reset {
-	uint32_t type;           // Reset type
-	uint8_t app_digest[32];  // Digest of next app in chain to verify
-	uint8_t next_app_data[220]; // Data to leave around for next app
+	enum reset_start type;
+	uint8_t mask;
+	uint8_t app_digest[RESET_DIGEST_SIZE];
+	uint8_t measured_id_seed[RESET_DIGEST_SIZE];
+	uint8_t next_app_data[RESET_DATA_SIZE];
 };
 
 struct reset rst;
@@ -560,9 +574,15 @@ syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, len, 0);
 
 Resets the TKey. Does not return.
 
-You can pass data to the firmware about the reset type `type` and a
-digest that the next app must have. You can also leave some data to
-the next app in the chain in `next_app_data`.
+You can pass data to the firmware about the reset type `type` and
+`measured_id_seed` that you want to include in the CDI measurement for
+the next app by the firmware. The next app's identity will be measured with
+what you leave in `measured_id_seed`, typically a digest of your
+security policy, the current app's CDI, the UDS of the TKey, and
+optionally a USS.
+
+You can also leave some data to the next app in the chain in
+`next_app_data`.
 
 The types of reset are defined in `reset.h`:
 

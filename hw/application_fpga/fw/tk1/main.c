@@ -448,6 +448,10 @@ static enum state start_where(struct context *ctx)
 	debug_putinthex(resetinfo->type);
 	debug_lf();
 
+	debug_puts("  -> mask: ");
+	debug_puthex(resetinfo->mask);
+	debug_lf();
+
 	debug_puts("  ->app_digest: \n");
 	debug_hexdump((void *)resetinfo->app_digest, RESET_DIGEST_SIZE);
 	debug_lf();
@@ -592,7 +596,26 @@ int main(void)
 
 		case FW_STATE_START:
 			// CDI = hash(uds, hash(app), uss)
-			compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
+			//
+			// or, if RESET_SEED is set,
+			//
+			// CDI = hash(uds, measured_id, uss)
+			if (resetinfo->mask & RESET_SEED) {
+				compute_cdi(
+				    (const uint8_t *)resetinfo->measured_id,
+				    ctx.use_uss, ctx.uss);
+			} else {
+				compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
+			}
+
+			// Reset resetinfo to default. Leave
+			// next_app_data intact, if any. We also leave
+			// app_digest since it might be used in the digest
+			// verification below.
+			resetinfo->type = START_DEFAULT;
+			resetinfo->mask &= ~RESET_SEED;
+			(void)memset((void *)resetinfo->measured_id, 0,
+				     RESET_DIGEST_SIZE);
 
 			if (ctx.ver_digest != NULL) {
 				print_digest(ctx.digest);
@@ -605,7 +628,7 @@ int main(void)
 			}
 
 			(void)memset((void *)resetinfo->app_digest, 0,
-				     sizeof(resetinfo->app_digest));
+				     RESET_DIGEST_SIZE);
 
 			jump_to_app();
 			break; // Not reached
