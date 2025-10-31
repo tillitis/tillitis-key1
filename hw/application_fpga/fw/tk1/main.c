@@ -592,7 +592,15 @@ int main(void)
 
 		case FW_STATE_START:
 			// CDI = hash(uds, hash(app), uss)
-			compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
+			//
+			// or, if seed_digest is set,
+			//
+			// CDI = hash(uds, seed_digest, uss)
+			if (resetinfo->mask & RESET_SEED) {
+				compute_cdi((const uint8_t *)resetinfo->seed_digest, ctx.use_uss, ctx.uss);
+			} else {
+				compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
+			}
 
 			if (ctx.ver_digest != NULL) {
 				print_digest(ctx.digest);

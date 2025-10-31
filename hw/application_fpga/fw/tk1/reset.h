@@ -10,7 +10,7 @@
 #define TK1_MMIO_RESETINFO_BASE 0xd0000f00
 #define TK1_MMIO_RESETINFO_SIZE 0x100
 #define RESET_DIGEST_SIZE 32
-#define RESET_DATA_SIZE 220
+#define RESET_DATA_SIZE 188
 
 enum reset_start {
 	START_DEFAULT = 0, // Probably cold boot
@@ -22,11 +22,16 @@ enum reset_start {
 	START_CLIENT_VER = 6,
 };
 
+#define RESET_NEXT 0x01
+#define RESET_SEED 0x02
+
 struct reset {
 	enum reset_start type;
+	uint8_t mask;
 	uint8_t app_digest[RESET_DIGEST_SIZE];
+	uint8_t seed_digest[RESET_DIGEST_SIZE];
 	uint8_t next_app_data[RESET_DATA_SIZE];
-};
+} __attribute__ ((__packed__));
 
 int reset(struct reset *userreset, size_t nextlen);
 int reset_data(uint8_t *next_app_data);
