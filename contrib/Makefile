@@ -74,4 +74,4 @@ build-image:
 	podman build -t $(BUILDIMAGE) .
 
 docker-build-image:
-	docker build -t $(BUILDIMAGE) .
+	docker buildx build --platform linux/amd64,linux/arm64/8 -t $(BUILDIMAGE) .
