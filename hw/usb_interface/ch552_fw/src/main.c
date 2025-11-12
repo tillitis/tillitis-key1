@@ -667,6 +667,7 @@ IDATA uint8_t DebugDataAvailable = 0;
 
 /** CDC variables */
 IDATA uint8_t CdcDataAvailable = 0;
+IDATA uint8_t CdcSendZeroLenPacket = 0;
 
 /** FIDO variables */
 IDATA uint8_t FidoDataAvailable = 0;
@@ -1320,6 +1321,11 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             // Out-of-sync packets will be dropped
             if (U_TOG_OK) {
                 UsbEp2ByteCount = USB_RX_LEN;                              // Length of received data
+                if (UsbEp2ByteCount == 0) {
+                    // If zero, assume it is a zero-length packet. Ignore and
+                    // wait for next frame
+                    break;
+                }
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
             }
             break;
@@ -1856,6 +1862,11 @@ void main()
                 UEP2_T_LEN = FrameBufLength; // Set the number of data bytes that Endpoint 2 is ready to send
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
 
+                if (FrameBufLength == 64) {
+                    // Terminate all 64-byte frames
+                    CdcSendZeroLenPacket = 1;
+                }
+
                 CdcDataAvailable = 0;
                 FrameBufLength = 0;
 
@@ -1863,6 +1874,16 @@ void main()
                     // Complete frame sent, get next header and data
                     FrameStarted = 0;
                 }
+            }
+
+            if (CdcSendZeroLenPacket && !Endpoint2UploadBusy) {
+                // Transmit zero-length packet to terminate 64-byte frames
+                // Only applicable to CDC (bulk transfers)
+
+                Endpoint2UploadBusy = 1; // Set busy flag
+                UEP2_T_LEN = 0; // Set the number of data bytes that Endpoint 2 is ready to send
+                UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
+                CdcSendZeroLenPacket = 0;
             }
 
             // Check if we should upload data to Endpoint 3 (FIDO)
