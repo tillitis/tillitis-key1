@@ -342,9 +342,7 @@ Firmware then proceeds to:
    computed digest. Halt CPU if different.
 
 2. Compute the Compound Device Identifier
-   ([CDI]((#compound-device-identifier-computation))) by doing a
-   BLAKE2s using the Unique Device Secret (UDS), the application
-   digest, and any User Supplied Secret (USS) digest already received.
+   ([CDI](#compound-device-identifier-computation)).
 
 3. Write the start address of the device app, currently `0x4000_0000`,
    to `APP_ADDR` and the size of the loaded binary to `APP_SIZE` to
@@ -491,11 +489,40 @@ it sends to the firmware to be part of the CDI computation.
 
 ### Compound Device Identifier computation
 
-The CDI is computed by:
+The CDI is computed in one of two ways.
 
-```
-CDI = blake2s(UDS, blake2s(app), USS)
-```
+1. CDI is a result of a hash of the Unique Device Secret, the digest
+   of the entire loaded app, and optionally the User Supplied Secret,
+   if sent from the client:
+
+   ```
+   CDI = blake2s(UDS, blake2s(app), USS)
+   ```
+
+   This is the default case.
+
+2. CDI is a result of a hash of the Unique Device Secret, something
+   left by the previous app, and optionally the User Supplied Secret,
+   if sent from the client:
+
+   ```
+   CDI = blake2s(UDS, seed_digest, USS)
+   ```
+
+  This alternative computation is only done if the `mask` in `struct
+  reset` includes `RESET_SEED`.
+
+  Typically a calling app would do a `TK1_SYSCALL_RESET` system call
+  and fill in something it wants to be mixed into the new CDI in
+  `seed_digest`, The firmware will then mix a new `seed_digest` before
+  doing the actual reset:
+  
+  ```
+  seed_digest = blake2s(CDI, seed_digest)
+  ```
+  
+  which will then be used in the actual CDI computation after the
+  reset.
 
 In an ideal world, software would never be able to read UDS at all and
 we would have a BLAKE2s function in hardware that would be the only
@@ -503,9 +530,9 @@ thing able to read the UDS. Unfortunately, we couldn't fit a BLAKE2s
 implementation in the FPGA.
 
 The firmware instead does the CDI computation using the special
-firmware-only `FW_RAM` which is invisible after switching to app mode.
-We keep the entire firmware stack in `FW_RAM` and clear the stack just
-before switching to app mode just in case.
+firmware-only `FW_RAM` which is invisible in app mode. We keep the
+entire firmware stack in `FW_RAM` and clear the stack just before
+switching to app mode just in case.
 
 We sleep for a random number of cycles before reading out the UDS,
 call `blake2s_update()` with it and then immediately call
@@ -547,9 +574,11 @@ handled in `syscall_handler()` in `syscall_handler.c`.
 
 ```
 struct reset {
-	uint32_t type;           // Reset type
-	uint8_t app_digest[32];  // Digest of next app in chain to verify
-	uint8_t next_app_data[220]; // Data to leave around for next app
+	enum reset_start type;
+	uint8_t mask;
+	uint8_t app_digest[RESET_DIGEST_SIZE];
+	uint8_t seed_digest[RESET_DIGEST_SIZE];
+	uint8_t next_app_data[RESET_DATA_SIZE];
 };
 
 struct reset rst;

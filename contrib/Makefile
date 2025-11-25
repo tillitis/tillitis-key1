@@ -24,8 +24,11 @@ all:
 	@echo "docker-build-image         Build a toolchain image named '$(BUILDIMAGE)' (Docker)"
 
 run:
-	podman run --rm --mount type=bind,source="`pwd`/../",target=/build -w /build -it \
-	 $(IMAGE) /usr/bin/bash -l
+	podman run --rm \
+	--device /dev/bus/usb/$(lsusb -d 1209:8886 | awk '{ printf "%s/%s", $2, substr($4,1,3) }') \
+	--mount type=bind,source="`pwd`/../hw/application_fpga",target=/build \
+	-w /build \
+	-it $(IMAGE) /usr/bin/bash -l
 
 docker-run:
 	docker run --rm --mount type=bind,source="`pwd`/../",target=/build -w /build -it \
@@ -61,7 +64,7 @@ run-make-clean_fw:
 
 flash:
 	podman run --rm \
-	--device /dev/bus/usb/$(lsusb | grep -m 1 1209:8886 | awk '{ printf "%s/%s", $2, substr($4,1,3) }') \
+	--device /dev/bus/usb/$(lsusb -d 1209:8886 | awk '{ printf "%s/%s", $2, substr($4,1,3) }') \
 	--mount type=bind,source="`pwd`/../hw/application_fpga",target=/build \
 	-w /build \
 	-it $(IMAGE) make prog_flash

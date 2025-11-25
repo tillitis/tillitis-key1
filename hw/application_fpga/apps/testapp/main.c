@@ -193,6 +193,10 @@ int main(void)
 	uint32_t cdi_local2[CDI_WORDS];
 	wordcpy_s(cdi_local, CDI_WORDS, (void *)cdi, CDI_WORDS);
 
+	puts(IO_CDC, "CDI:\r\n");
+	hexdump(IO_CDC, (void *)cdi, CDI_WORDS * 4);
+	puts(IO_CDC, "\r\n");
+
 	// Write to CDI should NOT have any effect in app mode.
 	wordcpy_s((void *)cdi, CDI_WORDS, zeros, CDI_WORDS);
 	wordcpy_s(cdi_local2, CDI_WORDS, (void *)cdi, CDI_WORDS);
