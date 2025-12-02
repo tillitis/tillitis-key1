@@ -54,6 +54,11 @@ ifdef FLASH_APP_1
 	FLASH_IMAGE_DEPS += $(FLASH_APP_1)
 endif
 
+ifdef FLASH_APP_1_SIG
+	TKEYIMAGE_FLAGS +=-app1sig $(FLASH_APP_1_SIG)
+	FLASH_IMAGE_DEPS += $(FLASH_APP_1_SIG)
+endif
+
 CFLAGS = \
 	-target riscv32-unknown-none-elf \
 	-march=rv32iczmmul \
