@@ -23,9 +23,20 @@ all:
 	@echo "docker-run                 Run a shell using image '$(IMAGE)' (Docker)"
 	@echo "docker-build-image         Build a toolchain image named '$(BUILDIMAGE)' (Docker)"
 
+# Find the TP1 programmer to be able to import the device into the
+# container.
+tpdev != lsusb -d 1209:8886 | awk '{ printf "%s/%s", $$2, substr($$4,1,3) }'
+
+ifneq ($(strip $(tpdev)),)
+tp = --device /dev/bus/usb/$(tpdev)
+endif
+
 run:
-	podman run --rm --mount type=bind,source="`pwd`/../",target=/build -w /build -it \
-	 $(IMAGE) /usr/bin/bash -l
+	podman run --rm \
+	$(tp) \
+	--mount type=bind,source="`pwd`/../",target=/build \
+	-w /build \
+	-it $(IMAGE) /usr/bin/bash -l
 
 docker-run:
 	docker run --rm --mount type=bind,source="`pwd`/../",target=/build -w /build -it \
@@ -61,7 +72,7 @@ run-make-clean_fw:
 
 flash:
 	podman run --rm \
-	--device /dev/bus/usb/$(lsusb | grep -m 1 1209:8886 | awk '{ printf "%s/%s", $2, substr($4,1,3) }') \
+	$(tp) \
 	--mount type=bind,source="`pwd`/../hw/application_fpga",target=/build \
 	-w /build \
 	-it $(IMAGE) make prog_flash
