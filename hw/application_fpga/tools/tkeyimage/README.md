@@ -8,6 +8,8 @@ the TKey.
 
 Add `-f` to parse or generate an entire flash image file.
 
+For more options see `tkeyimage -h`.
+
 ## Usage
 
 ### Inspect a partition table dump
@@ -85,6 +87,12 @@ With an app in slot 0, filling in the size in the partition table:
 $ ./tkeyimage -o partition.bin -app0 ../../fw/testloadapp/testloadapp.bin
 ```
 
+With an app in slot 0 and a signed app in slot 1:
+
+```
+$ ./tkeyimage -o partition.bin -app0 app0.bin -app1 app1.bin -app1sig app1.bin.sig
+```
+
 ### Generate flash image
 
 The program can also generate an entire flash image for use either
@@ -112,3 +120,10 @@ $ qemu-system-riscv32 -nographic -M tk1-castor,fifo=chrid \
 -bios qemu_firmware.elf -chardev pty,id=chrid -s -d guest_errors \
 -drive file=flash.bin,if=mtd,format=raw,index=0
 ```
+
+### Signatures
+
+The signature file format is similar to that of `tkey-sign`. Note that
+it is up to the app that will verify the signature to specify what
+signing algorithm to use. `tkeyimage` does not enforce a specific
+algorithm.
