@@ -608,13 +608,6 @@ int main(void)
 				compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
 			}
 
-			// Reset resetinfo to default. Leave
-			// next_app_data intact, if any.
-			resetinfo->type = START_DEFAULT;
-			resetinfo->mask &= ~RESET_SEED;
-			memset((void *)resetinfo->app_digest, 0, RESET_DIGEST_SIZE);
-			memset((void *)resetinfo->seed_digest, 0, RESET_DIGEST_SIZE);
-
 			if (ctx.ver_digest != NULL) {
 				print_digest(ctx.digest);
 				if (!memeq(ctx.digest, (void *)ctx.ver_digest,
@@ -625,8 +618,15 @@ int main(void)
 				}
 			}
 
+			// Reset resetinfo to default. Leave
+			// next_app_data intact, if any.
+			resetinfo->type = START_DEFAULT;
+			resetinfo->mask &= ~RESET_SEED;
+
+			(void)memset((void *)resetinfo->seed_digest, 0,
+				     RESET_DIGEST_SIZE);
 			(void)memset((void *)resetinfo->app_digest, 0,
-				     sizeof(resetinfo->app_digest));
+				     RESET_DIGEST_SIZE);
 
 			jump_to_app();
 			break; // Not reached
