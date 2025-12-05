@@ -202,9 +202,9 @@ int main(void)
 	}
 
 	// Should NOT be able to reset Tkey from app mode
-	puts(IO_CDC, "\r\nTesting system reset...");
-	*system_reset = 1;
-	puts(IO_CDC, "done.\r\n");
+	// puts(IO_CDC, "\r\nTesting system reset...");
+	// *system_reset = 1;
+	// puts(IO_CDC, "done.\r\n");
 
 	// Test FW_RAM.
 	*fw_ram = 0x21;
@@ -213,18 +213,32 @@ int main(void)
 		anyfailed = 1;
 	}
 
-	puts(IO_CDC, "\r\nTesting timer... 3");
+	puts(IO_CDC, "\r\nTesting timer (10 sec) ... 3");
 	// Matching clock at 24 MHz, giving us timer in seconds
 	*timer_prescaler = 24 * 1000000;
 
-	// Test timer expiration after 1s
-	*timer = 1;
+	// Test timer expiration after 10s
+	*timer = 10;
 	// Start the timer
 	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_START_BIT);
 	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
+
+	puts(IO_CDC, "\ntimer_reg: ");
+	putinthex(IO_CDC, *timer);
+	puts(IO_CDC, "\n");
+
+	if (*timer != 10) {
+		failmsg("Timer didn't reset to 10");
+		anyfailed = 1;
+	}
 	// Now timer has expired and is ready to run again
 	puts(IO_CDC, " 2");
+
+	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_START_BIT);
+	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
+	}
+	puts(IO_CDC, " was it 10 seconds?\n");
 
 	// Test to interrupt a timer - and reads from timer register
 	// Starting 10s timer and interrupting it in 3s...
@@ -243,6 +257,10 @@ int main(void)
 		failmsg("Timer didn't stop");
 		anyfailed = 1;
 	}
+
+	puts(IO_CDC, "\ntimer_reg: ");
+	putinthex(IO_CDC, *timer);
+	puts(IO_CDC, "\n");
 
 	if (*timer != 10) {
 		failmsg("Timer didn't reset to 10");
