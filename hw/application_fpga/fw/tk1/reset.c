@@ -44,7 +44,7 @@ int reset(struct reset *userreset, size_t nextlen)
 
 	// Mix in CDI of currently running app in the seed_digest.
 	int rc = blake2s((void *)resetinfo->seed_digest, RESET_DIGEST_SIZE,
-			 (void *)cdi, 32, (void *)resetinfo->seed_digest,
+			 (void *)cdi, 32, (void *)userreset->seed_digest,
 			 RESET_DIGEST_SIZE);
 	assert(rc == 0);
 
