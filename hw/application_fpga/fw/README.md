@@ -10,8 +10,10 @@ see [the TKey Developer Handbook](https://dev.tillitis.se/).
 
 - Firmware: Software in ROM responsible for loading, measuring,
   starting applications, and providing system calls. The firmware is
-  included as part of the FPGA bitstream and not replacable on a usual
-  consumer TKey.
+  included as part of the FPGA bitstream and not replaceable on a TKey
+  (note: on TKey Unlocked the user themself program the TKey and can
+  choose not to lock the memory in TKey and thus leave it open for
+  re-programming).
 - Client: Software running on a computer or a mobile phone the TKey is
   inserted into.
 - Device application or app: Software supplied by the client or from
@@ -127,7 +129,7 @@ at `0x0000_0000`. This is also the CPU reset vector.
 
 ### Reset type
 
-When the TKey is started or resetted it can load an app from different
+When the TKey is started or reset it can load an app from different
 sources. We call this the reset type. Reset type is located in the
 resetinfo part of FW\_RAM. The different reset types loads and start
 an app from:
@@ -229,7 +231,6 @@ Commands in state *WAITCOMMAND*:
 | `FW_CMD_NAME_VERSION` | unchanged                                  |
 | `FW_CMD_GET_UDI`      | unchanged                                  |
 | `FW_CMD_LOAD_APP`     | *LOADING* or unchanged on invalid app size |
-|                       |                                            |
 
 Commands in state *LOADING*:
 
@@ -253,7 +254,7 @@ Plain text explanation of the states:
   beginning with `FLASH*` transition to *LOAD_FLASH* to load an
   ordinary app from flash.
 
-  For type `CLIENT*` transitionto *WAITCOMMAND* to expect a device app
+  For type `CLIENT*` transition to *WAITCOMMAND* to expect a device app
   from the client.
 
   If type is unknown, error out.
@@ -324,14 +325,14 @@ Firmware then proceeds to:
 
 3. Check the special resetinfo area in FW\_RAM for reset type. Type
    zero means default behaviour, load from flash app slot 0, expecting
-   the app there to have a specific hardcoded BLAKE2s digest.
+   the app there to have a specific hard coded BLAKE2s digest.
 
 4. Load app data from flash slot 0 into RAM.
 
 5. Compute a BLAKE2s digest of the loaded app.
 
 6. Compare the computed digest against the allowed app digest
-   hardcoded in the firmware. If it's not equal, halt CPU.
+   hard coded in the firmware. If it's not equal, halt CPU.
 
 7. [Start the device app](#start-the-device-app).
 
@@ -385,7 +386,7 @@ Such a verified boot loader app:
 - Might be loaded from either flash or client.
 
 - Typically includes a security policy, for instance a public key and
-  code to check a crytographic signature.
+  code to check a cryptographic signature.
 
 - Can be specifically trusted by firmware to be able to do filesystem
   management to be able to update an app slot on flash. Add the app's
@@ -435,7 +436,7 @@ material. Depending on the app's behaviour and the number of keys it
 needs it can derive more keys, for instance by having nonces stored on
 its flash area and doing:
 
-```
+```C
 secret1 = blake2s(secret, nonce1)
 secret2 = blake2s(secret, nonce2)
 ...
@@ -463,7 +464,7 @@ After reset, firmware will:
    using this it's not possible to restart the loading of an
    application.
 
-3. On a sucessful response, the client will send multiple
+3. On a successful response, the client will send multiple
    `FW_CMD_LOAD_APP_DATA` commands, together containing the full
    application.
 
@@ -487,6 +488,10 @@ program gets a secret from the user and then does a key derivation
 function of some sort, for instance a BLAKE2s, to get 32 bytes which
 it sends to the firmware to be part of the CDI computation.
 
+Note: From the user’s perspective, the USS can be any length—there is
+no minimum or maximum. The client program must safely convert the user
+input into a 32-byte value.
+
 ### Compound Device Identifier computation
 
 The CDI is computed in one of two ways.
@@ -495,7 +500,7 @@ The CDI is computed in one of two ways.
    of the entire loaded app, and optionally the User Supplied Secret,
    if sent from the client:
 
-   ```
+   ```C
    CDI = blake2s(UDS, blake2s(app), USS)
    ```
 
@@ -505,7 +510,7 @@ The CDI is computed in one of two ways.
    left by the previous app, and optionally the User Supplied Secret,
    if sent from the client:
 
-   ```
+   ```C
    CDI = blake2s(UDS, seed_digest, USS)
    ```
 
@@ -517,7 +522,7 @@ The CDI is computed in one of two ways.
   `seed_digest`, The firmware will then mix a new `seed_digest` before
   doing the actual reset:
 
-  ```
+  ```C
   seed_digest = blake2s(CDI, seed_digest)
   ```
 
@@ -552,7 +557,7 @@ PicoRV32 interrupt handler. They are triggered by writing to the
 trigger address: 0xe1000000. It's typically done with a function
 signature like this:
 
-```
+```C
 int syscall(uint32_t number, uint32_t arg1, uint32_t arg2,
 	    uint32_t arg3);
 ```
@@ -572,7 +577,7 @@ handled in `syscall_handler()` in `syscall_handler.c`.
 
 #### `RESET`
 
-```
+```C
 struct reset {
 	enum reset_start type;
 	uint8_t mask;
@@ -606,7 +611,7 @@ The types of reset are defined in `reset.h`:
 
 #### `ALLOC_AREA`
 
-```
+```C
 syscall(TK1_SYSCALL_ALLOC_AREA, 0, 0, 0);
 ```
 
@@ -614,7 +619,7 @@ Allocate a flash area for the current app. Returns 0 on success.
 
 #### `DEALLOC_AREA`
 
-```
+```C
 syscall(TK1_SYSCALL_DEALLOC_AREA, 0, 0, 0);
 ```
 
@@ -623,7 +628,7 @@ success.
 
 #### `WRITE_DATA`
 
-```
+```C
 uint32_t offset = 0;
 uint8_t buf[17];
 
@@ -638,7 +643,7 @@ multiple of 4096 bytes.
 
 #### `READ_DATA`
 
-```
+```C
 uint32_t offset = 0;
 uint8_t buf[17];
 
@@ -649,7 +654,7 @@ Read into `buf` at byte `offset` from the app's flash area.
 
 #### `ERASE_DATA`
 
-```
+```C
 uint32_t offset = 0;
 uint32_t size = 4096;
 
@@ -663,7 +668,7 @@ Both `size` and  `offset` must be a multiple of 4096 bytes.
 
 #### `PRELOAD_DELETE`
 
-```
+```C
 syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0);
 ```
 
@@ -672,7 +677,7 @@ for the verified management app.
 
 #### `PRELOAD_STORE`
 
-```
+```C
 uint8_t *appbinary;
 uint32_t offset;
 uint32_t size;
@@ -695,7 +700,7 @@ Only available for the verified management app.
 
 #### `PRELOAD_STORE_FIN`
 
-```
+```C
 uint8_t app_digest[32];
 uint8_t app_signature[64];
 size_t app_size;
@@ -716,7 +721,7 @@ resulting signature in `app_signature`.
 
 #### `PRELOAD_GET_DIGSIG`
 
-```
+```C
 uint8_t app_digest[32];
 uint8_t app_signature[64];
 
@@ -730,7 +735,7 @@ verified management app.
 
 #### `STATUS`
 
-```
+```C
 syscall(TK1_SYSCALL_PRELOAD_STATUS, 0, 0, 0);
 ```
 
@@ -740,7 +745,7 @@ checks.
 
 #### `GET_VIDPID`
 
-```
+```C
 syscall(TK1_SYSCALL_PRELOAD_STATUS, 0, 0, 0);
 ```
 
@@ -785,11 +790,10 @@ in `dmesg` is the one you should do `cat /dev/hidrawX` on.
 Most of the utility functions that the firmware use lives in
 `tkey-libs`. The canonical place where you can find tkey-libs is at:
 
-  https://github.com/tillitis/tkey-libs
+  [https://github.com/tillitis/tkey-libs](https://github.com/tillitis/tkey-libs)
 
-but we have vendored it in for firmware use in `../tkey-libs`. See top
-README for how to update.
-
+but we have vendored it in for firmware use in `../tkey-libs`. [See
+top README](../../../README.md) for how to update.
 
 ### Test firmware
 
@@ -829,6 +833,11 @@ The fileystem layout looks like this:
 | Storage 3   | 128 kiB  | 0xD0000           | Storage for app           |
 | Partition 2 | 64 kiB   | 0xf0000           | Backup of parititon table |
 
+The storage area `Bitstream` is for development and prototyping
+purposes with a TKey Unlocked. For normal use of a TKey the bitstream
+should be programmed in the NVCM memory inside the FPGA and locked for
+re-programming.
+
 The partition table is made up of:
 
 | **name**  | **size**                                |
@@ -854,11 +863,11 @@ apps and verified boot.
 The storage status field is 0 if not allocated by an app and 1 if
 allocated.
 
-The storage auth tag is a way of controlling if a a device app can
+The storage auth tag is a way of controlling if a device app can
 access a storage area. It's computed with the 16 byte version of the
 BLAKE2s hash function like this:
 
-```
+```C
 digest = BLAKE2s_16(CDI, nonce)
 ```
 
