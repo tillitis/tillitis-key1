@@ -97,13 +97,16 @@ int verify(uint8_t pubkey[32])
 {
 	uint8_t app_digest[32];
 	uint8_t app_signature[64];
+	uint8_t flash_pubkey[32];
 	int ret = 0;
 
 	// pubkey we already have
 	// read signature
 	// read digest
 	ret = syscall(TK1_SYSCALL_PRELOAD_GET_DIGSIG, (uint32_t)app_digest,
-		      (uint32_t)app_signature, 0);
+		      (uint32_t)app_signature, (uint32_t)flash_pubkey);
+
+	(void)flash_pubkey; // Using pubkey argument instead of pubkey on flash
 
 	if (ret != 0) {
 		puts(IO_CDC, "couldn't get digsig, error:");
@@ -121,11 +124,15 @@ int verify(uint8_t pubkey[32])
 	hexdump(IO_CDC, app_signature, sizeof(app_signature));
 	puts(IO_CDC, "\r\n");
 
-	puts(IO_CDC, "pubkey:\r\n");
+	puts(IO_CDC, "flash pubkey:\r\n");
+	hexdump(IO_CDC, flash_pubkey, 32);
+	puts(IO_CDC, "\r\n");
+
+	puts(IO_CDC, "embedded pubkey:\r\n");
 	hexdump(IO_CDC, pubkey, 32);
 	puts(IO_CDC, "\r\n");
 
-	puts(IO_CDC, "Checking signature...\r\n");
+	puts(IO_CDC, "Checking signature against embedded pubkey...\r\n");
 
 	if (crypto_ed25519_check(app_signature, pubkey, app_digest,
 				 sizeof(app_digest)) != 0) {

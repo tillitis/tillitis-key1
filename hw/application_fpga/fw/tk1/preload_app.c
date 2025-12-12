@@ -200,7 +200,7 @@ int preload_delete(struct partition_table_storage *part_table_storage,
 
 int preload_get_digsig(struct partition_table *part_table,
 		       uint8_t app_digest[32], uint8_t app_signature[64],
-		       uint8_t slot)
+		       uint8_t pubkey[32], uint8_t slot)
 {
 	if (part_table == NULL || app_digest == NULL || app_signature == NULL) {
 		return -1;
@@ -219,6 +219,8 @@ int preload_get_digsig(struct partition_table *part_table,
 		 sizeof(part_table->pre_app_data[slot].digest));
 	memcpy_s(app_signature, 64, part_table->pre_app_data[slot].signature,
 		 sizeof(part_table->pre_app_data[slot].signature));
+	memcpy_s(pubkey, 32, part_table->pre_app_data[slot].pubkey,
+		 sizeof(part_table->pre_app_data[slot].pubkey));
 
 	return 0;
 }
