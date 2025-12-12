@@ -166,7 +166,7 @@ module tk1 #(
   reg           tmp_ready;
   /* verilator lint_on UNOPTFLAT */
 
-  reg  [ 2 : 0] muxed_led;
+  reg           muxed_led;
 
   wire [31 : 0] udi_rdata;
 
@@ -211,9 +211,9 @@ module tk1 #(
       .RGB1(led_g),
       .RGB2(led_b),
       .RGBLEDEN(1'h1),
-      .RGB0PWM(muxed_led[LED_B_BIT]),
-      .RGB1PWM(muxed_led[LED_G_BIT]),
-      .RGB2PWM(muxed_led[LED_R_BIT]),
+      .RGB0PWM(muxed_led),
+      .RGB1PWM(muxed_led),
+      .RGB2PWM(muxed_led),
       .CURREN(1'b1)
   );
   /* verilator lint_on PINMISSING */
@@ -359,10 +359,10 @@ module tk1 #(
     end
 
     if (cpu_trap) begin
-      muxed_led = cpu_trap_led_reg;
+      muxed_led = |cpu_trap_led_reg;
     end
     else begin
-      muxed_led = led_reg;
+      muxed_led = |led_reg;
     end
   end
 
