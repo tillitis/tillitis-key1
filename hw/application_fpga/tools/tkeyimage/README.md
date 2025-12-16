@@ -16,7 +16,7 @@ For more options see `tkeyimage -h`.
 
 Dump the entire data from flash, then inspect:
 
-```
+```bash
 $ tillitis-iceprog -R 1M dump.bin
 $ ./tkeyimage -i dump.bin -f
 INFO: main.Flash struct is 1048576 byte long
@@ -50,7 +50,7 @@ Partition Table Storage
 Read only the first copy of the partition table from flash to file,
 then inspect:
 
-```
+```bash
 $ tillitis-iceprog -o 128k -r partition.bin
 $ ./tkeyimage -i partition.bin
 INFO: main.PartTableStorage struct is 365 byte long
@@ -85,20 +85,20 @@ Partition Table Storage
 
 If you want to generate just a partition table:
 
-```
-$ ./tkeyimage -o partition.bin
+```bash
+./tkeyimage -o partition.bin
 ```
 
 With an app in slot 0, filling in the size in the partition table:
 
-```
-$ ./tkeyimage -o partition.bin -app0 ../../apps/testloadapp.bin
+```bash
+./tkeyimage -o partition.bin -app0 ../../apps/testloadapp.bin
 ```
 
 With an app in slot 0 and a signed app in slot 1:
 
-```
-$ ./tkeyimage -o partition.bin -app0 app0.bin -app1 app1.bin -app1sig app1.bin.sig -app1pub pubkey
+```bash
+./tkeyimage -o partition.bin -app0 app0.bin -app1 app1.bin -app1sig app1.bin.sig -app1pub pubkey
 ```
 
 ### Generate flash image
@@ -108,8 +108,8 @@ with real hardware or qemu.
 
 Generate like this:
 
-```
-$ ./tkeyimage -o flash.bin -f -app0 ../../apps/testloadapp.bin
+```bash
+./tkeyimage -o flash.bin -f -app0 ../../apps/testloadapp.bin
 ```
 
 Using `-app0` is mandatory because TKey firmware won't start without
@@ -117,14 +117,14 @@ an app in slot 0.
 
 The qemu args to use to run with `flash.bin` as the flash are:
 
-```
+```bash
 -drive file=flash.bin,if=mtd,format=raw,index=0
 ```
 
 A complete command example:
 
-```
-$ qemu-system-riscv32 -nographic -M tk1-castor,fifo=chrid \
+```bash
+qemu-system-riscv32 -nographic -M tk1-castor,fifo=chrid \
 -bios qemu_firmware.elf -chardev pty,id=chrid -s -d guest_errors \
 -drive file=flash.bin,if=mtd,format=raw,index=0
 ```
