@@ -244,7 +244,7 @@ Mitigations:
   over an app digest against a vendor public key. It will only
   continue if the signature verifies. It will then leave the app
   digest to firmware which will load the new app. If the new app's
-  digest is not the same as the already verified app digest exeuction
+  digest is not the same as the already verified app digest execution
   will halt.
 
   If the boot verifier app itself is malicious and doesn't have a good
@@ -255,7 +255,7 @@ Mitigations:
   
   `cdi = blake2s(UDS, blake2s(CDI of previous app, seed)[, USS])`
 
-  The seed is whatever data the previous might want to include in
+  The seed is whatever data the previous app might want to include in
   the measurement, for instance the digest of its security policy.
 
 - Changing: CDI is protected by hardware. It is only writable in
@@ -293,7 +293,7 @@ Mitigation:
 - Firmware memory is hardware protected by the current execution mode.
   It is only available in firmware mode.
 
-- It is all times protected by hardware against execution.
+- It is at all times protected by hardware against execution.
 
 ### RAM
 
@@ -304,7 +304,7 @@ Mitigation:
 - Execution: A device app can mark one continous area as
   non-executable, typically the areas after `.text`, up to and
   including the stack.
-  
+
 - Writable: No protection.
 
 - Reading externally: Firmware turns on a hardware assisted RAM
@@ -335,9 +335,9 @@ Mitigation:
   escalate privilege temporarily to firmware mode. This is done with
   hardware support from an interrupt call.
   
-  When this interrupt is done, the device temporarily enters firmware
-  mode and the system call handler in the firmware. Arguments are
-  passed in registers. The firmware does the system call and then
+  When this interrupt is raised, the device temporarily enters
+  firmware mode and the system call handler in the firmware. Arguments
+  are passed in registers. The firmware does the system call and then
   automatically goes back to the hardware app mode when returning to
   the app.
 
@@ -544,5 +544,3 @@ modification of the firmware CH552.
 - Leakage and glitching attacks including:
   - Faulting of the execution by the CPU in the FPGA and the CH552 MCU
   - EM leakage
-
-- Attacks on the TKey device apps.
