@@ -477,22 +477,24 @@ input into a 32-byte value.
 
 The CDI is computed in one of two ways.
 
-1. CDI is a result of a hash of the Unique Device Secret, the digest
-   of the entire loaded app, and optionally the User Supplied Secret,
-   if sent from the client:
+1. CDI is a result of a hash of the Unique Device Secret, a domain
+   determined by how the app was loaded, the digest of the entire
+   loaded app, and optionally the User Supplied Secret, if sent from
+   the client:
 
    ```C
-   CDI = blake2s(UDS, blake2s(app), USS)
+   CDI = blake2s(UDS, domain, blake2s(app), USS)
    ```
 
    This is the default case.
 
-2. CDI is a result of a hash of the Unique Device Secret, something
-   left by the previous app, and optionally the User Supplied Secret,
-   if sent from the client:
+2. CDI is a result of a hash of the Unique Device Secret, a domain
+   determined by how the app was loaded, something left by the
+   previous app, and optionally the User Supplied Secret, if sent from
+   the client:
 
    ```C
-   CDI = blake2s(UDS, blake2s(previous-CDI, measured_id_seed)*, USS)
+   CDI = blake2s(UDS, domain, blake2s(previous-CDI, measured_id_seed)*, USS)
    ```
 
   This alternative computation is only done if the `mask` in `struct
@@ -531,9 +533,9 @@ stored in the internal context buffer. UDS should now not be in
 `FW_RAM` anymore. We can read UDS only once per power cycle so UDS
 should now not be available even to firmware.
 
-Then we continue with the CDI computation by updating with an optional
-USS digest and finalizing the hash, storing the resulting digest in
-`CDI`.
+Then we continue with the CDI computation by updating with the domain,
+measured_id, and optional USS digest. Then finalizing the hash,
+storing the resulting digest in `CDI`.
 
 ### System calls
 
