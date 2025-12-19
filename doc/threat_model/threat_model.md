@@ -40,10 +40,9 @@ locked by blowing the fuses.
 - There is no access path to the contents of the NVCM from the FPGA
   fabric besides the configuration circuit.
 
-- There exist a possible warm boot attack against the Lattice iCE40
-  UltraPlus FPGAs, which allows an attacker with physical access to
-  load a FPGA configuration even though the NVCM has been programmed
-  and locked.
+- The Lattice iCE40 UltraPlus FPGAs are vulnerable to a warm boot
+  attack which allows an attacker with physical access to load a FPGA
+  configuration even though the NVCM has been programmed and locked.
 
 MC: There is? Where is this attack described? Is this really one of
 our assumptions?
@@ -356,40 +355,46 @@ Mitigation:
   the app getting it's own CDI with the measured boot/verified boot
   combination so a malicious app cannot leak secrets.
 
-
-#### Known possible weaknesses
-
-The CH552 MCU providing USB host communication contains firmware that
-implements the UART communication with the FPGA. The CH552 firmware
-can be updated by performing *port knocking*. The knock sequence is to
-apply 3.3V through a 10k resistor to the D+ line, while powering on
-the device.
-
-There may be possible buffer overflow attacks via the USB host
-interface into the firmware of the CH552, allowing both execution and
-modification of the firmware CH552.
-
-
 ## Known weaknesses
 
-The CH552 MCU providing USB communication contains firmware that
-implements the UART communication with the FPGA. The firmware can be
-updated by performing port knocking. The knock sequence is to apply
-3.3V through a 10k resistor to the D+ line, while powering on the
-device.
+- All RAM is writable in app mode, even addresses marked executable.
 
-- Physical access and access to a CH55x programmer board means an
+- A warm boot attack against the Lattice iCE40 UltraPlus, changing the
+  FPGA configuration while the chip is powered on will leave the EBR
+  and SPRAM intact after the new configuration is loaded. This means
+  we might leak contents of EBR and SPRAM.
+
+  Mitigations:
+  
+  - Requires physical access.
+
+  - Requires breaking the case.
+
+  - SPRAM is protected by a scrambling mechanism. See above under RAM.
+
+  - EBR is not protected, so any hardware cores that use EBR is still
+    vulnerable.
+
+    XXX: List which ones use EBR?
+
+- The CH552 MCU providing USB communication contains firmware that
+  implements the UART communication with the FPGA. The firmware can be
+  updated by performing port knocking. The knock sequence is to apply
+  3.3V through a 10k resistor to the D+ line, while powering on the
+  device.
+
+  Physical access and access to a CH55x programmer board means an
   attacker can change the USB controller firmware. This means they can
   listen to and modify all communication between the client and the
   firmware and the client and a device app.
-  
+ 
+  There may be vulnerabilities reachable through USB to the firmware
+  of the CH552, allowing both controlled execution and modification of
+  the CH552 firmware.
+
   Possible mitigation: Use of a challenge/response with an app with a
   known public key, like the one used with `tkey-verify`, can prove
   that the communication is unmodified.
-
-- There may be vulnerabilities reachable through USB to the firmware
-  of the CH552, allowing both controlled execution and modification of
-  the CH552 firmware.
 
 ## Scope
 
@@ -403,7 +408,9 @@ device.
 #### Out of scope
 
 - Leakage and glitching attacks including:
+
   - Faulting of the execution by the CPU in the FPGA and the CH552 MCU
+
   - EM leakage
 
 - Warm boot attacks. It should be hard to successfully perform against
@@ -499,18 +506,6 @@ Over time (with new releases), The TKey device should be able to
 withstand SW based attacks. Over time, the TKey Device should be able
 to make evil maid attacks take long enough time to make in infeasible to
 perform without the user discovering the missing device.
-
-#### Known possible weaknesses
-
-The CH552 MCU providing USB host communication contains firmware that
-implements the UART communication with the FPGA. The CH552 firmware
-can be updated by performing *port knocking*. The knock sequence is to
-apply 3.3V through a 10k resistor to the D+ line, while powering on
-the device.
-
-There may be possible buffer overflow attacks via the USB host
-interface into the firmware of the CH552, allowing both execution and
-modification of the firmware CH552.
 
 #### In scope
 
