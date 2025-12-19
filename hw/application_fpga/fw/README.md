@@ -477,22 +477,24 @@ input into a 32-byte value.
 
 The CDI is computed in one of two ways.
 
-1. CDI is a result of a hash of the Unique Device Secret, the digest
-   of the entire loaded app, and optionally the User Supplied Secret,
-   if sent from the client:
+1. CDI is a result of a hash of the Unique Device Secret, a domain
+   byte with the measured-id bit cleared, the digest of the entire
+   loaded app, and optionally the User Supplied Secret, if sent from
+   the client:
 
    ```C
-   CDI = blake2s(UDS, blake2s(app), USS)
+   CDI = blake2s(UDS, domain, blake2s(app), USS)
    ```
 
    This is the default case.
 
-2. CDI is a result of a hash of the Unique Device Secret, something
-   left by the previous app, and optionally the User Supplied Secret,
-   if sent from the client:
+2. CDI is a result of a hash of the Unique Device Secret, a domain
+   byte with the measured-id bit set, something left by the previous
+   app, and optionally the User Supplied Secret, if sent from the
+   client:
 
    ```C
-   CDI = blake2s(UDS, blake2s(previous-CDI, measured_id_seed)*, USS)
+   CDI = blake2s(UDS, domain, blake2s(previous-CDI, measured_id_seed)*, USS)
    ```
 
   This alternative computation is only done if the `mask` in `struct
@@ -514,6 +516,11 @@ The CDI is computed in one of two ways.
   2. After reset: `measured_id` will survive the reset and will then
      be used in the actual CDI computation after the reset.
 
+The domain byte is constructed from the following information:
+
+- App digest or `measured_id` was used to calculate CDI.
+- USS was used, or not used, to calculate the CDI.
+
 In an ideal world, software would never be able to read UDS at all and
 we would have a BLAKE2s function in hardware that would be the only
 thing able to read the UDS. Unfortunately, we couldn't fit a BLAKE2s
@@ -531,9 +538,9 @@ stored in the internal context buffer. UDS should now not be in
 `FW_RAM` anymore. We can read UDS only once per power cycle so UDS
 should now not be available even to firmware.
 
-Then we continue with the CDI computation by updating with an optional
-USS digest and finalizing the hash, storing the resulting digest in
-`CDI`.
+Then we continue with the CDI computation by updating with the domain,
+measured_id, and optional USS digest. Then finalizing the hash,
+storing the resulting digest in `CDI`.
 
 ### System calls
 

@@ -19,6 +19,9 @@
 #include "state.h"
 #include "syscall_enable.h"
 
+#define DOMAIN_USS_MASK 0x80
+#define DOMAIN_MEASURED_ID_MASK 0x40
+
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
 static volatile uint32_t *name0            = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
@@ -56,8 +59,8 @@ struct context {
 static void print_hw_version(void);
 static void print_digest(uint8_t *md);
 static uint32_t rnd_word(void);
-static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
-			const uint8_t *uss);
+static void compute_cdi(uint8_t domain, const uint8_t *digest,
+			const uint8_t use_uss, const uint8_t *uss);
 static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word);
 static enum state initial_commands(const struct frame_header *hdr,
 				   const uint8_t *cmd, enum state state,
@@ -107,8 +110,8 @@ static uint32_t rnd_word(void)
 }
 
 // CDI = blake2s(uds, blake2s(app), uss)
-static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
-			const uint8_t *uss)
+static void compute_cdi(uint8_t domain, const uint8_t *digest,
+			const uint8_t use_uss, const uint8_t *uss)
 {
 	uint32_t local_uds[8] = {0};
 	uint32_t local_cdi[8] = {0};
@@ -134,6 +137,9 @@ static void compute_cdi(const uint8_t *digest, const uint8_t use_uss,
 	wordcpy_s(local_uds, 8, (void *)uds, 8);
 	blake2s_update(&secure_ctx, (const void *)local_uds, 32);
 	(void)secure_wipe(local_uds, sizeof(local_uds));
+
+	// Update with domain
+	blake2s_update(&secure_ctx, &domain, 1);
 
 	// Update with TKey program digest
 	blake2s_update(&secure_ctx, digest, 32);
@@ -594,18 +600,24 @@ int main(void)
 			state = FW_STATE_START;
 			break;
 
-		case FW_STATE_START:
-			// CDI = hash(uds, hash(app), uss)
+		case FW_STATE_START: {
+			// CDI = hash(uds, domain, hash(app), uss)
 			//
 			// or, if RESET_SEED is set,
 			//
-			// CDI = hash(uds, measured_id, uss)
+			// CDI = hash(uds, domain, measured_id, uss)
+			uint8_t domain = 0;
+			domain |= ctx.use_uss ? DOMAIN_USS_MASK : 0;
+
 			if (resetinfo->mask & RESET_SEED) {
+				domain |= DOMAIN_MEASURED_ID_MASK;
 				compute_cdi(
+				    domain,
 				    (const uint8_t *)resetinfo->measured_id,
 				    ctx.use_uss, ctx.uss);
 			} else {
-				compute_cdi(ctx.digest, ctx.use_uss, ctx.uss);
+				compute_cdi(domain, ctx.digest, ctx.use_uss,
+					    ctx.uss);
 			}
 
 			// Reset resetinfo to default. Leave
@@ -632,6 +644,7 @@ int main(void)
 
 			jump_to_app();
 			break; // Not reached
+		}
 
 		case FW_STATE_FAIL:
 			// fallthrough
