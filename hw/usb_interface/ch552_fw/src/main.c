@@ -1,4 +1,5 @@
 // SPDX-FileCopyrightText: 2017 WCH <wch-ic.com>
+// oo
 // SPDX-FileCopyrightText: 2022 Tillitis AB <tillitis.se>
 // SPDX-License-Identifier: MIT
 
@@ -29,12 +30,6 @@ XDATA AT0000 uint8_t Ep0Buffer[3*MAX_PACKET_SIZE] = { 0 }; // Endpoint 0, Defaul
 XDATA AT00C0 uint8_t Ep1Buffer[DEFAULT_EP1_SIZE]  = { 0 }; // Endpoint 1, CDC Ctrl endpoint, IN[8] buffer
 XDATA AT00C8 uint8_t Ep2Buffer[2*MAX_PACKET_SIZE] = { 0 }; // Endpoint 2, CDC Data endpoint, buffer OUT[64]+IN[64], must be an even address
 XDATA AT0148 uint8_t Ep3Buffer[2*MAX_PACKET_SIZE] = { 0 }; // Endpoint 3, FIDO endpoint, buffer OUT[64]+IN[64], must be an even address
-
-
-// XDATA uint8_t * const Ep0Buffer = Ep0BufferP;
-// XDATA uint8_t * const Ep1Buffer = Ep1BufferP;
-// XDATA uint8_t * const Ep2Buffer = Ep2BufferP;
-// XDATA uint8_t * const Ep3Buffer = Ep3BufferP;
 
 IDATA uint16_t SetupLen = 0;
 IDATA uint8_t SetupReq = 0;
@@ -638,9 +633,6 @@ FLASH uint8_t LineCoding[7] = { 0x20, 0xA1, 0x07, 0x00, /* Data terminal rate, i
 
 /** Communication UART */
 XDATA volatile uint8_t UartTxBuf[UART_TX_BUF_SIZE] = { 0 };  // Serial transmit buffer
-// XDATA volatile uint8_t UartTxBuf2[UART_TX_BUF_SIZE] = { 0 };  // Serial transmit buffer
-// XDATA volatile uint8_t UartTxBuf3[UART_TX_BUF_SIZE] = { 0 };  // Serial transmit buffer
-// XDATA volatile uint8_t UartTxBuf4[UART_TX_BUF_SIZE] = { 0 };  // Serial transmit buffer
 IDATA uint8_t Ep2ByteLen;
 IDATA uint8_t Ep3ByteLen;
 IDATA uint8_t Ep4ByteLen;
@@ -651,8 +643,6 @@ volatile uint8_t UartRxBufOutputPointer = 0;  // Take pointer out of circular bu
 volatile uint8_t UartRxBufByteCount = 0;      // Number of unprocessed bytes remaining in the buffer
 
 volatile uint8_t set_ep0 = 0;
-volatile uint16_t irq_count = 0;
-volatile uint16_t delay = 0;
 
 /** Debug UART */
 #ifdef DEBUG_PRINT_HW
@@ -850,11 +840,19 @@ void Config_Uart1(uint8_t *cfg_uart)
     IE_UART1 = 1; // Enable UART1 interrupt
 }
 
+
+int anything_busy(void) {
+    if(Endpoint2UploadBusy || Endpoint3UploadBusy || Endpoint4UploadBusy || UsbEp2ByteCount || UsbEp3ByteCount || UsbEp4ByteCount) {
+         return 1;
+    }
+    return 0;
+}
+
+
 void usb_irq_setup_handler(void)
 {
     uint16_t len = USB_RX_LEN;
     printStrSetup("Setup ");
-    irq_count++;
 
     if (len == (sizeof(USB_SETUP_REQ))) {
         SetupLen = ((uint16_t) UsbSetupBuf->wLengthH << 8) | (UsbSetupBuf->wLengthL);
@@ -1261,14 +1259,14 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
         switch (USB_INT_ST & (MASK_UIS_TOKEN | MASK_UIS_ENDP)) {
 
         case UIS_TOKEN_SETUP | 0: // SETUP routine
-            if(!anything_busy()) {
+            // if(!anything_busy()) {
                 usb_irq_setup_handler();
-            }
+            // } // anything_busy
             break;
 
         case UIS_TOKEN_IN | 0: // Endpoint 1 IN (TX)
             
-            if(!anything_busy()) {
+            // if(!anything_busy()) {
             switch (SetupReq) {
             case USB_GET_DESCRIPTOR:
                 /* Continue sending descriptor in multiple packets if needed. Started from SETUP routine */
@@ -1291,26 +1289,23 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
                 set_ep0 = UEP_R_RES_ACK | UEP_T_RES_NAK;
                 break;
             }
-            } //anything_busy
+            // } //anything_busy
             break;
 
         case UIS_TOKEN_IN | 1: // Endpoint 1 IN (TX)
             UEP1_T_LEN = 0;    // Transmit length must be cleared (Endpoint 1)
             UEP1_CTRL = (UEP1_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_NAK; // Default answer NAK
-            // UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
             break;
 
         case UIS_TOKEN_IN | 2: // Endpoint 2 IN (TX)
             UEP2_T_LEN = 0;    // Transmit length must be cleared (Endpoint 2)
             UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_NAK; // Default answer NAK
-            // UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
             Endpoint2UploadBusy = 0; // Clear busy flag
             break;
 
         case UIS_TOKEN_IN | 3: // Endpoint 3 IN (TX)
             UEP3_T_LEN = 0;    // Transmit length must be cleared (Endpoint 3)
             UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_NAK; // Default answer NAK
-            // UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
             Endpoint3UploadBusy = 0; // Clear busy flag
             break;
 
@@ -1318,13 +1313,12 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             UEP4_T_LEN = 0;    // Transmit length must be cleared (Endpoint 4)
             UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_NAK; // Default answer NAK
             UEP4_CTRL ^= bUEP_T_TOG; // Sync flag flip
-            // UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
             Endpoint4UploadBusy = 0; // Clear busy flag
             break;
 
         case UIS_TOKEN_OUT | 0: // Endpoint 0 OUT (RX)
             
-            if(!anything_busy()) {
+            // if(!anything_busy()) {
             switch (SetupReq) {
             case USB_CDC_REQ_TYPE_SET_LINE_CODING:
                 /* We ignore line coding here because baudrate to the FPGA should not change */
@@ -1340,7 +1334,7 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
                 set_ep0 |= UEP_R_RES_ACK | UEP_T_RES_NAK; // Status phase, responds to IN with NAK
                 break;
             }
-            } //anything_busy
+            // } //anything_busy
             break;
 
         case UIS_TOKEN_OUT | 1: // Endpoint 1 OUT (RX), Disabled for now.
@@ -1360,9 +1354,7 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
                     // wait for next frame
                     break;
                 }
-                // memcpy(UartTxBuf2, Ep2Buffer, UsbEp2ByteCount);
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
-                // UEP0_CTRL = UEP_R_RES_NAK | UEP_T_RES_NAK;
             }
             break;
 
@@ -1370,27 +1362,15 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             // Out-of-sync packets will be dropped
             if (U_TOG_OK) {
                 UsbEp3ByteCount = USB_RX_LEN;                              // Length of received data
-                // memcpy(UartTxBuf3, Ep3Buffer, UsbEp3ByteCount);
                 UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
-                // UEP0_CTRL = UEP_R_RES_NAK | UEP_T_RES_NAK;
             }
             break;
 
         case UIS_TOKEN_OUT | 4: // Endpoint 4 OUT (RX)
             // Out-of-sync packets will be dropped
             if (U_TOG_OK) {
-                // UsbEp4ByteCount = USB_RX_LEN;                              // Length of received data
-
-                memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
-                       Ep0Buffer + 64,
-                       MAX_PACKET_SIZE);
-
-                // Endpoint3UploadBusy = 1; // Set busy flag
-                UEP3_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 3 is ready to send
-                UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-                
-                    // memcpy(UartTxBuf4, Ep0Buffer+64, UsbEp4ByteCount); // Endpoint 4 receive is at address UEP0_DMA+64
-                // UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
+                UsbEp4ByteCount = USB_RX_LEN;                              // Length of received data
+                UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
                 UEP4_CTRL ^= bUEP_R_TOG;                                   // Sync flag flip
                 // UEP0_CTRL = UEP_R_RES_NAK | UEP_T_RES_NAK;
             }
@@ -1451,14 +1431,6 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             WAKE_CTRL = 0x00;
 
         }
-    } else if (UIF_FIFO_OV) { // 
-        // Reset CH552 to start from a known state
-        SAFE_MOD = 0x55;
-        SAFE_MOD = 0xAA;
-        GLOBAL_CFG = bSW_RESET;
-        while (1)
-            ;
-
     } else { // Unexpected IRQ, should not happen
         printStrSetup("Unexpected IRQ\n");
         USB_INT_FG = 0xFF; // Clear interrupt flag
@@ -1583,12 +1555,6 @@ void check_cts_stop(void)
     }
 }
 
-int anything_busy(void) {
-    if(Endpoint2UploadBusy || Endpoint3UploadBusy || Endpoint4UploadBusy || UsbEp2ByteCount || UsbEp3ByteCount || UsbEp4ByteCount) {
-         return 1;
-    }
-    return 0;
-}
 
 // int check_content(uint8_t *buf, size_t size) {
 //
@@ -1627,8 +1593,6 @@ void main()
     if ((ActiveEndpoints & IO_FIDO) && (ActiveEndpoints & IO_CCID)) {
         ActiveEndpoints &= ~(IO_FIDO | IO_CCID);
     }
-    ActiveEndpoints |= IO_FIDO;
-    ActiveEndpoints |= IO_DEBUG;
 
     CreateCfgDescriptor(ActiveEndpoints);
 
@@ -1653,11 +1617,7 @@ void main()
         if(anything_busy()) {
             UEP0_CTRL = UEP_R_RES_NAK | UEP_T_RES_NAK;
         } else {
-            if (delay > 0) {
-                UEP0_CTRL = set_ep0;
-                delay = 0;
-            }
-            delay++;
+            UEP0_CTRL = set_ep0;
         }
 
         if (UsbConfig) {
@@ -1671,10 +1631,8 @@ void main()
                 CH554UART1SendByte(IO_CDC);  // Send CDC mode header
                 CH554UART1SendByte(Ep2ByteLen);  // Send length
                 // CH554UART1SendBuffer(UartTxBuf, Ep2ByteLen);
-                // CH554UART1SendBuffer(UartTxBuf2, Ep2ByteLen);
                 CH554UART1SendBuffer(Ep2Buffer, Ep2ByteLen);
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 2 to ACK again
-                // UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
                 UsbEp2ByteCount = 0;
             }
 
@@ -1690,10 +1648,8 @@ void main()
                 }
                 CH554UART1SendByte(Ep3ByteLen); // Send length (always 64 bytes for FIDO, variable for CCID)
                 // CH554UART1SendBuffer(UartTxBuf, Ep3ByteLen);
-                // CH554UART1SendBuffer(UartTxBuf3, Ep3ByteLen);
                 CH554UART1SendBuffer(Ep3Buffer, Ep3ByteLen);
                 UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 3 to ACK again
-                // UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
                 UsbEp3ByteCount = 0;
             }
 
@@ -1705,10 +1661,8 @@ void main()
                 CH554UART1SendByte(IO_DEBUG); // Send DEBUG mode header
                 CH554UART1SendByte(Ep4ByteLen); // Send length (always 64 bytes)
                 // CH554UART1SendBuffer(UartTxBuf, Ep4ByteLen);
-                // CH554UART1SendBuffer(UartTxBuf4, Ep4ByteLen);
                 CH554UART1SendBuffer(Ep0Buffer+64, Ep4ByteLen);
                 UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 4 to ACK again
-                // UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
                 UsbEp4ByteCount = 0;
             }
 
@@ -1951,10 +1905,6 @@ void main()
             // Check if we should upload data to Endpoint 2 (CDC)
             if (CdcDataAvailable && !Endpoint2UploadBusy) {
 
-                // UEP0_CTRL = UEP_R_RES_NAK | UEP_T_RES_NAK;
-                FrameBuf[0] = (irq_count >> 8) & 0xFF;
-                FrameBuf[1] = irq_count & 0xFF;
-
                 // Write upload endpoint
                 memcpy(Ep2Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 2 */
                        FrameBuf,
@@ -1963,27 +1913,6 @@ void main()
                 Endpoint2UploadBusy = 1; // Set busy flag
                 UEP2_T_LEN = FrameBufLength; // Set the number of data bytes that Endpoint 2 is ready to send
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-
-                // Write framebuf to UART?
-                // Is FrameBuf corrupted
-                //
-                //
-                
-                // Write upload endpoint
-                memset(FrameBuf+2, 0x00, 64-2);
-                // FrameBuf[0] = (irq_count >> 8) & 0xFF;
-                // FrameBuf[1] = irq_count & 0xFF;
-
-                memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
-                       FrameBuf,
-                       MAX_PACKET_SIZE);
-
-                Endpoint3UploadBusy = 1; // Set busy flag
-                UEP3_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 3 is ready to send
-                UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-                
-                // Write framebuf to UART?
-
 
                 if (FrameBufLength == 64) {
                     // Terminate all 64-byte frames
