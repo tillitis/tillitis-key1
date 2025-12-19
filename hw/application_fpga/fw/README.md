@@ -520,6 +520,8 @@ The domain byte is constructed from the following information:
 
 - App digest or `measured_id` was used to calculate CDI.
 - USS was used, or not used, to calculate the CDI.
+- The app was loaded from client, flash slot 0, or
+  flash slot 1.
 
 In an ideal world, software would never be able to read UDS at all and
 we would have a BLAKE2s function in hardware that would be the only

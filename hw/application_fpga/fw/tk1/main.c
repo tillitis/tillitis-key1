@@ -44,6 +44,13 @@ static volatile struct reset *resetinfo    = (volatile struct reset *)TK1_MMIO_R
 
 struct partition_table_storage part_table_storage;
 
+enum app_source {
+	APP_SRC_NONE = 0,
+	APP_SRC_FLASH0 = 1,
+	APP_SRC_FLASH1 = 2,
+	APP_SRC_CLIENT = 3,
+};
+
 // Context for the loading of a TKey program
 struct context {
 	uint32_t left;	    // Bytes left to receive
@@ -53,7 +60,8 @@ struct context {
 	uint8_t uss[32];    // User Supplied Secret, if any
 	uint8_t flash_slot; // App is loaded from flash slot number
 	/*@null@*/ volatile uint8_t
-	    *ver_digest; // Verify loaded app against this digest
+	    *ver_digest;	 // Verify loaded app against this digest
+	enum app_source app_src; // Where app was loaded from
 };
 
 static void print_hw_version(void);
@@ -472,34 +480,40 @@ static enum state start_where(struct context *ctx)
 		// fallthrough
 	case START_FLASH0:
 		ctx->flash_slot = 0;
+		ctx->app_src = APP_SRC_FLASH0;
 		ctx->ver_digest = mgmt_app_allowed_digest();
 
 		return FW_STATE_LOAD_FLASH_MGMT;
 
 	case START_FLASH1:
 		ctx->flash_slot = 1;
+		ctx->app_src = APP_SRC_FLASH1;
 		ctx->ver_digest = NULL;
 
 		return FW_STATE_LOAD_FLASH;
 
 	case START_FLASH0_VER:
 		ctx->flash_slot = 0;
+		ctx->app_src = APP_SRC_FLASH0;
 		ctx->ver_digest = resetinfo->app_digest;
 
 		return FW_STATE_LOAD_FLASH;
 
 	case START_FLASH1_VER:
 		ctx->flash_slot = 1;
+		ctx->app_src = APP_SRC_FLASH1;
 		ctx->ver_digest = resetinfo->app_digest;
 
 		return FW_STATE_LOAD_FLASH;
 
 	case START_CLIENT:
+		ctx->app_src = APP_SRC_CLIENT;
 		ctx->ver_digest = NULL;
 
 		return FW_STATE_WAITCOMMAND;
 
 	case START_CLIENT_VER:
+		ctx->app_src = APP_SRC_CLIENT;
 		ctx->ver_digest = resetinfo->app_digest;
 
 		return FW_STATE_WAITCOMMAND;
@@ -606,7 +620,7 @@ int main(void)
 			// or, if RESET_SEED is set,
 			//
 			// CDI = hash(uds, domain, measured_id, uss)
-			uint8_t domain = 0;
+			uint8_t domain = ctx.app_src;
 			domain |= ctx.use_uss ? DOMAIN_USS_MASK : 0;
 
 			if (resetinfo->mask & RESET_SEED) {
