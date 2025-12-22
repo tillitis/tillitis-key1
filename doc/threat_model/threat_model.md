@@ -15,21 +15,37 @@ Handbook](https://dev.tillitis.se/), [the firmware
 documentation](../../hw/application_fpga/fw/README.md) or [the top
 level hardware documentation](../../hw/application_fpga/README.md).
 
-The threat model tries to capture and describe the threats that needs
-to be mitigated in order for the device app to work in a secure and
+The threat model tries to describe the threats that needs to be
+mitigated in order for the device app to work in a secure and
 trustworthy manner.
 
-Note that the threat model and the mitigations (see below) applies to
-TKey Unlocked devices too as long as they have been provisioned with:
+### TKey Unlocked
 
-- the bitstream from the release,
+The TKey comes in two versions: the ordinary TKey for general use and
+the TKey Unlocked. The Unlocked is for people who want to provision
+the bitstream themselves, either because they want to choose the
+Unique Device Secret themselves or want to change the hardware design
+or the firmware.
+
+This threat model and the mitigations listed applies to unlocked
+devices too as long as they have been provisioned with:
+
+- the bitstream from the official release,
 - a unique, random UDS,
 - a unique UDI
 
-The configuration must have been written into the NVCM and
-locked by blowing the fuses.
+The configuration must have been written into the NVCM and locked by
+blowing the fuses.
+
+XXX: Might need to remove above if we rely on new casing as
+mitigations in the threat model.
 
 ## Assumptions
+
+- The security boundary is the FPGA itself. The client, the CH552 USB
+  controller, and the flash chip, are outside of the security
+  boundary, even if we make our best efforts to secure them they are
+  basically outside of our control.
 
 - There are no backdoors or vulnerabilities in Lattice iCE40 UltraPlus
   FPGA devices that allow external access to the internal
@@ -44,9 +60,6 @@ locked by blowing the fuses.
   attack which allows an attacker with physical access to load a FPGA
   configuration even though the NVCM has been programmed and locked.
 
-MC: There is? Where is this attack described? Is this really one of
-our assumptions?
-
 - The FPGA development toolchain, including YoSys, NextPnR and
   IceStorm generates a correct design, and also does not inject
   hardware exfiltration mechanisms in the generated bitstream.
@@ -54,7 +67,7 @@ our assumptions?
 - The end user is not an attacker. The end user at least doesn't
   knowingly aid the attacker in attacks on their device.
 
-## Assets & basic threats against them
+## Assets
 
 - UDS - Unique Device Secret. 
 
@@ -76,8 +89,6 @@ our assumptions?
 
   Provisioned by the user from the client during loading of the device
   app. Should not be revealed to a third party.
-
-  Threat: Leak.
 
 - CDI - Compound Device Identity. 
 
@@ -114,7 +125,9 @@ our assumptions?
   
 - Preloaded apps
 
-  Threat: 
+  The TKey comes with two preloaded apps stored in slot 0 and slot 1,
+  the boot verifier and the FIDO2 app. By default they are started in
+  a chain.
 
 ## Threats and mitigations
 
@@ -143,7 +156,10 @@ Mitigation:
 
 ### General memory map attacks
 
-Threat: Illegal execution or illegal access.
+Threats:
+
+- Illegal execution.
+- Illegal access.
 
 Mitigation: 
 
@@ -182,6 +198,10 @@ Mitigations:
   predictable cycles, it randomizes when the UDS handling takes place
   using the TRNG.
 
+- UDS is generated and provisioned in an airgapped environment. It's
+  kept only until the bitstream for that particular device is
+  provisioned and then deleted.
+  
 ### UDI
 
 Threats:
@@ -223,7 +243,10 @@ Mitigations:
 
 ### CDI
 
-Threat: Leaking or changed by device app.
+Threats:
+
+- Leaking.
+- Changing by device app.
 
 Mitigations:
 
@@ -269,7 +292,7 @@ Mitigation:
 
 ### Filesystem partition table
 
-Threat: Corruption or malicious change.
+Threats: Corruption or malicious change.
 
 Mitigations:
 
@@ -283,20 +306,37 @@ Mitigations:
   access, breaking of the case, and accessing the flash directly,
   which is currently out of scope.
 
-### Firmware memory
+### Firmware memory (`FW_RAM`)
 
-Threat: Leaking sensitive data. Execution.
+Threats: 
+
+- Leaking sensitive data. 
+- Execution.
 
 Mitigation:
 
+- The entire `FW_RAM` is cleared when the FPGA is powered up and the
+  FPGA is configured.
+  
+  XXX but it is not cleared by hardware after each reset?
+
+  TODO: Perhaps the firmware should clear the `FW_RAM` before doing a
+  reset.
+
+- The firmware's stack in `FW_RAM` is cleared by firmware before
+  jumping to an app.
+
 - Firmware memory is hardware protected by the current execution mode.
-  It is only available in firmware mode.
+  It is only available for reading and writing in firmware mode.
 
 - It is at all times protected by hardware against execution.
 
 ### RAM
 
-Threat: Execution of writable areas. Reading out externally.
+Threats: 
+
+- Leaking sensitive data.
+- Execution of writable areas. 
 
 Mitigation:
 
@@ -306,11 +346,18 @@ Mitigation:
 
 - Writable: No protection.
 
-- Reading externally: Firmware turns on a hardware assisted RAM
-  address and data scrambling mechanisms. It makes it harder for an
-  outside attacker to find assets generated by and stored in the RAM
-  by applications. Note that this mitigates an attack from outside the
-  CPU, not from an exploit towards applications running on it.
+- Leaking: Firmware fills entire RAM with random data at startup to
+  ensure that any rests of data that might have been present are
+  wiped.
+
+- Leaking: Firmware turns on a hardware assisted RAM address and data
+  scrambling mechanism. This makes it harder for an outside attacker
+  to find assets generated by and stored in the RAM by applications.
+  Note that this mitigates an attack from outside the CPU, not from an
+  exploit towards applications running on it.
+
+  The address and data scrambling is initiated with different
+  randomness from the TRNG at each start of the firmware.
 
 ### Firmware mode
 
@@ -409,14 +456,17 @@ Mitigation:
 
 - Leakage and glitching attacks including:
 
-  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU
+  - Faulting of the execution by the CPU in the FPGA and the CH552
+    MCU.
 
-  - EM leakage
+  - EM leakage.
 
 - Warm boot attacks. It should be hard to successfully perform against
   the TKey, but the attack is not yet fully mitigated.
 
 - Attacks on the TKey device apps.
+
+- Attacks on anything outside the FPGA chip.
 
 ## Threat Actors - The bad guys
 
