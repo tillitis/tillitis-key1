@@ -1576,426 +1576,429 @@ void main()
 
             // Check if Endpoint 2 (CDC) has received data
             if (UsbEp2ByteCount) {
-                Ep2ByteLen = UsbEp2ByteCount; // UsbEp2ByteCount can be maximum 64 bytes
-                memcpy(UartTxBuf, Ep2Buffer, Ep2ByteLen);
+                // Write upload endpoint
+                memcpy(Ep2Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 2 */
+                       Ep2Buffer,
+                       UsbEp2ByteCount);
+
+                Endpoint2UploadBusy = 1; // Set busy flag
+                UEP2_T_LEN = UsbEp2ByteCount; // Set the number of data bytes that Endpoint 2 is ready to send
+                UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
 
                 UsbEp2ByteCount = 0;
-                CH554UART1SendByte(IO_CDC);  // Send CDC mode header
-                CH554UART1SendByte(Ep2ByteLen);  // Send length
-                CH554UART1SendBuffer(UartTxBuf, Ep2ByteLen);
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 2 to ACK again
             }
 
-            // Check if Endpoint 3 (FIDO or CCID) has received data
-            if (UsbEp3ByteCount) {
-                Ep3ByteLen = UsbEp3ByteCount; // UsbEp3ByteCount can be maximum 64 bytes
-                memcpy(UartTxBuf, Ep3Buffer, Ep3ByteLen);
+            // // Check if Endpoint 3 (FIDO or CCID) has received data
+            // if (UsbEp3ByteCount) {
+            //     Ep3ByteLen = UsbEp3ByteCount; // UsbEp3ByteCount can be maximum 64 bytes
+            //     memcpy(UartTxBuf, Ep3Buffer, Ep3ByteLen);
+            //
+            //     UsbEp3ByteCount = 0;
+            //     if (ActiveEndpoints & IO_FIDO) {
+            //         CH554UART1SendByte(IO_FIDO); // Send FIDO mode header
+            //     } else if (ActiveEndpoints & IO_CCID) {
+            //         CH554UART1SendByte(IO_CCID); // Send CCID mode header
+            //     }
+            //     CH554UART1SendByte(Ep3ByteLen); // Send length (always 64 bytes for FIDO, variable for CCID)
+            //     CH554UART1SendBuffer(UartTxBuf, Ep3ByteLen);
+            //     UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 3 to ACK again
+            // }
+            //
+            // // Check if Endpoint 4 (DEBUG) has received data
+            // if (UsbEp4ByteCount) {
+            //     Ep4ByteLen = UsbEp4ByteCount; // UsbEp4ByteCount can be maximum 64 bytes
+            //     memcpy(UartTxBuf, Ep0Buffer+64, Ep4ByteLen); // Endpoint 4 receive is at address UEP0_DMA+64
+            //
+            //     UsbEp4ByteCount = 0;
+            //     CH554UART1SendByte(IO_DEBUG); // Send DEBUG mode header
+            //     CH554UART1SendByte(Ep4ByteLen); // Send length (always 64 bytes)
+            //     CH554UART1SendBuffer(UartTxBuf, Ep4ByteLen);
+            //     UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 4 to ACK again
+            // }
 
-                UsbEp3ByteCount = 0;
-                if (ActiveEndpoints & IO_FIDO) {
-                    CH554UART1SendByte(IO_FIDO); // Send FIDO mode header
-                } else if (ActiveEndpoints & IO_CCID) {
-                    CH554UART1SendByte(IO_CCID); // Send CCID mode header
-                }
-                CH554UART1SendByte(Ep3ByteLen); // Send length (always 64 bytes for FIDO, variable for CCID)
-                CH554UART1SendBuffer(UartTxBuf, Ep3ByteLen);
-                UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 3 to ACK again
-            }
-
-            // Check if Endpoint 4 (DEBUG) has received data
-            if (UsbEp4ByteCount) {
-                Ep4ByteLen = UsbEp4ByteCount; // UsbEp4ByteCount can be maximum 64 bytes
-                memcpy(UartTxBuf, Ep0Buffer+64, Ep4ByteLen); // Endpoint 4 receive is at address UEP0_DMA+64
-
-                UsbEp4ByteCount = 0;
-                CH554UART1SendByte(IO_DEBUG); // Send DEBUG mode header
-                CH554UART1SendByte(Ep4ByteLen); // Send length (always 64 bytes)
-                CH554UART1SendBuffer(UartTxBuf, Ep4ByteLen);
-                UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 4 to ACK again
-            }
-
-            UartRxBufByteCount = uart_byte_count(); // Check amount of data in buffer
-
-            if ((UartRxBufByteCount >= 2) && !FrameStarted) {  // If we have data and the header is not yet validated
-                FrameMode = UartRxBuf[UartRxBufOutputPointer]; // Extract frame mode
-                if ((FrameMode == IO_CDC)   ||
-                    (FrameMode == IO_FIDO)  ||
-                    (FrameMode == IO_CCID)  ||
-                    (FrameMode == IO_DEBUG) ||
-                    (FrameMode == IO_CH552)) {
-
-                    FrameLength = UartRxBuf[increment_pointer(UartRxBufOutputPointer,
-                                                              1,
-                                                              UART_RX_BUF_SIZE)]; // Extract frame length
-                    FrameRemainingBytes = FrameLength;
-                    UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                               2,
-                                                               UART_RX_BUF_SIZE); // Start at valid data so skip the mode and length byte
-                    UartRxBufByteCount -= 2; // Subtract the frame mode and frame length bytes from the total byte count
-                    FrameStarted = 1;
-
-                    // Mark that we should discard data if destination for the frame is not active
-                    if ((FrameMode & ActiveEndpoints) == 0) {
-                        FrameDiscard = 1;
-                    }
-
-                } else { // Invalid frame mode
-
-                    cts_stop();
-
-                    // Reset CH552 to start from a known state
-                    SAFE_MOD = 0x55;
-                    SAFE_MOD = 0xAA;
-                    GLOBAL_CFG = bSW_RESET;
-                    while (1)
-                        ;
-                }
-            }
-
-            // Copy CDC data from UartRxBuf to FrameBuf
-            if (FrameStarted && !FrameDiscard && !CdcDataAvailable) {
-                if (FrameMode == IO_CDC) {
-                    if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
-                        (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
-                        circular_copy(FrameBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      MAX_FRAME_SIZE);
-                        FrameBufLength = MAX_FRAME_SIZE;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_FRAME_SIZE,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= MAX_FRAME_SIZE;
-                        CdcDataAvailable = 1;
-                        cts_start();
-                    }
-                    else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
-                             (UartRxBufByteCount >= FrameRemainingBytes)) {
-                        circular_copy(FrameBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      FrameRemainingBytes);
-                        FrameBufLength = FrameRemainingBytes;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   FrameRemainingBytes,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= FrameRemainingBytes;
-                        CdcDataAvailable = 1;
-                        cts_start();
-                    }
-                }
-            }
-
-            // Copy FIDO data from UartRxBuf to FrameBuf
-            if (FrameStarted && !FrameDiscard && !FidoDataAvailable) {
-                if (FrameMode == IO_FIDO) {
-                    if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
-                        (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
-                        circular_copy(FrameBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      MAX_FRAME_SIZE);
-                        FrameBufLength = MAX_FRAME_SIZE;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_FRAME_SIZE,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= MAX_FRAME_SIZE;
-                        FidoDataAvailable = 1;
-                        cts_start();
-                    }
-                }
-            }
-
-            // Copy CCID data from UartRxBuf to FrameBuf
-            if (FrameStarted && !FrameDiscard && !CcidDataAvailable) {
-                if (FrameMode == IO_CCID) {
-                    if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
-                        (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
-                        circular_copy(FrameBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      MAX_FRAME_SIZE);
-                        FrameBufLength = MAX_FRAME_SIZE;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_FRAME_SIZE,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= MAX_FRAME_SIZE;
-                        CcidDataAvailable = 1;
-                        cts_start();
-                    }
-                    else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
-                             (UartRxBufByteCount >= FrameRemainingBytes)) {
-                        circular_copy(FrameBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      FrameRemainingBytes);
-                        FrameBufLength = FrameRemainingBytes;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   FrameRemainingBytes,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= FrameRemainingBytes;
-                        CcidDataAvailable = 1;
-                        cts_start();
-                    }
-                }
-            }
-
-            // Copy DEBUG data from UartRxBuf to FrameBuf
-            if (FrameStarted && !FrameDiscard && !DebugDataAvailable) {
-                if (FrameMode == IO_DEBUG) {
-                    if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
-                        (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
-                        circular_copy(FrameBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      MAX_FRAME_SIZE);
-                        FrameBufLength = MAX_FRAME_SIZE;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_FRAME_SIZE,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= MAX_FRAME_SIZE;
-                        DebugDataAvailable = 1;
-                        cts_start();
-                    }
-                    else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
-                             (UartRxBufByteCount >= FrameRemainingBytes)) {
-                        circular_copy(FrameBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      FrameRemainingBytes);
-                        FrameBufLength = FrameRemainingBytes;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   FrameRemainingBytes,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= FrameRemainingBytes;
-                        DebugDataAvailable = 1;
-                        cts_start();
-                    }
-                }
-            }
-
-            // Copy CH552 data from UartRxBuf to FrameBuf
-            if (FrameStarted && !FrameDiscard && !CH552DataAvailable) {
-                if (FrameMode == IO_CH552) {
-                    if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
-                        (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
-                        circular_copy(FrameBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      MAX_FRAME_SIZE);
-                        FrameBufLength = MAX_FRAME_SIZE;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_FRAME_SIZE,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= MAX_FRAME_SIZE;
-                        CH552DataAvailable = 1;
-                        cts_start();
-                    }
-                    else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
-                             (UartRxBufByteCount >= FrameRemainingBytes)) {
-                        circular_copy(FrameBuf,
-                                      UartRxBuf,
-                                      UART_RX_BUF_SIZE,
-                                      UartRxBufOutputPointer,
-                                      FrameRemainingBytes);
-                        FrameBufLength = FrameRemainingBytes;
-                        // Update output pointer
-                        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   FrameRemainingBytes,
-                                                                   UART_RX_BUF_SIZE);
-                        FrameRemainingBytes -= FrameRemainingBytes;
-                        CH552DataAvailable = 1;
-                        cts_start();
-                    }
-                }
-            }
-
-            // Discard frame
-            if (FrameStarted && FrameDiscard && !DiscardDataAvailable) {
-                if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
-                    (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
-                    // Update output pointer
-                    UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                               MAX_FRAME_SIZE,
-                                                               UART_RX_BUF_SIZE);
-                    FrameRemainingBytes -= MAX_FRAME_SIZE;
-                    DiscardDataAvailable = 1;
-                    cts_start();
-                }
-                else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
-                        (UartRxBufByteCount >= FrameRemainingBytes)) {
-                    // Update output pointer
-                    UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                               FrameRemainingBytes,
-                                                               UART_RX_BUF_SIZE);
-                    FrameRemainingBytes -= FrameRemainingBytes;
-                    DiscardDataAvailable = 1;
-                    cts_start();
-                }
-            }
-
-            // Check if we should upload data to Endpoint 2 (CDC)
-            if (CdcDataAvailable && !Endpoint2UploadBusy) {
-
-                // Write upload endpoint
-                memcpy(Ep2Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 2 */
-                       FrameBuf,
-                       FrameBufLength);
-
-                Endpoint2UploadBusy = 1; // Set busy flag
-                UEP2_T_LEN = FrameBufLength; // Set the number of data bytes that Endpoint 2 is ready to send
-                UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-
-                if (FrameBufLength == 64) {
-                    // Terminate all 64-byte frames
-                    CdcSendZeroLenPacket = 1;
-                }
-
-                CdcDataAvailable = 0;
-                FrameBufLength = 0;
-
-                if (FrameRemainingBytes == 0) {
-                    // Complete frame sent, get next header and data
-                    FrameStarted = 0;
-                }
-            }
-
-            if (CdcSendZeroLenPacket && !Endpoint2UploadBusy) {
-                // Transmit zero-length packet to terminate 64-byte frames
-                // Only applicable to CDC (bulk transfers)
-
-                Endpoint2UploadBusy = 1; // Set busy flag
-                UEP2_T_LEN = 0; // Set the number of data bytes that Endpoint 2 is ready to send
-                UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-                CdcSendZeroLenPacket = 0;
-            }
-
-            // Check if we should upload data to Endpoint 3 (FIDO)
-            if (FidoDataAvailable && !Endpoint3UploadBusy) {
-
-                // Write upload endpoint
-                memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
-                       FrameBuf,
-                       FrameBufLength);
-
-                Endpoint3UploadBusy = 1; // Set busy flag
-                UEP3_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 3 is ready to send
-                UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-
-                FidoDataAvailable = 0;
-                FrameBufLength = 0;
-
-                // Get next header and data
-                FrameStarted = 0;
-            }
-
-            // Check if we should upload data to Endpoint 3 (CCID)
-            if (CcidDataAvailable && !Endpoint3UploadBusy) {
-
-                // Write upload endpoint
-                memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
-                       FrameBuf,
-                       FrameBufLength);
-
-                Endpoint3UploadBusy = 1; // Set busy flag
-                UEP3_T_LEN = FrameBufLength; // Set the number of data bytes that Endpoint 3 is ready to send
-                UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-
-                CcidDataAvailable = 0;
-                FrameBufLength = 0;
-
-                // Get next header and data
-                FrameStarted = 0;
-            }
-
-            // Check if we should upload data to Endpoint 4 (DEBUG)
-            if (DebugDataAvailable && !Endpoint4UploadBusy) {
-
-                if (FrameBufLength == MAX_PACKET_SIZE) {
-                    // Write upload endpoint
-                    memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
-                           FrameBuf,
-                           FrameBufLength);
-                } else {
-                    memset(Ep0Buffer + 128, 0, MAX_PACKET_SIZE);
-                    // Write upload endpoint
-                    memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
-                           FrameBuf,
-                           FrameBufLength);
-                }
-
-                Endpoint4UploadBusy = 1; // Set busy flag
-                UEP4_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 4 is ready to send
-                UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
-
-                DebugDataAvailable = 0;
-                FrameBufLength = 0;
-
-                if (FrameRemainingBytes == 0) {
-                    // Complete frame sent, get next header and data
-                    FrameStarted = 0;
-                }
-            }
-
-            // Check if we should handle CH552 data
-            if (CH552DataAvailable) {
-
-                // Check command range
-                if (FrameBuf[0] < CH552_CMD_MAX) {
-                    switch (FrameBuf[0]) {
-                    case SET_ENDPOINTS:
-                        cts_stop(); // Stop UART data from FPGA
-                        RESET_KEEP = FrameBuf[1]; // Save endpoints to persistent register
-                        SAFE_MOD = 0x55; // Start reset sequence
-                        SAFE_MOD = 0xAA;
-                        GLOBAL_CFG = bSW_RESET;
-                        while (1)
-                            ;
-                        break;
-                    default:
-                        break;
-                    } // END switch(FrameBuf[0])
-                }
-
-                CH552DataAvailable = 0;
-                FrameBufLength = 0;
-
-                memset(FrameBuf, 0, MAX_FRAME_SIZE);
-
-                if (FrameRemainingBytes == 0) {
-                    // Complete frame sent, get next header and data
-                    FrameStarted = 0;
-                }
-            }
-
-            if (DiscardDataAvailable) {
-
-                DiscardDataAvailable = 0;
-                printStr("Frame discarded!\n");
-
-                if (FrameRemainingBytes == 0) {
-                    // Complete frame discarded, get next header and data
-                    FrameStarted = 0;
-                    // Stop discarding frames
-                    FrameDiscard = 0;
-                }
-            }
+            // UartRxBufByteCount = uart_byte_count(); // Check amount of data in buffer
+            //
+            // if ((UartRxBufByteCount >= 2) && !FrameStarted) {  // If we have data and the header is not yet validated
+            //     FrameMode = UartRxBuf[UartRxBufOutputPointer]; // Extract frame mode
+            //     if ((FrameMode == IO_CDC)   ||
+            //         (FrameMode == IO_FIDO)  ||
+            //         (FrameMode == IO_CCID)  ||
+            //         (FrameMode == IO_DEBUG) ||
+            //         (FrameMode == IO_CH552)) {
+            //
+            //         FrameLength = UartRxBuf[increment_pointer(UartRxBufOutputPointer,
+            //                                                   1,
+            //                                                   UART_RX_BUF_SIZE)]; // Extract frame length
+            //         FrameRemainingBytes = FrameLength;
+            //         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                    2,
+            //                                                    UART_RX_BUF_SIZE); // Start at valid data so skip the mode and length byte
+            //         UartRxBufByteCount -= 2; // Subtract the frame mode and frame length bytes from the total byte count
+            //         FrameStarted = 1;
+            //
+            //         // Mark that we should discard data if destination for the frame is not active
+            //         if ((FrameMode & ActiveEndpoints) == 0) {
+            //             FrameDiscard = 1;
+            //         }
+            //
+            //     } else { // Invalid frame mode
+            //
+            //         cts_stop();
+            //
+            //         // Reset CH552 to start from a known state
+            //         SAFE_MOD = 0x55;
+            //         SAFE_MOD = 0xAA;
+            //         GLOBAL_CFG = bSW_RESET;
+            //         while (1)
+            //             ;
+            //     }
+            // }
+            //
+            // // Copy CDC data from UartRxBuf to FrameBuf
+            // if (FrameStarted && !FrameDiscard && !CdcDataAvailable) {
+            //     if (FrameMode == IO_CDC) {
+            //         if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+            //             (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
+            //             circular_copy(FrameBuf,
+            //                           UartRxBuf,
+            //                           UART_RX_BUF_SIZE,
+            //                           UartRxBufOutputPointer,
+            //                           MAX_FRAME_SIZE);
+            //             FrameBufLength = MAX_FRAME_SIZE;
+            //             // Update output pointer
+            //             UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                        MAX_FRAME_SIZE,
+            //                                                        UART_RX_BUF_SIZE);
+            //             FrameRemainingBytes -= MAX_FRAME_SIZE;
+            //             CdcDataAvailable = 1;
+            //             cts_start();
+            //         }
+            //         else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
+            //                  (UartRxBufByteCount >= FrameRemainingBytes)) {
+            //             circular_copy(FrameBuf,
+            //                           UartRxBuf,
+            //                           UART_RX_BUF_SIZE,
+            //                           UartRxBufOutputPointer,
+            //                           FrameRemainingBytes);
+            //             FrameBufLength = FrameRemainingBytes;
+            //             // Update output pointer
+            //             UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                        FrameRemainingBytes,
+            //                                                        UART_RX_BUF_SIZE);
+            //             FrameRemainingBytes -= FrameRemainingBytes;
+            //             CdcDataAvailable = 1;
+            //             cts_start();
+            //         }
+            //     }
+            // }
+            //
+            // // Copy FIDO data from UartRxBuf to FrameBuf
+            // if (FrameStarted && !FrameDiscard && !FidoDataAvailable) {
+            //     if (FrameMode == IO_FIDO) {
+            //         if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+            //             (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
+            //             circular_copy(FrameBuf,
+            //                           UartRxBuf,
+            //                           UART_RX_BUF_SIZE,
+            //                           UartRxBufOutputPointer,
+            //                           MAX_FRAME_SIZE);
+            //             FrameBufLength = MAX_FRAME_SIZE;
+            //             // Update output pointer
+            //             UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                        MAX_FRAME_SIZE,
+            //                                                        UART_RX_BUF_SIZE);
+            //             FrameRemainingBytes -= MAX_FRAME_SIZE;
+            //             FidoDataAvailable = 1;
+            //             cts_start();
+            //         }
+            //     }
+            // }
+            //
+            // // Copy CCID data from UartRxBuf to FrameBuf
+            // if (FrameStarted && !FrameDiscard && !CcidDataAvailable) {
+            //     if (FrameMode == IO_CCID) {
+            //         if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+            //             (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
+            //             circular_copy(FrameBuf,
+            //                           UartRxBuf,
+            //                           UART_RX_BUF_SIZE,
+            //                           UartRxBufOutputPointer,
+            //                           MAX_FRAME_SIZE);
+            //             FrameBufLength = MAX_FRAME_SIZE;
+            //             // Update output pointer
+            //             UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                        MAX_FRAME_SIZE,
+            //                                                        UART_RX_BUF_SIZE);
+            //             FrameRemainingBytes -= MAX_FRAME_SIZE;
+            //             CcidDataAvailable = 1;
+            //             cts_start();
+            //         }
+            //         else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
+            //                  (UartRxBufByteCount >= FrameRemainingBytes)) {
+            //             circular_copy(FrameBuf,
+            //                           UartRxBuf,
+            //                           UART_RX_BUF_SIZE,
+            //                           UartRxBufOutputPointer,
+            //                           FrameRemainingBytes);
+            //             FrameBufLength = FrameRemainingBytes;
+            //             // Update output pointer
+            //             UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                        FrameRemainingBytes,
+            //                                                        UART_RX_BUF_SIZE);
+            //             FrameRemainingBytes -= FrameRemainingBytes;
+            //             CcidDataAvailable = 1;
+            //             cts_start();
+            //         }
+            //     }
+            // }
+            //
+            // // Copy DEBUG data from UartRxBuf to FrameBuf
+            // if (FrameStarted && !FrameDiscard && !DebugDataAvailable) {
+            //     if (FrameMode == IO_DEBUG) {
+            //         if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+            //             (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
+            //             circular_copy(FrameBuf,
+            //                           UartRxBuf,
+            //                           UART_RX_BUF_SIZE,
+            //                           UartRxBufOutputPointer,
+            //                           MAX_FRAME_SIZE);
+            //             FrameBufLength = MAX_FRAME_SIZE;
+            //             // Update output pointer
+            //             UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                        MAX_FRAME_SIZE,
+            //                                                        UART_RX_BUF_SIZE);
+            //             FrameRemainingBytes -= MAX_FRAME_SIZE;
+            //             DebugDataAvailable = 1;
+            //             cts_start();
+            //         }
+            //         else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
+            //                  (UartRxBufByteCount >= FrameRemainingBytes)) {
+            //             circular_copy(FrameBuf,
+            //                           UartRxBuf,
+            //                           UART_RX_BUF_SIZE,
+            //                           UartRxBufOutputPointer,
+            //                           FrameRemainingBytes);
+            //             FrameBufLength = FrameRemainingBytes;
+            //             // Update output pointer
+            //             UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                        FrameRemainingBytes,
+            //                                                        UART_RX_BUF_SIZE);
+            //             FrameRemainingBytes -= FrameRemainingBytes;
+            //             DebugDataAvailable = 1;
+            //             cts_start();
+            //         }
+            //     }
+            // }
+            //
+            // // Copy CH552 data from UartRxBuf to FrameBuf
+            // if (FrameStarted && !FrameDiscard && !CH552DataAvailable) {
+            //     if (FrameMode == IO_CH552) {
+            //         if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+            //             (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
+            //             circular_copy(FrameBuf,
+            //                           UartRxBuf,
+            //                           UART_RX_BUF_SIZE,
+            //                           UartRxBufOutputPointer,
+            //                           MAX_FRAME_SIZE);
+            //             FrameBufLength = MAX_FRAME_SIZE;
+            //             // Update output pointer
+            //             UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                        MAX_FRAME_SIZE,
+            //                                                        UART_RX_BUF_SIZE);
+            //             FrameRemainingBytes -= MAX_FRAME_SIZE;
+            //             CH552DataAvailable = 1;
+            //             cts_start();
+            //         }
+            //         else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
+            //                  (UartRxBufByteCount >= FrameRemainingBytes)) {
+            //             circular_copy(FrameBuf,
+            //                           UartRxBuf,
+            //                           UART_RX_BUF_SIZE,
+            //                           UartRxBufOutputPointer,
+            //                           FrameRemainingBytes);
+            //             FrameBufLength = FrameRemainingBytes;
+            //             // Update output pointer
+            //             UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                        FrameRemainingBytes,
+            //                                                        UART_RX_BUF_SIZE);
+            //             FrameRemainingBytes -= FrameRemainingBytes;
+            //             CH552DataAvailable = 1;
+            //             cts_start();
+            //         }
+            //     }
+            // }
+            //
+            // // Discard frame
+            // if (FrameStarted && FrameDiscard && !DiscardDataAvailable) {
+            //     if ((FrameRemainingBytes >= MAX_FRAME_SIZE) &&
+            //         (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
+            //         // Update output pointer
+            //         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                    MAX_FRAME_SIZE,
+            //                                                    UART_RX_BUF_SIZE);
+            //         FrameRemainingBytes -= MAX_FRAME_SIZE;
+            //         DiscardDataAvailable = 1;
+            //         cts_start();
+            //     }
+            //     else if ((FrameRemainingBytes < MAX_FRAME_SIZE) &&
+            //             (UartRxBufByteCount >= FrameRemainingBytes)) {
+            //         // Update output pointer
+            //         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
+            //                                                    FrameRemainingBytes,
+            //                                                    UART_RX_BUF_SIZE);
+            //         FrameRemainingBytes -= FrameRemainingBytes;
+            //         DiscardDataAvailable = 1;
+            //         cts_start();
+            //     }
+            // }
+            //
+            // // Check if we should upload data to Endpoint 2 (CDC)
+            // if (CdcDataAvailable && !Endpoint2UploadBusy) {
+            //
+            //     // Write upload endpoint
+            //     memcpy(Ep2Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 2 */
+            //            FrameBuf,
+            //            FrameBufLength);
+            //
+            //     Endpoint2UploadBusy = 1; // Set busy flag
+            //     UEP2_T_LEN = FrameBufLength; // Set the number of data bytes that Endpoint 2 is ready to send
+            //     UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
+            //
+            //     if (FrameBufLength == 64) {
+            //         // Terminate all 64-byte frames
+            //         CdcSendZeroLenPacket = 1;
+            //     }
+            //
+            //     CdcDataAvailable = 0;
+            //     FrameBufLength = 0;
+            //
+            //     if (FrameRemainingBytes == 0) {
+            //         // Complete frame sent, get next header and data
+            //         FrameStarted = 0;
+            //     }
+            // }
+            //
+            // if (CdcSendZeroLenPacket && !Endpoint2UploadBusy) {
+            //     // Transmit zero-length packet to terminate 64-byte frames
+            //     // Only applicable to CDC (bulk transfers)
+            //
+            //     Endpoint2UploadBusy = 1; // Set busy flag
+            //     UEP2_T_LEN = 0; // Set the number of data bytes that Endpoint 2 is ready to send
+            //     UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
+            //     CdcSendZeroLenPacket = 0;
+            // }
+            //
+            // // Check if we should upload data to Endpoint 3 (FIDO)
+            // if (FidoDataAvailable && !Endpoint3UploadBusy) {
+            //
+            //     // Write upload endpoint
+            //     memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
+            //            FrameBuf,
+            //            FrameBufLength);
+            //
+            //     Endpoint3UploadBusy = 1; // Set busy flag
+            //     UEP3_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 3 is ready to send
+            //     UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
+            //
+            //     FidoDataAvailable = 0;
+            //     FrameBufLength = 0;
+            //
+            //     // Get next header and data
+            //     FrameStarted = 0;
+            // }
+            //
+            // // Check if we should upload data to Endpoint 3 (CCID)
+            // if (CcidDataAvailable && !Endpoint3UploadBusy) {
+            //
+            //     // Write upload endpoint
+            //     memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
+            //            FrameBuf,
+            //            FrameBufLength);
+            //
+            //     Endpoint3UploadBusy = 1; // Set busy flag
+            //     UEP3_T_LEN = FrameBufLength; // Set the number of data bytes that Endpoint 3 is ready to send
+            //     UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
+            //
+            //     CcidDataAvailable = 0;
+            //     FrameBufLength = 0;
+            //
+            //     // Get next header and data
+            //     FrameStarted = 0;
+            // }
+            //
+            // // Check if we should upload data to Endpoint 4 (DEBUG)
+            // if (DebugDataAvailable && !Endpoint4UploadBusy) {
+            //
+            //     if (FrameBufLength == MAX_PACKET_SIZE) {
+            //         // Write upload endpoint
+            //         memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
+            //                FrameBuf,
+            //                FrameBufLength);
+            //     } else {
+            //         memset(Ep0Buffer + 128, 0, MAX_PACKET_SIZE);
+            //         // Write upload endpoint
+            //         memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
+            //                FrameBuf,
+            //                FrameBufLength);
+            //     }
+            //
+            //     Endpoint4UploadBusy = 1; // Set busy flag
+            //     UEP4_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 4 is ready to send
+            //     UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
+            //
+            //     DebugDataAvailable = 0;
+            //     FrameBufLength = 0;
+            //
+            //     if (FrameRemainingBytes == 0) {
+            //         // Complete frame sent, get next header and data
+            //         FrameStarted = 0;
+            //     }
+            // }
+            //
+            // // Check if we should handle CH552 data
+            // if (CH552DataAvailable) {
+            //
+            //     // Check command range
+            //     if (FrameBuf[0] < CH552_CMD_MAX) {
+            //         switch (FrameBuf[0]) {
+            //         case SET_ENDPOINTS:
+            //             cts_stop(); // Stop UART data from FPGA
+            //             RESET_KEEP = FrameBuf[1]; // Save endpoints to persistent register
+            //             SAFE_MOD = 0x55; // Start reset sequence
+            //             SAFE_MOD = 0xAA;
+            //             GLOBAL_CFG = bSW_RESET;
+            //             while (1)
+            //                 ;
+            //             break;
+            //         default:
+            //             break;
+            //         } // END switch(FrameBuf[0])
+            //     }
+            //
+            //     CH552DataAvailable = 0;
+            //     FrameBufLength = 0;
+            //
+            //     memset(FrameBuf, 0, MAX_FRAME_SIZE);
+            //
+            //     if (FrameRemainingBytes == 0) {
+            //         // Complete frame sent, get next header and data
+            //         FrameStarted = 0;
+            //     }
+            // }
+            //
+            // if (DiscardDataAvailable) {
+            //
+            //     DiscardDataAvailable = 0;
+            //     printStr("Frame discarded!\n");
+            //
+            //     if (FrameRemainingBytes == 0) {
+            //         // Complete frame discarded, get next header and data
+            //         FrameStarted = 0;
+            //         // Stop discarding frames
+            //         FrameDiscard = 0;
+            //     }
+            // }
 
         } /* END if (UsbConfig) */
     } /* END while (1) */
