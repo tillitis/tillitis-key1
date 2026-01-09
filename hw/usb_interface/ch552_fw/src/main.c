@@ -1488,11 +1488,15 @@ void circular_copy(uint8_t *dest, uint8_t *src, uint32_t src_size, uint32_t star
 
     if (length <= remaining_space) {
         // If the length to copy doesn't exceed the remaining space, do a single memcpy
+        EA = 0; // Disable interrupt, memcpy is not reentrant
         memcpy(dest, src + start_pos, length);
+        EA = 1; // Enable interrupts
     } else {
         // If the length to copy exceeds the remaining space, split the copy
+        EA = 0; // Disable interrupt, memcpy is not reentrant
         memcpy(dest, src + start_pos, remaining_space);                // Copy from start_pos to end of buffer
         memcpy(dest + remaining_space, src, length - remaining_space); // Copy the rest from the beginning of buffer
+        EA = 1; // Enable interrupts
     }
 }
 
@@ -1577,7 +1581,9 @@ void main()
             // Check if Endpoint 2 (CDC) has received data
             if (UsbEp2ByteCount) {
                 Ep2ByteLen = UsbEp2ByteCount; // UsbEp2ByteCount can be maximum 64 bytes
+                EA = 0; // Disable interrupt, memcpy is not reentrant
                 memcpy(UartTxBuf, Ep2Buffer, Ep2ByteLen);
+                EA = 1; // Enable interrupts
 
                 UsbEp2ByteCount = 0;
                 CH554UART1SendByte(IO_CDC);  // Send CDC mode header
@@ -1589,7 +1595,9 @@ void main()
             // Check if Endpoint 3 (FIDO or CCID) has received data
             if (UsbEp3ByteCount) {
                 Ep3ByteLen = UsbEp3ByteCount; // UsbEp3ByteCount can be maximum 64 bytes
+                EA = 0; // Disable interrupt, memcpy is not reentrant
                 memcpy(UartTxBuf, Ep3Buffer, Ep3ByteLen);
+                EA = 1; // Enable interrupts
 
                 UsbEp3ByteCount = 0;
                 if (ActiveEndpoints & IO_FIDO) {
@@ -1605,7 +1613,9 @@ void main()
             // Check if Endpoint 4 (DEBUG) has received data
             if (UsbEp4ByteCount) {
                 Ep4ByteLen = UsbEp4ByteCount; // UsbEp4ByteCount can be maximum 64 bytes
+                EA = 0; // Disable interrupt, memcpy is not reentrant
                 memcpy(UartTxBuf, Ep0Buffer+64, Ep4ByteLen); // Endpoint 4 receive is at address UEP0_DMA+64
+                EA = 1; // Enable interrupts
 
                 UsbEp4ByteCount = 0;
                 CH554UART1SendByte(IO_DEBUG); // Send DEBUG mode header
@@ -1854,9 +1864,11 @@ void main()
             if (CdcDataAvailable && !Endpoint2UploadBusy) {
 
                 // Write upload endpoint
+                EA = 0; // Disable interrupt, memcpy is not reentrant
                 memcpy(Ep2Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 2 */
                        FrameBuf,
                        FrameBufLength);
+                EA = 1; // Enable interrupts
 
                 Endpoint2UploadBusy = 1; // Set busy flag
                 UEP2_T_LEN = FrameBufLength; // Set the number of data bytes that Endpoint 2 is ready to send
@@ -1890,9 +1902,11 @@ void main()
             if (FidoDataAvailable && !Endpoint3UploadBusy) {
 
                 // Write upload endpoint
+                EA = 0; // Disable interrupt, memcpy is not reentrant
                 memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
                        FrameBuf,
                        FrameBufLength);
+                EA = 1; // Enable interrupts
 
                 Endpoint3UploadBusy = 1; // Set busy flag
                 UEP3_T_LEN = MAX_PACKET_SIZE; // Set the number of data bytes that Endpoint 3 is ready to send
@@ -1909,9 +1923,11 @@ void main()
             if (CcidDataAvailable && !Endpoint3UploadBusy) {
 
                 // Write upload endpoint
+                EA = 0; // Disable interrupt, memcpy is not reentrant
                 memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
                        FrameBuf,
                        FrameBufLength);
+                EA = 1; // Enable interrupts
 
                 Endpoint3UploadBusy = 1; // Set busy flag
                 UEP3_T_LEN = FrameBufLength; // Set the number of data bytes that Endpoint 3 is ready to send
@@ -1929,15 +1945,19 @@ void main()
 
                 if (FrameBufLength == MAX_PACKET_SIZE) {
                     // Write upload endpoint
+                    EA = 0; // Disable interrupt, memcpy is not reentrant
                     memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
                            FrameBuf,
                            FrameBufLength);
+                    EA = 1; // Enable interrupts
                 } else {
                     memset(Ep0Buffer + 128, 0, MAX_PACKET_SIZE);
                     // Write upload endpoint
+                    EA = 0; // Disable interrupt, memcpy is not reentrant
                     memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
                            FrameBuf,
                            FrameBufLength);
+                    EA = 1; // Enable interrupts
                 }
 
                 Endpoint4UploadBusy = 1; // Set busy flag
