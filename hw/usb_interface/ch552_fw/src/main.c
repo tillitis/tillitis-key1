@@ -1480,6 +1480,19 @@ uint8_t uart_byte_count()
     }
 }
 
+// Local byte-wise copy function.
+// The SDCC mcs51 memcpy() uses fixed registers and is not reentrant, so it can
+// be corrupted if interrupted by an ISR.
+// This implementation is reentrant, given that source and destination buffers
+// are not accessed concurrently. Use this instead of memcpy() if it could be
+// interrupted.
+static void memcpy_local(void *dst, const void *src, uint8_t len)
+{
+    uint8_t *d = dst;
+    const uint8_t *s = src;
+    while (len--) *d++ = *s++;
+}
+
 // Copy data from a circular buffer
 void circular_copy(uint8_t *dest, uint8_t *src, uint32_t src_size, uint32_t start_pos, uint32_t length) {
 
@@ -1488,11 +1501,11 @@ void circular_copy(uint8_t *dest, uint8_t *src, uint32_t src_size, uint32_t star
 
     if (length <= remaining_space) {
         // If the length to copy doesn't exceed the remaining space, do a single memcpy
-        memcpy(dest, src + start_pos, length);
+        memcpy_local(dest, src + start_pos, length);
     } else {
         // If the length to copy exceeds the remaining space, split the copy
-        memcpy(dest, src + start_pos, remaining_space);                // Copy from start_pos to end of buffer
-        memcpy(dest + remaining_space, src, length - remaining_space); // Copy the rest from the beginning of buffer
+        memcpy_local(dest, src + start_pos, remaining_space);                // Copy from start_pos to end of buffer
+        memcpy_local(dest + remaining_space, src, length - remaining_space); // Copy the rest from the beginning of buffer
     }
 }
 
@@ -1577,7 +1590,7 @@ void main()
             // Check if Endpoint 2 (CDC) has received data
             if (UsbEp2ByteCount) {
                 Ep2ByteLen = UsbEp2ByteCount; // UsbEp2ByteCount can be maximum 64 bytes
-                memcpy(UartTxBuf, Ep2Buffer, Ep2ByteLen);
+                memcpy_local(UartTxBuf, Ep2Buffer, Ep2ByteLen);
 
                 UsbEp2ByteCount = 0;
                 CH554UART1SendByte(IO_CDC);  // Send CDC mode header
@@ -1589,7 +1602,7 @@ void main()
             // Check if Endpoint 3 (FIDO or CCID) has received data
             if (UsbEp3ByteCount) {
                 Ep3ByteLen = UsbEp3ByteCount; // UsbEp3ByteCount can be maximum 64 bytes
-                memcpy(UartTxBuf, Ep3Buffer, Ep3ByteLen);
+                memcpy_local(UartTxBuf, Ep3Buffer, Ep3ByteLen);
 
                 UsbEp3ByteCount = 0;
                 if (ActiveEndpoints & IO_FIDO) {
@@ -1605,7 +1618,7 @@ void main()
             // Check if Endpoint 4 (DEBUG) has received data
             if (UsbEp4ByteCount) {
                 Ep4ByteLen = UsbEp4ByteCount; // UsbEp4ByteCount can be maximum 64 bytes
-                memcpy(UartTxBuf, Ep0Buffer+64, Ep4ByteLen); // Endpoint 4 receive is at address UEP0_DMA+64
+                memcpy_local(UartTxBuf, Ep0Buffer+64, Ep4ByteLen); // Endpoint 4 receive is at address UEP0_DMA+64
 
                 UsbEp4ByteCount = 0;
                 CH554UART1SendByte(IO_DEBUG); // Send DEBUG mode header
@@ -1854,7 +1867,7 @@ void main()
             if (CdcDataAvailable && !Endpoint2UploadBusy) {
 
                 // Write upload endpoint
-                memcpy(Ep2Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 2 */
+                memcpy_local(Ep2Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 2 */
                        FrameBuf,
                        FrameBufLength);
 
@@ -1890,7 +1903,7 @@ void main()
             if (FidoDataAvailable && !Endpoint3UploadBusy) {
 
                 // Write upload endpoint
-                memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
+                memcpy_local(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
                        FrameBuf,
                        FrameBufLength);
 
@@ -1909,7 +1922,7 @@ void main()
             if (CcidDataAvailable && !Endpoint3UploadBusy) {
 
                 // Write upload endpoint
-                memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
+                memcpy_local(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
                        FrameBuf,
                        FrameBufLength);
 
@@ -1929,13 +1942,13 @@ void main()
 
                 if (FrameBufLength == MAX_PACKET_SIZE) {
                     // Write upload endpoint
-                    memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
+                    memcpy_local(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
                            FrameBuf,
                            FrameBufLength);
                 } else {
                     memset(Ep0Buffer + 128, 0, MAX_PACKET_SIZE);
                     // Write upload endpoint
-                    memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
+                    memcpy_local(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
                            FrameBuf,
                            FrameBufLength);
                 }
