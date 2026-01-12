@@ -632,11 +632,11 @@ FLASH uint8_t LineCoding[7] = { 0x20, 0xA1, 0x07, 0x00, /* Data terminal rate, i
 
 /** Communication UART */
 XDATA uint8_t UartTxBuf[UART_TX_BUF_SIZE] = { 0 };  // Serial transmit buffer
-volatile IDATA uint8_t Ep2ByteLen;
-volatile IDATA uint8_t Ep3ByteLen;
-volatile IDATA uint8_t Ep4ByteLen;
+IDATA uint8_t Ep2ByteLen;
+IDATA uint8_t Ep3ByteLen;
+IDATA uint8_t Ep4ByteLen;
 
-XDATA uint8_t UartRxBuf[UART_RX_BUF_SIZE] = { 0 };  // Serial receive buffer
+volatile XDATA uint8_t UartRxBuf[UART_RX_BUF_SIZE] = { 0 };  // Serial receive buffer
 volatile IDATA uint8_t UartRxBufInputPointer = 0;   // Circular buffer write pointer, bus reset needs to be initialized to 0
 volatile IDATA uint8_t UartRxBufOutputPointer = 0;  // Take pointer out of circular buffer, bus reset needs to be initialized to 0
 volatile IDATA uint8_t UartRxBufByteCount = 0;      // Number of unprocessed bytes remaining in the buffer
@@ -687,6 +687,7 @@ IDATA uint8_t FrameStarted = 0;
 IDATA uint8_t FrameDiscard = 0;
 IDATA uint8_t DiscardDataAvailable = 0;
 
+static void memcpy_local(void *dst, const void *src, uint8_t len);
 uint32_t increment_pointer(uint32_t pointer, uint32_t increment, uint32_t buffer_size);
 uint32_t decrement_pointer(uint32_t pointer, uint32_t decrement, uint32_t buffer_size);
 void cts_start(void);
