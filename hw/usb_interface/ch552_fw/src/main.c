@@ -682,8 +682,8 @@ IDATA uint8_t FrameDiscard = 0;
 IDATA uint8_t DiscardDataAvailable = 0;
 
 static void memcpy_local(void *dst, const void *src, uint8_t len);
-uint32_t increment_pointer(uint32_t pointer, uint32_t increment, uint32_t buffer_size);
-uint32_t decrement_pointer(uint32_t pointer, uint32_t decrement, uint32_t buffer_size);
+uint8_t increment_pointer(uint8_t pointer, uint8_t increment, uint8_t buffer_size);
+uint8_t decrement_pointer(uint8_t pointer, uint8_t decrement, uint8_t buffer_size);
 void cts_start(void);
 void cts_stop(void);
 void check_cts_stop(void);
@@ -1489,10 +1489,10 @@ static void memcpy_local(void *dst, const void *src, uint8_t len)
 }
 
 // Copy data from a circular buffer
-void circular_copy(uint8_t *dest, uint8_t *src, uint32_t src_size, uint32_t start_pos, uint32_t length) {
+void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t start_pos, uint8_t length) {
 
     // Calculate the remaining space from start_pos to end of buffer
-    uint32_t remaining_space = src_size - start_pos;
+    uint8_t remaining_space = src_size - start_pos;
 
     if (length <= remaining_space) {
         // If the length to copy doesn't exceed the remaining space, do a single memcpy
@@ -1505,13 +1505,13 @@ void circular_copy(uint8_t *dest, uint8_t *src, uint32_t src_size, uint32_t star
 }
 
 // Function to increment a pointer and wrap around the buffer
-uint32_t increment_pointer(uint32_t pointer, uint32_t increment, uint32_t buffer_size)
+uint8_t increment_pointer(uint8_t pointer, uint8_t increment, uint8_t buffer_size)
 {
     return (pointer + increment) % buffer_size;
 }
 
 // Function to decrement a pointer and wrap around the buffer
-uint32_t decrement_pointer(uint32_t pointer, uint32_t decrement, uint32_t buffer_size)
+uint8_t decrement_pointer(uint8_t pointer, uint8_t decrement, uint8_t buffer_size)
 {
     return (pointer + buffer_size - (decrement % buffer_size)) % buffer_size;
 }
