@@ -627,15 +627,9 @@ FLASH uint8_t LineCoding[7] = { 0x20, 0xA1, 0x07, 0x00, /* Data terminal rate, i
                                                   0x08, /* Data bits (5, 6, 7, 8 or 16) */
                                 };
 
-#define UART_TX_BUF_SIZE     64   // Serial transmit buffer
 #define UART_RX_BUF_SIZE     140  // Serial receive buffer
 
 /** Communication UART */
-XDATA uint8_t UartTxBuf[UART_TX_BUF_SIZE] = { 0 };  // Serial transmit buffer
-IDATA uint8_t Ep2ByteLen;
-IDATA uint8_t Ep3ByteLen;
-IDATA uint8_t Ep4ByteLen;
-
 volatile XDATA uint8_t UartRxBuf[UART_RX_BUF_SIZE] = { 0 };  // Serial receive buffer
 volatile IDATA uint8_t UartRxBufInputPointer = 0;   // Circular buffer write pointer, bus reset needs to be initialized to 0
 volatile IDATA uint8_t UartRxBufOutputPointer = 0;  // Take pointer out of circular buffer, bus reset needs to be initialized to 0
@@ -1577,41 +1571,36 @@ void main()
 
             // Check if Endpoint 2 (CDC) has received data
             if (UsbEp2ByteCount) {
-                Ep2ByteLen = UsbEp2ByteCount; // UsbEp2ByteCount can be maximum 64 bytes
-                memcpy(UartTxBuf, Ep2Buffer, Ep2ByteLen);
 
-                UsbEp2ByteCount = 0;
                 CH554UART1SendByte(IO_CDC);  // Send CDC mode header
-                CH554UART1SendByte(Ep2ByteLen);  // Send length
-                CH554UART1SendBuffer(UartTxBuf, Ep2ByteLen);
+                CH554UART1SendByte(UsbEp2ByteCount);  // Send length
+                CH554UART1SendBuffer(Ep2Buffer, UsbEp2ByteCount);
+                UsbEp2ByteCount = 0;
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 2 to ACK again
             }
 
             // Check if Endpoint 3 (FIDO or CCID) has received data
             if (UsbEp3ByteCount) {
-                Ep3ByteLen = UsbEp3ByteCount; // UsbEp3ByteCount can be maximum 64 bytes
-                memcpy(UartTxBuf, Ep3Buffer, Ep3ByteLen);
 
-                UsbEp3ByteCount = 0;
                 if (ActiveEndpoints & IO_FIDO) {
                     CH554UART1SendByte(IO_FIDO); // Send FIDO mode header
                 } else if (ActiveEndpoints & IO_CCID) {
                     CH554UART1SendByte(IO_CCID); // Send CCID mode header
                 }
-                CH554UART1SendByte(Ep3ByteLen); // Send length (always 64 bytes for FIDO, variable for CCID)
-                CH554UART1SendBuffer(UartTxBuf, Ep3ByteLen);
+
+                CH554UART1SendByte(UsbEp3ByteCount); // Send length (always 64 bytes for FIDO, variable for CCID)
+                CH554UART1SendBuffer(Ep3Buffer, UsbEp3ByteCount);
+                UsbEp3ByteCount = 0;
                 UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 3 to ACK again
             }
 
             // Check if Endpoint 4 (DEBUG) has received data
             if (UsbEp4ByteCount) {
-                Ep4ByteLen = UsbEp4ByteCount; // UsbEp4ByteCount can be maximum 64 bytes
-                memcpy(UartTxBuf, Ep0Buffer+64, Ep4ByteLen); // Endpoint 4 receive is at address UEP0_DMA+64
 
-                UsbEp4ByteCount = 0;
                 CH554UART1SendByte(IO_DEBUG); // Send DEBUG mode header
-                CH554UART1SendByte(Ep4ByteLen); // Send length (always 64 bytes)
-                CH554UART1SendBuffer(UartTxBuf, Ep4ByteLen);
+                CH554UART1SendByte(UsbEp4ByteCount); // Send length (always 64 bytes)
+                CH554UART1SendBuffer(Ep0Buffer+64, UsbEp4ByteCount); // Endpoint 4 receive is at address UEP0_DMA+64
+                UsbEp4ByteCount = 0;
                 UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 4 to ACK again
             }
 
