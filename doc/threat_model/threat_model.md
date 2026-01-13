@@ -232,14 +232,17 @@ Mitigations:
   Windows, but this isn't enforced. The protection is weak.
   Keyloggers, especially on X11, would probably be leaking the USS.
   
-- On the device side, the USS is only handled as a digest, not the
-  passphrase the user entered, but this digest is also very sensitive,
-  as it's the actual argument used in the CDI computation, but this
-  means the device app can't leak any passphrase entered by the user.
-  
 - The firmware uses the USS in the CDI computation. The entire memory
   the USS is kept in, `FW_RAM`, is then wiped and made unavailable to
   the device app by hardware protection.
+
+  Since the firmware does the computation, the device app doesn't even
+  see the USS digest.
+
+- On the device side, the USS is only handled as a digest, not the
+  passphrase the user entered, but this digest is also very sensitive,
+  as it's the actual argument used in the CDI computation, but this
+  means the firmware can't leak any passphrase entered by the user.
 
 ### CDI
 
@@ -282,7 +285,7 @@ Mitigations:
 
 - Changing: CDI is protected by hardware. It is only writable in
   firmware mode, not app mode. This protects against an app changing
-  its own CDI.
+  its own CDI to something not measured by the firmware.
 
 ### Vendor public key
 
