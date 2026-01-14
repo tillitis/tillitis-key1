@@ -1489,10 +1489,10 @@ static void memcpy_local(void *dst, const void *src, uint8_t len)
 }
 
 // Copy data from a circular buffer
-void inline circular_copy(uint8_t *dest, uint8_t *src, uint16_t src_size, uint8_t start_pos, uint8_t length) {
+void inline circular_copy(uint8_t *dest, uint8_t *src, uint8_t start_pos, uint8_t length) {
 
     // Calculate the remaining space from start_pos to end of buffer
-    uint8_t remaining_space = src_size - start_pos;
+    uint8_t remaining_space = 256 - start_pos;
 
     if (length <= remaining_space) {
         // If the length to copy doesn't exceed the remaining space, do a single memcpy
@@ -1657,7 +1657,6 @@ void main()
                         (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
                         circular_copy(FrameBuf,
                                       UartRxBuf,
-                                      UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       MAX_FRAME_SIZE);
                         FrameBufLength = MAX_FRAME_SIZE;
@@ -1673,7 +1672,6 @@ void main()
                              (UartRxBufByteCount >= FrameRemainingBytes)) {
                         circular_copy(FrameBuf,
                                       UartRxBuf,
-                                      UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       FrameRemainingBytes);
                         FrameBufLength = FrameRemainingBytes;
@@ -1695,7 +1693,6 @@ void main()
                         (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
                         circular_copy(FrameBuf,
                                       UartRxBuf,
-                                      UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       MAX_FRAME_SIZE);
                         FrameBufLength = MAX_FRAME_SIZE;
@@ -1717,7 +1714,6 @@ void main()
                         (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
                         circular_copy(FrameBuf,
                                       UartRxBuf,
-                                      UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       MAX_FRAME_SIZE);
                         FrameBufLength = MAX_FRAME_SIZE;
@@ -1733,7 +1729,6 @@ void main()
                              (UartRxBufByteCount >= FrameRemainingBytes)) {
                         circular_copy(FrameBuf,
                                       UartRxBuf,
-                                      UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       FrameRemainingBytes);
                         FrameBufLength = FrameRemainingBytes;
@@ -1755,7 +1750,6 @@ void main()
                         (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
                         circular_copy(FrameBuf,
                                       UartRxBuf,
-                                      UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       MAX_FRAME_SIZE);
                         FrameBufLength = MAX_FRAME_SIZE;
@@ -1771,7 +1765,6 @@ void main()
                              (UartRxBufByteCount >= FrameRemainingBytes)) {
                         circular_copy(FrameBuf,
                                       UartRxBuf,
-                                      UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       FrameRemainingBytes);
                         FrameBufLength = FrameRemainingBytes;
@@ -1793,7 +1786,6 @@ void main()
                         (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
                         circular_copy(FrameBuf,
                                       UartRxBuf,
-                                      UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       MAX_FRAME_SIZE);
                         FrameBufLength = MAX_FRAME_SIZE;
@@ -1809,7 +1801,6 @@ void main()
                              (UartRxBufByteCount >= FrameRemainingBytes)) {
                         circular_copy(FrameBuf,
                                       UartRxBuf,
-                                      UART_RX_BUF_SIZE,
                                       UartRxBufOutputPointer,
                                       FrameRemainingBytes);
                         FrameBufLength = FrameRemainingBytes;
