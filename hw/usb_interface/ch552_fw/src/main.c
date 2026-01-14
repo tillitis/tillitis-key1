@@ -627,7 +627,7 @@ FLASH uint8_t LineCoding[7] = { 0x20, 0xA1, 0x07, 0x00, /* Data terminal rate, i
                                                   0x08, /* Data bits (5, 6, 7, 8 or 16) */
                                 };
 
-#define UART_RX_BUF_SIZE     140  // Serial receive buffer
+#define UART_RX_BUF_SIZE     256 // Serial receive buffer
 
 /** Communication UART */
 volatile XDATA uint8_t UartRxBuf[UART_RX_BUF_SIZE] = { 0 };  // Serial receive buffer
@@ -682,8 +682,7 @@ uint8_t FrameDiscard = 0;
 uint8_t DiscardDataAvailable = 0;
 
 static void memcpy_local(void *dst, const void *src, uint8_t len);
-uint8_t increment_pointer(uint8_t pointer, uint8_t increment, uint8_t buffer_size);
-uint8_t decrement_pointer(uint8_t pointer, uint8_t decrement, uint8_t buffer_size);
+static uint8_t increment_pointer(uint8_t p, uint8_t inc);
 void cts_start(void);
 void cts_stop(void);
 void check_cts_stop(void);
@@ -1452,10 +1451,11 @@ void Uart1_ISR(void)IRQ_UART1
 {
     // Check if data has been received
     if (U1RI) {
+        // bufsize is 256, will wrap naturally
         UartRxBuf[UartRxBufInputPointer++] = SBUF1;
-        if (UartRxBufInputPointer >= UART_RX_BUF_SIZE) {
-            UartRxBufInputPointer = 0; // Reset write pointer
-        }
+        // if (UartRxBufInputPointer >= UART_RX_BUF_SIZE) {
+        //     UartRxBufInputPointer = 0; // Reset write pointer
+        // }
 
         check_cts_stop();
 
@@ -1489,7 +1489,7 @@ static void memcpy_local(void *dst, const void *src, uint8_t len)
 }
 
 // Copy data from a circular buffer
-void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t start_pos, uint8_t length) {
+void inline circular_copy(uint8_t *dest, uint8_t *src, uint16_t src_size, uint8_t start_pos, uint8_t length) {
 
     // Calculate the remaining space from start_pos to end of buffer
     uint8_t remaining_space = src_size - start_pos;
@@ -1504,16 +1504,11 @@ void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t start_
     }
 }
 
-// Function to increment a pointer and wrap around the buffer
-uint8_t increment_pointer(uint8_t pointer, uint8_t increment, uint8_t buffer_size)
+// Function to increment a pointer and wrap around the buffer. Can only handle
+// a buffer_size of 256 bytes.
+static inline uint8_t increment_pointer(uint8_t p, uint8_t inc)
 {
-    return (pointer + increment) % buffer_size;
-}
-
-// Function to decrement a pointer and wrap around the buffer
-uint8_t decrement_pointer(uint8_t pointer, uint8_t decrement, uint8_t buffer_size)
-{
-    return (pointer + buffer_size - (decrement % buffer_size)) % buffer_size;
+    return (p + inc);
 }
 
 void cts_start(void)
@@ -1628,12 +1623,12 @@ void main()
                     (FrameMode == IO_CH552)) {
 
                     FrameLength = UartRxBuf[increment_pointer(UartRxBufOutputPointer,
-                                                              1,
-                                                              UART_RX_BUF_SIZE)]; // Extract frame length
+                                                              1
+                                                              )]; // Extract frame length
                     FrameRemainingBytes = FrameLength;
                     UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                               2,
-                                                               UART_RX_BUF_SIZE); // Start at valid data so skip the mode and length byte
+                                                               2
+                                                               ); // Start at valid data so skip the mode and length byte
                     UartRxBufByteCount -= 2; // Subtract the frame mode and frame length bytes from the total byte count
                     FrameStarted = 1;
 
@@ -1668,8 +1663,8 @@ void main()
                         FrameBufLength = MAX_FRAME_SIZE;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_FRAME_SIZE,
-                                                                   UART_RX_BUF_SIZE);
+                                                                   MAX_FRAME_SIZE
+                                                                   );
                         FrameRemainingBytes -= MAX_FRAME_SIZE;
                         CdcDataAvailable = 1;
                         cts_start();
@@ -1684,8 +1679,8 @@ void main()
                         FrameBufLength = FrameRemainingBytes;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   FrameRemainingBytes,
-                                                                   UART_RX_BUF_SIZE);
+                                                                   FrameRemainingBytes
+                                                                   );
                         FrameRemainingBytes -= FrameRemainingBytes;
                         CdcDataAvailable = 1;
                         cts_start();
@@ -1706,8 +1701,8 @@ void main()
                         FrameBufLength = MAX_FRAME_SIZE;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_FRAME_SIZE,
-                                                                   UART_RX_BUF_SIZE);
+                                                                   MAX_FRAME_SIZE
+                                                                   );
                         FrameRemainingBytes -= MAX_FRAME_SIZE;
                         FidoDataAvailable = 1;
                         cts_start();
@@ -1728,8 +1723,8 @@ void main()
                         FrameBufLength = MAX_FRAME_SIZE;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_FRAME_SIZE,
-                                                                   UART_RX_BUF_SIZE);
+                                                                   MAX_FRAME_SIZE
+                                                                   );
                         FrameRemainingBytes -= MAX_FRAME_SIZE;
                         CcidDataAvailable = 1;
                         cts_start();
@@ -1744,8 +1739,8 @@ void main()
                         FrameBufLength = FrameRemainingBytes;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   FrameRemainingBytes,
-                                                                   UART_RX_BUF_SIZE);
+                                                                   FrameRemainingBytes
+                                                                   );
                         FrameRemainingBytes -= FrameRemainingBytes;
                         CcidDataAvailable = 1;
                         cts_start();
@@ -1766,8 +1761,8 @@ void main()
                         FrameBufLength = MAX_FRAME_SIZE;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_FRAME_SIZE,
-                                                                   UART_RX_BUF_SIZE);
+                                                                   MAX_FRAME_SIZE
+                                                                   );
                         FrameRemainingBytes -= MAX_FRAME_SIZE;
                         DebugDataAvailable = 1;
                         cts_start();
@@ -1782,8 +1777,8 @@ void main()
                         FrameBufLength = FrameRemainingBytes;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   FrameRemainingBytes,
-                                                                   UART_RX_BUF_SIZE);
+                                                                   FrameRemainingBytes
+                                                                   );
                         FrameRemainingBytes -= FrameRemainingBytes;
                         DebugDataAvailable = 1;
                         cts_start();
@@ -1804,8 +1799,8 @@ void main()
                         FrameBufLength = MAX_FRAME_SIZE;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   MAX_FRAME_SIZE,
-                                                                   UART_RX_BUF_SIZE);
+                                                                   MAX_FRAME_SIZE
+                                                                   );
                         FrameRemainingBytes -= MAX_FRAME_SIZE;
                         CH552DataAvailable = 1;
                         cts_start();
@@ -1820,8 +1815,8 @@ void main()
                         FrameBufLength = FrameRemainingBytes;
                         // Update output pointer
                         UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                                   FrameRemainingBytes,
-                                                                   UART_RX_BUF_SIZE);
+                                                                   FrameRemainingBytes
+                                                                   );
                         FrameRemainingBytes -= FrameRemainingBytes;
                         CH552DataAvailable = 1;
                         cts_start();
@@ -1835,8 +1830,8 @@ void main()
                     (UartRxBufByteCount >= MAX_FRAME_SIZE)) {
                     // Update output pointer
                     UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                               MAX_FRAME_SIZE,
-                                                               UART_RX_BUF_SIZE);
+                                                               MAX_FRAME_SIZE
+                                                               );
                     FrameRemainingBytes -= MAX_FRAME_SIZE;
                     DiscardDataAvailable = 1;
                     cts_start();
@@ -1845,8 +1840,8 @@ void main()
                         (UartRxBufByteCount >= FrameRemainingBytes)) {
                     // Update output pointer
                     UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer,
-                                                               FrameRemainingBytes,
-                                                               UART_RX_BUF_SIZE);
+                                                               FrameRemainingBytes
+                                                               );
                     FrameRemainingBytes -= FrameRemainingBytes;
                     DiscardDataAvailable = 1;
                     cts_start();
