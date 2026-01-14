@@ -1463,7 +1463,7 @@ void Uart1_ISR(void)IRQ_UART1
     }
 }
 
-uint8_t uart_byte_count()
+uint8_t inline uart_byte_count()
 {
     uint8_t in = UartRxBufInputPointer;
     uint8_t out = UartRxBufOutputPointer;
@@ -1481,7 +1481,7 @@ uint8_t uart_byte_count()
 // This implementation is reentrant, given that source and destination buffers
 // are not accessed concurrently. Use this instead of memcpy() if it could be
 // interrupted.
-static void memcpy_local(void *dst, const void *src, uint8_t len)
+static inline void memcpy_local(void *dst, const void *src, uint8_t len)
 {
     uint8_t *d = dst;
     const uint8_t *s = src;
