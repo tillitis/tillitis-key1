@@ -2,30 +2,46 @@
 
 ## Introduction
 
-The Tillitis TKey is a platform for running device apps in a
-restricted execution environment physically separate from the client.
-The device provides the device app access to secrets derived through
-measurement of a device app or, in a chain of apps, derived keys from
-the chain. The device app in turn provides functionality and
-controlled access to assets to a companion client app as needed to
-solve different use cases.
+The Tillitis TKey is a platform for running small programs (device
+applications) in a restricted execution environment physically
+separate from the client. The device app typically provides
+functionality to a companion client app to solve different use cases,
+typically cryptographic signing, authentication, encryption, et
+cetera.
+
+The TKey provides the device app access to secrets derived through
+measurement of the device app or, when chaining, derived keys from the
+chain of started apps.
 
 For more about the TKey, see [TKey Developer
 Handbook](https://dev.tillitis.se/), [the firmware
 documentation](../../hw/application_fpga/fw/README.md) or [the top
 level hardware documentation](../../hw/application_fpga/README.md).
 
-The threat model tries to describe the threats that needs to be
+This threat model tries to describe the threats that needs to be
 mitigated in order for the device app to work in a secure and
 trustworthy manner.
 
+TL;DR:
+
+- We believe that a successful attack reproducing the same key
+  material will need both access to the user's User Supplied Secret
+  (something they know) and physical access to the TKey device
+  (something they have).
+
+- In the use case of a directly measured device app an attacker will
+  also need to use that exact app (the integrity of the app).
+
+- When using a combination of measured boot and verified boot we
+  believe the attacker needs
+
 ### TKey Unlocked
 
-The TKey comes in two versions: the ordinary TKey for general use and
-the TKey Unlocked. The Unlocked is for people who want to provision
-the bitstream themselves, either because they want to choose the
-Unique Device Secret themselves or want to change the hardware design
-or the firmware.
+The TKey is available in two versions: the ordinary TKey for general
+use and the TKey Unlocked. The Unlocked is for people who want to
+provision the bitstream themselves, either because they want to choose
+the Unique Device Secret themselves or want to change the hardware
+design or the firmware.
 
 This threat model and the mitigations listed applies to unlocked
 devices too as long as they have been provisioned with:
@@ -55,10 +71,6 @@ mitigations in the threat model.
 
 - There is no access path to the contents of the NVCM from the FPGA
   fabric besides the configuration circuit.
-
-- The Lattice iCE40 UltraPlus FPGAs are vulnerable to a warm boot
-  attack which allows an attacker with physical access to load a FPGA
-  configuration even though the NVCM has been programmed and locked.
 
 - The FPGA development toolchain, including YoSys, NextPnR and
   IceStorm generates a correct design, and also does not inject
@@ -129,6 +141,16 @@ mitigations in the threat model.
   the boot verifier and the FIDO2 app. By default they are started in
   a chain.
 
+- Sigsum keys
+
+  The [TKey Verification
+  System](https://github.com/tillitis/tkey-verification) uses a
+  [Sigsum transparency log](https://www.sigsum.org/) to sign a message
+  about every provisioned key. Tillitis' private key is used to do
+  this signing and must be kept secret.
+
+- Published data about provisioned keys
+
 ## Threats and mitigations
 
 There are two major type of attacks
@@ -144,6 +166,40 @@ There are two major type of attacks
    attacks may be performed from the client through the USB port,
    through the TKey enclosure, or near the TKey device.
 
+
+## In scope
+
+- SW attacks from the client against the firmware in the FPGA as well
+  as the FPGA design itself via USB.
+
+- Timing attacks on the firmware and the FPGA design.
+
+## Out of scope
+
+- All physical and electrical attacks applied to the board, including:
+
+  - Reading out of the UDS from the external flash chip. A bitstream
+    on flash is not used in production, only development.
+  - Triggering of the FPGA warm boot functionality. It should be hard
+    to successfully perform against the TKey, but the attack is not
+    yet fully mitigated.
+
+  - Triggering firmware update of the CH552 MCU, using the port
+    knocking mechanism.
+
+- Glitching attacks including:
+
+  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU
+  - Disturbance of the TRNG entropy generation
+
+- EM leakage.
+
+- Attacks on the TKey device apps.
+
+- Leakage and glitching attacks including:
+  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU
+  - EM leakage
+
 ### General physical attacks
 
 Threat: Opening the TKey to access the chips and the programming pins.
@@ -151,8 +207,7 @@ Threat: Opening the TKey to access the chips and the programming pins.
 Mitigation:
 
 - A transparent TKey casing glued together which makes it harder to
-  open up without leaving physical marks indicating tamper attempts. A
-  weak protection, but might help against giving it back modified.
+  open up without leaving physical marks indicating tamper attempts.
 
 ### General memory map attacks
 
@@ -180,13 +235,15 @@ Mitigation:
 
 ### UDS
 
-Threat: Leaking.
+Threat: Leaking or changing to known value.
 
 Mitigations:
 
 - The UDS is part of the bitstream, locked down within the NVCM in the
-  FPGA chip. The data in NVCM shouldn't be visible on X-ray and isn't
-  visible with microscopes.
+  FPGA chip and can't be read or changed after locking.
+  
+  The data in NVCM shouldn't be visible on X-ray and isn't visible
+  with microscopes.
 
 - The hardware design allows only one read of the entire UDS once per
   power-cycle, meant to be done by the firmware.
@@ -201,7 +258,16 @@ Mitigations:
 - UDS is generated and provisioned in an airgapped environment. It's
   kept only until the bitstream for that particular device is
   provisioned and then deleted.
+
+- `tkey-verify` is used by the user to verify that the UDS is
+  unchanged from time of provisioning. Usage:
   
+  https://www.tillitis.se/applications/tkey-device-verification/
+
+  Repo with source code and detailed documentation:
+
+  https://github.com/tillitis/tkey-verification
+
 ### UDI
 
 Threats:
@@ -377,7 +443,7 @@ Mitigation:
   status to app mode, locking off sensitive areas of the memory map
   from reading and/or writing. The entire ROM, where firmware resides,
   is marked non-executable in app mode. It must still be readable,
-  though, since tkey-verify checks it.
+  though, since `tkey-verify` checks it.
 
 - Hardware protection for system call privilege escalation. In order
   to access the filesystem and other sensitive stuff the app needs to
@@ -407,12 +473,14 @@ Mitigation:
 
 ## Known weaknesses
 
-- All RAM is writable in app mode, even addresses marked executable.
+- All RAM is writable in bot firmware and app mode, even addresses
+  marked executable.
 
-- A warm boot attack against the Lattice iCE40 UltraPlus, changing the
-  FPGA configuration while the chip is powered on will leave the EBR
-  and SPRAM intact after the new configuration is loaded. This means
-  we might leak contents of EBR and SPRAM.
+- It's possible to change the configuration of the Lattice iCE40
+  UltraPlus FPGA while the power is on even when the NVCM is locked.
+  This warm boot leaves the EBR and SPRAM intact after the new
+  configuration is loaded, and the contents of the EBR and SPRAM can
+  leak.
 
   Mitigations:
   
@@ -427,49 +495,42 @@ Mitigation:
 
     XXX: List which ones use EBR?
 
-- The CH552 MCU providing USB communication contains firmware that
-  implements the UART communication with the FPGA. The firmware can be
-  updated by performing port knocking. The knock sequence is to apply
-  3.3V through a 10k resistor to the D+ line, while powering on the
-  device.
+- The CH552 MCU USB weaknesses
 
-  Physical access and access to a CH55x programmer board means an
-  attacker can change the USB controller firmware. This means they can
-  listen to and modify all communication between the client and the
-  firmware and the client and a device app.
- 
-  There may be vulnerabilities reachable through USB to the firmware
-  of the CH552, allowing both controlled execution and modification of
-  the CH552 firmware.
+  Asset: CH552 firmware.
+  
+  Threat: Change of firmware to listen and modify to communication
+  between client app and device app. For instance:
 
-  Possible mitigation: Use of a challenge/response with an app with a
-  known public key, like the one used with `tkey-verify`, can prove
-  that the communication is unmodified.
+    - The controller firmware can be updated over USB.
 
-## Scope
+      An attacker with physical access to the TKey and a CH55x
+      programmer board can change the USB controller firmware. This
+      means they can listen to and modify all communication between
+      the client and the firmware and the client and a device app.
+  
+    - There may be vulnerabilities in the CH552 firmware reachable
+      through USB allowing both controlled execution and modification
+      of the CH552 firmware.
 
-#### In scope
+  These are outside the security boundary defined above but mentioned
+  since a user can actively do a test to mitigate the threat.
 
-- SW attacks from the host against the firmware in the FPGA as well as
-  the FPGA design itself via the USB host interface.
+  Partial mitigation: `tkey-verify` uses a cryptographic
+  challenge/response against a known public key with a device app.
+  Succesfully verifying the signature by running `tkey-verify`
+  verifies that the communication, at least for those commands, is not
+  modified.
 
-- Timing attacks on the firmware and the FPGA design.
+### Sigsum private key
 
-#### Out of scope
+Threat: Leaking or changing to malicious
 
-- Leakage and glitching attacks including:
+Mitigation:
 
-  - Faulting of the execution by the CPU in the FPGA and the CH552
-    MCU.
+- Encrypted at rest.
 
-  - EM leakage.
-
-- Warm boot attacks. It should be hard to successfully perform against
-  the TKey, but the attack is not yet fully mitigated.
-
-- Attacks on the TKey device apps.
-
-- Attacks on anything outside the FPGA chip.
+- Used in an airgapped environment.
 
 ## Threat Actors - The bad guys
 
@@ -559,36 +620,3 @@ Over time (with new releases), The TKey device should be able to
 withstand SW based attacks. Over time, the TKey Device should be able
 to make evil maid attacks take long enough time to make in infeasible to
 perform without the user discovering the missing device.
-
-#### In scope
-
-- SW attacks from the client against the firmware in the FPGA as well
-  as the FPGA design itself via USB.
-
-- Timing attacks on the firmware and the FPGA design.
-
-#### Out of scope
-
-- All physical and electrical attacks applied to the board, including:
-
-  - Reading out of the UDS from the external flash chip. A bitstream
-    on flash is not used in production, only development.
-  - Triggering of the FPGA warm boot functionality. It should be hard
-    to successfully perform against the TKey, but the attack is not
-    yet fully mitigated.
-
-  - Triggering firmware update of the CH552 MCU, using the port
-    knocking mechanism.
-
-- Glitching attacks including:
-
-  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU
-  - Disturbance of the TRNG entropy generation
-
-- EM leakage.
-
-- Attacks on the TKey device apps.
-
-- Leakage and glitching attacks including:
-  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU
-  - EM leakage
