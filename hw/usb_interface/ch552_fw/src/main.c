@@ -30,9 +30,9 @@ XDATA AT00C0 uint8_t Ep1Buffer[DEFAULT_EP1_SIZE]  = { 0 }; // Endpoint 1, CDC Ct
 XDATA AT00C8 uint8_t Ep2Buffer[2*MAX_PACKET_SIZE] = { 0 }; // Endpoint 2, CDC Data endpoint, buffer OUT[64]+IN[64], must be an even address
 XDATA AT0148 uint8_t Ep3Buffer[2*MAX_PACKET_SIZE] = { 0 }; // Endpoint 3, FIDO endpoint, buffer OUT[64]+IN[64], must be an even address
 
-IDATA uint16_t SetupLen = 0;
-IDATA uint8_t SetupReq = 0;
-IDATA uint8_t UsbConfig = 0;
+uint16_t SetupLen = 0;
+uint8_t SetupReq = 0;
+uint8_t UsbConfig = 0;
 const uint8_t *pDescr = NULL;         // USB configuration flag
 
 #define UsbSetupBuf                   ((PUSB_SETUP_REQ)Ep0Buffer)
@@ -106,9 +106,9 @@ const uint8_t *pDescr = NULL;         // USB configuration flag
 #define BYTE2(x)   ((uint8_t)(((x) >> 16) & 0x000000FFU))  // Third byte
 #define BYTE3(x)   ((uint8_t)(((x) >> 24) & 0x000000FFU))  // Most significant byte
 
-IDATA uint8_t FidoInterfaceNum = 0;
-IDATA uint8_t CcidInterfaceNum = 0;
-IDATA uint8_t DebugInterfaceNum = 0;
+uint8_t FidoInterfaceNum = 0;
+uint8_t CcidInterfaceNum = 0;
+uint8_t DebugInterfaceNum = 0;
 
 XDATA uint8_t ActiveCfgDesc[MAX_CFG_DESC_SIZE];
 XDATA uint8_t ActiveCfgDescSize = 0;
@@ -631,9 +631,9 @@ FLASH uint8_t LineCoding[7] = { 0x20, 0xA1, 0x07, 0x00, /* Data terminal rate, i
 
 /** Communication UART */
 volatile XDATA uint8_t UartRxBuf[UART_RX_BUF_SIZE] = { 0 };  // Serial receive buffer
-volatile IDATA uint8_t UartRxBufInputPointer = 0;   // Circular buffer write pointer, bus reset needs to be initialized to 0
-volatile IDATA uint8_t UartRxBufOutputPointer = 0;  // Take pointer out of circular buffer, bus reset needs to be initialized to 0
-volatile IDATA uint8_t UartRxBufByteCount = 0;      // Number of unprocessed bytes remaining in the buffer
+volatile uint8_t UartRxBufInputPointer = 0;   // Circular buffer write pointer, bus reset needs to be initialized to 0
+volatile uint8_t UartRxBufOutputPointer = 0;  // Take pointer out of circular buffer, bus reset needs to be initialized to 0
+volatile uint8_t UartRxBufByteCount = 0;      // Number of unprocessed bytes remaining in the buffer
 
 /** Debug UART */
 #ifdef DEBUG_PRINT_HW
@@ -645,41 +645,41 @@ volatile IDATA uint8_t DebugUartRxBufByteCount = 0;
 #endif
 
 /** Endpoint handling */
-volatile IDATA uint8_t UsbEp2ByteCount = 0;     // Represents the data received by USB endpoint 2 (CDC)
-volatile IDATA uint8_t UsbEp3ByteCount = 0;     // Represents the data received by USB endpoint 3 (FIDO or CCID)
-volatile IDATA uint8_t UsbEp4ByteCount = 0;     // Represents the data received by USB endpoint 4 (DEBUG)
+volatile uint8_t UsbEp2ByteCount = 0;     // Represents the data received by USB endpoint 2 (CDC)
+volatile uint8_t UsbEp3ByteCount = 0;     // Represents the data received by USB endpoint 3 (FIDO or CCID)
+volatile uint8_t UsbEp4ByteCount = 0;     // Represents the data received by USB endpoint 4 (DEBUG)
 
-volatile IDATA uint8_t Endpoint2UploadBusy = 0; // Whether the upload endpoint 2 (CDC) is busy
-volatile IDATA uint8_t Endpoint3UploadBusy = 0; // Whether the upload endpoint 3 (FIDO or CCID) is busy
-volatile IDATA uint8_t Endpoint4UploadBusy = 0; // Whether the upload endpoint 4 (DEBUG) is busy
+volatile uint8_t Endpoint2UploadBusy = 0; // Whether the upload endpoint 2 (CDC) is busy
+volatile uint8_t Endpoint3UploadBusy = 0; // Whether the upload endpoint 3 (FIDO or CCID) is busy
+volatile uint8_t Endpoint4UploadBusy = 0; // Whether the upload endpoint 4 (DEBUG) is busy
 
 /** CH552 variables */
-IDATA uint8_t CH552DataAvailable = 0;
+uint8_t CH552DataAvailable = 0;
 
 /** DEBUG variables */
-IDATA uint8_t DebugDataAvailable = 0;
+uint8_t DebugDataAvailable = 0;
 
 /** CDC variables */
-IDATA uint8_t CdcDataAvailable = 0;
-IDATA uint8_t CdcSendZeroLenPacket = 0;
+uint8_t CdcDataAvailable = 0;
+uint8_t CdcSendZeroLenPacket = 0;
 
 /** FIDO variables */
-IDATA uint8_t FidoDataAvailable = 0;
+uint8_t FidoDataAvailable = 0;
 
 /** CCID variables */
-IDATA uint8_t CcidDataAvailable = 0;
+uint8_t CcidDataAvailable = 0;
 
 /** Frame data */
 #define MAX_FRAME_SIZE    64
 XDATA uint8_t FrameBuf[MAX_FRAME_SIZE] = { 0 };
-IDATA uint8_t FrameBufLength = 0;
+uint8_t FrameBufLength = 0;
 
-IDATA uint8_t FrameMode   = 0;
-IDATA uint8_t FrameLength = 0;
-IDATA uint8_t FrameRemainingBytes = 0;
-IDATA uint8_t FrameStarted = 0;
-IDATA uint8_t FrameDiscard = 0;
-IDATA uint8_t DiscardDataAvailable = 0;
+uint8_t FrameMode   = 0;
+uint8_t FrameLength = 0;
+uint8_t FrameRemainingBytes = 0;
+uint8_t FrameStarted = 0;
+uint8_t FrameDiscard = 0;
+uint8_t DiscardDataAvailable = 0;
 
 static void memcpy_local(void *dst, const void *src, uint8_t len);
 uint8_t increment_pointer(uint8_t pointer, uint8_t increment, uint8_t buffer_size);
