@@ -19,6 +19,8 @@
 #include "state.h"
 #include "syscall_enable.h"
 
+#define DOMAIN_USS_MASK 0x80
+
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
 static volatile uint32_t *name0            = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
@@ -609,6 +611,7 @@ int main(void)
 				break;
 			}
 			uint8_t domain = resetinfo->type;
+			domain |= ctx.use_uss ? DOMAIN_USS_MASK : 0;
 
 			if (resetinfo->mask & RESET_SEED) {
 				compute_cdi(
