@@ -24,11 +24,23 @@
 #include "print.h"
 #include "usb_strings.h"
 
-XDATA AT0000 uint8_t Ep0Buffer[3*MAX_PACKET_SIZE] = { 0 }; // Endpoint 0, Default endpoint, OUT & IN buffer[64], must be an even address +
-                                                           // Endpoint 4, DEBUG endpoint, buffer OUT[64]+IN[64], must be an even address
-XDATA AT00C0 uint8_t Ep1Buffer[DEFAULT_EP1_SIZE]  = { 0 }; // Endpoint 1, CDC Ctrl endpoint, IN[8] buffer
-XDATA AT00C8 uint8_t Ep2Buffer[2*MAX_PACKET_SIZE] = { 0 }; // Endpoint 2, CDC Data endpoint, buffer OUT[64]+IN[64], must be an even address
-XDATA AT0148 uint8_t Ep3Buffer[2*MAX_PACKET_SIZE] = { 0 }; // Endpoint 3, FIDO endpoint, buffer OUT[64]+IN[64], must be an even address
+XDATA AT0000 uint8_t Ep0Buffer[DEFAULT_EP0_SIZE + 2*DEFAULT_EP4_SIZE] = { 0 };
+                                                            // Endpoint 0, Default endpoint, OUT & IN buffer[64],
+                                                            // must be an even address.
+                                                            // Endpoint 4, DEBUG endpoint, buffer OUT[64]+IN[64],
+                                                            // must be an even address
+XDATA AT00C0 uint8_t Ep1Buffer[  DEFAULT_EP1_SIZE] = { 0 }; // Endpoint 1, CDC Ctrl endpoint, IN[8] buffer
+XDATA AT00C8 uint8_t Ep2Buffer[2*DEFAULT_EP2_SIZE] = { 0 }; // Endpoint 2, CDC Data endpoint, buffer OUT[64]+IN[64],
+                                                            // must be an even address
+XDATA AT0148 uint8_t Ep3Buffer[2*DEFAULT_EP3_SIZE] = { 0 }; // Endpoint 3, FIDO/CCID endpoint, buffer OUT[64]+IN[64],
+                                                            // must be an even address
+
+#define Ep2BufferRx  (Ep2Buffer)
+#define Ep2BufferTx  (Ep2Buffer + DEFAULT_EP2_SIZE)
+#define Ep3BufferRx  (Ep3Buffer)
+#define Ep3BufferTx  (Ep3Buffer + DEFAULT_EP3_SIZE)
+#define Ep4BufferRx  (Ep0Buffer + DEFAULT_EP0_SIZE)
+#define Ep4BufferTx  (Ep0Buffer + DEFAULT_EP0_SIZE + DEFAULT_EP4_SIZE)
 
 uint16_t SetupLen = 0;
 uint8_t SetupReq = 0;
@@ -44,28 +56,28 @@ const uint8_t *pDescr = NULL;         // USB configuration flag
 #define CDC_CTRL_EPIN_SIZE             DEFAULT_EP1_SIZE  // CDC Ctrl Endpoint IN Size
 
 #define CDC_DATA_EPOUT_ADDR            0x02              // CDC Data Endpoint OUT Address
-#define CDC_DATA_EPOUT_SIZE            MAX_PACKET_SIZE   // CDC Data Endpoint OUT Size
+#define CDC_DATA_EPOUT_SIZE            DEFAULT_EP2_SIZE  // CDC Data Endpoint OUT Size
 
 #define CDC_DATA_EPIN_ADDR             0x82              // CDC Data Endpoint IN Address
-#define CDC_DATA_EPIN_SIZE             MAX_PACKET_SIZE   // CDC Data Endpoint IN Size
+#define CDC_DATA_EPIN_SIZE             DEFAULT_EP2_SIZE  // CDC Data Endpoint IN Size
 
 #define FIDO_EPOUT_ADDR                0x03              // FIDO Endpoint OUT Address
-#define FIDO_EPOUT_SIZE                MAX_PACKET_SIZE   // FIDO Endpoint OUT Size
+#define FIDO_EPOUT_SIZE                DEFAULT_EP3_SIZE  // FIDO Endpoint OUT Size
 
 #define FIDO_EPIN_ADDR                 0x83              // FIDO Endpoint IN Address
-#define FIDO_EPIN_SIZE                 MAX_PACKET_SIZE   // FIDO Endpoint IN Size
+#define FIDO_EPIN_SIZE                 DEFAULT_EP3_SIZE  // FIDO Endpoint IN Size
 
 #define CCID_BULK_EPOUT_ADDR           0x03              // CCID Bulk Endpoint OUT Address
-#define CCID_BULK_EPOUT_SIZE           MAX_PACKET_SIZE   // CCID Bulk Endpoint OUT Size
+#define CCID_BULK_EPOUT_SIZE           DEFAULT_EP3_SIZE  // CCID Bulk Endpoint OUT Size
 
 #define CCID_BULK_EPIN_ADDR            0x83              // CCID Bulk Endpoint IN Address
-#define CCID_BULK_EPIN_SIZE            MAX_PACKET_SIZE   // CCID Bulk Endpoint IN Size
+#define CCID_BULK_EPIN_SIZE            DEFAULT_EP3_SIZE  // CCID Bulk Endpoint IN Size
 
 #define DEBUG_EPOUT_ADDR               0x04              // DEBUG Endpoint OUT Address
-#define DEBUG_EPOUT_SIZE               MAX_PACKET_SIZE   // DEBUG Endpoint OUT Size
+#define DEBUG_EPOUT_SIZE               DEFAULT_EP4_SIZE  // DEBUG Endpoint OUT Size
 
 #define DEBUG_EPIN_ADDR                0x84              // DEBUG Endpoint IN Address
-#define DEBUG_EPIN_SIZE                MAX_PACKET_SIZE   // DEBUG Endpoint IN Size
+#define DEBUG_EPIN_SIZE                DEFAULT_EP4_SIZE  // DEBUG Endpoint IN Size
 
 #define CDC_CTRL_FS_BINTERVAL          32                // Gives 32 ms polling interval at Full Speed for interrupt transfers
 #define CDC_DATA_FS_BINTERVAL          0                 // bInterval is ignored for BULK transfers
@@ -122,7 +134,7 @@ FLASH uint8_t DevDesc[] = {
         USB_DEV_CLASS_MISCELLANEOUS,      /* bDeviceClass: Miscellaneous Device Class (Composite) */
         0x02,                             /* bDeviceSubClass: Common Class */
         0x01,                             /* bDeviceProtocol: IAD (Interface Association Descriptor) */
-        DEFAULT_EP0_SIZE,                 /* bMaxPacketSize */
+        BUF_EP0_SIZE,                     /* bMaxPacketSize */
         0x09,                             /* idVendor */            // VID LOBYTE
         0x12,                             /* idVendor */            // VID HIBYTE
         0x85,                             /* idProduct */           // PID LOBYTE
@@ -555,14 +567,14 @@ FLASH uint8_t FidoReportDesc[] ={
         0x15, 0x00,                       /*     Logical Minimum (0) */
         0x26, 0xFF, 0x00,                 /*     Logical Maximum (255) */
         0x75, 0x08,                       /*     Report Size (8) */
-        0x95, MAX_PACKET_SIZE,            /*     Report Count (64) */
+        0x95, FIDO_EPIN_SIZE,             /*     Report Count (64) */
         0x81, 0x02,                       /*     Input (Data, Variable, Absolute); */
         /* 20 */
         0x09, 0x21,                       /*     Usage (Output Report Data) */
         0x15, 0x00,                       /*     Logical Minimum (0) */
         0x26, 0xFF, 0x00,                 /*     Logical Maximum (255) */
         0x75, 0x08,                       /*     Report Size (8) */
-        0x95, MAX_PACKET_SIZE,            /*     Report Count (64) */
+        0x95, FIDO_EPOUT_SIZE,            /*     Report Count (64) */
         0x91, 0x02,                       /*     Output (Data, Variable, Absolute) */
         /* 33 */
         0x09, 0x07,                       /*     Usage (7, Reserved) */
@@ -599,14 +611,14 @@ FLASH uint8_t DebugReportDesc[] ={
         0x15, 0x00,                       /*     Logical Minimum (0) */
         0x26, 0xFF, 0x00,                 /*     Logical Maximum (255) */
         0x75, 0x08,                       /*     Report Size (8 bits) */
-        0x95, MAX_PACKET_SIZE,            /*     Report Count (64 bytes) */
+        0x95, DEBUG_EPOUT_SIZE,           /*     Report Count (64 bytes) */
         0x91, 0x02,                       /*     Output (Data, Variable, Absolute) */
         /* 20 */
         0x09, 0x03,                       /*     Usage (Input Report), 0x03 defines that the input report carries raw data for the host. */
         0x15, 0x00,                       /*     Logical Minimum (0) */
         0x26, 0xFF, 0x00,                 /*     Logical Maximum (255) */
         0x75, 0x08,                       /*     Report Size (8 bits) */
-        0x95, MAX_PACKET_SIZE,            /*     Report Count (64 bytes) */
+        0x95, DEBUG_EPIN_SIZE,            /*     Report Count (64 bytes) */
         0x81, 0x02,                       /*     Input (Data, Variable, Absolute) */
         /* 33 */
         0xC0                              /*   End Collection */
@@ -639,9 +651,9 @@ volatile uint8_t UartRxBufByteCount = 0;      // Number of unprocessed bytes rem
 #ifdef DEBUG_PRINT_HW
 #define DEBUG_UART_RX_BUF_SIZE        8
 XDATA uint8_t DebugUartRxBuf[DEBUG_UART_RX_BUF_SIZE] = { 0 };
-volatile IDATA uint8_t DebugUartRxBufInputPointer = 0;
-volatile IDATA uint8_t DebugUartRxBufOutputPointer = 0;
-volatile IDATA uint8_t DebugUartRxBufByteCount = 0;
+volatile uint8_t DebugUartRxBufInputPointer = 0;
+volatile uint8_t DebugUartRxBufOutputPointer = 0;
+volatile uint8_t DebugUartRxBufByteCount = 0;
 #endif
 
 /** Endpoint handling */
@@ -681,9 +693,8 @@ uint8_t FrameStarted = 0;
 uint8_t FrameDiscard = 0;
 uint8_t DiscardDataAvailable = 0;
 
-static void memcpy_local(void *dst, const void *src, uint8_t len);
 uint8_t increment_pointer(uint8_t pointer, uint8_t increment, uint8_t buffer_size);
-uint8_t decrement_pointer(uint8_t pointer, uint8_t decrement, uint8_t buffer_size);
+
 void cts_start(void);
 void cts_stop(void);
 void check_cts_stop(void);
@@ -699,7 +710,9 @@ void USBDeviceCfg()
 {
     USB_CTRL = 0x00;                                       // Clear USB control register
     USB_CTRL &= ~bUC_HOST_MODE;                            // This bit selects the device mode
-    USB_CTRL |= bUC_DEV_PU_EN | bUC_INT_BUSY | bUC_DMA_EN; // USB device and internal pull-up enable, automatically return to NAK before interrupt flag is cleared
+    USB_CTRL |= bUC_DEV_PU_EN | bUC_INT_BUSY | bUC_DMA_EN; // USB device and internal pull-up enable,
+                                                           // automatically return to NAK before interrupt
+                                                           // flag is cleared
     USB_DEV_AD = 0x00;                                     // Device address initialization
 #if 0
     // USB_CTRL  |= bUC_LOW_SPEED;
@@ -832,7 +845,7 @@ void Config_Uart1(uint8_t *cfg_uart)
     IE_UART1 = 1; // Enable UART1 interrupt
 }
 
-void usb_irq_setup_handler(void)
+void UsbEp0SetupHandler(void)
 {
     uint16_t len = USB_RX_LEN;
     printStrSetup("Setup ");
@@ -877,7 +890,7 @@ void usb_irq_setup_handler(void)
                 pDescr = LineCoding;
                 len = sizeof(LineCoding);
                 SetupLen = MIN(SetupLen, len); // Limit total length
-                len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                len = (SetupLen >= BUF_EP0_SIZE) ? BUF_EP0_SIZE : SetupLen; // The length of this transmission
                 memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                 SetupLen -= len;
                 pDescr += len;
@@ -911,7 +924,7 @@ void usb_irq_setup_handler(void)
                     pDescr = DevDesc; // Send the device descriptor to the buffer to be sent
                     len = sizeof(DevDesc);
                     SetupLen = MIN(SetupLen, len); // Limit total length
-                    len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                    len = (SetupLen >= BUF_EP0_SIZE) ? BUF_EP0_SIZE : SetupLen; // The length of this transmission
                     memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                     SetupLen -= len;
                     pDescr += len;
@@ -926,7 +939,7 @@ void usb_irq_setup_handler(void)
                     pDescr = ActiveCfgDesc; // Send the configuration descriptor to the buffer to be sent
                     len = ActiveCfgDescSize; // Dynamic value based on what endpoints are enabled
                     SetupLen = MIN(SetupLen, len); // Limit total length
-                    len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                    len = (SetupLen >= BUF_EP0_SIZE) ? BUF_EP0_SIZE : SetupLen; // The length of this transmission
                     memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                     SetupLen -= len;
                     pDescr += len;
@@ -979,7 +992,7 @@ void usb_irq_setup_handler(void)
                         break;      // Early exit
                     }
                     SetupLen = MIN(SetupLen, len); // Limit total length
-                    len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                    len = (SetupLen >= BUF_EP0_SIZE) ? BUF_EP0_SIZE : SetupLen; // The length of this transmission
                     memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                     SetupLen -= len;
                     pDescr += len;
@@ -1004,7 +1017,7 @@ void usb_irq_setup_handler(void)
                         break;      // Early exit
                     }
                     SetupLen = MIN(SetupLen, len); // Limit total length
-                    len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                    len = (SetupLen >= BUF_EP0_SIZE) ? BUF_EP0_SIZE : SetupLen; // The length of this transmission
                     memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                     SetupLen -= len;
                     pDescr += len;
@@ -1029,7 +1042,7 @@ void usb_irq_setup_handler(void)
                         break;      // Early exit
                     }
                     SetupLen = MIN(SetupLen, len); // Limit total length
-                    len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                    len = (SetupLen >= BUF_EP0_SIZE) ? BUF_EP0_SIZE : SetupLen; // The length of this transmission
                     memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                     SetupLen -= len;
                     pDescr += len;
@@ -1097,13 +1110,13 @@ void usb_irq_setup_handler(void)
                         UEP3_CTRL = (UEP3_CTRL & ~(bUEP_R_TOG | MASK_UEP_R_RES)) | UEP_R_RES_ACK; // Set endpoint 3 OUT (RX) ACK
                         break;
                     case 0x82:
-                        UEP2_CTRL = (UEP2_CTRL & ~(bUEP_T_TOG | MASK_UEP_T_RES)) | UEP_T_RES_NAK; // Set endpoint 2 IN (TX) NACK
+                        UEP2_CTRL = (UEP2_CTRL & ~(bUEP_T_TOG | MASK_UEP_T_RES)) | UEP_T_RES_NAK; // Set endpoint 2 IN (TX) NAK
                         break;
                     case 0x02:
                         UEP2_CTRL = (UEP2_CTRL & ~(bUEP_R_TOG | MASK_UEP_R_RES)) | UEP_R_RES_ACK; // Set endpoint 2 OUT (RX) ACK
                         break;
                     case 0x81:
-                        UEP1_CTRL = (UEP1_CTRL & ~(bUEP_T_TOG | MASK_UEP_T_RES)) | UEP_T_RES_NAK; // Set endpoint 1 IN (TX) NACK
+                        UEP1_CTRL = (UEP1_CTRL & ~(bUEP_T_TOG | MASK_UEP_T_RES)) | UEP_T_RES_NAK; // Set endpoint 1 IN (TX) NAK
                         break;
                     case 0x01:
                         UEP1_CTRL = (UEP1_CTRL & ~(bUEP_R_TOG | MASK_UEP_R_RES)) | UEP_R_RES_ACK; // Set endpoint 1 OUT (RX) ACK
@@ -1212,12 +1225,16 @@ void usb_irq_setup_handler(void)
     if (len == 0xFF) {
         SetupReq = 0xFF;
         UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_STALL | UEP_T_RES_STALL; // STALL
-    } else if (len <= DEFAULT_EP0_SIZE) { // Upload data or status phase returns 0 length packet
+    } else if (len <= BUF_EP0_SIZE && len > 0) { // Upload data or status phase returns 0 length packet
         UEP0_T_LEN = len;
-        UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK; // The default packet is DATA1, return response ACK
+        UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK; // The default data packet is DATA1,
+                                                                             // return ACK for OUT (RX),
+                                                                             // return ACK for IN (TX)
     } else {
         UEP0_T_LEN = 0; // Although it has not yet reached the status stage, it is preset to upload 0-length data packets in advance to prevent the host from entering the status stage early.
-        UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK; // The default data packet is DATA1, and the response ACK is returned
+        UEP0_CTRL = bUEP_R_TOG | bUEP_T_TOG | UEP_R_RES_ACK | UEP_T_RES_ACK; // The default data packet is DATA1,
+                                                                             // return ACK for OUT (RX),
+                                                                             // return ACK for IN (TX)
     }
 }
 
@@ -1239,14 +1256,14 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
         switch (USB_INT_ST & (MASK_UIS_TOKEN | MASK_UIS_ENDP)) {
 
         case UIS_TOKEN_SETUP | 0: // SETUP routine
-            usb_irq_setup_handler();
+            UsbEp0SetupHandler();
             break;
 
         case UIS_TOKEN_IN | 0: // Endpoint 0 IN (TX)
             switch (SetupReq) {
             case USB_GET_DESCRIPTOR:
                 /* Continue sending descriptor in multiple packets if needed. Started from SETUP routine */
-                len = (SetupLen >= DEFAULT_EP0_SIZE) ? DEFAULT_EP0_SIZE : SetupLen; // The length of this transmission
+                len = (SetupLen >= BUF_EP0_SIZE) ? BUF_EP0_SIZE : SetupLen; // The length of this transmission
                 memcpy(Ep0Buffer, pDescr, len); // Copy upload data
                 SetupLen -= len;
                 pDescr += len;
@@ -1258,7 +1275,8 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
                 UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
                 break;
             default:
-                UEP0_T_LEN = 0; // The status phase is completed and interrupted or the 0-length data packet is forced to be uploaded to end the control transmission.
+                UEP0_T_LEN = 0; // The status phase is completed and interrupted or the 0-length data packet
+                                // is forced to be uploaded to end the control transmission.
                 UEP0_CTRL = UEP_R_RES_ACK | UEP_T_RES_NAK;
                 break;
             }
@@ -1307,8 +1325,13 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
         case UIS_TOKEN_OUT | 1: // Endpoint 1 OUT (RX), Disabled for now.
             // Out-of-sync packets will be dropped
             if (U_TOG_OK) {
-                //UsbEpXByteCount = USB_RX_LEN;                              // Length of received data
-                //UEP1_CTRL = (UEP1_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
+                /*
+                UsbEpXByteCount = USB_RX_LEN;                              // Length of received data
+                UEP1_CTRL = (UEP1_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data,
+                                                                           // the main function finishes processing,
+                                                                           // and the main function modifies the
+                                                                           // response mode
+                 */
             }
             break;
 
@@ -1321,7 +1344,10 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
                     // wait for next frame
                     break;
                 }
-                UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
+                UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data,
+                                                                           // the main function finishes processing,
+                                                                           // and the main function modifies the
+                                                                           // response mode
             }
             break;
 
@@ -1329,7 +1355,10 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             // Out-of-sync packets will be dropped
             if (U_TOG_OK) {
                 UsbEp3ByteCount = USB_RX_LEN;                              // Length of received data
-                UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
+                UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data,
+                                                                           // the main function finishes processing,
+                                                                           // and the main function modifies the
+                                                                           // response mode
             }
             break;
 
@@ -1337,7 +1366,10 @@ void DeviceInterrupt(void)IRQ_USB // USB interrupt service routine, using regist
             // Out-of-sync packets will be dropped
             if (U_TOG_OK) {
                 UsbEp4ByteCount = USB_RX_LEN;                              // Length of received data
-                UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data, the main function finishes processing, and the main function modifies the response mode
+                UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_NAK; // NAK after receiving a packet of data,
+                                                                           // the main function finishes processing,
+                                                                           // and the main function modifies the
+                                                                           // response mode
                 UEP4_CTRL ^= bUEP_R_TOG;                                   // Sync flag flip
             }
             break;
@@ -1476,7 +1508,8 @@ inline uint8_t uart_byte_count()
 }
 
 // Copy data from a circular buffer
-inline void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t start_pos, uint8_t length) {
+inline void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t start_pos, uint8_t length)
+{
 
     // Calculate the remaining space from start_pos to end of buffer
     uint8_t remaining_space = src_size - start_pos;
@@ -1495,12 +1528,6 @@ inline void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t
 inline uint8_t increment_pointer(uint8_t pointer, uint8_t increment, uint8_t buffer_size)
 {
     return (pointer + increment) % buffer_size;
-}
-
-// Function to decrement a pointer and wrap around the buffer
-uint8_t decrement_pointer(uint8_t pointer, uint8_t decrement, uint8_t buffer_size)
-{
-    return (pointer + buffer_size - (decrement % buffer_size)) % buffer_size;
 }
 
 inline void cts_start(void)
@@ -1574,7 +1601,7 @@ void main()
 
                 CH554UART1SendByte(IO_CDC);  // Send CDC mode header
                 CH554UART1SendByte(UsbEp2ByteCount);  // Send length
-                CH554UART1SendBuffer(Ep2Buffer, UsbEp2ByteCount);
+                CH554UART1SendBuffer(Ep2BufferRx, UsbEp2ByteCount);
                 UsbEp2ByteCount = 0;
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 2 to ACK again
             }
@@ -1589,7 +1616,7 @@ void main()
                 }
 
                 CH554UART1SendByte(UsbEp3ByteCount); // Send length (always 64 bytes for FIDO, variable for CCID)
-                CH554UART1SendBuffer(Ep3Buffer, UsbEp3ByteCount);
+                CH554UART1SendBuffer(Ep3BufferRx, UsbEp3ByteCount);
                 UsbEp3ByteCount = 0;
                 UEP3_CTRL = (UEP3_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 3 to ACK again
             }
@@ -1599,7 +1626,7 @@ void main()
 
                 CH554UART1SendByte(IO_DEBUG); // Send DEBUG mode header
                 CH554UART1SendByte(UsbEp4ByteCount); // Send length (always 64 bytes)
-                CH554UART1SendBuffer(Ep0Buffer+64, UsbEp4ByteCount); // Endpoint 4 receive is at address UEP0_DMA+64
+                CH554UART1SendBuffer(Ep4BufferRx, UsbEp4ByteCount);
                 UsbEp4ByteCount = 0;
                 UEP4_CTRL = (UEP4_CTRL & ~MASK_UEP_R_RES) | UEP_R_RES_ACK; // Enable Endpoint 4 to ACK again
             }
@@ -1844,7 +1871,7 @@ void main()
             if (CdcDataAvailable && !Endpoint2UploadBusy) {
 
                 // Write upload endpoint
-                memcpy(Ep2Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 2 */
+                memcpy(Ep2BufferTx, /* Copy to IN (TX) buffer of Endpoint 2 */
                        FrameBuf,
                        FrameBufLength);
 
@@ -1852,7 +1879,7 @@ void main()
                 UEP2_T_LEN = FrameBufLength; // Set the number of data bytes that Endpoint 2 is ready to send
                 UEP2_CTRL = (UEP2_CTRL & ~MASK_UEP_T_RES) | UEP_T_RES_ACK; // Answer ACK
 
-                if (FrameBufLength == 64) {
+                if (FrameBufLength == MAX_PACKET_SIZE) {
                     // Terminate all 64-byte frames
                     CdcSendZeroLenPacket = 1;
                 }
@@ -1880,7 +1907,7 @@ void main()
             if (FidoDataAvailable && !Endpoint3UploadBusy) {
 
                 // Write upload endpoint
-                memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
+                memcpy(Ep3BufferTx, /* Copy to IN (TX) buffer of Endpoint 3 */
                        FrameBuf,
                        FrameBufLength);
 
@@ -1899,7 +1926,7 @@ void main()
             if (CcidDataAvailable && !Endpoint3UploadBusy) {
 
                 // Write upload endpoint
-                memcpy(Ep3Buffer + MAX_PACKET_SIZE, /* Copy to IN buffer of Endpoint 3 */
+                memcpy(Ep3BufferTx, /* Copy to IN (TX) buffer of Endpoint 3 */
                        FrameBuf,
                        FrameBufLength);
 
@@ -1919,13 +1946,13 @@ void main()
 
                 if (FrameBufLength == MAX_PACKET_SIZE) {
                     // Write upload endpoint
-                    memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
+                    memcpy(Ep4BufferTx, /* Copy to IN (TX) buffer of Endpoint 4 */
                            FrameBuf,
                            FrameBufLength);
                 } else {
-                    memset(Ep0Buffer + 128, 0, MAX_PACKET_SIZE);
+                    memset(Ep4BufferTx, 0, MAX_PACKET_SIZE);
                     // Write upload endpoint
-                    memcpy(Ep0Buffer + 128, /* Copy to IN (TX) buffer of Endpoint 4 */
+                    memcpy(Ep4BufferTx, /* Copy to IN (TX) buffer of Endpoint 4 */
                            FrameBuf,
                            FrameBufLength);
                 }
