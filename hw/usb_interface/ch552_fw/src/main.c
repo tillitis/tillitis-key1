@@ -1463,7 +1463,7 @@ void Uart1_ISR(void)IRQ_UART1
     }
 }
 
-uint8_t uart_byte_count()
+inline uint8_t uart_byte_count()
 {
     uint8_t in = UartRxBufInputPointer;
     uint8_t out = UartRxBufOutputPointer;
@@ -1476,7 +1476,7 @@ uint8_t uart_byte_count()
 }
 
 // Copy data from a circular buffer
-void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t start_pos, uint8_t length) {
+inline void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t start_pos, uint8_t length) {
 
     // Calculate the remaining space from start_pos to end of buffer
     uint8_t remaining_space = src_size - start_pos;
@@ -1492,7 +1492,7 @@ void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t start_
 }
 
 // Function to increment a pointer and wrap around the buffer
-uint8_t increment_pointer(uint8_t pointer, uint8_t increment, uint8_t buffer_size)
+inline uint8_t increment_pointer(uint8_t pointer, uint8_t increment, uint8_t buffer_size)
 {
     return (pointer + increment) % buffer_size;
 }
@@ -1503,17 +1503,17 @@ uint8_t decrement_pointer(uint8_t pointer, uint8_t decrement, uint8_t buffer_siz
     return (pointer + buffer_size - (decrement % buffer_size)) % buffer_size;
 }
 
-void cts_start(void)
+inline void cts_start(void)
 {
     gpio_p1_5_unset(); // Signal to FPGA to send more data
 }
 
-void cts_stop(void)
+inline void cts_stop(void)
 {
     gpio_p1_5_set(); // Signal to FPGA to not send more data
 }
 
-void check_cts_stop(void)
+inline void check_cts_stop(void)
 {
     if (uart_byte_count() >= 133) // UartRxBuf is filled to 95% or more
     {
