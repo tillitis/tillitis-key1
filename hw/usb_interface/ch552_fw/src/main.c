@@ -706,7 +706,7 @@ void check_cts_stop(void);
  * Output         : None
  * Return         : None
  *******************************************************************************/
-void USBDeviceCfg()
+void USBDeviceCfg(void)
 {
     USB_CTRL = 0x00;                                       // Clear USB control register
     USB_CTRL &= ~bUC_HOST_MODE;                            // This bit selects the device mode
@@ -732,7 +732,7 @@ void USBDeviceCfg()
  * Output         : None
  * Return         : None
  *******************************************************************************/
-void USBDeviceIntCfg()
+void USBDeviceIntCfg(void)
 {
     USB_INT_EN |= bUIE_SUSPEND;  // Enable device suspend interrupt
     USB_INT_EN |= bUIE_TRANSFER; // Enable USB transfer completion interrupt
@@ -751,7 +751,7 @@ void USBDeviceIntCfg()
  * Output         : None
  * Return         : None
  *******************************************************************************/
-void USBDeviceEndPointCfg()
+void USBDeviceEndPointCfg(void)
 {
     // TODO: Is casting the right thing here? What about endianness?
     UEP0_DMA = (uint16_t) Ep0Buffer; // Endpoint 0 data transfer address, Endpoint 4
@@ -1495,7 +1495,7 @@ void Uart1_ISR(void)IRQ_UART1
     }
 }
 
-inline uint8_t uart_byte_count()
+inline uint8_t uart_byte_count(void)
 {
     uint8_t in = UartRxBufInputPointer;
     uint8_t out = UartRxBufOutputPointer;
@@ -1548,7 +1548,7 @@ inline void check_cts_stop(void)
     }
 }
 
-void main()
+void main(void)
 {
     CfgFsys();     // CH559 clock selection configuration
     mDelaymS(5);   // Modify the main frequency and wait for the internal crystal to stabilize, which must be added
