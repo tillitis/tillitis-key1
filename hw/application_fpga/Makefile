@@ -268,7 +268,7 @@ compile_commands.json:
 
 .PHONY: check
 check:
-	clang-tidy -header-filter=.* -checks=cert-* $(CHECK_SOURCES) -- $(CFLAGS)
+	clang-tidy -header-filter=.* -checks=cert-*,clang-analyzer-* $(CHECK_SOURCES) -- $(CFLAGS)
 
 .PHONY: splint
 splint:
