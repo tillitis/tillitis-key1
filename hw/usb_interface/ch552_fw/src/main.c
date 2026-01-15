@@ -79,11 +79,11 @@ const uint8_t *pDescr = NULL;         // USB configuration flag
 #define DEBUG_EPIN_ADDR                0x84              // DEBUG Endpoint IN Address
 #define DEBUG_EPIN_SIZE                DEFAULT_EP4_SIZE  // DEBUG Endpoint IN Size
 
-#define CDC_CTRL_FS_BINTERVAL          32                // Gives 32 ms polling interval at Full Speed for interrupt transfers
+#define CDC_CTRL_FS_BINTERVAL          16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
 #define CDC_DATA_FS_BINTERVAL          0                 // bInterval is ignored for BULK transfers
-#define FIDO_FS_BINTERVAL              2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
+#define FIDO_FS_BINTERVAL              16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
 #define CCID_BULK_FS_BINTERVAL         0                 // bInterval is ignored for BULK transfers
-#define DEBUG_FS_BINTERVAL             2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
+#define DEBUG_FS_BINTERVAL             16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
 
 #define MAX_CFG_DESC_SIZE              (9+66+77+32)      // Size of CfgDesc+CdcDesc+MAX(FidoDesc,CcidDesc)+DebugDesc
 
