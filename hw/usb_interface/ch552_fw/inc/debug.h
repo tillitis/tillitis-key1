@@ -179,7 +179,7 @@ inline uint8_t  CH554UART1RcvByte(void)
  *******************************************************************************/
 inline void CH554UART1SendByte(uint8_t SendDat)
 {
-    while(gpio_p1_4_get() == 1) // FPGA CTS
+    while(gpio_p1_4_get() == 0) // FPGA CTS
         ;
     SBUF1 = SendDat; // Query sending, the interrupt mode does not need the following two statements, but TI=0 is required before sending
     while (U1TI == 0)
@@ -197,7 +197,7 @@ inline void CH554UART1SendBuffer(uint8_t *Buf, uint32_t Len)
 {
     uint32_t Count = 0;
     while (Count < Len) {
-        if (gpio_p1_4_get() == 0) { // FPGA CTS
+        if (gpio_p1_4_get()) { // FPGA CTS
             SBUF1 = Buf[Count++];
             while (U1TI == 0)
                 ;

@@ -1532,12 +1532,12 @@ inline uint8_t increment_pointer(uint8_t pointer, uint8_t increment, uint8_t buf
 
 inline void cts_start(void)
 {
-    gpio_p1_5_unset(); // Signal to FPGA to send more data
+    gpio_p1_5_set(); // Signal to FPGA to send more data
 }
 
 inline void cts_stop(void)
 {
-    gpio_p1_5_set(); // Signal to FPGA to not send more data
+    gpio_p1_5_unset(); // Signal to FPGA to not send more data
 }
 
 inline void check_cts_stop(void)
