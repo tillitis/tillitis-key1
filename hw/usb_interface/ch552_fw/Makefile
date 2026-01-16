@@ -26,6 +26,7 @@ CFLAGS = \
          --xram-size $(XRAM_SIZE) \
          --xram-loc $(XRAM_LOC) \
          --code-size $(CODE_SIZE) \
+         --stack-auto \
          -Iinc \
          -DFREQ_SYS=$(FREQ_SYS) \
          $(EXTRA_FLAGS)

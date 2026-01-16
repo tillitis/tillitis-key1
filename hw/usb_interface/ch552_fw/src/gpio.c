@@ -6,7 +6,7 @@
 #include "ch554.h"
 
 // Set pin p1.4 and p1.5 to GPIO output mode.
-void gpio_init()
+void gpio_init(void)
 {
     // p1.4
     P1_MOD_OC &= ~0x10;
@@ -65,7 +65,7 @@ uint8_t gpio_get(uint8_t pin)
 }
 
 // Set pin p1.4 to GPIO input mode. (FPGA_CTS)
-void gpio_init_p1_4_in()
+void gpio_init_p1_4_in(void)
 {
     // p1.4
     P1_MOD_OC &= ~0x10; // Output Mode: 0 = Push-pull output, 1 = Open-drain output
@@ -85,7 +85,7 @@ uint8_t gpio_p1_4_get(void)
 }
 
 // Set pin p1.5 to GPIO output mode. (CH552_CTS)
-void gpio_init_p1_5_out()
+void gpio_init_p1_5_out(void)
 {
     // p1.5
     P1_MOD_OC &= ~0x20; // Output Mode: 0 = Push-pull output, 1 = Open-drain output

@@ -49,7 +49,7 @@ void mDelaymS(uint16_t n); // Delay in mS
  * Function Name  : CH554UART0Alter()
  * Description    : Set the alternate pin mappings for UART0 (RX on P1.2, TX on P1.3)
  *******************************************************************************/
-inline void CH554UART0Alter()
+inline void CH554UART0Alter(void)
 {
     PIN_FUNC |= bUART0_PIN_X; // RX on P1.2, TX on P1.3
 }
@@ -61,7 +61,7 @@ inline void CH554UART0Alter()
  *                  T2 can also be used as baud rate generator
  *                  RX on P3.0, TX on P3.1
  *******************************************************************************/
-inline void mInitSTDIO( )
+inline void mInitSTDIO(void)
 {
     uint32_t x;
     uint8_t x2;
@@ -98,7 +98,7 @@ inline void mInitSTDIO( )
  * Description    : CH554UART0 receives a byte
  * Return         : SBUF
  *******************************************************************************/
-inline uint8_t CH554UART0RcvByte()
+inline uint8_t CH554UART0RcvByte(void)
 {
     while (RI == 0)
         ; // Wait for uart rx interrupt flag
@@ -123,7 +123,7 @@ inline void CH554UART0SendByte(uint8_t SendDat)
  * Function Name  : CH554UART1Alter()
  * Description    : Set the alternate pin mappings for UART1 (RX on P3.4, TX on P3.2)
  *******************************************************************************/
-inline void CH554UART1Alter()
+inline void CH554UART1Alter(void)
 {
     PIN_FUNC |= bUART1_PIN_X; // RX on P3.4, TX on P3.2
 }
@@ -134,7 +134,7 @@ inline void CH554UART1Alter()
  *                  RX on P1.6, TX on P1.7
  *
  *******************************************************************************/
-inline void UART1Setup()
+inline void UART1Setup(void)
 {
     U1SM0 = 0;    // UART1 selects 8-bit data bit
     U1SMOD = 1;   // Fast mode
@@ -149,7 +149,7 @@ inline void UART1Setup()
  * Function Name  : UART1Clean()
  * Description    : Read out spurious data
  *******************************************************************************/
-inline void UART1Clean()
+inline void UART1Clean(void)
 {
     uint8_t tmp;
 
@@ -164,7 +164,7 @@ inline void UART1Clean()
  * Description    : CH554UART1 receives a byte
  * Return         : SBUF
  *******************************************************************************/
-inline uint8_t  CH554UART1RcvByte( )
+inline uint8_t  CH554UART1RcvByte(void)
 {
     while (U1RI == 0)  // Query reception, interrupt mode is not required
         ;
