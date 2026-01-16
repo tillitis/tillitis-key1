@@ -10,8 +10,10 @@ see [the TKey Developer Handbook](https://dev.tillitis.se/).
 
 - Firmware: Software in ROM responsible for loading, measuring,
   starting applications, and providing system calls. The firmware is
-  included as part of the FPGA bitstream and not replacable on a usual
-  consumer TKey.
+  included as part of the FPGA bitstream and not replaceable on a TKey
+  (note: on TKey Unlocked the user themself program the TKey and can
+  choose not to lock the memory in TKey and thus leave it open for
+  re-programming).
 - Client: Software running on a computer or a mobile phone the TKey is
   inserted into.
 - Device application or app: Software supplied by the client or from
@@ -47,7 +49,7 @@ memory access control.
 ## Communication
 
 The firmware communicates with the client using the
-`UART_{RX,TX}_{STATUS,DATA}` registers. On top of that is uses three
+`UART_{RX,TX}_{STATUS,DATA}` registers. On top of that it uses three
 protocols: The USB Mode protocol, the TKey framing protocol, and the
 firmware's own protocol.
 
@@ -107,9 +109,9 @@ Dev Handbook for specific details.
 
 * FW\_RAM is divided into the following areas:
 
-- fw stack: 3000 bytes.
-- resetinfo: 256 bytes.
-- .data and .bss: 840 bytes.
+- firmware stack: 3000 bytes.
+- `resetinfo` area: 256 bytes.
+- `.data` and `.bss`: 840 bytes.
 
 ## Firmware behaviour
 
@@ -117,9 +119,11 @@ The purpose of the firmware is to:
 
 1. Load, measure, and start an application received from the client
    over the USB/UART or from one of two flash app slots.
-2. Provide functionality to run only app's with specific BLAKE2s
+2. Provide functionality to run only apps with specific BLAKE2s
    digests.
 3. Provide system calls to access the filesystem and get other data.
+4. To help measure data into the new Compound Device Identifier when
+   chaining apps.
 
 The firmware binary is part of the FPGA bitstream as the initial
 values of the Block RAMs used to construct the ROM. The ROM is located
@@ -127,9 +131,9 @@ at `0x0000_0000`. This is also the CPU reset vector.
 
 ### Reset type
 
-When the TKey is started or resetted it can load an app from different
+When the TKey is started or reset it can load an app from different
 sources. We call this the reset type. Reset type is located in the
-resetinfo part of FW\_RAM. The different reset types loads and start
+`resetinfo` part of FW\_RAM. The different reset types loads and start
 an app from:
 
 1. Flash slot 0 (default): `FLASH0` with a specific app hash defined
@@ -229,7 +233,6 @@ Commands in state *WAITCOMMAND*:
 | `FW_CMD_NAME_VERSION` | unchanged                                  |
 | `FW_CMD_GET_UDI`      | unchanged                                  |
 | `FW_CMD_LOAD_APP`     | *LOADING* or unchanged on invalid app size |
-|                       |                                            |
 
 Commands in state *LOADING*:
 
@@ -253,7 +256,7 @@ Plain text explanation of the states:
   beginning with `FLASH*` transition to *LOAD_FLASH* to load an
   ordinary app from flash.
 
-  For type `CLIENT*` transitionto *WAITCOMMAND* to expect a device app
+  For type `CLIENT*` transition to *WAITCOMMAND* to expect a device app
   from the client.
 
   If type is unknown, error out.
@@ -277,6 +280,9 @@ Plain text explanation of the states:
   registered verification digest, verify that the app we are about to
   start is indeed the correct app. This also means that a prospective
   management app is now verified.
+
+  We can compute the CDI in two different ways. See [Compound Device
+  Identifier computation](#compound-device-identifier-computation) below
 
   Clean up firmware data structures, enable the system calls, and
   start the app, which ends the firmware state machine. Hardware
@@ -305,7 +311,7 @@ Firmware is using a part of the FW\_RAM for its own stack.
 
 When reset is released, the CPU starts executing the firmware. It
 begins in `start.S` by clearing all CPU registers, clears all FW\_RAM,
-except the part reserved for the resetinfo area, sets up a stack for
+except the part reserved for the `resetinfo` area, sets up a stack for
 itself there, and then jumps to `main()`. Also included in the
 assembly part of firmware is an interrupt handler for the system
 calls, but the handler is not yet enabled.
@@ -322,29 +328,27 @@ Firmware then proceeds to:
    CDC USB endpoint and the internal command channel between the CPU
    and the CH552.
 
-3. Check the special resetinfo area in FW\_RAM for reset type. Type
+3. Check the special `resetinfo` area in FW\_RAM for reset type. Type
    zero means default behaviour, load from flash app slot 0, expecting
-   the app there to have a specific hardcoded BLAKE2s digest.
+   the app there to have a specific hard coded BLAKE2s digest.
 
 4. Load app data from flash slot 0 into RAM.
 
 5. Compute a BLAKE2s digest of the loaded app.
 
 6. Compare the computed digest against the allowed app digest
-   hardcoded in the firmware. If it's not equal, halt CPU.
+   hard coded in the firmware. If it's not equal, halt CPU.
 
 7. [Start the device app](#start-the-device-app).
 
 ### Start the device app
 
 1. Check if there is a verification digest left from the previous app
-   in the resetinfo. If it is, compare with the loaded app's already
-   computed digest. Halt CPU if different.
+   in the `resetinfo` area. If it is, compare with the loaded app's
+   already computed digest. Halt CPU if different.
 
 2. Compute the Compound Device Identifier
-   ([CDI]((#compound-device-identifier-computation))) by doing a
-   BLAKE2s using the Unique Device Secret (UDS), the application
-   digest, and any User Supplied Secret (USS) digest already received.
+   ([CDI](#compound-device-identifier-computation)).
 
 3. Write the start address of the device app, currently `0x4000_0000`,
    to `APP_ADDR` and the size of the loaded binary to `APP_SIZE` to
@@ -379,15 +383,13 @@ To support verified boot the firmware supports reset types with
 verification. This means that the firmware will load an app as usual
 either from flash or from the client, but before starting the app it
 will verify the new app's computed digest with a verification digest.
-The verification digest can either be stored in the firmware itself or
-left to it from a previous app, a verified boot loader app.
 
 Such a verified boot loader app:
 
 - Might be loaded from either flash or client.
 
 - Typically includes a security policy, for instance a public key and
-  code to check a crytographic signature.
+  code to check a cryptographic signature.
 
 - Can be specifically trusted by firmware to be able to do filesystem
   management to be able to update an app slot on flash. Add the app's
@@ -398,7 +400,7 @@ Such a verified boot loader app:
 It works like this:
 
 - The app reads a digest of the next app in the chain and the
-  signature over the digest from either the filesystem (syscall
+  signature over the digest from either the filesystem (system call
   `PRELOAD_GET_DIGSIG`) or sent from the client.
 
 - If the signature provided over the digest is verified against the
@@ -407,6 +409,10 @@ It works like this:
   depending on where it wants the next app to start from. It also
   sends the now verified app digest to the firmware in the same system
   call.
+
+- The app leaves something it want's to be measured by the firmware
+  for the coming CDI, typically a digest of its own security policy,
+  like a vendor public key.
 
 - The key is reset and firmware starts again. It checks:
 
@@ -417,36 +423,10 @@ It works like this:
 
 - Firmware refuses to start if the loaded app has a different digest.
 
-- If the app was allowed to start it can now use something
-  deterministic left for it in resetinfo by the verified boot loader
-  app as a seed for it's key material and no longer use CDI for the
-  purpose.
-
-We propose that a loader app can derive the seed for the next app by
-creating a shared secret, perhaps something as easy as:
-
-```
-secret = blake2s(cdi, "name-of-next-app")
-```
-
-The loader shares the secret with the next app by putting it in the
-part of `resetinfo` that is reserved for inter-app communication.
-
-The next app can now use the secret as a seed for it's own key
-material. Depending on the app's behaviour and the number of keys it
-needs it can derive more keys, for instance by having nonces stored on
-its flash area and doing:
-
-```
-secret1 = blake2s(secret, nonce1)
-secret2 = blake2s(secret, nonce2)
-...
-```
-
-Now it can create many secrets deterministically, as long as there is
-some space left on flash for the nonces and all of them can be traced
-to the measured identity of the loader app, giving all the features of
-the measured boot system.
+- If the app was allowed to start it can use the CDI as usual for its
+  key material. See the [Compound Device Identifier
+  computation](#compound-device-identifier-computation) for more about
+  the different CDI computations.
 
 ### App loaded from client
 
@@ -465,7 +445,7 @@ After reset, firmware will:
    using this it's not possible to restart the loading of an
    application.
 
-3. On a sucessful response, the client will send multiple
+3. On a successful response, the client will send multiple
    `FW_CMD_LOAD_APP_DATA` commands, together containing the full
    application.
 
@@ -489,13 +469,50 @@ program gets a secret from the user and then does a key derivation
 function of some sort, for instance a BLAKE2s, to get 32 bytes which
 it sends to the firmware to be part of the CDI computation.
 
+Note: From the user’s perspective, the USS can be any length—there is
+no minimum or maximum. The client program must safely convert the user
+input into a 32-byte value.
+
 ### Compound Device Identifier computation
 
-The CDI is computed by:
+The CDI is computed in one of two ways.
 
-```
-CDI = blake2s(UDS, blake2s(app), USS)
-```
+1. CDI is a result of a hash of the Unique Device Secret, the digest
+   of the entire loaded app, and optionally the User Supplied Secret,
+   if sent from the client:
+
+   ```C
+   CDI = blake2s(UDS, blake2s(app), USS)
+   ```
+
+   This is the default case.
+
+2. CDI is a result of a hash of the Unique Device Secret, something
+   left by the previous app, and optionally the User Supplied Secret,
+   if sent from the client:
+
+   ```C
+   CDI = blake2s(UDS, blake2s(previous-CDI, measured_id_seed)*, USS)
+   ```
+
+  This alternative computation is only done if the `mask` in `struct
+  reset` includes `RESET_SEED`.
+
+  Note that this is done in two parts, before and after reset, in
+  order not to leak CDI between resets.
+
+  1. Before reset (marked with an asterisk above): Typically a calling
+     app would do a `TK1_SYSCALL_RESET` system call and fill in
+     something it wants to be mixed into the new CDI in
+     `measured_id_seed`, The firmware will then mix a new
+     `measured_id` before doing the actual reset:
+
+     ```C
+     measured_id = blake2s(CDI, measured_id_seed)
+      ```
+
+  2. After reset: `measured_id` will survive the reset and will then
+     be used in the actual CDI computation after the reset.
 
 In an ideal world, software would never be able to read UDS at all and
 we would have a BLAKE2s function in hardware that would be the only
@@ -503,9 +520,9 @@ thing able to read the UDS. Unfortunately, we couldn't fit a BLAKE2s
 implementation in the FPGA.
 
 The firmware instead does the CDI computation using the special
-firmware-only `FW_RAM` which is invisible after switching to app mode.
-We keep the entire firmware stack in `FW_RAM` and clear the stack just
-before switching to app mode just in case.
+firmware-only `FW_RAM` which is invisible in app mode. We keep the
+entire firmware stack in `FW_RAM` and clear the stack just before
+switching to app mode just in case.
 
 We sleep for a random number of cycles before reading out the UDS,
 call `blake2s_update()` with it and then immediately call
@@ -525,7 +542,7 @@ PicoRV32 interrupt handler. They are triggered by writing to the
 trigger address: 0xe1000000. It's typically done with a function
 signature like this:
 
-```
+```C
 int syscall(uint32_t number, uint32_t arg1, uint32_t arg2,
 	    uint32_t arg3);
 ```
@@ -536,20 +553,22 @@ number in the a0 register and the arguments in registers a1 to a7
 according to the RISC-V calling convention. The caller is responsible
 for saving and restoring registers.
 
-The syscall handler returns execution on the next instruction after
-the store instruction to the trigger address. The return value from
-the syscall is now available in x10 (a0).
+The system call handler returns execution on the next instruction
+after the store instruction to the trigger address. The return value
+from the system call is now available in x10 (a0).
 
-The syscall numbers are kept in `syscall_num.h`. The syscalls are
-handled in `syscall_handler()` in `syscall_handler.c`.
+The system call numbers are kept in `syscall_num.h`. The system calls
+are handled in `syscall_handler()` in `syscall_handler.c`.
 
 #### `RESET`
 
-```
+```C
 struct reset {
-	uint32_t type;           // Reset type
-	uint8_t app_digest[32];  // Digest of next app in chain to verify
-	uint8_t next_app_data[220]; // Data to leave around for next app
+	enum reset_start type;
+	uint8_t mask;
+	uint8_t app_digest[RESET_DIGEST_SIZE];
+	uint8_t measured_id_seed[RESET_DIGEST_SIZE];
+	uint8_t next_app_data[RESET_DATA_SIZE];
 };
 
 struct reset rst;
@@ -560,9 +579,15 @@ syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, len, 0);
 
 Resets the TKey. Does not return.
 
-You can pass data to the firmware about the reset type `type` and a
-digest that the next app must have. You can also leave some data to
-the next app in the chain in `next_app_data`.
+You can pass data to the firmware about the reset type `type` and
+`measured_id_seed` that you want to include in the CDI measurement for
+the next app by the firmware. The next app's identity will be measured with
+what you leave in `measured_id_seed`, typically a digest of your
+security policy, the current app's CDI, the UDS of the TKey, and
+optionally a USS.
+
+You can also leave some data to the next app in the chain in
+`next_app_data`.
 
 The types of reset are defined in `reset.h`:
 
@@ -577,7 +602,7 @@ The types of reset are defined in `reset.h`:
 
 #### `ALLOC_AREA`
 
-```
+```C
 syscall(TK1_SYSCALL_ALLOC_AREA, 0, 0, 0);
 ```
 
@@ -585,7 +610,7 @@ Allocate a flash area for the current app. Returns 0 on success.
 
 #### `DEALLOC_AREA`
 
-```
+```C
 syscall(TK1_SYSCALL_DEALLOC_AREA, 0, 0, 0);
 ```
 
@@ -594,7 +619,7 @@ success.
 
 #### `WRITE_DATA`
 
-```
+```C
 uint32_t offset = 0;
 uint8_t buf[17];
 
@@ -609,7 +634,7 @@ multiple of 4096 bytes.
 
 #### `READ_DATA`
 
-```
+```C
 uint32_t offset = 0;
 uint8_t buf[17];
 
@@ -620,7 +645,7 @@ Read into `buf` at byte `offset` from the app's flash area.
 
 #### `ERASE_DATA`
 
-```
+```C
 uint32_t offset = 0;
 uint32_t size = 4096;
 
@@ -634,7 +659,7 @@ Both `size` and  `offset` must be a multiple of 4096 bytes.
 
 #### `PRELOAD_DELETE`
 
-```
+```C
 syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0);
 ```
 
@@ -643,7 +668,7 @@ for the verified management app.
 
 #### `PRELOAD_STORE`
 
-```
+```C
 uint8_t *appbinary;
 uint32_t offset;
 uint32_t size;
@@ -666,7 +691,7 @@ Only available for the verified management app.
 
 #### `PRELOAD_STORE_FIN`
 
-```
+```C
 uint8_t app_digest[32];
 uint8_t app_signature[64];
 size_t app_size;
@@ -687,7 +712,7 @@ resulting signature in `app_signature`.
 
 #### `PRELOAD_GET_DIGSIG`
 
-```
+```C
 uint8_t app_digest[32];
 uint8_t app_signature[64];
 
@@ -701,7 +726,7 @@ verified management app.
 
 #### `STATUS`
 
-```
+```C
 syscall(TK1_SYSCALL_PRELOAD_STATUS, 0, 0, 0);
 ```
 
@@ -711,7 +736,7 @@ checks.
 
 #### `GET_VIDPID`
 
-```
+```C
 syscall(TK1_SYSCALL_PRELOAD_STATUS, 0, 0, 0);
 ```
 
@@ -756,11 +781,10 @@ in `dmesg` is the one you should do `cat /dev/hidrawX` on.
 Most of the utility functions that the firmware use lives in
 `tkey-libs`. The canonical place where you can find tkey-libs is at:
 
-  https://github.com/tillitis/tkey-libs
+  [https://github.com/tillitis/tkey-libs](https://github.com/tillitis/tkey-libs)
 
-but we have vendored it in for firmware use in `../tkey-libs`. See top
-README for how to update.
-
+but we have vendored it in for firmware use in `../tkey-libs`. [See
+top README](../../../README.md) for how to update.
 
 ### Test firmware
 
@@ -800,6 +824,11 @@ The fileystem layout looks like this:
 | Storage 3   | 128 kiB  | 0xD0000           | Storage for app           |
 | Partition 2 | 64 kiB   | 0xf0000           | Backup of parititon table |
 
+The storage area `Bitstream` is for development and prototyping
+purposes with a TKey Unlocked. For normal use of a TKey the bitstream
+should be programmed in the NVCM memory inside the FPGA and locked for
+re-programming.
+
 The partition table is made up of:
 
 | **name**  | **size**                                |
@@ -819,17 +848,17 @@ The partition table is made up of:
   Usual to detect broken flash and a signal to use the backup copy.
 
 The digest and signature are reported from the `PRELOAD_GET_DIGSIG`
-syscall as a part of chaining of apps. See Management app, chaining
-apps and verified boot.
+system call as a part of chaining of apps. See Management app,
+chaining apps and verified boot.
 
 The storage status field is 0 if not allocated by an app and 1 if
 allocated.
 
-The storage auth tag is a way of controlling if a a device app can
+The storage auth tag is a way of controlling if a device app can
 access a storage area. It's computed with the 16 byte version of the
 BLAKE2s hash function like this:
 
-```
+```C
 digest = BLAKE2s_16(CDI, nonce)
 ```
 
