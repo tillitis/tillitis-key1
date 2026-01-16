@@ -84,7 +84,7 @@ $ ./tkeyimage -o partition.bin
 With an app in slot 0, filling in the size in the partition table:
 
 ```
-$ ./tkeyimage -o partition.bin -app0 ../../fw/testloadapp/testloadapp.bin
+$ ./tkeyimage -o partition.bin -app0 ../../apps/testloadapp.bin
 ```
 
 With an app in slot 0 and a signed app in slot 1:
@@ -101,7 +101,7 @@ with real hardware or qemu.
 Generate like this:
 
 ```
-$ ./tkeyimage -o flash.bin -f -app0 ../../fw/testloadapp/testloadapp.bin
+$ ./tkeyimage -o flash.bin -f -app0 ../../apps/testloadapp.bin
 ```
 
 Using `-app0` is mandatory because TKey firmware won't start without
