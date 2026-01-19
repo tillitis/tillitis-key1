@@ -20,5 +20,7 @@ int preload_delete(struct partition_table_storage *part_table_storage,
 int preload_get_metadata(struct partition_table *part_table,
 			 uint8_t app_digest[32], uint8_t app_signature[64],
 			 uint8_t pubkey[32], uint8_t slot);
+int preload_set_pubkey(struct partition_table_storage *part_table_storage,
+		       uint8_t pubkey[32], uint8_t to_slot);
 
 #endif
