@@ -238,3 +238,35 @@ int preload_get_metadata(struct partition_table *part_table,
 
 	return 0;
 }
+
+int preload_set_pubkey(struct partition_table_storage *part_table_storage,
+		       uint8_t pubkey[32], uint8_t to_slot)
+{
+	struct partition_table *part_table = &part_table_storage->table;
+
+	if (part_table == NULL) {
+		return -1;
+	}
+
+	if (!in_app_ram(pubkey, 32)) {
+		return -1;
+	}
+
+	if (to_slot >= N_PRELOADED_APP) {
+		return -1;
+	}
+
+	// Check if we are allowed to store
+	if (!mgmt_app_authenticate()) {
+		return -1;
+	}
+
+	memcpy_s(part_table->pre_app_data[to_slot].pubkey,
+		 sizeof(part_table->pre_app_data[to_slot].pubkey), pubkey, 32);
+
+	if (part_table_write(part_table_storage) != 0) {
+		return -1;
+	}
+
+	return 0;
+}
