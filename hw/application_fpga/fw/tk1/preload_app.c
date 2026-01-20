@@ -54,7 +54,13 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 int preload_store(struct partition_table *part_table, uint32_t offset,
 		  uint8_t *data, size_t size, uint8_t to_slot)
 {
-	if (part_table == NULL || data == NULL) {
+	if (part_table == NULL) {
+		return -1;
+	}
+
+	// Allow data to point only to app RAM
+	if (data < (uint8_t *)TK1_RAM_BASE ||
+	    data >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
 		return -1;
 	}
 
@@ -202,7 +208,23 @@ int preload_get_metadata(struct partition_table *part_table,
 			 uint8_t app_digest[32], uint8_t app_signature[64],
 			 uint8_t pubkey[32], uint8_t slot)
 {
-	if (part_table == NULL || app_digest == NULL || app_signature == NULL) {
+	if (part_table == NULL) {
+		return -1;
+	}
+
+	// Allow data to point only to app RAM
+	if (app_digest < (uint8_t *)TK1_RAM_BASE ||
+	    app_digest >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
+		return -1;
+	}
+
+	if (app_signature < (uint8_t *)TK1_RAM_BASE ||
+	    app_signature >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
+		return -1;
+	}
+
+	if (pubkey < (uint8_t *)TK1_RAM_BASE ||
+	    pubkey >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
 		return -1;
 	}
 
