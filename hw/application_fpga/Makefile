@@ -160,7 +160,8 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/rng.o \
 	$(P)/fw/tk1/reset.o \
 	$(P)/fw/tk1/preload_app.o \
-	$(P)/fw/tk1/mgmt_app.o
+	$(P)/fw/tk1/mgmt_app.o \
+	$(P)/fw/tk1/memcheck.o \
 
 CHECK_SOURCES = \
 	$(P)/fw/tk1/*.[ch]

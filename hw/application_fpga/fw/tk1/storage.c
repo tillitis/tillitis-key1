@@ -10,6 +10,7 @@
 
 #include "auth_app.h"
 #include "flash.h"
+#include "memcheck.h"
 #include "partition_table.h"
 #include "storage.h"
 
@@ -224,9 +225,7 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
-	// Allow data to point only to app RAM
-	if (data < (uint8_t *)TK1_RAM_BASE ||
-	    data >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
+	if (!in_app_ram(data, size)) {
 		return -1;
 	}
 
@@ -276,9 +275,7 @@ int storage_read_data(struct partition_table *part_table, uint32_t offset,
 		return -1;
 	}
 
-	// Allow data to point only to app RAM
-	if (data < (uint8_t *)TK1_RAM_BASE ||
-	    data >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
+	if (!in_app_ram(data, size)) {
 		return -1;
 	}
 
