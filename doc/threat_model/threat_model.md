@@ -29,11 +29,21 @@ TL;DR:
   (something they know) and physical access to the TKey device
   (something they have).
 
-- In the use case of a directly measured device app an attacker will
-  also need to use that exact app (the integrity of the app).
-
 - When using a combination of measured boot and verified boot we
-  believe the attacker needs
+  believe the attacker also needs access to the vendor's private key.
+
+- Physical access is needed to do a denial of service either by
+  stealing the TKey or breaking it.
+
+- We think there are some assets (EBR) available to someone with
+  physical access and the knowledge and equipment to do a warm boot
+  attack replacing the FPGA configuration while the FPGA chip is
+  running.
+
+- Over time (with new releases), the TKey should be able to withstand
+  software based attacks. Over time, the TKey should be able to make
+  evil maid attacks take long enough time to make in infeasible to
+  perform without the user discovering the missing device.
 
 ### TKey Unlocked
 
@@ -102,11 +112,11 @@ mitigations in the threat model.
   Provisioned by the user from the client during loading of the device
   app. Should not be revealed to a third party.
 
-- CDI - Compound Device Identity. 
+- CDI - Compound Device Identity.
 
-  Computed by firmware. Used by the device app to derive secrets, keys
-  et c. as needed. The CDI should never be exposed outside of the
-  FPGA.
+  A secret computed by firmware. Used by the device app to derive
+  cryptographic keys et c. as needed. The CDI should never be exposed
+  outside of the FPGA.
 
 - Vendor public key
 
@@ -316,48 +326,61 @@ Threats:
 
 - Leaking.
 - Changing by device app.
+- Impersonation.
 
 Mitigations:
 
-- Leaking: A malicious app designed to leak the CDI, the base of its
-  secrets, will in the measured boot case, leak the /wrong/ secret
-  since the CDI is a measurement of the app itself. If the app running
-  is changed to be malicious, the CDI becomes different. It is
-  computed like this:
-  
-  `CDI = blake2s(UDS, blake2s(app)[, USS])`
+- Leaking: A malicious app designed to leak the CDI will in the
+  default *measured boot* case leak the /wrong/ secret since the CDI
+  includes a measurement of the app itself.
 
-- Leaking: A malicious app designed to leak in the verified boot case
-  will not be allowed to execute by the security policy of the boot
-  verifier.
-
-  Typically the boot verifier will check the app vendor's signature
-  over an app digest against a vendor public key. It will only
-  continue if the signature verifies. It will then leave the app
-  digest to firmware which will load the new app. If the new app's
-  digest is not the same as the already verified app digest execution
-  will halt.
-
-  If the boot verifier app itself is malicious and doesn't have a good
-  security policy the new CDI will depend on the CDI of the verifier
-  app itself and will thus be the /wrong/ CDI, which protects the real
-  CDI from leaking. In the verified boot case the new CDI is computed
-  by firmware like this:
-  
-  `cdi = blake2s(UDS, blake2s(CDI of previous app, seed)[, USS])`
-
-  The seed is whatever data the previous app might want to include in
-  the measurement, for instance the digest of its security policy.
+- Leaking: A malicious app designed to leak in the *verified boot*
+  case will not be allowed to execute by the trust policy of the boot
+  verifier. See [the boot verifier design
+  document](https://github.com/tillitis/tkey-boot-verifier/blob/main/doc/design.md)
+  for details.
 
 - Changing: CDI is protected by hardware. It is only writable in
   firmware mode, not app mode. This protects against an app changing
   its own CDI to something not measured by the firmware.
 
+- Impersonation: When using *verified boot* the attacker is control
+  of:
+
+  - vendor public key
+  - message (the app they want to load)
+  - signature over the app digest.
+
+  It's possible to use an vendor public key with a non-canonical point
+  encododing which might verify signatures over many messages. This
+  means an attacker can send the TKey a correct vendor signature but
+  use their own public key and an malicious app, which will still
+  verify with the vendor signature.
+
+  The mitigation is that our
+  [tkey-boot-verifier](https://github.com/tillitis/tkey-boot-verifier/)
+  always measures the vendor key, too, which means if they use an
+  unexpected vendor key, they get the wrong CDI.
+
+  This is, of course, also the case if someone uses a valid vendor key
+  and their own signature. We're not stopping them from loading and
+  executing a malicious app: we're stopping them from unlocking the
+  secret.
+
+  If the attacker use their own boot verifier app to try to verify and
+  impersonate next app, the entire verifier app is *also* always
+  measured, so they still get the wrong CDI.
+
 ### Vendor public key
 
-Threat: Used to run or install a verified, but malicious device app.
+Threat: Replaced by malicious vendor key.
 
-Mitigation:
+Mitigations:
+
+- Needs physical access, since it can only be done only either by
+  cracking case and updating flash (out of scope) or by requesting
+  that `tkey-boot-verifier` update the key, which asks the user to
+  assert presence.
 
 ### Filesystem partition table
 
@@ -458,7 +481,10 @@ Mitigation:
 
 ### Preloaded apps
 
-Threat: Changed to malicious apps.
+Threats:
+
+- Changed to malicious apps.
+- Changed remotely.
 
 Mitigation:
 
@@ -467,9 +493,10 @@ Mitigation:
   Firmware will only start it after a power cycle if the computed
   digested is the same.
 
-- App slot 1: No protection against changing app. Instead, we rely on
-  the app getting it's own CDI with the measured boot/verified boot
-  combination so a malicious app cannot leak secrets.
+- App slot 1: Changing app needs user to assert presence by touching
+  touch sensor. For malicious apps we rely on the app getting it's own
+  CDI with the measured boot/verified boot combination so a malicious
+  app cannot leak secrets.
 
 ## Known weaknesses
 
@@ -615,8 +642,3 @@ withstand SW attacks by vERyRevil.
   development
 * End game: Long term stealth presence providing access to information
   about the end user
-
-Over time (with new releases), The TKey device should be able to
-withstand SW based attacks. Over time, the TKey Device should be able
-to make evil maid attacks take long enough time to make in infeasible to
-perform without the user discovering the missing device.
