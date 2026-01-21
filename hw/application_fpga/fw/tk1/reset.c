@@ -8,6 +8,7 @@
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 
+#include "memcheck.h"
 #include "reset.h"
 
 // clang-format off
@@ -18,8 +19,7 @@ static volatile struct reset *resetinfo = (volatile struct reset *)TK1_MMIO_RESE
 
 int reset(struct user_reset *userreset, size_t nextlen)
 {
-	if ((uint32_t)userreset < TK1_RAM_BASE ||
-	    (uint32_t)userreset >= TK1_RAM_BASE + TK1_RAM_SIZE) {
+	if (!in_app_ram(userreset, sizeof(struct reset))) {
 		return -1;
 	}
 
@@ -63,13 +63,7 @@ int reset(struct user_reset *userreset, size_t nextlen)
 
 int reset_data(uint8_t *next_app_data)
 {
-	if ((uint32_t)next_app_data < TK1_RAM_BASE ||
-	    (uint32_t)next_app_data >= TK1_RAM_BASE + TK1_RAM_SIZE) {
-		return -1;
-	}
-
-	if ((uint32_t)next_app_data + RESET_DATA_SIZE >
-	    TK1_RAM_BASE + TK1_RAM_SIZE) {
+	if (!in_app_ram(next_app_data, RESET_DATA_SIZE)) {
 		return -1;
 	}
 
