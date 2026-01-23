@@ -80,8 +80,12 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 		/* Already has an area */
 		return 0;
 	}
-
+#ifdef DEV_ONLY_USE_AREA_0
+	int index = 0;
+#else
 	int index = get_first_empty(part_table);
+#endif
+
 	if (index < 0) {
 		/* No empty slot */
 		return -1;
@@ -96,10 +100,12 @@ int storage_allocate_area(struct partition_table_storage *part_table_storage)
 	// Allocate the empty index found
 	// Erase area first
 
+#ifndef DEV_ONLY_USE_AREA_0
 	// Assumes the area is 64 KiB block aligned
 	flash_block_64_erase(start_address); // Erase first 64 KB block
 	flash_block_64_erase(start_address +
 			     0x10000); // Erase second 64 KB block
+#endif
 
 	// Write partition table lastly
 	part_table->app_storage[index].status = 0x01;

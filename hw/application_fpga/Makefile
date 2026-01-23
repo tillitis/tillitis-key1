@@ -239,6 +239,11 @@ flash_image.bin: tools/tkeyimage/tkeyimage $(FLASH_IMAGE_DEPS)
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
 
+ifdef DEV_ONLY_USE_AREA_0
+firmware.elf: CFLAGS += -DDEV_ONLY_USE_AREA_0
+qemu_firmware.elf: CFLAGS += -DDEV_ONLY_USE_AREA_0
+endif
+
 #firmware.elf: CFLAGS += -DTKEY_DEBUG
 firmware.elf: tkey-libs $(FIRMWARE_OBJS) $(P)/fw/tk1/firmware.lds $(P)/fw/tk1/mgmt_app_digest.h
 	$(CC) $(CFLAGS) $(FIRMWARE_OBJS) $(LDFLAGS) -o $@ > $(basename $@).map
