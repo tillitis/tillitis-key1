@@ -395,13 +395,13 @@ Such a verified boot loader app:
   management to be able to update an app slot on flash. Add the app's
   digest to `allowed_app_digest` in `mgmt_app.c` to allow it to use
   `PRELOAD_DELETE`, `PRELOAD_STORE`, `PRELOAD_STORE_FIN`, and
-  `PRELOAD_GET_DIGSIG`.
+  `PRELOAD_GET_METADATA`.
 
 It works like this:
 
 - The app reads a digest of the next app in the chain and the
   signature over the digest from either the filesystem (system call
-  `PRELOAD_GET_DIGSIG`) or sent from the client.
+  `PRELOAD_GET_METADATA`) or sent from the client.
 
 - If the signature provided over the digest is verified against the
   public key the app use the system call `RESET` with the reset type
@@ -710,14 +710,14 @@ in `app_digest`.
 Sign `app_digest` with your Ed25519 private key and pass the
 resulting signature in `app_signature`.
 
-#### `PRELOAD_GET_DIGSIG`
+#### `PRELOAD_GET_METADATA`
 
 ```C
 uint8_t app_digest[32];
 uint8_t app_signature[64];
 uint8_t pubkey[32];
 
-syscall(TK1_SYSCALL_PRELOAD_GET_DIGSIG, (uint32_t)app_digest,
+syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)app_digest,
 		(uint32_t)app_signature, (uint32_t)pubkey;
 ```
 
@@ -850,7 +850,7 @@ The partition table is made up of:
   Usual to detect broken flash and a signal to use the backup copy.
 
 The digest, signature and pubkey are reported from the
-`PRELOAD_GET_DIGSIG` system call as a part of chaining of apps. See
+`PRELOAD_GET_METADATA` system call as a part of chaining of apps. See
 Management app, chaining apps and verified boot.
 
 The storage status field is 0 if not allocated by an app and 1 if
