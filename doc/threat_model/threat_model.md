@@ -44,7 +44,7 @@ and trustworthy manner.
 * UDS - Unique Device Secret. Provisioned and stored in the FPGA NVCM
   during TKey device provisioning. Never to be replaced or altered
   during the life time of a given TKey device. Used to derive
-  application secrets. Must never leave the device. Tillitis must NOT
+  application secrets. Must never leave the device. Tillitis must
   not store a copy of the UDS.
 
 * UDI - Unique Device ID. Provisioned and stored in the FPGA NVCM
