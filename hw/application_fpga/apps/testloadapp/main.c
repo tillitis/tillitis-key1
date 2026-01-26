@@ -103,13 +103,13 @@ int verify(uint8_t pubkey[32])
 	// pubkey we already have
 	// read signature
 	// read digest
-	ret = syscall(TK1_SYSCALL_PRELOAD_GET_DIGSIG, (uint32_t)app_digest,
+	ret = syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)app_digest,
 		      (uint32_t)app_signature, (uint32_t)flash_pubkey);
 
 	(void)flash_pubkey; // Using pubkey argument instead of pubkey on flash
 
 	if (ret != 0) {
-		puts(IO_CDC, "couldn't get digsig, error:");
+		puts(IO_CDC, "couldn't get metadata, error:");
 		putinthex(IO_CDC, ret);
 		puts(IO_CDC, "\r\n");
 
