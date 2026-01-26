@@ -38,7 +38,7 @@ TL;DR:
 - We think there are some assets (EBR) available to someone with
   physical access and the knowledge and equipment to do a warm boot
   attack replacing the FPGA configuration while the FPGA chip is
-  running.
+  running. See [Known weaknesses](known-weaknesses).
 
 - Over time (with new releases), the TKey should be able to withstand
   software based attacks. Over time, the TKey should be able to make
@@ -48,12 +48,12 @@ TL;DR:
 ### TKey Unlocked
 
 The TKey is available in two versions: the ordinary TKey for general
-use and the TKey Unlocked. The Unlocked is for people who want to
+use and the TKey Unlocked. The Unlocked is for users who want to
 provision the bitstream themselves, either because they want to choose
 the Unique Device Secret themselves or want to change the hardware
 design or the firmware.
 
-This threat model and the mitigations listed applies to unlocked
+The threat model and the mitigations listed applies to unlocked
 devices too as long as they have been provisioned with:
 
 - the bitstream from the official release,
@@ -131,17 +131,21 @@ mitigations in the threat model.
   Used by a vendor to sign device apps that are meant to get the same
   CDI by a combination of measured boot and verified boot.
 
-- Vendor Sigsum signing key.
+- Vendor Sigsum private key.
 
   The [TKey Verification
   System](https://github.com/tillitis/tkey-verification) uses a
   [Sigsum transparency log](https://www.sigsum.org/) to sign a message
-  about every provisioned Tkey. Tillitis' private key is used to do
-  this signing and must be kept secret.
+  about every provisioned Tkey. Tillitis' Sigsum private key is used
+  to do this signing and must be kept secret.
+
+  Not kept on TKey, so not in scope.
 
 - Vendor Sigsum public key.
 
   Corresponding public key to the Sigsum signing key above.
+
+  Not kept on TKey, so not in scope.
 
 - Filesystem partition table.
 
@@ -207,6 +211,7 @@ There are two major type of attacks
 
   - Reading out of the UDS from the external flash chip. A bitstream
     on flash is not used in production, only development.
+
   - Triggering of the FPGA warm boot functionality. It should be hard
     to successfully perform against the TKey, but the attack is not
     yet fully mitigated.
@@ -216,7 +221,8 @@ There are two major type of attacks
 
 - Glitching attacks including:
 
-  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU
+  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU.
+
   - Disturbance of the TRNG entropy generation
 
 - EM leakage.
@@ -224,8 +230,12 @@ There are two major type of attacks
 - Attacks on the TKey device apps.
 
 - Leakage and glitching attacks including:
-  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU
-  - EM leakage
+
+  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU.
+
+  - EM leakage.
+
+- Attacks on Tillitis' infrastructure outside of the TKey itself.
 
 ### General physical attacks
 
@@ -407,24 +417,16 @@ Mitigations:
   that `tkey-boot-verifier` update the key, which asks the user to
   assert presence.
 
-
 ### Vendor private key
 
-Threat: Leaking.
+Not on TKey. Out of scope, but included for reference.
 
-TODO Fill in.
+Threat: Leaking or changing to malicious.
 
-### Vendor Sigsum signing key
+Mitigation:
 
-Threat: Leaking.
-
-TODO Fill in.
-
-### Vendor Sigsum public key
-
-Threat: User tricked into trusting some other public key.
-
-TODO Fill in.
+- Encrypted at rest.
+- Used in an airgapped environment.
 
 ### Filesystem partition table
 
@@ -544,7 +546,9 @@ Mitigation:
   CDI with the measured boot/verified boot combination so a malicious
   app cannot leak secrets.
 
-### Sigsum private key
+### Vendor Sigsum private key
+
+Not on TKey. Out of scope, but included for reference.
 
 Threat: Leaking or changing to malicious
 
@@ -553,6 +557,20 @@ Mitigation:
 - Encrypted at rest.
 
 - Used in an airgapped environment.
+
+### Vendor Sigsum public key
+
+Not on TKey. Out of scope, but included for reference.
+
+Threat: User tricked into trusting some other public key.
+
+Mitigation:
+
+- Trusted distribution of the `tkey-verify` client app.
+
+The environment the user runs `tkey-verify` on is assumed to be
+outside of the vendor's control. Malicious actors can replace the
+command.
 
 ### Verification files
 
