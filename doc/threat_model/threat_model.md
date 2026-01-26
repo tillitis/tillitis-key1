@@ -118,7 +118,7 @@ mitigations in the threat model.
   cryptographic keys et c. as needed. The CDI should never be exposed
   outside of the FPGA.
 
-- Vendor public key
+- Vendor public key.
 
   Used in a verified boot scenario to verify the next app to start.
 
@@ -126,40 +126,57 @@ mitigations in the threat model.
   associated with the device app in slot 1 or be fed to a boot
   verifier app from the client.
 
-- Filesystem partition table
+- Vendor private key.
 
-- Firmware memory
+  Used by a vendor to sign device apps that are meant to get the same
+  CDI by a combination of measured boot and verified boot.
+
+- Vendor Sigsum signing key.
+
+  The [TKey Verification
+  System](https://github.com/tillitis/tkey-verification) uses a
+  [Sigsum transparency log](https://www.sigsum.org/) to sign a message
+  about every provisioned Tkey. Tillitis' private key is used to do
+  this signing and must be kept secret.
+
+- Vendor Sigsum public key.
+
+  Corresponding public key to the Sigsum signing key above.
+
+- Filesystem partition table.
+
+  Partition table on the TKey flash. Keeps metadata about the vendor
+  key, preloaded apps, and app storage slots.
+
+- Firmware memory.
 
   The firmware has its own memory, `FW_RAM`. It does all its sensitive
   computations here.
 
-- RAM
+- RAM.
 
   The TKey has a memory where the device app is loaded and executed.
   It's available for the apps.
 
-- Firmware mode
+- Firmware mode.
 
   The TKey has two execution modes: firmware mode and app mode.
   Firmware mode has more priveleges. When running in firmware mode the
   entire memory map (including some of the other assets listed here)
   are available for read and write access.
   
-- Preloaded apps
+- Preloaded apps.
 
   The TKey comes with two preloaded apps stored in slot 0 and slot 1,
   the boot verifier and the FIDO2 app. By default they are started in
   a chain.
 
-- Sigsum keys
+- Verification files
 
-  The [TKey Verification
-  System](https://github.com/tillitis/tkey-verification) uses a
-  [Sigsum transparency log](https://www.sigsum.org/) to sign a message
-  about every provisioned key. Tillitis' private key is used to do
-  this signing and must be kept secret.
-
-- Published data about provisioned keys
+  Published files used by the The [TKey Verification
+  System](https://github.com/tillitis/tkey-verification). Includes a
+  Sigsum proof over a message and some metadata the user can recreate
+  from this data.
 
 ## Threats and mitigations
 
@@ -253,7 +270,12 @@ Mitigations:
   FPGA chip and can't be read or changed after locking.
   
   The data in NVCM shouldn't be visible on X-ray and isn't visible
-  with microscopes.
+  with microscopes, even SEM. See Lattice's whitepaper [Security
+  aspects of Lattice semiconductor iCE40 mobile FPGA
+  devices](https://www.latticesemi.com/-/media/LatticeSemi/Documents/WhitePapers/NZ/SecurityAspectOfLatticeSemiconductor-English-090313.ashx?document_id=50737).
+
+- The UDS is implemented as hardware registers, not EBR, so it's not
+  vulnerable to a warm boot attack.
 
 - The hardware design allows only one read of the entire UDS once per
   power-cycle, meant to be done by the firmware.
@@ -308,9 +330,9 @@ Mitigations:
   Windows, but this isn't enforced. The protection is weak.
   Keyloggers, especially on X11, would probably be leaking the USS.
   
-- The firmware uses the USS in the CDI computation. The entire memory
-  the USS is kept in, `FW_RAM`, is then wiped and made unavailable to
-  the device app by hardware protection.
+- The firmware uses the USS in the CDI computation. The memory the USS
+  was kept in is then wiped and made unavailable to the device app by
+  hardware protection.
 
   Since the firmware does the computation, the device app doesn't even
   see the USS digest.
@@ -333,6 +355,9 @@ Mitigations:
 - Leaking: A malicious app designed to leak the CDI will in the
   default *measured boot* case leak the /wrong/ secret since the CDI
   includes a measurement of the app itself.
+
+- Leaking: CDI is implemented as hardware registers, not EBR, so it's
+  not vulnerable to reading by a warm boot attack.
 
 - Leaking: A malicious app designed to leak in the *verified boot*
   case will not be allowed to execute by the trust policy of the boot
@@ -382,6 +407,25 @@ Mitigations:
   that `tkey-boot-verifier` update the key, which asks the user to
   assert presence.
 
+
+### Vendor private key
+
+Threat: Leaking.
+
+TODO Fill in.
+
+### Vendor Sigsum signing key
+
+Threat: Leaking.
+
+TODO Fill in.
+
+### Vendor Sigsum public key
+
+Threat: User tricked into trusting some other public key.
+
+TODO Fill in.
+
 ### Filesystem partition table
 
 Threats: Corruption or malicious change.
@@ -409,11 +453,10 @@ Mitigation:
 
 - The entire `FW_RAM` is cleared when the FPGA is powered up and the
   FPGA is configured.
-  
-  XXX but it is not cleared by hardware after each reset?
 
-  TODO: Perhaps the firmware should clear the `FW_RAM` before doing a
-  reset.
+  TODO: However, since `FW_RAM` is not cleared after a soft reset,
+  perhaps the firmware should clear the `FW_RAM` except the
+  `resetinfo` area before doing a reset.
 
 - The firmware's stack in `FW_RAM` is cleared by firmware before
   jumping to an app.
@@ -469,15 +512,18 @@ Mitigation:
   though, since `tkey-verify` checks it.
 
 - Hardware protection for system call privilege escalation. In order
-  to access the filesystem and other sensitive stuff the app needs to
-  escalate privilege temporarily to firmware mode. This is done with
-  hardware support from an interrupt call.
-  
+  to do priveleged actions the app needs to temporarily change to
+  firmware mode. This is done with hardware support from an interrupt
+  call.
+    
   When this interrupt is raised, the device temporarily enters
-  firmware mode and the system call handler in the firmware. Arguments
-  are passed in registers. The firmware does the system call and then
-  automatically goes back to the hardware app mode when returning to
-  the app.
+  firmware mode and calls the system call handler in the firmware.
+  Arguments are passed in registers. The firmware does the system call
+  and then automatically goes back to the hardware app mode when
+  returning to the app.
+
+  See the Developer Handbook for [a list of the system
+  calls](https://dev.tillitis.se/castor/syscalls/).
 
 ### Preloaded apps
 
@@ -498,6 +544,24 @@ Mitigation:
   CDI with the measured boot/verified boot combination so a malicious
   app cannot leak secrets.
 
+### Sigsum private key
+
+Threat: Leaking or changing to malicious
+
+Mitigation:
+
+- Encrypted at rest.
+
+- Used in an airgapped environment.
+
+### Verification files
+
+Threat: Replaced.
+
+Mitigation:
+
+TODO fill in
+
 ## Known weaknesses
 
 - All RAM is writable in bot firmware and app mode, even addresses
@@ -505,9 +569,24 @@ Mitigation:
 
 - It's possible to change the configuration of the Lattice iCE40
   UltraPlus FPGA while the power is on even when the NVCM is locked.
-  This warm boot leaves the EBR and SPRAM intact after the new
-  configuration is loaded, and the contents of the EBR and SPRAM can
-  leak.
+  See "Security of the On-Chip CRAM and BRAM" in Lattice's whitepaper
+  [Security aspects of Lattice semiconductor iCE40 mobile FPGA
+  devices](https://www.latticesemi.com/-/media/LatticeSemi/Documents/WhitePapers/NZ/SecurityAspectOfLatticeSemiconductor-English-090313.ashx?document_id=50737).
+  
+  > On resetting the product with power still applied, it is possible
+  > to insert a new program in CRAM that will read the BRAM data out.
+  >
+  > However, on resetting the product, the CRAM memory itself is fully
+  > erased and there is no possible way to read the CRAM data externally.
+  >
+  > Therefore, storing Digital Key data in the NVCM with the
+  > protection flag set, and then sending that secure data to the CRAM
+  > memory of the chip, there is no way to extract it.
+
+  A warm boot leaves the EBR (what the whitepaper calls BRAM) and
+  SPRAM intact after the new configuration is loaded, and the contents
+  of the EBR and SPRAM can leak. "CRAM" in the quoute is the
+  configuration memory the bitstream is in when the chip has power.
 
   Mitigations:
   
@@ -515,13 +594,23 @@ Mitigation:
 
   - Requires breaking the case.
 
-  - SPRAM is protected by a scrambling mechanism. See above under RAM.
+  - UDS is stored in locked-down NVCM and in registers in CRAM when
+    running. It is not in SPRAM nor EBR, except for a very short
+    moment when firmware computes CDI. See [UDS](#UDS) protection
+    above.
+
+  - SPRAM is protected by a scrambling mechanism. See above under
+    [RAM](#RAM).
 
   - EBR is not protected, so any hardware cores that use EBR is still
     vulnerable.
 
-    XXX: List which ones use EBR?
-
+    These use EBR:
+    
+    - `FW_RAM`, including the `resetinfo` that is kept over soft
+      resets.
+    - XXX List others using EBR.
+    
 - The CH552 MCU USB weaknesses
 
   Asset: CH552 firmware.
@@ -548,16 +637,6 @@ Mitigation:
   Succesfully verifying the signature by running `tkey-verify`
   verifies that the communication, at least for those commands, is not
   modified.
-
-### Sigsum private key
-
-Threat: Leaking or changing to malicious
-
-Mitigation:
-
-- Encrypted at rest.
-
-- Used in an airgapped environment.
 
 ## Threat Actors - The bad guys
 
