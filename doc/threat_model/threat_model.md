@@ -379,7 +379,7 @@ Mitigations:
   firmware mode, not app mode. This protects against an app changing
   its own CDI to something not measured by the firmware.
 
-- Impersonation: When using *verified boot* the attacker is control
+- Impersonation: When using *verified boot* the attacker is in control
   of:
 
   - vendor public key
@@ -387,9 +387,9 @@ Mitigations:
   - signature over the app digest.
 
   It's possible to use an vendor public key with a non-canonical point
-  encododing which might verify signatures over many messages. This
+  encoding which might verify signatures over many messages. This
   means an attacker can send the TKey a correct vendor signature but
-  use their own public key and an malicious app, which will still
+  use their own public key and a malicious app, which will still
   verify with the vendor signature.
 
   The mitigation is that our
@@ -498,7 +498,7 @@ Mitigation:
 
 ### Firmware mode
 
-Threat: Unlawful privelege escalation.
+Threat: Unlawful privilege escalation.
 
 Mitigation:
 
@@ -539,7 +539,7 @@ Mitigation:
 - App slot 0, containing the boot verifier, can not be changed after
   provisioning. It's app digest is mentioned in the firmware in ROM.
   Firmware will only start it after a power cycle if the computed
-  digested is the same.
+  digest is the same.
 
 - App slot 1: Changing app needs user to assert presence by touching
   touch sensor. For malicious apps we rely on the app getting it's own
@@ -582,7 +582,7 @@ TODO fill in
 
 ## Known weaknesses
 
-- All RAM is writable in bot firmware and app mode, even addresses
+- All RAM is writable in both firmware and app mode, even addresses
   marked executable.
 
 - It's possible to change the configuration of the Lattice iCE40
