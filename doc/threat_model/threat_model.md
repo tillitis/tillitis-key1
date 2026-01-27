@@ -38,7 +38,7 @@ TL;DR:
 - We think there are some assets (EBR) available to someone with
   physical access and the knowledge and equipment to do a warm boot
   attack replacing the FPGA configuration while the FPGA chip is
-  running. See [Known weaknesses](known-weaknesses).
+  running. See [Known weaknesses](#known-weaknesses).
 
 - Over time (with new releases), the TKey should be able to withstand
   software based attacks. Over time, the TKey should be able to make
