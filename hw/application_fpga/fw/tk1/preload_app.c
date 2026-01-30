@@ -9,6 +9,7 @@
 #include <tkey/tk1_mem.h>
 
 #include "flash.h"
+#include "memcheck.h"
 #include "mgmt_app.h"
 #include "partition_table.h"
 #include "preload_app.h"
@@ -54,7 +55,11 @@ int preload_load(struct partition_table *part_table, uint8_t from_slot)
 int preload_store(struct partition_table *part_table, uint32_t offset,
 		  uint8_t *data, size_t size, uint8_t to_slot)
 {
-	if (part_table == NULL || data == NULL) {
+	if (part_table == NULL) {
+		return -1;
+	}
+
+	if (!in_app_ram(data, size)) {
 		return -1;
 	}
 
@@ -105,14 +110,11 @@ int preload_store_finalize(struct partition_table_storage *part_table_storage,
 		return -1;
 	}
 
-	// Allow data to point only to app RAM
-	if (app_digest < (uint8_t *)TK1_RAM_BASE ||
-	    app_digest >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
+	if (!in_app_ram(app_digest, 32)) {
 		return -1;
 	}
 
-	if (app_signature < (uint8_t *)TK1_RAM_BASE ||
-	    app_signature >= (uint8_t *)(TK1_RAM_BASE + TK1_RAM_SIZE)) {
+	if (!in_app_ram(app_signature, 64)) {
 		return -1;
 	}
 
@@ -202,7 +204,15 @@ int preload_get_digsig(struct partition_table *part_table,
 		       uint8_t app_digest[32], uint8_t app_signature[64],
 		       uint8_t slot)
 {
-	if (part_table == NULL || app_digest == NULL || app_signature == NULL) {
+	if (part_table == NULL) {
+		return -1;
+	}
+
+	if (!in_app_ram(app_digest, 32)) {
+		return -1;
+	}
+
+	if (!in_app_ram(app_signature, 64)) {
 		return -1;
 	}
 
