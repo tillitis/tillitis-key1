@@ -850,7 +850,7 @@ The partition table is made up of:
   Usual to detect broken flash and a signal to use the backup copy.
 
 The digest, signature and pubkey are reported from the
-`PRELOAD_GET_DIGSIG` system call as a part of chaining of apps. See
+`PRELOAD_GET_METADATA` system call as a part of chaining of apps. See
 Management app, chaining apps and verified boot.
 
 The storage status field is 0 if not allocated by an app and 1 if
