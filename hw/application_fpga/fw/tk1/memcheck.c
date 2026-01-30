@@ -9,28 +9,35 @@
 
 #include "memcheck.h"
 
+// Check if object at pointer p with size size is located in app RAM.
+//
+// Return true if object is in app RAM. Otherwise return false.
 bool in_app_ram(const void *p, size_t size)
 {
 	uintptr_t addr = (uintptr_t)p;
 
-	if (TK1_RAM_BASE > UINTPTR_MAX) {
+	if (TK1_RAM_BASE > UINTPTR_MAX || TK1_RAM_SIZE > UINTPTR_MAX) {
 		assert(1 == 2);
 	}
-
-	if ((uintptr_t)TK1_RAM_BASE + TK1_RAM_SIZE < TK1_RAM_BASE) {
+	if (TK1_RAM_BASE > UINTPTR_MAX - TK1_RAM_SIZE) {
 		assert(1 == 2);
 	}
+	uintptr_t stop = TK1_RAM_BASE + TK1_RAM_SIZE;
 
+	// Lower than RAM?
 	if (addr < TK1_RAM_BASE) {
 		return false;
 	}
 
-	if (size > TK1_RAM_SIZE) {
+	// Higher than RAM's end?
+	if (addr >= stop) {
 		return false;
 	}
 
-	// Checking 'addr + size > BASE + SIZE' without overflow
-	if (addr > (uintptr_t)TK1_RAM_BASE + TK1_RAM_SIZE - size) {
+	// How much is left from addr to end of RAM?
+	uintptr_t left = stop - addr;
+
+	if (size > left) {
 		return false;
 	}
 
