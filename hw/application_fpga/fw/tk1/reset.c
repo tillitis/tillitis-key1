@@ -19,7 +19,7 @@ static volatile struct reset *resetinfo = (volatile struct reset *)TK1_MMIO_RESE
 
 int reset(struct user_reset *userreset, size_t nextlen)
 {
-	if (!in_app_ram(userreset, sizeof(struct reset))) {
+	if (!in_app_ram(userreset, sizeof(struct user_reset))) {
 		return -1;
 	}
 
