@@ -395,13 +395,13 @@ Such a verified boot loader app:
   management to be able to update an app slot on flash. Add the app's
   digest to `allowed_app_digest` in `mgmt_app.c` to allow it to use
   `PRELOAD_DELETE`, `PRELOAD_STORE`, `PRELOAD_STORE_FIN`, and
-  `PRELOAD_GET_DIGSIG`.
+  `PRELOAD_GET_METADATA`.
 
 It works like this:
 
 - The app reads a digest of the next app in the chain and the
   signature over the digest from either the filesystem (system call
-  `PRELOAD_GET_DIGSIG`) or sent from the client.
+  `PRELOAD_GET_METADATA`) or sent from the client.
 
 - If the signature provided over the digest is verified against the
   public key the app use the system call `RESET` with the reset type
@@ -710,19 +710,20 @@ in `app_digest`.
 Sign `app_digest` with your Ed25519 private key and pass the
 resulting signature in `app_signature`.
 
-#### `PRELOAD_GET_DIGSIG`
+#### `PRELOAD_GET_METADATA`
 
 ```C
 uint8_t app_digest[32];
 uint8_t app_signature[64];
+uint8_t pubkey[32];
 
-syscall(TK1_SYSCALL_PRELOAD_GET_DIGSIG, (uint32_t)app_digest,
-		(uint32_t)app_signature, 0);
+syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)app_digest,
+		(uint32_t)app_signature, (uint32_t)pubkey;
 ```
 
-Copies the digest and signature of app in flash slot 1 to `app_digest`
-and `app_signature`. Returns 0 on success. Only available for the
-verified management app.
+Copies the digest and signature of app, and pubkey in flash slot 1 to
+`app_digest`, `app_signature` and `pubkey`. Returns 0 on success. Only
+available for the verified management app.
 
 #### `STATUS`
 
@@ -831,25 +832,26 @@ re-programming.
 
 The partition table is made up of:
 
-| **name**  | **size**                                |
-|-----------|-----------------------------------------|
-| Version   | 1 B                                     |
-| App 0     | 4 B length, 32 B digest, 64 B signature |
-| App 1     | 4 B length, 32 B digest, 64 B signature |
-| Storage 0 | 1 B status, 16 B nonce, 16 B auth tag   |
-| Storage 1 | 1 B status, 16 B nonce, 16 B auth tag   |
-| Storage 2 | 1 B status, 16 B nonce, 16 B auth tag   |
-| Storage 3 | 1 B status, 16 B nonce, 16 B auth tag   |
-| Checksum  | 32 B                                    |
+| **name**  | **size**                                             |
+|-----------|------------------------------------------------------|
+| Version   | 1 B                                                  |
+| App 0     | 4 B length, 32 B digest, 64 B signature, 32 B pubkey |
+| App 1     | 4 B length, 32 B digest, 64 B signature, 32 B pubkey |
+| Storage 0 | 1 B status, 16 B nonce, 16 B auth tag                |
+| Storage 1 | 1 B status, 16 B nonce, 16 B auth tag                |
+| Storage 2 | 1 B status, 16 B nonce, 16 B auth tag                |
+| Storage 3 | 1 B status, 16 B nonce, 16 B auth tag                |
+| Checksum  | 32 B                                                 |
 
 - Digest is a BLAKE2s hash digest of the app.
 - Signature is an Ed25519 signature of the above digest.
+- Pubkey is an Ed25519 pubkey which can verify the signature above.
 - Checksum is a BLAKE2s hash digest of everything that came before.
   Usual to detect broken flash and a signal to use the backup copy.
 
-The digest and signature are reported from the `PRELOAD_GET_DIGSIG`
-system call as a part of chaining of apps. See Management app,
-chaining apps and verified boot.
+The digest, signature and pubkey are reported from the
+`PRELOAD_GET_METADATA` system call as a part of chaining of apps. See
+Management app, chaining apps and verified boot.
 
 The storage status field is 0 if not allocated by an app and 1 if
 allocated.

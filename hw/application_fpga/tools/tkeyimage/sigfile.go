@@ -12,6 +12,12 @@ import (
 	"strings"
 )
 
+type PubKey struct {
+	Alg    [2]byte
+	KeyNum [8]byte
+	Key    [32]byte
+}
+
 type Signature struct {
 	Alg    [2]byte
 	KeyNum [8]byte
@@ -37,6 +43,23 @@ func ReadBase64(filename string) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+func ReadKey(filename string) (*PubKey, error) {
+	var pub PubKey
+
+	buf, err := ReadBase64(filename)
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	r := bytes.NewReader(buf)
+	err = binary.Read(r, binary.BigEndian, &pub)
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	return &pub, nil
 }
 
 func ReadSig(filename string) (*Signature, error) {
