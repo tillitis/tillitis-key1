@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/tillitis/tkey-sign-cli/signify"
 	"golang.org/x/crypto/blake2s"
 )
 
@@ -149,7 +150,7 @@ func genPartitionFile(outFn string, app0Fn, app1Fn, app1SigFn, app1PubFn string)
 // GenChecksum().
 //
 // It returns the partition table.
-func newPartTable(app0 []byte, app1 []byte, app1Sig *Signature, app1Pub *PubKey) PartTableStorage {
+func newPartTable(app0 []byte, app1 []byte, app1Sig signify.Signature, app1Pub signify.PubKey) PartTableStorage {
 	storage := PartTableStorage{
 		PartTable: PartTable{
 			Version:          1,
@@ -169,13 +170,8 @@ func newPartTable(app0 []byte, app1 []byte, app1Sig *Signature, app1Pub *PubKey)
 		storage.PartTable.PreLoadedAppData[1].Digest = blake2s.Sum256(app1)
 	}
 
-	if app1Sig != nil {
-		storage.PartTable.PreLoadedAppData[1].Signature = app1Sig.Sig
-	}
-
-	if app1Pub != nil {
-		storage.PartTable.PreLoadedAppData[1].Pubkey = app1Pub.Key
-	}
+	storage.PartTable.PreLoadedAppData[1].Signature = app1Sig
+	storage.PartTable.PreLoadedAppData[1].Pubkey = app1Pub
 
 	return storage
 }
@@ -225,7 +221,7 @@ func genFlashFile(outFn, app0Fn, app1Fn, app1SigFn, app1PubFn string) {
 	}
 }
 
-func readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn string) (app0 []byte, app1 []byte, app1Sig *Signature, app1Pub *PubKey) {
+func readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn string) (app0 []byte, app1 []byte, app1Sig signify.Signature, app1Pub signify.PubKey) {
 	app0, err := os.ReadFile(app0Fn)
 	if err != nil {
 		panic(err)
@@ -247,15 +243,13 @@ func readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn string) (app0 []byte, app1 [
 	}
 
 	if app1SigFn != "" {
-		app1Sig, err = ReadSig(app1SigFn)
-		if err != nil {
+		if err := app1Sig.FromFile(app1SigFn); err != nil {
 			panic(err)
 		}
 	}
 
 	if app1PubFn != "" {
-		app1Pub, err = ReadKey(app1PubFn)
-		if err != nil {
+		if err := app1Pub.FromFile(app1PubFn); err != nil {
 			panic(err)
 		}
 	}
