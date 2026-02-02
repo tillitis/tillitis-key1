@@ -48,7 +48,6 @@ module tk1_spi_master (
   localparam CTRL_IDLE = 3'h0;
   localparam CTRL_POS_FLANK = 3'h1;
   localparam CTRL_NEG_FLANK = 3'h2;
-  localparam CTRL_NEXT = 3'h3;
 
 
   //----------------------------------------------------------------
@@ -246,14 +245,9 @@ module tk1_spi_master (
 
       CTRL_NEG_FLANK: begin
         spi_tx_data_nxt = 1'h1;
+        spi_rx_data_nxt = 1'h1;
         spi_csk_new = 1'h0;
         spi_csk_we = 1'h1;
-        spi_ctrl_new = CTRL_NEXT;
-        spi_ctrl_we = 1'h1;
-      end
-
-      CTRL_NEXT: begin
-        spi_rx_data_nxt = 1'h1;
         if (spi_bit_ctr_reg == 3'h7) begin
           spi_ready_new = 1'h1;
           spi_ready_we  = 1'h1;
