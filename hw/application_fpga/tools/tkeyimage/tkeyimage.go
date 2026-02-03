@@ -170,7 +170,7 @@ func newPartTable(app0 []byte, app1 []byte, app1Sig signify.Signature, app1Pub s
 		storage.PartTable.PreLoadedAppData[1].Digest = blake2s.Sum256(app1)
 	}
 
-	storage.PartTable.PreLoadedAppData[1].Signature = app1Sig
+	storage.PartTable.PreLoadedAppData[1].Signature = app1Sig.Sig
 	storage.PartTable.PreLoadedAppData[1].Pubkey = app1Pub
 
 	return storage
@@ -245,6 +245,10 @@ func readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn string) (app0 []byte, app1 [
 	if app1SigFn != "" {
 		if err := app1Sig.FromFile(app1SigFn); err != nil {
 			panic(err)
+		}
+
+		if app1Sig.Alg != signify.B2sEd {
+			panic("incompatible signature file")
 		}
 	}
 
