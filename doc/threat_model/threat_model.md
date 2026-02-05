@@ -288,7 +288,7 @@ Mitigations:
   vulnerable to a warm boot attack.
 
 - The hardware design allows only one read of the entire UDS once per
-  power-cycle, meant to be done by the firmware.
+  reset, meant to be done by the firmware.
 
 - The firmware reads out UDS exactly once and keeps it in the special
   firmware RAM for a very short period while doing the CDI
@@ -538,8 +538,7 @@ Mitigation:
 
 - App slot 0, containing the boot verifier, can not be changed after
   provisioning. It's app digest is mentioned in the firmware in ROM.
-  Firmware will only start it after a power cycle if the computed
-  digest is the same.
+  Firmware will only start it if the computed digest is the same.
 
 - App slot 1: Changing app needs user to assert presence by touching
   touch sensor. For malicious apps we rely on the app getting it's own
