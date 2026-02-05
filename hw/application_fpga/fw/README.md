@@ -478,7 +478,7 @@ input into a 32-byte value.
 The CDI is computed in one of two ways.
 
 1. CDI is a result of a hash of the Unique Device Secret, a domain
-   determined by how the app was loaded, the digest of the entire
+   byte with the measured-id bit cleared, the digest of the entire
    loaded app, and optionally the User Supplied Secret, if sent from
    the client:
 
@@ -489,9 +489,9 @@ The CDI is computed in one of two ways.
    This is the default case.
 
 2. CDI is a result of a hash of the Unique Device Secret, a domain
-   determined by how the app was loaded, something left by the
-   previous app, and optionally the User Supplied Secret, if sent from
-   the client:
+   byte with the measured-id bit set, something left by the previous
+   app, and optionally the User Supplied Secret, if sent from the
+   client:
 
    ```C
    CDI = blake2s(UDS, domain, blake2s(previous-CDI, measured_id_seed)*, USS)
@@ -515,6 +515,11 @@ The CDI is computed in one of two ways.
 
   2. After reset: `measured_id` will survive the reset and will then
      be used in the actual CDI computation after the reset.
+
+The domain byte is constructed from the following information:
+
+- App digest or `measured_id` was used to calculate CDI.
+- USS was used, or not used, to calculate the CDI.
 
 In an ideal world, software would never be able to read UDS at all and
 we would have a BLAKE2s function in hardware that would be the only

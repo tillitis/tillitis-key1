@@ -20,6 +20,7 @@
 #include "syscall_enable.h"
 
 #define DOMAIN_USS_MASK 0x80
+#define DOMAIN_MEASURED_ID_MASK 0x40
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -609,6 +610,7 @@ int main(void)
 			domain |= ctx.use_uss ? DOMAIN_USS_MASK : 0;
 
 			if (resetinfo->mask & RESET_SEED) {
+				domain |= DOMAIN_MEASURED_ID_MASK;
 				compute_cdi(
 				    domain,
 				    (const uint8_t *)resetinfo->measured_id,
