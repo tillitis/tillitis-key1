@@ -379,6 +379,16 @@ Mitigations:
   firmware mode, not app mode. This protects against an app changing
   its own CDI to something not measured by the firmware.
 
+- Impersonation: We separate the CDI into domains/namespaces by
+  always measuring the domain, depending on:
+
+  1. If the app was loaded with or without USS.
+  2. If the app was directly loaded (the entire app is measured) or
+     verified (combination of measured boot and verified boot).
+
+  TODO Investigate if we also use different domains for what source we
+  loaded the app from: client, slot 0, slot 1.
+
 - Impersonation: When using *verified boot* the attacker is in control
   of:
 
@@ -388,9 +398,9 @@ Mitigations:
 
   It's possible to use an vendor public key with a non-canonical point
   encoding which might verify signatures over many messages. This
-  means an attacker can send the TKey a correct vendor signature but
-  use their own public key and a malicious app, which will still
-  verify with the vendor signature.
+  means an attacker can send a correct vendor signature but use their
+  own public key and a malicious app, which will still verify with the
+  vendor signature.
 
   The mitigation is that our
   [tkey-boot-verifier](https://github.com/tillitis/tkey-boot-verifier/)
