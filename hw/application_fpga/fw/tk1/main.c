@@ -19,8 +19,8 @@
 #include "state.h"
 #include "syscall_enable.h"
 
-#define DOMAIN_USS_MASK 0x80
-#define DOMAIN_MEASURED_ID_MASK 0x40
+#define DOMAIN_USS_MASK 0x1
+#define DOMAIN_MEASURED_ID_MASK 0x2
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -109,6 +109,26 @@ static uint32_t rnd_word(void)
 	return *trng_entropy;
 }
 
+// Domain strings are indexed by toggling bits. Set means on. Bit 0
+// is USS, bit 1 is chained.
+//
+// Bitstring | Value | Comment
+// ----------------------------------------------
+// 00        |     0 | directly loaded, no USS
+// 01        |     1 | directly loaded, with USS
+// 10        |     2 | chained, no USS
+// 11        |     3 | chained, with USS
+#define DOMAINS 4
+
+// Keep constant length of the domain strings
+#define DOMSTR_LEN 14
+const char domainstr[DOMAINS][DOMSTR_LEN] = {
+    "nouss+direct-",
+    "uss+direct---",
+    "nouss+chained",
+    "uss+chained--",
+};
+
 // CDI = blake2s(uds, blake2s(app), uss)
 static void compute_cdi(uint8_t domain, const uint8_t *digest,
 			const uint8_t use_uss, const uint8_t *uss)
@@ -138,8 +158,8 @@ static void compute_cdi(uint8_t domain, const uint8_t *digest,
 	blake2s_update(&secure_ctx, (const void *)local_uds, 32);
 	(void)secure_wipe(local_uds, sizeof(local_uds));
 
-	// Update with domain
-	blake2s_update(&secure_ctx, &domain, 1);
+	// Update with a domain string
+	blake2s_update(&secure_ctx, domainstr[domain], DOMSTR_LEN);
 
 	// Update with TKey program digest
 	blake2s_update(&secure_ctx, digest, 32);
