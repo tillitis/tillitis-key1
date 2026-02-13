@@ -18,5 +18,6 @@ int storage_write_data(struct partition_table *part_table, uint32_t offset,
 		       uint8_t *data, size_t size);
 int storage_read_data(struct partition_table *part_table, uint32_t offset,
 		      uint8_t *data, size_t size);
+int storage_erase_areas(struct partition_table_storage *part_table_storage);
 
 #endif
