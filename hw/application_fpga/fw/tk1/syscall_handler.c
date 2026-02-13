@@ -110,6 +110,9 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 		// arg1 next_app_data
 		return reset_data((uint8_t *)arg1);
 
+	case TK1_SYSCALL_ERASE_AREAS:
+		return storage_erase_areas(&part_table_storage);
+
 	default:
 		assert(1 == 2);
 	}

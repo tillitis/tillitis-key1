@@ -745,6 +745,14 @@ Returns Vendor and Product ID. Notably the serial number is not
 returned, so a device app can't identify what particular TKey it is
 running on.
 
+#### `ERASE_AREAS`
+
+```C
+syscall(TK1_SYSCALL_ERASE_AREAS, 0, 0, 0);
+```
+
+Erases all app storage. Privileged syscall.  Returns 0 on success.
+
 ## Developing firmware
 
 Standing in `hw/application_fpga/` you can run `make firmware.elf` to
