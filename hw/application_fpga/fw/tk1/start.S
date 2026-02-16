@@ -110,7 +110,7 @@ x3_valid:
 
 // Init
 
-	.=0x100
+	.=0xc0
 init:
 	li x1, 0
 	li x2, 0
