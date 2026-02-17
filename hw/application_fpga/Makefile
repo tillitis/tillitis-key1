@@ -343,15 +343,14 @@ LINT_FLAGS = \
 lint: $(FPGA_VERILOG_SRCS) \
 		$(SIM_VERILOG_SRCS) \
 		$(VERILOG_SRCS) \
-		$(PICORV32_SRCS) \
-		$(ICE40_SIM_CELLS)
+		$(PICORV32_SRCS)
 	$(LINT) $(LINT_FLAGS) \
 	-DBRAM_FW_SIZE=$(BRAM_FW_SIZE) \
 	-DFIRMWARE_HEX=\"$(P)/firmware.hex\" \
 	-DUDS_HEX=\"$(P)/data/uds.hex\" \
 	-DUDI_HEX=\"$(P)/data/udi.hex\" \
 	--top-module application_fpga \
-	config.vlt $^ \
+	config.vlt $^ $(ICE40_SIM_CELLS) \
 	>lint_issues.txt 2>&1 \
 	&& { rm -f lint_issues.txt; exit 0; } \
 	|| {   cat lint_issues.txt; exit 1; }
@@ -391,7 +390,7 @@ checkfmt: $(FPGA_VERILOG_SRCS) $(SIM_VERILOG_SRCS) $(VERILATOR_VERILOG_SRCS) $(V
 # Build Verilator compiled simulation for the design.
 #-------------------------------------------------------------------
 verilator: $(VERILATOR_VERILOG_SRCS) $(VERILOG_SRCS) $(PICORV32_SRCS) \
-		firmware.hex $(ICE40_SIM_CELLS) \
+		firmware.hex \
 		$(P)/tb/application_fpga_verilator.cc
 	verilator \
 		--timescale 1ns/1ns \
@@ -408,7 +407,7 @@ verilator: $(VERILATOR_VERILOG_SRCS) $(VERILOG_SRCS) $(PICORV32_SRCS) \
 		--exe \
 		--Mdir verilated \
 		--top-module application_fpga_sim \
-		$(filter %.v, $^) \
+		$(filter %.v, $^) $(ICE40_SIM_CELLS) \
 		$(filter %.cc, $^)
 	make -C verilated -f Vapplication_fpga_sim.mk
 .PHONY: verilator
@@ -485,7 +484,6 @@ application_fpga_testfw.bin: application_fpga.asc bram_fw.hex testfw.hex
 tb_application_fpga: $(SIM_VERILOG_SRCS) \
 			$(VERILOG_SRCS) \
 			$(PICORV32_SRCS) \
-			$(ICE40_SIM_CELLS) \
 			simfirmware.hex
 	python3 ./tools/app_bin_to_spram_hex.py \
 			./tb/app.bin \
@@ -513,7 +511,7 @@ tb_application_fpga: $(SIM_VERILOG_SRCS) \
 		-DFIRMWARE_HEX=\"$(P)/simfirmware.hex\" \
 		-DUDS_HEX=\"$(P)/data/uds.hex\" \
 		-DUDI_HEX=\"$(P)/data/udi.hex\" \
-		$(filter %.v, $^)
+		$(filter %.v, $^) $(ICE40_SIM_CELLS)
 	make -C tb_verilated -f Vtb_application_fpga_sim.mk
 	./tb_verilated/Vtb_application_fpga_sim \
 		&& { echo -e "\n -- Wave simulation saved to tb_application_fpga_sim.fst\n"; true; }
