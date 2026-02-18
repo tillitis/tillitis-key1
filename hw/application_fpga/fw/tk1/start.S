@@ -73,7 +73,6 @@ x3_invalid:
 x3_valid:
 
 	// Remove data left over from the syscall handling
-	mv x0, zero
 	mv x1, zero
 	// x2 (sp) is assumed to be preserved by the interrupt handler
 	// x3 (interrupt return address) need to be preserved
@@ -110,7 +109,7 @@ x3_valid:
 
 // Init
 
-	.=0xc0
+	.=0xb4
 init:
 	li x1, 0
 	li x2, 0
@@ -144,22 +143,13 @@ init:
 	li x30,0
 	li x31,0
 
-	// Clear FW_RAM
+	// Clear FW_RAM which includes .bss and .data
 	la a0, _sfwram
 	la a1, _efwram
 clear:
 	sw zero, 0(a0)
 	addi a0, a0, 4
 	blt a0, a1, clear
-
-	// Zero-init bss section
-	la a0, _sbss
-	la a1, _ebss
-
-loop_init_bss:
-	sw zero, 0(a0)
-	addi a0, a0, 4
-	blt a0, a1, loop_init_bss
 
 	// Init stack
 	la sp, _estack
