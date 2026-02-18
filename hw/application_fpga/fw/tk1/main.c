@@ -109,7 +109,7 @@ static uint32_t rnd_word(void)
 	return *trng_entropy;
 }
 
-// CDI = blake2s(uds, blake2s(app), uss)
+// CDI = blake2s(uds, domain + digest + uss)
 static void compute_cdi(uint8_t domain, const uint8_t *digest,
 			const uint8_t use_uss, const uint8_t *uss)
 {
@@ -129,19 +129,18 @@ static void compute_cdi(uint8_t domain, const uint8_t *digest,
 	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
 	}
 
-	blake2err = blake2s_init(&secure_ctx, 32, NULL, 0);
-	assert(blake2err == 0);
-
-	// Update hash with UDS. This means UDS will live for a short
-	// while on the firmware stack which is in the special fw_ram.
+	// Initialize the BLAKE2s hash function with the UDS as key.
+	// This means UDS will live for a short while on the firmware
+	// stack which is in the special fw_ram.
 	wordcpy_s(local_uds, 8, (void *)uds, 8);
-	blake2s_update(&secure_ctx, (const void *)local_uds, 32);
+	blake2err = blake2s_init(&secure_ctx, 32, local_uds, 32);
+	assert(blake2err == 0);
 	(void)secure_wipe(local_uds, sizeof(local_uds));
 
-	// Update with domain
+	// Update hash with domain
 	blake2s_update(&secure_ctx, &domain, 1);
 
-	// Update with TKey program digest
+	// Update hash with TKey program digest
 	blake2s_update(&secure_ctx, digest, 32);
 
 	// Possibly hash in the USS as well
@@ -601,11 +600,11 @@ int main(void)
 			break;
 
 		case FW_STATE_START: {
-			// CDI = hash(uds, domain, hash(app), uss)
+			// CDI = hash(uds, domain + hash(app) + uss)
 			//
 			// or, if RESET_SEED is set,
 			//
-			// CDI = hash(uds, domain, measured_id, uss)
+			// CDI = hash(uds, domain + measured_id + uss)
 			uint8_t domain = 0;
 			domain |= ctx.use_uss ? DOMAIN_USS_MASK : 0;
 
