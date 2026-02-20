@@ -11,10 +11,15 @@ TKey.*
 ## Introduction
 
 The Tillitis TKey is an open source, open hardware FPGA-based USB
-security token using
+security token which can run generic applications while still
+guaranteeing the security of its cryptographic assets.
+
+The key behind guaranteeing key security even as a general computer is
+the
 [DICE-like](https://trustedcomputinggroup.org/work-groups/dice-architectures/)
-unconditional measured boot that can run generic applications while
-still guaranteeing the security of its cryptographic assets.
+measured boot or, when chaining apps, the combination of measured boot
+and verified boot. You can read more about this in the introduction in
+the [TKey Developer Handbook](https://dev.tillitis.se/castor/intro/).
 
 [TKey Threat Model](doc/threat_model/threat_model.md).
 
@@ -234,44 +239,6 @@ $ git checkout fw-3
 
 Note that you need to change the optimization flag in the tkey-libs'
 Makefile to `-Os`.
-
-## Measured boot
-
-The key behind guaranteeing security even as a general computer is the
-unconditional measured boot. This means that we have a small,
-unchangeable, trusted firmware in ROM that creates a unique identity
-before starting the application. This identity is used as a seed for
-all later cryptographic keys.
-
-We call this identity the Compound Device Identity (CDI). The CDI is a
-cryptographic mix of:
-
-1. the Unique Device Secret (UDS), a hardware secret, unique per
-   device, something the user *has*,
-2. the hash digest of the TKey device application that has been
-  loaded, the *integrity* of the application, and,
-3. an optional User Supplied Secret (USS), something the user *knows*.
-
-CDI is computed using the BLAKE2s hash function:
-
-CDI = BLAKE2s(UDS, BLAKE2s(application loaded in RAM), USS)
-
-When firmware is about to start the device application it changes the
-TKey to a less permissive hardware mode, application mode. In
-application mode the UDS and the User Supplied Secret are no longer
-available, but the device application can use the CDI as a seed to
-deterministically generate any cryptographic keys it needs.
-
-- If the wrong application has been loaded, or the original
-  application has been tampered with, the generated keys will be
-  different.
-- If the USS is not the same, the generated keys will be different.
-- If the same USS and device application is used on a different TKey,
-  the generated keys will be different.
-
-The TKey unconditional measured boot is inspired by, but not exactly
-the same as part of [TCG
-DICE](https://trustedcomputinggroup.org/work-groups/dice-architectures/).
 
 # Current Work in Progress in this repository
 
