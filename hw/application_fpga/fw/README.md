@@ -475,7 +475,8 @@ input into a 32-byte value.
 
 ### Compound Device Identifier computation
 
-The CDI is computed in one of two ways.
+The CDI is computed in one of two ways. In both of them the Unique
+Device Secret is used as a key in the BLAKE2s hash function.
 
 1. CDI is a result of a hash of the Unique Device Secret, a domain
    byte with the measured-id bit cleared, the digest of the entire
@@ -483,7 +484,7 @@ The CDI is computed in one of two ways.
    the client:
 
    ```C
-   CDI = blake2s(UDS, domain, blake2s(app), USS)
+   CDI = blake2s(UDS, domain + blake2s(app) + USS)
    ```
 
    This is the default case.
@@ -494,7 +495,7 @@ The CDI is computed in one of two ways.
    client:
 
    ```C
-   CDI = blake2s(UDS, domain, blake2s(previous-CDI, measured_id_seed)*, USS)
+   CDI = blake2s(UDS, domain + blake2s(previous-CDI, measured_id_seed)* + USS)
    ```
 
   This alternative computation is only done if the `mask` in `struct
@@ -512,6 +513,8 @@ The CDI is computed in one of two ways.
      ```C
      measured_id = blake2s(CDI, measured_id_seed)
       ```
+
+     The CDI is here used as the key in BLAKE2s.
 
   2. After reset: `measured_id` will survive the reset and will then
      be used in the actual CDI computation after the reset.
