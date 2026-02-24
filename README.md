@@ -246,8 +246,8 @@ We are updating the FPGA and firmware on TKey as part of the Castor
 release. This update will simplify TKey’s usage, laying the groundwork
 for future support of U2F/FIDO authentication.
 
-You can track our progress through this
-[milestone](https://github.com/tillitis/tillitis-key1/milestone/1).
+You can track our progress in the
+[Platform project](https://github.com/orgs/tillitis/projects/11/views/2).
 
 Note that main branch is in development. We try to keep status of main
 branch updated in the [release notes](/doc/release_notes.md#upcoming-release-castor).
