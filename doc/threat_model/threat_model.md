@@ -35,11 +35,8 @@ TL;DR:
   the exact same device app as the first app in the chain.
 
 - If the first app is our boot verifier we believe the attacker *also*
-  needs access to the vendor's private key. Other verifying apps might
-  have similar requirements.
-
-- Physical access is needed to do a denial of service either by
-  stealing the TKey or breaking it.
+  needs access to the vendor's private and public key to get the same
+  secret. Other verifying apps might have similar requirements.
 
 - We think there are some assets (EBR) available to someone with
   physical access and the knowledge and equipment to do a warm boot
