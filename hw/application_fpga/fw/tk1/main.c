@@ -519,6 +519,8 @@ int main(void)
 
 	print_hw_version();
 
+	config_endpoints(IO_CH552);
+
 	/*@-mustfreeonly@*/
 	/* Yes, splint, this points directly to RAM and we don't care
 	 * about freeing anything was pointing to 0x0 before.
@@ -535,12 +537,6 @@ int main(void)
 		assert(1 == 2);
 	}
 
-	// Reset the USB controller to only enable the USB CDC
-	// endpoint and the internal command channel.
-	config_endpoints(IO_CDC | IO_CH552);
-
-	led_set(LED_WHITE);
-
 #if defined(SIMULATION)
 	run(&ctx);
 #endif
@@ -549,6 +545,11 @@ int main(void)
 		switch (state) {
 		case FW_STATE_INITIAL:
 			state = start_where(&ctx);
+
+			if (state == FW_STATE_WAITCOMMAND) {
+				config_endpoints(IO_CDC | IO_CH552);
+				led_set(LED_WHITE);
+			}
 			break;
 
 		case FW_STATE_WAITCOMMAND:

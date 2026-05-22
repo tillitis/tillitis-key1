@@ -1566,11 +1566,6 @@ void main(void)
 
     uint8_t ActiveEndpoints = RESET_KEEP;
 
-    // Always enable CDC endpoint
-    if ((ActiveEndpoints & IO_CDC) == 0x0) {
-        ActiveEndpoints |= IO_CDC;
-    }
-
     // Always enable CH552 endpoint
     if ((ActiveEndpoints & IO_CH552) == 0x0) {
         ActiveEndpoints |= IO_CH552;
@@ -1594,6 +1589,39 @@ void main(void)
     UEP4_T_LEN = 0;         // Transmit length must be cleared (Endpoint 4)
 
     cts_start();            // Signal OK to send
+
+    // If no USB endpoints enabled we wait for a valid
+    // SET_ENDPOINTS command.
+    if (ActiveEndpoints == IO_CH552) {
+        while (uart_byte_count() < 4)
+            ;
+
+        uint8_t InitFrameMode = UartRxBuf[UartRxBufOutputPointer];
+        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer, 1, UART_RX_BUF_SIZE);
+
+        uint8_t InitFrameLength = UartRxBuf[UartRxBufOutputPointer];
+        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer, 1, UART_RX_BUF_SIZE);
+
+        uint8_t Ch552Command = UartRxBuf[UartRxBufOutputPointer];
+        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer, 1, UART_RX_BUF_SIZE);
+
+        uint8_t Endpoints = UartRxBuf[UartRxBufOutputPointer];
+        UartRxBufOutputPointer = increment_pointer(UartRxBufOutputPointer, 1, UART_RX_BUF_SIZE);
+
+        if (InitFrameMode == IO_CH552 && InitFrameLength == 2 && Ch552Command == SET_ENDPOINTS) {
+            // Always enable CDC endpoint
+            RESET_KEEP = Endpoints | IO_CDC; // Save endpoints to persistent register
+        } else {
+            RESET_KEEP = 0; // Disable all USB endpoints on invalid command
+        }
+
+        cts_stop(); // Stop UART data from FPGA
+        SAFE_MOD = 0x55; // Start reset sequence
+        SAFE_MOD = 0xAA;
+        GLOBAL_CFG = bSW_RESET;
+        while (1)
+            ;
+    }
 
     while (1) {
         if (UsbConfig) {
@@ -1980,7 +2008,7 @@ void main(void)
                     switch (FrameBuf[0]) {
                     case SET_ENDPOINTS:
                         cts_stop(); // Stop UART data from FPGA
-                        RESET_KEEP = FrameBuf[1]; // Save endpoints to persistent register
+                        RESET_KEEP = FrameBuf[1] | IO_CDC; // Save endpoints to persistent register
                         SAFE_MOD = 0x55; // Start reset sequence
                         SAFE_MOD = 0xAA;
                         GLOBAL_CFG = bSW_RESET;
