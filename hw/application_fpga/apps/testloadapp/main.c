@@ -178,6 +178,8 @@ int main(void)
 
 	led_set(LED_BLUE);
 
+	config_endpoints(IO_CDC);
+
 	// Generate a key pair from CDI
 	crypto_ed25519_key_pair(secret_key, pubkey, (uint8_t *)cdi);
 

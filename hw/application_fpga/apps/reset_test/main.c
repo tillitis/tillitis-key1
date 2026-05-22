@@ -50,6 +50,8 @@ int main(void)
 	led_set(LED_BLUE);
 	struct reset rst = {0};
 
+	config_endpoints(IO_CDC);
+
 	while (1) {
 
 		puts(IO_CDC, "reset_test: Waiting for command\r\n");

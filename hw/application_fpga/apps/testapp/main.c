@@ -75,6 +75,8 @@ int main(void)
 
 	led_set(LED_BLUE);
 
+	config_endpoints(IO_CDC);
+
 	// Wait for terminal program and a character to be typed
 	if (readselect(IO_CDC, &endpoint, &available) < 0) {
 		// readselect failed! I/O broken? Just redblink.
