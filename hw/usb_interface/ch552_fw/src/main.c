@@ -1550,6 +1550,10 @@ inline void check_cts_stop(void)
 
 void main(void)
 {
+    gpio_init_p1_5_out();   // Init GPIO p1.5 to output mode for CH552_CTS
+    cts_stop();             // Signal not OK to send
+    gpio_init_p1_4_in();    // Init GPIO p1.4 to input mode for FPGA_CTS
+
     CfgFsys();     // CH559 clock selection configuration
     mDelaymS(5);   // Modify the main frequency and wait for the internal crystal to stabilize, which must be added
 #ifdef DEBUG_PRINT_HW
@@ -1589,8 +1593,6 @@ void main(void)
     UEP3_T_LEN = 0;         // Transmit length must be cleared (Endpoint 3)
     UEP4_T_LEN = 0;         // Transmit length must be cleared (Endpoint 4)
 
-    gpio_init_p1_4_in();    // Init GPIO p1.4 to input mode for FPGA_CTS
-    gpio_init_p1_5_out();   // Init GPIO p1.5 to output mode for CH552_CTS
     cts_start();            // Signal OK to send
 
     while (1) {
