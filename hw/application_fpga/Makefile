@@ -70,7 +70,7 @@ CFLAGS = \
 	-mabi=ilp32 \
 	-static \
 	-std=gnu99 \
-	-Os \
+	-Oz \
 	-ffast-math \
 	-fno-common \
 	-fno-builtin-printf \
