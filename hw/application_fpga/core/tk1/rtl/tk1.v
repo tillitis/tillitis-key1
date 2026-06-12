@@ -65,9 +65,11 @@ module tk1 #(
   localparam ADDR_VERSION = 8'h02;
 
   localparam ADDR_LED = 8'h09;
+  /* verilator lint_off UNUSED */
   localparam LED_R_BIT = 2;
   localparam LED_G_BIT = 1;
   localparam LED_B_BIT = 0;
+  /* verilator lint_on UNUSED */
 
   localparam ADDR_GPIO = 8'h0a;
   /* verilator lint_off UNUSED */

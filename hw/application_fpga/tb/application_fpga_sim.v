@@ -377,10 +377,12 @@ module application_fpga_sim (
       .led_g(led_g),
       .led_b(led_b),
 
+      /* verilator lint_off PINCONNECTEMPTY */
       .gpio1(),
       .gpio2(),
       .gpio3(),
       .gpio4(),
+      /* verilator lint_on PINCONNECTEMPTY */
 
       .syscall(irq31_eoi),
 
