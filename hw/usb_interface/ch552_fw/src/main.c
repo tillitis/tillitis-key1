@@ -1610,7 +1610,7 @@ void main(void)
 
         if (InitFrameMode == IO_CH552 && InitFrameLength == 2 && Ch552Command == SET_ENDPOINTS) {
             // Always enable CDC endpoint
-            RESET_KEEP = Endpoints | IO_CDC; // Save endpoints to persistent register
+            RESET_KEEP = Endpoints; // Save endpoints to persistent register
         } else {
             RESET_KEEP = 0; // Disable all USB endpoints on invalid command
         }
@@ -2008,7 +2008,7 @@ void main(void)
                     switch (FrameBuf[0]) {
                     case SET_ENDPOINTS:
                         cts_stop(); // Stop UART data from FPGA
-                        RESET_KEEP = FrameBuf[1] | IO_CDC; // Save endpoints to persistent register
+                        RESET_KEEP = FrameBuf[1]; // Save endpoints to persistent register
                         SAFE_MOD = 0x55; // Start reset sequence
                         SAFE_MOD = 0xAA;
                         GLOBAL_CFG = bSW_RESET;
