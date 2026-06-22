@@ -10,6 +10,7 @@ import encode_usb_strings
 
 magic = encode_usb_strings.string_to_descriptor("68de5d27-e223-4874-bc76-a54d6e84068f")
 random_uuid = str(uuid.uuid4())
+random_uuid = random_uuid.replace("-", "_")
 replacement = encode_usb_strings.string_to_descriptor(random_uuid)
 
 
