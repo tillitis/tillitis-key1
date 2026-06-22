@@ -1576,23 +1576,12 @@ void main(void)
         ActiveEndpoints &= ~(IO_FIDO | IO_CCID);
     }
 
-    CreateCfgDescriptor(ActiveEndpoints);
-
-    USBDeviceCfg();
-    USBDeviceEndPointCfg(); // Endpoint configuration
-    USBDeviceIntCfg();      // Interrupt initialization
-
-    UEP0_T_LEN = 0;         // Transmit length must be cleared (Endpoint 0)
-    UEP1_T_LEN = 0;         // Transmit length must be cleared (Endpoint 1)
-    UEP2_T_LEN = 0;         // Transmit length must be cleared (Endpoint 2)
-    UEP3_T_LEN = 0;         // Transmit length must be cleared (Endpoint 3)
-    UEP4_T_LEN = 0;         // Transmit length must be cleared (Endpoint 4)
-
-    cts_start();            // Signal OK to send
-
     // If no USB endpoints enabled we wait for a valid
     // SET_ENDPOINTS command.
     if (ActiveEndpoints == IO_CH552) {
+        EA = 1;                      // Allow microcontroller interrupt
+        cts_start();
+
         while (uart_byte_count() < 4)
             ;
 
@@ -1621,6 +1610,20 @@ void main(void)
         while (1)
             ;
     }
+
+    CreateCfgDescriptor(ActiveEndpoints);
+
+    USBDeviceCfg();
+    USBDeviceEndPointCfg(); // Endpoint configuration
+    USBDeviceIntCfg();      // Interrupt initialization
+
+    UEP0_T_LEN = 0;         // Transmit length must be cleared (Endpoint 0)
+    UEP1_T_LEN = 0;         // Transmit length must be cleared (Endpoint 1)
+    UEP2_T_LEN = 0;         // Transmit length must be cleared (Endpoint 2)
+    UEP3_T_LEN = 0;         // Transmit length must be cleared (Endpoint 3)
+    UEP4_T_LEN = 0;         // Transmit length must be cleared (Endpoint 4)
+
+    cts_start();            // Signal OK to send
 
     while (1) {
         if (UsbConfig) {
