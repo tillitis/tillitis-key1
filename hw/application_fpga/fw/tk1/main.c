@@ -318,6 +318,8 @@ static enum state loading_commands(const struct frame_header *hdr,
 			memcpy_s(&rsp[1], CMDSIZE - 1, &ctx->digest, 32);
 			fwreply(*hdr, FW_RSP_LOAD_APP_DATA_READY, rsp);
 
+			config_endpoints(0); // Disable all endpoints
+
 			state = FW_STATE_START;
 			break;
 		}
