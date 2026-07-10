@@ -83,16 +83,23 @@ const uint8_t *pDescr = NULL;         // USB configuration flag
 #define CDC_DATA_FS_BINTERVAL          0                 // bInterval is ignored for BULK transfers
 #define FIDO_FS_BINTERVAL              2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
 #define CCID_BULK_FS_BINTERVAL         0                 // bInterval is ignored for BULK transfers
-#define DEBUG_FS_BINTERVAL             16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
 
-#define MAX_CFG_DESC_SIZE              (9+66+77+32)      // Size of CfgDesc+CdcDesc+MAX(FidoDesc,CcidDesc)+DebugDesc
+#ifdef USE_BULK_TRANSFER_FOR_DEBUG
+#define DEBUG_FS_BINTERVAL             0                 // bInterval is ignored for BULK transfers
+#define DEBUG_DESC_SIZE                23                // Size of DebugDesc
+#else
+#define DEBUG_FS_BINTERVAL             16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
+#define DEBUG_DESC_SIZE                32                // Size of DebugDesc
+#define DEBUG_REPORT_DESC_SIZE         34                // Size of DebugReportDesc
+#endif
+
+#define MAX_CFG_DESC_SIZE              (9+66+77+DEBUG_DESC_SIZE)  // Size of CfgDesc+CdcDesc+MAX(FidoDesc,CcidDesc)+DebugDesc
 
 #define NUM_INTERFACES                 4                 // Number of interfaces
 
 #define CHANGE_ME                      0x00              // Value placeholder
 
 #define FIDO_REPORT_DESC_SIZE          47                // Size of FidoReportDesc
-#define DEBUG_REPORT_DESC_SIZE         34                // Size of DebugReportDesc
 
 #define CCID_VALUE_BCDCCID                 0x0110
 #define CCID_VALUE_DWPROTOCOLS             0x00000002
@@ -501,6 +508,40 @@ FLASH uint8_t CcidDesc[] = {
         /* 77 */
 };
 
+#ifdef USE_BULK_TRANSFER_FOR_DEBUG
+// DEBUG Descriptor (vendor-specific bulk interface)
+FLASH uint8_t DebugDesc[] = {
+        /******************** Interface, DEBUG Descriptor (two endpoints) ********************/
+        0x09,                             /* bLength: Interface Descriptor size */
+        USB_DESC_TYPE_INTERFACE,          /* bDescriptorType: Interface */
+        CHANGE_ME,                        /* bInterfaceNumber: Number of Interface */
+        0x00,                             /* bAlternateSetting: Alternate setting */
+        0x02,                             /* bNumEndpoints: Number of endpoints in Interface */
+        USB_DEV_CLASS_VENDOR_SPECIFIC,    /* bInterfaceClass: Vendor Specific */
+        0x00,                             /* bInterfaceSubClass : 1=BOOT, 0=no boot */
+        0x00,                             /* bInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
+        USB_IDX_INTERFACE_DEBUG_STR,      /* iInterface: Index of string descriptor */
+        /******************** DEBUG Bulk Endpoint Descriptor (OUT) ********************/
+        /* 9 */
+        0x07,                             /* bLength: Endpoint Descriptor size */
+        USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
+        DEBUG_EPOUT_ADDR,                 /* bEndpointAddress: Endpoint Address (OUT) */
+        USB_EP_TYPE_BULK,                 /* bmAttributes: Bulk endpoint */
+        LOBYTE(DEBUG_EPOUT_SIZE),         /* wMaxPacketSize (low byte): 64 Byte max */
+        HIBYTE(DEBUG_EPOUT_SIZE),         /* wMaxPacketSize (high byte): 64 Byte max */
+        0x00,                             /* bInterval: Ignored for BULK */
+        /******************** DEBUG Bulk Endpoint Descriptor (IN) ********************/
+        /* 16 */
+        0x07,                             /* bLength: Endpoint Descriptor size */
+        USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
+        DEBUG_EPIN_ADDR,                  /* bEndpointAddress: Endpoint Address (IN) */
+        USB_EP_TYPE_BULK,                 /* bmAttributes: Bulk endpoint */
+        LOBYTE(DEBUG_EPIN_SIZE),          /* wMaxPacketSize (low byte): 64 Byte max */
+        HIBYTE(DEBUG_EPIN_SIZE),          /* wMaxPacketSize (high byte): 64 Byte max */
+        0x00,                             /* bInterval: Ignored for BULK */
+        /* 23 */
+};
+#else
 // DEBUG Descriptor
 FLASH uint8_t DebugDesc[] = {
         /******************** Interface, DEBUG Descriptor (two endpoints) ********************/
@@ -544,6 +585,7 @@ FLASH uint8_t DebugDesc[] = {
         DEBUG_FS_BINTERVAL,               /* bInterval: Polling Interval */
         /* 32 */
 };
+#endif
 
 // FIDO Device Descriptor (copy from FidoDesc)
 FLASH uint8_t FidoCfgDesc[] = {
@@ -1007,10 +1049,12 @@ void UsbEp0SetupHandler(void)
                         printStrSetup("FidoCfgDesc\n");
                         pDescr = FidoCfgDesc;
                         len = sizeof(FidoCfgDesc);
+#ifndef USE_BULK_TRANSFER_FOR_DEBUG
                     } else if (UsbSetupBuf->wIndexL == DebugInterfaceNum) { // Interface number for DEBUG
                         printStrSetup("DebugCfgDesc\n");
                         pDescr = DebugCfgDesc;
                         len = sizeof(DebugCfgDesc);
+#endif
                     } else {
                         printStrSetup("Unknown HID Interface!\n");
                         len = 0xFF; // Unsupported
@@ -1032,10 +1076,12 @@ void UsbEp0SetupHandler(void)
                         printStrSetup("FidoReportDesc\n");
                         pDescr = FidoReportDesc;
                         len = sizeof(FidoReportDesc);
+#ifndef USE_BULK_TRANSFER_FOR_DEBUG
                     } else if (UsbSetupBuf->wIndexL == DebugInterfaceNum) { // Interface number for DEBUG
                         printStrSetup("DebugReportDesc\n");
                         pDescr = DebugReportDesc;
                         len = sizeof(DebugReportDesc);
+#endif
                     } else {
                         printStrSetup("Unknown Report!\n");
                         len = 0xFF; // Unknown Report
