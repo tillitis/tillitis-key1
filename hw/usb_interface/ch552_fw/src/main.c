@@ -1594,6 +1594,8 @@ inline void check_cts_stop(void)
     }
 }
 
+#define fpga_uart_ready() (gpio_p1_4_get() == 0)
+
 void main(void)
 {
     gpio_init_p1_5_out();   // Init GPIO p1.5 to output mode for CH552_CTS
@@ -1675,7 +1677,8 @@ void main(void)
         if (UsbConfig) {
 
             // Check if Endpoint 2 (CDC) has received data
-            if (UsbEp2ByteCount) {
+            if (UsbEp2ByteCount && fpga_uart_ready()) {
+                // Only send if FPGA CTS is low (ready to receive)
 
                 CH554UART1SendByte(IO_CDC);  // Send CDC mode header
                 CH554UART1SendByte(UsbEp2ByteCount);  // Send length
@@ -1685,7 +1688,8 @@ void main(void)
             }
 
             // Check if Endpoint 3 (FIDO or CCID) has received data
-            if (UsbEp3ByteCount) {
+            if (UsbEp3ByteCount && fpga_uart_ready()) {
+                // Only send if FPGA CTS is low (ready to receive)
 
                 if (ActiveEndpoints & IO_FIDO) {
                     CH554UART1SendByte(IO_FIDO); // Send FIDO mode header
@@ -1700,7 +1704,8 @@ void main(void)
             }
 
             // Check if Endpoint 4 (DEBUG) has received data
-            if (UsbEp4ByteCount) {
+            if (UsbEp4ByteCount && fpga_uart_ready()) {
+                // Only send if FPGA CTS is low (ready to receive)
 
                 CH554UART1SendByte(IO_DEBUG); // Send DEBUG mode header
                 CH554UART1SendByte(UsbEp4ByteCount); // Send length (always 64 bytes)
