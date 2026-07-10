@@ -681,7 +681,7 @@ FLASH uint8_t LineCoding[7] = { 0x20, 0xA1, 0x07, 0x00, /* Data terminal rate, i
                                                   0x08, /* Data bits (5, 6, 7, 8 or 16) */
                                 };
 
-#define UART_RX_BUF_SIZE     140  // Serial receive buffer
+#define UART_RX_BUF_SIZE     220  // Serial receive buffer
 
 /** Communication UART */
 volatile XDATA uint8_t UartRxBuf[UART_RX_BUF_SIZE] = { 0 };  // Serial receive buffer
@@ -1588,7 +1588,7 @@ inline void cts_stop(void)
 
 inline void check_cts_stop(void)
 {
-    if (uart_byte_count() >= 133) // UartRxBuf is filled to 95% or more
+    if (uart_byte_count() >= 212) // UartRxBuf is filled to more than 95%
     {
         cts_stop();
     }
