@@ -31,6 +31,10 @@ CFLAGS = \
          -DFREQ_SYS=$(FREQ_SYS) \
          $(EXTRA_FLAGS)
 
+ifdef BULK
+CFLAGS += -DUSE_BULK_TRANSFER_FOR_DEBUG
+endif
+
 LFLAGS = \
          $(CFLAGS)
 
