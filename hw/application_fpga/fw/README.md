@@ -61,22 +61,25 @@ Mode Protocol. It is used in both directions.
 |----------|-----------|------------------------------------|
 | Endpoint | 1B        | Origin or destination USB endpoint |
 | Length   | 1B        | Number of bytes following          |
-| Payload  | See above | Actual data from or to firmware    |
+| Payload  | See below | Actual data from or to firmware    |
 
 The different endpoints:
 
 | *Name* | *Value* | *Comment*                                                            |
 |--------|---------|----------------------------------------------------------------------|
-| CH552  | 0x04    | USB controller control                                               |
+| CH552  | 0x04    | USB controller control endpoint. Always active.                      |
 | CDC    | 0x08    | USB CDC-ACM, a serial port on the client.                            |
 | FIDO   | 0x10    | A USB FIDO security token device, useful for FIDO-type applications. |
 | CCID   | 0x20    | USB CCID, a port for emulating a smart card                          |
 | DEBUG  | 0x40    | A USB HID special debug pipe. Useful for debug prints.               |
 
 You can turn on and off different endpoints dynamically by sending
-commands to the `CH552` control endpoint. When the TKey starts only
-the `CH552` and the `CDC` endpoints are active. To change this, send a
-command to `CH552` in this form:
+commands to the `CH552` control endpoint. After a power cycle only the
+`CH552` endpoint is active. After a software-induced reset, the TKey
+firmware quickly sets the USB controller back to this state.
+
+To change which endpoints are active you send a command to `CH552` in
+this form:
 
 | *Name*   | *Size* | *Comment*                     |
 |----------|--------|-------------------------------|
