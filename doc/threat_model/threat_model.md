@@ -417,6 +417,10 @@ Mitigations:
   that `tkey-boot-verifier` update the key, which asks the user to
   assert presence.
 
+- Needs to be signed by current vendor private key. Enforced by the
+  boot verifier in app slot 0, which cannot be modified [see Preloaded
+  apps](#preloaded-apps).
+
 ### Vendor private key
 
 Not on TKey. Out of scope, but included for reference.
