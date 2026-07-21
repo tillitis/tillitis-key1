@@ -195,8 +195,8 @@ There are two major type of attacks
 ## In scope
 
 - SW attacks from the client against the firmware in the FPGA, the
-  boot verifier in flash slot 0, and as the FPGA design itself via
-  USB.
+  boot verifier in flash slot 0, and against the FPGA design itself
+  via USB.
 
 - Timing attacks on the firmware and the FPGA design.
 
@@ -216,20 +216,15 @@ There are two major type of attacks
 
 - Glitching attacks including:
 
-  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU.
+  - Faulting of the execution by the CPU in the FPGA and the CH552
+    MCU.
 
-  - Disturbance of the TRNG entropy generation
+  - Disturbing of the TRNG entropy generation.
 
-- EM leakage.
+- Electromagnetic leakage.
 
 - Attacks on the TKey device apps, except the special case the boot
   verifier in slot 0, which we count as a trusted boot stage.
-
-- Leakage and glitching attacks including:
-
-  - Faulting of the execution by the CPU in the FPGA and the CH552 MCU.
-
-  - EM leakage.
 
 - Attacks on Tillitis' infrastructure outside of the TKey itself.
 
@@ -334,19 +329,19 @@ Mitigations:
 - On the client side, our apps use the pinentry protocol to get the
   USS. They usually depend on gnome3-pinentry on Linux and Gpg4Win on
   Windows, but this isn't enforced. The protection is weak.
-  Keyloggers, especially on X11, would probably be leaking the USS.
+  Keyloggers, especially on X11, would probably leak the USS.
 
-- The firmware uses the USS in the CDI computation. The memory the USS
-  was kept in is then wiped and made unavailable to the device app by
-  hardware protection.
+- The firmware uses the USS digest in the CDI computation. The memory
+  the digest was kept in is wiped and made unavailable to the device
+  app by hardware protection.
 
   Since the firmware does the computation, the device app doesn't even
   see the USS digest.
 
-- On the device side, the USS is only handled as a digest, not the
-  passphrase the user entered, but this digest is also very sensitive,
-  as it's the actual argument used in the CDI computation, but this
-  means the firmware can't leak any passphrase entered by the user.
+- On the device side, only the USS digest is handled, not what the
+  user entered, but this digest is also very sensitive, as it's the
+  actual argument used in the CDI computation, but this means the
+  firmware can't leak what the user entered.
 
 ### CDI
 
@@ -360,7 +355,7 @@ Threats:
 Mitigations:
 
 - Leaking (measured boot case): A malicious app designed to leak the
-  CDI will leak the /wrong/ secret since the CDI includes a
+  CDI will leak the *wrong* secret since the CDI includes a
   measurement of the app itself.
 
 - Leaking (verified boot case): A malicious app designed to leak the
