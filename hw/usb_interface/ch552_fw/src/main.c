@@ -81,7 +81,13 @@ const uint8_t *pDescr = NULL;         // USB configuration flag
 
 #define CDC_CTRL_FS_BINTERVAL          16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
 #define CDC_DATA_FS_BINTERVAL          0                 // bInterval is ignored for BULK transfers
+
+#ifdef USE_SLOW_TRANSFER_FOR_FIDO
+#define FIDO_FS_BINTERVAL              16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
+#else
 #define FIDO_FS_BINTERVAL              2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
+#endif
+
 #define CCID_BULK_FS_BINTERVAL         0                 // bInterval is ignored for BULK transfers
 
 #ifdef USE_BULK_TRANSFER_FOR_DEBUG
