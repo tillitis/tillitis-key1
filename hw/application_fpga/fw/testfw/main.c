@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <tkey/assert.h>
 #include <tkey/io.h>
+#include <tkey/led.h>
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 
@@ -99,11 +100,35 @@ void failmsg(char *s)
 	puts(IO_CDC, "\r\n");
 }
 
+void uart_glitch_workaround(void)
+{
+	// Enable the CDC port
+	//
+	// A glitch on the UART TX line during power-on is interpreted as a
+	// valid byte by the USB controller. This corrupts the first command we
+	// try to send, causing the USB controller to reset.
+	//
+	// We work around this by sending a command to force a reset and then
+	// waiting until the USB controller has restarted.
+
+	config_endpoints(0);
+
+	volatile int32_t i = 500000;
+	while (i-- > 0) {
+		;
+	}
+}
+
 int main(void)
 {
 	uint8_t in = 0;
 	uint8_t available = 0;
 	enum ioend endpoint = IO_NONE;
+
+	uart_glitch_workaround();
+	config_endpoints(IO_CDC);
+
+	led_set(LED_BLUE);
 
 	// Hard coded test UDS in ../../data/uds.hex
 	// clang-format off
