@@ -31,6 +31,14 @@ CFLAGS = \
          -DFREQ_SYS=$(FREQ_SYS) \
          $(EXTRA_FLAGS)
 
+ifdef BULK
+CFLAGS += -DUSE_BULK_TRANSFER_FOR_DEBUG
+endif
+
+ifdef SLOW
+CFLAGS += -DUSE_SLOW_TRANSFER_FOR_FIDO # This might be needed when using FIDO in conjunction with DEBUG
+endif
+
 LFLAGS = \
          $(CFLAGS)
 

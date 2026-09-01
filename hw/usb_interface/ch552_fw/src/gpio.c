@@ -81,7 +81,7 @@ void gpio_init_p1_4_in(void)
 // Read status of pin 1.4
 uint8_t gpio_p1_4_get(void)
 {
-    return (P1 & 0x10); // p1.4
+    return (P1 & 0x10) ? 1 : 0; // p1.4
 }
 
 // Set pin p1.5 to GPIO output mode. (CH552_CTS)

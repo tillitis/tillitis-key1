@@ -81,18 +81,31 @@ const uint8_t *pDescr = NULL;         // USB configuration flag
 
 #define CDC_CTRL_FS_BINTERVAL          16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
 #define CDC_DATA_FS_BINTERVAL          0                 // bInterval is ignored for BULK transfers
-#define FIDO_FS_BINTERVAL              2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
-#define CCID_BULK_FS_BINTERVAL         0                 // bInterval is ignored for BULK transfers
-#define DEBUG_FS_BINTERVAL             16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
 
-#define MAX_CFG_DESC_SIZE              (9+66+77+32)      // Size of CfgDesc+CdcDesc+MAX(FidoDesc,CcidDesc)+DebugDesc
+#ifdef USE_SLOW_TRANSFER_FOR_FIDO
+#define FIDO_FS_BINTERVAL              16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
+#else
+#define FIDO_FS_BINTERVAL              2                 // Gives 2 ms polling interval at Full Speed for interrupt transfers
+#endif
+
+#define CCID_BULK_FS_BINTERVAL         0                 // bInterval is ignored for BULK transfers
+
+#ifdef USE_BULK_TRANSFER_FOR_DEBUG
+#define DEBUG_FS_BINTERVAL             0                 // bInterval is ignored for BULK transfers
+#define DEBUG_DESC_SIZE                23                // Size of DebugDesc
+#else
+#define DEBUG_FS_BINTERVAL             16                // Gives 16 ms polling interval at Full Speed for interrupt transfers
+#define DEBUG_DESC_SIZE                32                // Size of DebugDesc
+#define DEBUG_REPORT_DESC_SIZE         34                // Size of DebugReportDesc
+#endif
+
+#define MAX_CFG_DESC_SIZE              (9+66+77+DEBUG_DESC_SIZE)  // Size of CfgDesc+CdcDesc+MAX(FidoDesc,CcidDesc)+DebugDesc
 
 #define NUM_INTERFACES                 4                 // Number of interfaces
 
 #define CHANGE_ME                      0x00              // Value placeholder
 
 #define FIDO_REPORT_DESC_SIZE          47                // Size of FidoReportDesc
-#define DEBUG_REPORT_DESC_SIZE         34                // Size of DebugReportDesc
 
 #define CCID_VALUE_BCDCCID                 0x0110
 #define CCID_VALUE_DWPROTOCOLS             0x00000002
@@ -501,6 +514,40 @@ FLASH uint8_t CcidDesc[] = {
         /* 77 */
 };
 
+#ifdef USE_BULK_TRANSFER_FOR_DEBUG
+// DEBUG Descriptor (vendor-specific bulk interface)
+FLASH uint8_t DebugDesc[] = {
+        /******************** Interface, DEBUG Descriptor (two endpoints) ********************/
+        0x09,                             /* bLength: Interface Descriptor size */
+        USB_DESC_TYPE_INTERFACE,          /* bDescriptorType: Interface */
+        CHANGE_ME,                        /* bInterfaceNumber: Number of Interface */
+        0x00,                             /* bAlternateSetting: Alternate setting */
+        0x02,                             /* bNumEndpoints: Number of endpoints in Interface */
+        USB_DEV_CLASS_VENDOR_SPECIFIC,    /* bInterfaceClass: Vendor Specific */
+        0x00,                             /* bInterfaceSubClass : 1=BOOT, 0=no boot */
+        0x00,                             /* bInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
+        USB_IDX_INTERFACE_DEBUG_STR,      /* iInterface: Index of string descriptor */
+        /******************** DEBUG Bulk Endpoint Descriptor (OUT) ********************/
+        /* 9 */
+        0x07,                             /* bLength: Endpoint Descriptor size */
+        USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
+        DEBUG_EPOUT_ADDR,                 /* bEndpointAddress: Endpoint Address (OUT) */
+        USB_EP_TYPE_BULK,                 /* bmAttributes: Bulk endpoint */
+        LOBYTE(DEBUG_EPOUT_SIZE),         /* wMaxPacketSize (low byte): 64 Byte max */
+        HIBYTE(DEBUG_EPOUT_SIZE),         /* wMaxPacketSize (high byte): 64 Byte max */
+        0x00,                             /* bInterval: Ignored for BULK */
+        /******************** DEBUG Bulk Endpoint Descriptor (IN) ********************/
+        /* 16 */
+        0x07,                             /* bLength: Endpoint Descriptor size */
+        USB_DESC_TYPE_ENDPOINT,           /* bDescriptorType: Endpoint */
+        DEBUG_EPIN_ADDR,                  /* bEndpointAddress: Endpoint Address (IN) */
+        USB_EP_TYPE_BULK,                 /* bmAttributes: Bulk endpoint */
+        LOBYTE(DEBUG_EPIN_SIZE),          /* wMaxPacketSize (low byte): 64 Byte max */
+        HIBYTE(DEBUG_EPIN_SIZE),          /* wMaxPacketSize (high byte): 64 Byte max */
+        0x00,                             /* bInterval: Ignored for BULK */
+        /* 23 */
+};
+#else
 // DEBUG Descriptor
 FLASH uint8_t DebugDesc[] = {
         /******************** Interface, DEBUG Descriptor (two endpoints) ********************/
@@ -544,6 +591,7 @@ FLASH uint8_t DebugDesc[] = {
         DEBUG_FS_BINTERVAL,               /* bInterval: Polling Interval */
         /* 32 */
 };
+#endif
 
 // FIDO Device Descriptor (copy from FidoDesc)
 FLASH uint8_t FidoCfgDesc[] = {
@@ -639,7 +687,7 @@ FLASH uint8_t LineCoding[7] = { 0x20, 0xA1, 0x07, 0x00, /* Data terminal rate, i
                                                   0x08, /* Data bits (5, 6, 7, 8 or 16) */
                                 };
 
-#define UART_RX_BUF_SIZE     140  // Serial receive buffer
+#define UART_RX_BUF_SIZE     220  // Serial receive buffer
 
 /** Communication UART */
 volatile XDATA uint8_t UartRxBuf[UART_RX_BUF_SIZE] = { 0 };  // Serial receive buffer
@@ -1007,10 +1055,12 @@ void UsbEp0SetupHandler(void)
                         printStrSetup("FidoCfgDesc\n");
                         pDescr = FidoCfgDesc;
                         len = sizeof(FidoCfgDesc);
+#ifndef USE_BULK_TRANSFER_FOR_DEBUG
                     } else if (UsbSetupBuf->wIndexL == DebugInterfaceNum) { // Interface number for DEBUG
                         printStrSetup("DebugCfgDesc\n");
                         pDescr = DebugCfgDesc;
                         len = sizeof(DebugCfgDesc);
+#endif
                     } else {
                         printStrSetup("Unknown HID Interface!\n");
                         len = 0xFF; // Unsupported
@@ -1032,10 +1082,12 @@ void UsbEp0SetupHandler(void)
                         printStrSetup("FidoReportDesc\n");
                         pDescr = FidoReportDesc;
                         len = sizeof(FidoReportDesc);
+#ifndef USE_BULK_TRANSFER_FOR_DEBUG
                     } else if (UsbSetupBuf->wIndexL == DebugInterfaceNum) { // Interface number for DEBUG
                         printStrSetup("DebugReportDesc\n");
                         pDescr = DebugReportDesc;
                         len = sizeof(DebugReportDesc);
+#endif
                     } else {
                         printStrSetup("Unknown Report!\n");
                         len = 0xFF; // Unknown Report
@@ -1542,11 +1594,13 @@ inline void cts_stop(void)
 
 inline void check_cts_stop(void)
 {
-    if (uart_byte_count() >= 133) // UartRxBuf is filled to 95% or more
+    if (uart_byte_count() >= 212) // UartRxBuf is filled to more than 95%
     {
         cts_stop();
     }
 }
+
+#define fpga_uart_ready() (gpio_p1_4_get() == 0)
 
 void main(void)
 {
@@ -1629,7 +1683,8 @@ void main(void)
         if (UsbConfig) {
 
             // Check if Endpoint 2 (CDC) has received data
-            if (UsbEp2ByteCount) {
+            if (UsbEp2ByteCount && fpga_uart_ready()) {
+                // Only send if FPGA CTS is low (ready to receive)
 
                 CH554UART1SendByte(IO_CDC);  // Send CDC mode header
                 CH554UART1SendByte(UsbEp2ByteCount);  // Send length
@@ -1639,7 +1694,8 @@ void main(void)
             }
 
             // Check if Endpoint 3 (FIDO or CCID) has received data
-            if (UsbEp3ByteCount) {
+            if (UsbEp3ByteCount && fpga_uart_ready()) {
+                // Only send if FPGA CTS is low (ready to receive)
 
                 if (ActiveEndpoints & IO_FIDO) {
                     CH554UART1SendByte(IO_FIDO); // Send FIDO mode header
@@ -1654,7 +1710,8 @@ void main(void)
             }
 
             // Check if Endpoint 4 (DEBUG) has received data
-            if (UsbEp4ByteCount) {
+            if (UsbEp4ByteCount && fpga_uart_ready()) {
+                // Only send if FPGA CTS is low (ready to receive)
 
                 CH554UART1SendByte(IO_DEBUG); // Send DEBUG mode header
                 CH554UART1SendByte(UsbEp4ByteCount); // Send length (always 64 bytes)
