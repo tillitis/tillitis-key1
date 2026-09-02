@@ -30,10 +30,16 @@ module application_fpga (
 
     input wire touch_event,
 
+`ifdef PACKAGE_SG48
     input  wire app_gpio1,
     input  wire app_gpio2,
     output wire app_gpio3,
     output wire app_gpio4,
+`elsif PACKAGE_UWG30
+    // Empty here
+`else
+    `error "Invalid configuration! You must define either PACKAGE_SG48 or PACKAGE_UWG30."
+`endif
 
     output wire led_r,
     output wire led_g,
@@ -364,10 +370,21 @@ module application_fpga (
       .led_g(led_g),
       .led_b(led_b),
 
+`ifdef PACKAGE_SG48
       .gpio1(app_gpio1),
       .gpio2(app_gpio2),
       .gpio3(app_gpio3),
       .gpio4(app_gpio4),
+`elsif PACKAGE_UWG30
+      /* verilator lint_off PINCONNECTEMPTY */
+      .gpio1(),
+      .gpio2(),
+      .gpio3(),
+      .gpio4(),
+      /* verilator lint_on PINCONNECTEMPTY */
+`else
+      `error "Invalid configuration! You must define either PACKAGE_SG48 or PACKAGE_UWG30."
+`endif
 
       .syscall(irq31_eoi),
 

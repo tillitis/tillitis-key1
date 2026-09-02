@@ -1,0 +1,47 @@
+#=======================================================================
+#
+# application_fpga_tk1_sg48.pcf
+# ------------------------
+# Pin constraints file for the Application FPGA design to be used
+# on the tk1 board with the CH552 MCU used as a USB-serial chip.
+# This version targets the SG48 package.
+#
+#
+# SPDX-FileCopyrightText: 2022 Tillitis AB <tillitis.se>
+# SPDX-License-Identifier: BSD-2-Clause
+#
+#=======================================================================
+
+# UART.
+set_io interface_rx 26
+set_io interface_tx 25
+set_io interface_ch552_cts 27
+set_io interface_fpga_cts 28
+
+
+# SPI master to flash memory.
+set_io spi_miso 17
+set_io spi_sck  15
+set_io spi_ss   16
+set_io spi_mosi 14
+
+
+# Touch sense.
+set_io touch_event 6
+
+
+# GPIOs.
+set_io app_gpio1 36
+set_io app_gpio2 38
+set_io app_gpio3 45
+set_io app_gpio4 46
+
+
+# LEDs
+set_io led_r 39
+set_io led_g 40
+set_io led_b 41
+
+#=======================================================================
+# EOF application_fpga_tk1_sg48.pcf
+#=======================================================================

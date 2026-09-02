@@ -12,7 +12,7 @@ help() {
     echo "  --freq <frequency>          Set target frequency for design in MHz (might be overridden from value in synthesis file)"
     echo "  --log-file <file>           Set log output filename (default: $LOG_FILE)"
     echo "  --out-file <file>           Set place and route output filename (default: $OUT_FILE)"
-    echo "  --package <type>            Set package type (default: $PACKAGE)"
+    echo "  --package <type>            Set package type (sg48 or uwg30)"
     echo "  --pin-file <file>           Set pin file to use (default: $PIN_FILE)"
     echo "  --synth-file <file>         Set synthesis file to use (default: $SYNTH_FILE)"
     echo "  --timeout '<time>[SUFFIX]'  Set time to run before script is killed"
@@ -27,8 +27,8 @@ export LOCK_DIR=$(mktemp -u -p $TOP_DIR)
 
 export LOG_FILE=../application_fpga_par.txt
 export OUT_FILE=../application_fpga_par.json
-export PACKAGE=sg48
-export PIN_FILE=../data/application_fpga_tk1.pcf
+export PIN_FILE_SG48=../data/application_fpga_tk1_sg48.pcf
+export PIN_FILE_UWG30=../data/application_fpga_tk1_uwg30.pcf
 export SYNTH_FILE=../synth.json
 
 export PNR_DEBUG=/dev/null
@@ -167,9 +167,6 @@ export LOG_FILE=$(basename $LOG_FILE)
 export OUT_FILE_PATH=$(realpath $(dirname $OUT_FILE))
 export OUT_FILE=$(basename $OUT_FILE)
 
-export PIN_FILE_PATH=$(realpath $(dirname $PIN_FILE))
-export PIN_FILE=$(basename $PIN_FILE)
-
 export SYNTH_FILE_PATH=$(realpath $(dirname $SYNTH_FILE))
 export SYNTH_FILE=$(basename $SYNTH_FILE)
 
@@ -194,6 +191,24 @@ if [ -z "$FREQ" ]; then
 else
     export FREQ
 fi
+
+if [ -z "$PACKAGE" ]; then
+    echo "No package set!"
+    exit 1
+else
+    if [ "$PACKAGE" == "sg48" ]; then
+        export PIN_FILE=$PIN_FILE_SG48
+    elif [ "$PACKAGE" == "uwg30" ]; then
+        export PIN_FILE=$PIN_FILE_UWG30
+    else
+        echo "Invalid package name!"
+        exit 1
+    fi
+    export PACKAGE
+fi
+
+export PIN_FILE_PATH=$(realpath $(dirname $PIN_FILE))
+export PIN_FILE=$(basename $PIN_FILE)
 
 if [ -n "$TIMEOUT" ]; then
     echo "Timeout:          $TIMEOUT"

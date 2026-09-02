@@ -72,9 +72,13 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: lint verilog using verilator
+      - name: lint verilog with PACKAGE=sg48 using verilator
         working-directory: hw/application_fpga
-        run: make lint
+        run: make lint PACKAGE=sg48
+
+      - name: lint verilog with PACKAGE=uwg30 using verilator
+        working-directory: hw/application_fpga
+        run: make lint PACKAGE=uwg30
 
   build-usb-firmware:
     runs-on: ubuntu-latest
@@ -96,7 +100,7 @@ jobs:
         working-directory: hw/usb_interface/ch552_fw
         run: make
 
-  build-bitstream:
+  build-bitstream-sg48:
     outputs:
       commit_sha: ${{ github.sha }}
     runs-on: ubuntu-latest
@@ -114,9 +118,9 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: make application FPGA gateware
+      - name: make application FPGA gateware for SG48 package
         working-directory: hw/application_fpga
-        run: make all
+        run: make all PACKAGE=sg48
 
       - name: Cache binaries
         uses: actions/cache@v4
@@ -124,10 +128,40 @@ jobs:
           path: |
             hw/application_fpga/application_fpga.bin
             hw/application_fpga/firmware.bin
-          key: build-${{ github.run_number }}-${{ github.sha }}-${{ github.run_attempt }}
+          key: build-sg48-${{ github.run_number }}-${{ github.sha }}-${{ github.run_attempt }}
 
-  check-hashes:
-    needs: build-bitstream
+  build-bitstream-uwg30:
+    outputs:
+      commit_sha: ${{ github.sha }}
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/tillitis/tkey-builder:5rc2
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0
+          persist-credentials: false
+
+      - name: fix
+        # https://github.com/actions/runner-images/issues/6775
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: make application FPGA gateware for UWG30 package
+        working-directory: hw/application_fpga
+        run: make all PACKAGE=uwg30
+
+      - name: Cache binaries
+        uses: actions/cache@v4
+        with:
+          path: |
+            hw/application_fpga/application_fpga.bin
+            hw/application_fpga/firmware.bin
+          key: build-uwg30-${{ github.run_number }}-${{ github.sha }}-${{ github.run_attempt }}
+
+  check-hashes-sg48:
+    needs: build-bitstream-sg48
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/tillitis/tkey-builder:5rc2
@@ -143,12 +177,34 @@ jobs:
           path: |
             hw/application_fpga/application_fpga.bin
             hw/application_fpga/firmware.bin
-          key: build-${{ github.run_number }}-${{ needs.build-bitstream.outputs.commit_sha }}-${{ github.run_attempt }}
+          key: build-sg48-${{ github.run_number }}-${{ needs.build-bitstream-sg48.outputs.commit_sha }}-${{ github.run_attempt }}
 
       - name: check matching hashes for firmware.bin & application_fpga.bin
         working-directory: hw/application_fpga
-        run: make check-binary-hashes
+        run: make check-binary-hashes PACKAGE=sg48
 
+  check-hashes-uwg30:
+    needs: build-bitstream-uwg30
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/tillitis/tkey-builder:5rc2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Retrieve binaries from cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            hw/application_fpga/application_fpga.bin
+            hw/application_fpga/firmware.bin
+          key: build-uwg30-${{ github.run_number }}-${{ needs.build-bitstream-uwg30.outputs.commit_sha }}-${{ github.run_attempt }}
+
+      - name: check matching hashes for firmware.bin & application_fpga.bin
+        working-directory: hw/application_fpga
+        run: make check-binary-hashes PACKAGE=uwg30
 
   reuse-compliance-check:
     runs-on: ubuntu-latest
