@@ -168,7 +168,13 @@ module tk1 #(
   reg           tmp_ready;
   /* verilator lint_on UNOPTFLAT */
 
+`ifdef PACKAGE_SG48
+  reg  [ 2 : 0] muxed_led;
+`elsif PACKAGE_UWG30
   reg           muxed_led;
+`else
+  `error "Invalid configuration! You must define either PACKAGE_SG48 or PACKAGE_UWG30."
+`endif
 
   wire [31 : 0] udi_rdata;
 
@@ -213,9 +219,17 @@ module tk1 #(
       .RGB1(led_g),
       .RGB2(led_b),
       .RGBLEDEN(1'h1),
+`ifdef PACKAGE_SG48
+      .RGB0PWM(muxed_led[LED_R_BIT]),
+      .RGB1PWM(muxed_led[LED_G_BIT]),
+      .RGB2PWM(muxed_led[LED_B_BIT]),
+`elsif PACKAGE_UWG30
       .RGB0PWM(muxed_led),
       .RGB1PWM(muxed_led),
       .RGB2PWM(muxed_led),
+`else
+      `error "Invalid configuration! You must define either PACKAGE_SG48 or PACKAGE_UWG30."
+`endif
       .CURREN(1'b1)
   );
   /* verilator lint_on PINMISSING */
@@ -361,10 +375,22 @@ module tk1 #(
     end
 
     if (cpu_trap) begin
+`ifdef PACKAGE_SG48
+      muxed_led = cpu_trap_led_reg;
+`elsif PACKAGE_UWG30
       muxed_led = |cpu_trap_led_reg;
+`else
+      `error "Invalid configuration! You must define either PACKAGE_SG48 or PACKAGE_UWG30."
+`endif
     end
     else begin
+`ifdef PACKAGE_SG48
+      muxed_led = led_reg;
+`elsif PACKAGE_UWG30
       muxed_led = |led_reg;
+`else
+      `error "Invalid configuration! You must define either PACKAGE_SG48 or PACKAGE_UWG30."
+`endif
     end
   end
 

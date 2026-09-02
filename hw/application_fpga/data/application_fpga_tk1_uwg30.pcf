@@ -30,13 +30,6 @@ set_io spi_mosi F1
 set_io touch_event B1
 
 
-# GPIOs.
-#set_io app_gpio1 36
-#set_io app_gpio2 38
-#set_io app_gpio3 45
-#set_io app_gpio4 46
-
-
 # LEDs
 set_io led_r A5
 set_io led_b B5
