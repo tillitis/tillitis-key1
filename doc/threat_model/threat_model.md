@@ -464,9 +464,8 @@ Mitigation:
 - The entire `FW_RAM` is cleared when the FPGA is powered up and the
   FPGA is configured.
 
-  TODO: However, since `FW_RAM` is not cleared after a soft reset,
-  perhaps the firmware should clear the `FW_RAM` except the
-  `resetinfo` area before doing a reset.
+- Firmware clears the `FW_RAM` except the `resetinfo` area before
+  doing a reset.
 
 - The firmware's stack in `FW_RAM` is cleared by firmware before
   jumping to an app.

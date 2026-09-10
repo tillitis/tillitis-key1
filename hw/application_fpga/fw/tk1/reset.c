@@ -52,6 +52,15 @@ int reset(struct user_reset *userreset, size_t nextlen)
 	memcpy((void *)resetinfo->next_app_data, userreset->next_app_data,
 	       nextlen);
 
+	// Clear the firmware ram
+	asm volatile("la a0, _sfwram;"
+		     "la a1, _efwram;"
+		     "loopfwram:;"
+		     "sw zero, 0(a0);"
+		     "addi a0, a0, 4;"
+		     "blt a0, a1, loopfwram;" ::
+			 : "memory");
+
 	// Do the actual reset.
 	*system_reset = 1;
 
