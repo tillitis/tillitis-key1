@@ -771,13 +771,14 @@ Returns Vendor and Product ID. Notably the serial number is not
 returned, so a device app can't identify what particular TKey it is
 running on.
 
-#### `ERASE_AREAS`
+#### `ERASE_AREA`
 
 ```C
-syscall(TK1_SYSCALL_ERASE_AREAS, 0, 0, 0);
+uint8_t area;
+syscall(TK1_SYSCALL_ERASE_AREA, (uint32_t)area, 0, 0);
 ```
 
-Erases all app storage. Privileged syscall.  Returns 0 on success.
+Erases a storage area. Privileged syscall. Returns 0 on success.
 
 ## Developing firmware
 
