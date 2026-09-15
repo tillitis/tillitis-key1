@@ -314,40 +314,43 @@ int storage_read_data(struct partition_table *part_table, uint32_t offset,
 	return flash_read_data(address, data, size);
 }
 
-// Erases all app storage. Privileged operation. Returns zero on
+// Erases a storage area, zero indexed. Privileged operation. Returns zero on
 // success.
-int storage_erase_areas(struct partition_table_storage *part_table_storage)
+int storage_erase_areas(struct partition_table_storage *part_table_storage,
+			uint8_t area)
 {
+	if (area >= N_STORAGE_AREA) {
+		return -1;
+	}
+
 	// Check if we are allowed to erase
 	if (!mgmt_app_authenticate()) {
 		return -1;
 	}
 
-	for (uint8_t i = 0; i < N_STORAGE_AREA; i++) {
-		struct app_storage_area *app_storage =
-		    &part_table_storage->table.app_storage[i];
+	struct app_storage_area *app_storage =
+	    &part_table_storage->table.app_storage[area];
 
-		// Erase area first
+	// Erase area first
 
-		uint32_t start_address = 0;
+	uint32_t start_address = 0;
 
-		if (index_to_address(i, &start_address) != 0) {
-			return -1;
-		}
-
-		// Erase both 64 KB blocks
-		flash_block_64_erase(start_address);
-		flash_block_64_erase(start_address + 0x10000);
-
-		// Mark area as free
-		app_storage->status = 0x00;
-
-		(void)memset(app_storage->auth.nonce, 0x00,
-			     sizeof(app_storage->auth.nonce));
-
-		(void)memset(app_storage->auth.authentication_digest, 0x00,
-			     sizeof(app_storage->auth.authentication_digest));
+	if (index_to_address(area, &start_address) != 0) {
+		return -1;
 	}
+
+	// Erase both 64 KB blocks
+	flash_block_64_erase(start_address);
+	flash_block_64_erase(start_address + 0x10000);
+
+	// Mark area as free
+	app_storage->status = 0x00;
+
+	(void)memset(app_storage->auth.nonce, 0x00,
+		     sizeof(app_storage->auth.nonce));
+
+	(void)memset(app_storage->auth.authentication_digest, 0x00,
+		     sizeof(app_storage->auth.authentication_digest));
 
 	if (part_table_write(part_table_storage) != 0) {
 		return -1;

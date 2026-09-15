@@ -774,10 +774,10 @@ running on.
 #### `ERASE_AREAS`
 
 ```C
-syscall(TK1_SYSCALL_ERASE_AREAS, 0, 0, 0);
+syscall(TK1_SYSCALL_ERASE_AREAS, (uint8_t)area, 0, 0);
 ```
 
-Erases all app storage. Privileged syscall.  Returns 0 on success.
+Erases a storage area. Privileged syscall. Returns 0 on success.
 
 ## Developing firmware
 
