@@ -29,7 +29,7 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 	uint8_t available = 0;
 	enum ioend endpoint = IO_NONE;
 
-	led_set((state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE);
+	led_set((state == FW_STATE_LOADING) ? LED_WHITE : LED_BLACK);
 
 	debug_puts("readcommand\n");
 
