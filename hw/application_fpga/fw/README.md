@@ -141,13 +141,10 @@ an app from:
 
 1. Flash slot 0 (default): `FLASH0` with a specific app hash defined
    in a constant in firmware.
-2. Flash slot 1: `FLASH1`.
-3. Flash slot 0 with a specific app hash left from previous app:
-   `FLASH0_VER`
-4. Flash slot 1 with a specific app hash left from previous app:
+2. Flash slot 1 with a specific app hash left from previous app:
    `FLASH1_VER`.
-5. Client: `CLIENT`.
-6. Client with a specific app hash left from previous app:
+3. Client: `CLIENT`.
+4. Client with a specific app hash left from previous app:
    `CLIENT_VER`.
 
 ### Firmware state machine
@@ -210,8 +207,6 @@ Allowed data in state *INITIAL*:
 | *reset type* | *next state*      |
 |--------------|-------------------|
 | `FLASH0`     | *LOAD_FLASH_MGMT* |
-| `FLASH1`     | *LOAD_FLASH*      |
-| `FLASH0_VER` | *LOAD_FLASH*      |
 | `FLASH1_VER` | *LOAD_FLASH*      |
 | `CLIENT`     | *WAITCOMMAND*     |
 | `CLIENT_VER` | *WAITCOMMAND*     |
@@ -408,10 +403,9 @@ It works like this:
 
 - If the signature provided over the digest is verified against the
   public key the app use the system call `RESET` with the reset type
-  set to `START_FLASH0_VER`, `START_FLASH1_VER`, or `START_CLIENT_VER`
-  depending on where it wants the next app to start from. It also
-  sends the now verified app digest to the firmware in the same system
-  call.
+  set to `START_FLASH1_VER`, or `START_CLIENT_VER` depending on where
+  it wants the next app to start from. It also sends the now verified
+  app digest to the firmware in the same system call.
 
 - The app leaves something it want's to be measured by the firmware
   for the coming CDI, typically a digest of its own security policy,
@@ -620,8 +614,6 @@ The types of reset are defined in `reset.h`:
 | *Name*             | *Comment*                                      |
 |--------------------|------------------------------------------------|
 | `START_FLASH0`     | Load next app from flash slot 0                |
-| `START_FLASH1`     | Load next app from flash slot 1                |
-| `START_FLASH0_VER` | Load next app from flash slot 0, but verify it |
 | `START_FLASH1_VER` | Load next app from flash slot 1, but verify it |
 | `START_CLIENT`     | Load next app from client                      |
 | `START_CLIENT_VER` | Load next app from client                      |

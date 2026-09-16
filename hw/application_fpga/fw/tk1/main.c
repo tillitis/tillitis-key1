@@ -469,25 +469,11 @@ static enum state start_where(struct context *ctx)
 
 	// Where do we start?
 	switch (resetinfo->type) {
-	case START_DEFAULT:
-		// fallthrough
 	case START_FLASH0:
 		ctx->flash_slot = 0;
 		ctx->ver_digest = mgmt_app_allowed_digest();
 
 		return FW_STATE_LOAD_FLASH_MGMT;
-
-	case START_FLASH1:
-		ctx->flash_slot = 1;
-		ctx->ver_digest = NULL;
-
-		return FW_STATE_LOAD_FLASH;
-
-	case START_FLASH0_VER:
-		ctx->flash_slot = 0;
-		ctx->ver_digest = resetinfo->app_digest;
-
-		return FW_STATE_LOAD_FLASH;
 
 	case START_FLASH1_VER:
 		ctx->flash_slot = 1;
@@ -626,7 +612,7 @@ int main(void)
 			// next_app_data intact, if any. We also leave
 			// app_digest since it might be used in the digest
 			// verification below.
-			resetinfo->type = START_DEFAULT;
+			resetinfo->type = START_FLASH0;
 			resetinfo->mask &= ~RESET_SEED;
 			(void)memset((void *)resetinfo->measured_id, 0,
 				     RESET_DIGEST_SIZE);

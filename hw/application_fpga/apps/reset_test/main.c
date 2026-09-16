@@ -74,7 +74,7 @@ int main(void)
 		case '1':
 			// Reset into default state
 
-			rst.type = START_DEFAULT;
+			rst.type = START_FLASH0;
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 			break;
 
@@ -85,14 +85,7 @@ int main(void)
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 			break;
 
-		case '3':
-			// Reset and load app from second flash slot
-
-			rst.type = START_FLASH1;
-			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
-			break;
-
-		case '4': {
+		case '3': {
 			// Reset and load app from client with verification
 			// using an invalid digest.
 			//
@@ -106,7 +99,7 @@ int main(void)
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 		} break;
 
-		case '5': {
+		case '4': {
 			// Reset and load app from client with verification
 			// using a digest matching the example app (blue.bin)
 			// from tkey-libs
@@ -121,7 +114,7 @@ int main(void)
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 		} break;
 
-		case '6': {
+		case '5': {
 			// Reset and load app from second flash slot with
 			// verification using an invalid digest.
 			//
@@ -135,7 +128,7 @@ int main(void)
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 		} break;
 
-		case '7': {
+		case '6': {
 			// Reset and load app from second flash slot with
 			// verification using a digest matching the example app
 			// (blue.bin) from tkey-libs
