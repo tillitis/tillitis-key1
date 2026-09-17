@@ -43,5 +43,5 @@ struct user_reset {
 };
 
 int reset(struct user_reset *userreset, size_t nextlen);
-int reset_data(uint8_t *next_app_data);
+int reset_get_reset_data(uint8_t *next_app_data);
 #endif

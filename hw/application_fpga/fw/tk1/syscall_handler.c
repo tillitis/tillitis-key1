@@ -106,9 +106,9 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 	case TK1_SYSCALL_STATUS:
 		return part_get_status();
 
-	case TK1_SYSCALL_GET_APP_DATA:
+	case TK1_SYSCALL_GET_RESET_DATA:
 		// arg1 next_app_data
-		return reset_data((uint8_t *)arg1);
+		return reset_get_reset_data((uint8_t *)arg1);
 
 	case TK1_SYSCALL_ERASE_AREA:
 		// arg1 area

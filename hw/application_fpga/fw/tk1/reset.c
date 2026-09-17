@@ -61,7 +61,7 @@ int reset(struct user_reset *userreset, size_t nextlen)
 	__builtin_unreachable();
 }
 
-int reset_data(uint8_t *next_app_data)
+int reset_get_reset_data(uint8_t *next_app_data)
 {
 	if (!in_app_ram(next_app_data, RESET_DATA_SIZE)) {
 		return -1;
