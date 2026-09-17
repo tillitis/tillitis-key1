@@ -626,6 +626,16 @@ The types of reset are defined in `reset.h`:
 | `START_CLIENT`     | Load next app from client                      |
 | `START_CLIENT_VER` | Load next app from client                      |
 
+#### `GET_RESET_DATA`
+
+```C
+uint8_t next_app_data[184];
+syscall(TK1_SYSCALL_GET_RESET_DATA, (uint32_t)next_app_data, 0, 0);
+```
+
+Fills in data left from previous app in the chain into next_app_data.
+Buffer needs to be large enough to receive `RESET_DATA_SIZE` bytes.
+
 #### `ALLOC_AREA`
 
 ```C
@@ -655,8 +665,8 @@ syscall(TK1_SYSCALL_WRITE_DATA, offset, (uint32_t)buf, sizeof(buf))
 Write data in `buf` to the app's flash area at byte `offset` within
 the area. Returns 0 on success.
 
-At most 4096 bytes can be written at once and `offset` must be a
-multiple of 4096 bytes.
+Up to storage area size bytes can be written at once and offset must
+be a multiple of 256 bytes.
 
 #### `READ_DATA`
 
@@ -667,7 +677,8 @@ uint8_t buf[17];
 syscall(TK1_SYSCALL_READ_DATA, offset, (uint32_t)buf, sizeof(buf);
 ```
 
-Read into `buf` at byte `offset` from the app's flash area.
+Read into `buf` at byte `offset` from the app's flash area. The read
+length limit is the size of the storage area.
 
 #### `ERASE_DATA`
 
@@ -683,14 +694,15 @@ success.
 
 Both `size` and  `offset` must be a multiple of 4096 bytes.
 
-#### `PRELOAD_DELETE`
+#### `GET_VIDPID`
 
 ```C
-syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0);
+syscall(TK1_SYSCALL_PRELOAD_STATUS, 0, 0, 0);
 ```
 
-Delete the app in flash slot 1. Returns 0 on success. Only available
-for the verified management app.
+Returns Vendor and Product ID. Notably the serial number is not
+returned, so a device app can't identify what particular TKey it is
+running on.
 
 #### `PRELOAD_STORE`
 
@@ -736,6 +748,15 @@ in `app_digest`.
 Sign `app_digest` with your Ed25519 private key and pass the
 resulting signature in `app_signature`.
 
+#### `PRELOAD_DELETE`
+
+```C
+syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0);
+```
+
+Delete the app in flash slot 1. Returns 0 on success. Only available
+for the verified management app.
+
 #### `PRELOAD_GET_METADATA`
 
 ```C
@@ -751,6 +772,17 @@ Copies the digest and signature of app, and pubkey in flash slot 1 to
 `app_digest`, `app_signature` and `pubkey`. Returns 0 on success. Only
 available for the verified management app.
 
+#### `PRELOAD_SET_PUBKEY`
+
+```C
+uint8_t pubkey[32];
+
+syscall(TK1_SYSCALL_PRELOAD_SET_PUBKEY, (uint32_t)pubkey, 0, 0);
+```
+
+Stores pubkey for app in flash slot 1. Only available for the verified
+management app. Returns 0 on success.
+
 #### `STATUS`
 
 ```C
@@ -760,16 +792,6 @@ syscall(TK1_SYSCALL_PRELOAD_STATUS, 0, 0, 0);
 Returns filesystem status. Non-zero when problems have been detected,
 so far only that the first copy of the partition table didn't pass
 checks.
-
-#### `GET_VIDPID`
-
-```C
-syscall(TK1_SYSCALL_PRELOAD_STATUS, 0, 0, 0);
-```
-
-Returns Vendor and Product ID. Notably the serial number is not
-returned, so a device app can't identify what particular TKey it is
-running on.
 
 #### `ERASE_AREA`
 
