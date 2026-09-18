@@ -288,7 +288,7 @@ int main(void)
 		if (in == '+') {
 			struct reset rst;
 			memset(&rst, 0, sizeof(rst));
-			rst.type = START_DEFAULT;
+			rst.type = START_FLASH0;
 			syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
 		}
 
