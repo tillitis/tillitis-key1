@@ -697,7 +697,7 @@ Both `size` and  `offset` must be a multiple of 4096 bytes.
 #### `GET_VIDPID`
 
 ```C
-syscall(TK1_SYSCALL_PRELOAD_STATUS, 0, 0, 0);
+syscall(TK1_SYSCALL_GET_VIDPID, 0, 0, 0);
 ```
 
 Returns Vendor and Product ID. Notably the serial number is not
