@@ -520,19 +520,23 @@ Device Secret is used as a key in the BLAKE2s hash function.
   2. After reset: `measured_id` will survive the reset and will be
      used in the CDI computation for the next app.
 
-The domain byte is used to separate the following cases:
+The domain byte is used to separate combinations of the following:
 
-| *Bitstring* | *Value* | *Comment*                     |
-|-------------|---------|-------------------------------|
-| 00          | 0       | Directly loaded app, no USS   |
-| 01          | 1       | Directly loaded app, with USS |
-| 10          | 2       | Chained app, no USS           |
-| 11          | 3       | Chained app, with USS         |
+- Directly loaded or chained app
+- USS or no USS
+- Boot type (resetinfo.type)
+
+| *Bits* | *Name*            | *Value* | *Meaning*                               |
+|--------|-------------------|---------|-----------------------------------------|
+| 0      | DOMAIN_USS_USED   | 0       | No USS                                  |
+|        |                   | 1       | USS                                     |
+| 1      | DOMAIN_CHAINED    | 0       | Directly loaded app                     |
+|        |                   | 1       | Chained app                             |
+| 2:3    | DOMAIN_RESET_TYPE | 0-3     | Value present in resetinfo.type at boot |
+| 4:7    |                   |         | Reserved, all zeros                     |
 
 - Directly loaded app: the app's BLAKE2s digest is used.
 - Chained app: the `measured_id` measurement from before a reset is used.
-
-The rest of the bits in the domain byte are reserved for future use.
 
 In an ideal world, software would never be able to read UDS at all and
 we would have a BLAKE2s function in hardware that would be the only

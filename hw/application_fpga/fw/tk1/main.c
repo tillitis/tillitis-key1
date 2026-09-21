@@ -19,8 +19,10 @@
 #include "state.h"
 #include "syscall_enable.h"
 
-#define DOMAIN_USS_MASK 0x1
-#define DOMAIN_MEASURED_ID_MASK 0x2
+#define DOMAIN_USS_USED_POS 0
+#define DOMAIN_CHAINED_POS 1
+#define DOMAIN_RESET_TYPE_POS 2
+#define DOMAIN_RESET_TYPE_MAX 3 // 4 reset types available (0-3)
 
 // clang-format off
 static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
@@ -594,11 +596,16 @@ int main(void)
 			// or, if RESET_SEED is set,
 			//
 			// CDI = hash(uds, domain + measured_id + uss)
+			if (resetinfo->type > DOMAIN_RESET_TYPE_MAX) {
+				state = FW_STATE_FAIL;
+				break;
+			}
 			uint8_t domain = 0;
-			domain |= ctx.use_uss ? DOMAIN_USS_MASK : 0;
+			domain |= resetinfo->type << DOMAIN_RESET_TYPE_POS;
+			domain |= ctx.use_uss ? 1 << DOMAIN_USS_USED_POS : 0;
 
 			if (resetinfo->mask & RESET_SEED) {
-				domain |= DOMAIN_MEASURED_ID_MASK;
+				domain |= 1 << DOMAIN_CHAINED_POS;
 				compute_cdi(
 				    domain,
 				    (const uint8_t *)resetinfo->measured_id,
