@@ -591,6 +591,17 @@ int main(void)
 			break;
 
 		case FW_STATE_START: {
+			// Check whether loaded app is allowed to start
+			if (ctx.ver_digest != NULL) {
+				print_digest(ctx.digest);
+				if (!memeq(ctx.digest, (void *)ctx.ver_digest,
+					   sizeof(ctx.digest))) {
+					debug_puts("Digests do not match\n");
+					state = FW_STATE_FAIL;
+					break;
+				}
+			}
+
 			// CDI = hash(uds, domain + hash(app) + uss)
 			//
 			// or, if RESET_SEED is set,
@@ -615,25 +626,12 @@ int main(void)
 					    ctx.uss);
 			}
 
-			// Reset resetinfo to default. Leave
-			// next_app_data intact, if any. We also leave
-			// app_digest since it might be used in the digest
-			// verification below.
+			// Reset resetinfo to default. Leave next_app_data
+			// intact, if any.
 			resetinfo->type = START_FLASH0;
 			resetinfo->mask &= ~RESET_SEED;
 			(void)memset((void *)resetinfo->measured_id, 0,
 				     RESET_DIGEST_SIZE);
-
-			if (ctx.ver_digest != NULL) {
-				print_digest(ctx.digest);
-				if (!memeq(ctx.digest, (void *)ctx.ver_digest,
-					   sizeof(ctx.digest))) {
-					debug_puts("Digests do not match\n");
-					state = FW_STATE_FAIL;
-					break;
-				}
-			}
-
 			(void)memset((void *)resetinfo->app_digest, 0,
 				     RESET_DIGEST_SIZE);
 
