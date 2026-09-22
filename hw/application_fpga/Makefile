@@ -273,11 +273,13 @@ tools/b2s/b2s:
 #-------------------------------------------------------------------
 LDFLAGS = \
 	-T $(P)/fw/tk1/firmware.lds \
+	-fuse-ld=lld \
 	-Wl,--cref,-M \
 	-L $(LIBDIR) -lcommon -lblake2s
 
 QEMU_LDFLAGS = \
 	-T $(P)/fw/tk1/qemu_firmware.lds \
+	-fuse-ld=lld \
 	-Wl,--cref,-M \
 	-L $(LIBDIR) -lcommon -lblake2s
 
@@ -289,7 +291,7 @@ tkey-libs:
 
 # Device app used as preloaded app
 $(FLASH_APP_0):
-	make -C apps
+	make -C apps defaultapp.bin
 
 # Build a complete filesystem image
 flash_image.bin: tools/tkeyimage/tkeyimage $(FLASH_IMAGE_DEPS)

@@ -1,0 +1,89 @@
+name: sca
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request: {}
+  # allow manual runs:
+  workflow_dispatch: {}
+
+jobs:
+  run-infer:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/tillitis/infer-toolchain:1.2.0
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+        with:
+          # fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Go inside container (needed for building firmware)
+        run: |
+          apt-get update
+          apt-get install -y golang-go ca-certificates git
+
+      - name: fix
+        # https://github.com/actions/runner-images/issues/6775
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: run infer
+        working-directory: hw/application_fpga
+        run: |
+          cp tools/sca/run-infer.sh .
+          cp tools/sca/infer_exceptions.txt .
+          ./run-infer.sh
+
+      - name: Archive all report files
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: infer-reports
+          path: |
+            hw/application_fpga/infer-out-*/report.txt
+            hw/application_fpga/infer-out-*/expanded-report.txt
+            hw/application_fpga/infer-out-*/censored-issues-report.txt
+            hw/application_fpga/infer-out-*/checkers_used.txt
+
+  run-scan-build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/tillitis/scan-build-toolchain:22.1.0
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+        with:
+          # fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Go inside container (needed for building firmware)
+        run: |
+          apt-get update
+          apt-get install -y golang-go ca-certificates git
+
+      - name: fix
+        # https://github.com/actions/runner-images/issues/6775
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: run scan-build
+        working-directory: hw/application_fpga
+        run: |
+          cp tools/sca/run-scan-build.sh .
+          cp tools/sca/scan-build_exceptions.txt .
+          cp tools/sca/sarif_to_txt.py .
+          ./run-scan-build.sh
+
+      - name: Archive all report files
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: scan-build-reports
+          path: |
+            hw/application_fpga/scan-build-out-*/report.txt
+            hw/application_fpga/scan-build-out-*/expanded-report.txt
+            hw/application_fpga/scan-build-out-*/censored-issues-report.txt
+            hw/application_fpga/scan-build-out-*/checkers_used.txt

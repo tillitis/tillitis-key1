@@ -56,6 +56,10 @@ jobs:
         run: |
           make check
 
+      - name: compile apps
+        working-directory: hw/application_fpga/apps
+        run: make
+
   check-verilog:
     runs-on: ubuntu-latest
     container:
