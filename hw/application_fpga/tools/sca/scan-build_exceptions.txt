@@ -1,0 +1,2 @@
+# <issue_type_regex>:<filename_regex>:<function_regex>:<reason_string>
+core.FixedAddressDereference:.*:.*:Ignore FixedAddressDereference

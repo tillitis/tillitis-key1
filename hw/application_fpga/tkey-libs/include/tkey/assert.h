@@ -23,6 +23,6 @@
 #endif
 
 void assert_fail(enum ioend dest, const char *assertion, const char *file,
-		 unsigned int line, const char *function);
-void assert_halt(void);
+		 unsigned int line, const char *function) __attribute__((noreturn));
+void assert_halt(void) __attribute__((noreturn));
 #endif
