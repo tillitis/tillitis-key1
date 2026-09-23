@@ -42,6 +42,7 @@ static volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER
 static volatile uint32_t *ram_addr_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
 static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
 static volatile struct reset *resetinfo    = (volatile struct reset *)TK1_MMIO_RESETINFO_BASE;
+static volatile uint32_t *system_reset     = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;
 // clang-format on
 
 struct partition_table_storage part_table_storage;
@@ -262,6 +263,24 @@ static enum state initial_commands(const struct frame_header *hdr,
 		state = FW_STATE_LOADING;
 		break;
 	}
+
+	case FW_CMD_RESET:
+		if (hdr->len != 128) {
+			// Bad length
+			state = FW_STATE_FAIL;
+			break;
+		}
+
+		memset((void *)resetinfo, 0, sizeof(*resetinfo));
+		resetinfo->type = cmd[1];
+		memcpy((void *)resetinfo->next_app_data, cmd + 2, 126);
+
+		*system_reset = 1;
+
+		// Should not reach this point
+		state = FW_STATE_FAIL;
+
+		break;
 
 	default:
 		debug_puts("Got unknown firmware cmd: 0x");
