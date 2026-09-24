@@ -834,6 +834,7 @@ void CreateCfgDescriptor(uint8_t ep_config)
     DebugInterfaceNum = 0xFF; // Set as invalid until we have parsed each interface
 
     memset(ActiveCfgDesc, 0, MAX_CFG_DESC_SIZE); // Clean the descriptor
+    ActiveCfgDescSize = 0;
 
     uint8_t cfg_desc_size = sizeof(CfgDesc);
     memcpy(ActiveCfgDesc, CfgDesc, cfg_desc_size);
@@ -847,6 +848,11 @@ void CreateCfgDescriptor(uint8_t ep_config)
         ActiveCfgDesc[ActiveCfgDescSize + 45] = num_iface;
         num_iface++;
         ActiveCfgDescSize += cdc_desc_size;
+    }
+
+    // FIDO and CCID can't be enabled at the same time. Disable both!
+    if ((ep_config & IO_FIDO) && (ep_config & IO_CCID)) {
+        ep_config &= ~(IO_FIDO | IO_CCID);
     }
 
     if (ep_config & IO_FIDO) {
@@ -1550,7 +1556,7 @@ void Uart1_ISR(void)IRQ_UART1
     }
 }
 
-inline uint8_t uart_byte_count(void)
+static inline uint8_t uart_byte_count(void)
 {
     uint8_t in = UartRxBufInputPointer;
     uint8_t out = UartRxBufOutputPointer;
@@ -1563,7 +1569,7 @@ inline uint8_t uart_byte_count(void)
 }
 
 // Copy data from a circular buffer
-inline void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t start_pos, uint8_t length)
+static inline void circular_copy(uint8_t *dest, uint8_t *src, uint8_t src_size, uint8_t start_pos, uint8_t length)
 {
 
     // Calculate the remaining space from start_pos to end of buffer
