@@ -34,7 +34,7 @@ enum fwcmd {
 	FW_RSP_LOAD_APP_DATA_READY	= 0x07,
 	FW_CMD_GET_UDI			= 0x08,
 	FW_RSP_GET_UDI			= 0x09,
-	FW_CMD_MAX                      = 0x0a,
+	FW_CMD_RESET			= 0xfe,
 };
 // clang-format on
 
