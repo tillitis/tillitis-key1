@@ -1,8 +1,13 @@
 #######################################################
 
 # Toolchain
+ifdef SCA
+CC = clang
+OBJCOPY = llvm-objcopy
+else
 CC = sdcc
 OBJCOPY = objcopy
+endif
 PACK_HEX = packihx
 CHPROG = chprog
 
@@ -17,8 +22,16 @@ XRAM_LOC  = 0x0000   # xRAM area starts at address 0 in the External Data Addres
 CODE_SIZE = 0x3800   # 14 KB program storage area
 FREQ_SYS  = 16000000 # 16 MHz system clock
 
+ifndef SCA
 EXTRA_FLAGS = -DBUILD_CODE
+endif
 
+ifdef SCA
+CFLAGS = \
+         -fcommon \
+         -Iinc \
+         -DFREQ_SYS=$(FREQ_SYS)
+else
 CFLAGS = \
          -V \
          -mmcs51 \
@@ -30,6 +43,7 @@ CFLAGS = \
          -Iinc \
          -DFREQ_SYS=$(FREQ_SYS) \
          $(EXTRA_FLAGS)
+endif
 
 ifdef BULK
 CFLAGS += -DUSE_BULK_TRANSFER_FOR_DEBUG

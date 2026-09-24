@@ -41,6 +41,7 @@ ASFLAGS = \
 
 LDFLAGS = \
 	-T $(LIBDIR)/app.lds \
+	-fuse-ld=lld \
 	-L $(LIBDIR) -lcrt0 -lcommon -lmonocypher -lblake2s
 
 .PHONY: all

@@ -49,7 +49,7 @@ void mDelaymS(uint16_t n); // Delay in mS
  * Function Name  : CH554UART0Alter()
  * Description    : Set the alternate pin mappings for UART0 (RX on P1.2, TX on P1.3)
  *******************************************************************************/
-inline void CH554UART0Alter(void)
+static inline void CH554UART0Alter(void)
 {
     PIN_FUNC |= bUART0_PIN_X; // RX on P1.2, TX on P1.3
 }
@@ -61,7 +61,7 @@ inline void CH554UART0Alter(void)
  *                  T2 can also be used as baud rate generator
  *                  RX on P3.0, TX on P3.1
  *******************************************************************************/
-inline void mInitSTDIO(void)
+static inline void mInitSTDIO(void)
 {
     uint32_t x;
     uint8_t x2;
@@ -98,7 +98,7 @@ inline void mInitSTDIO(void)
  * Description    : CH554UART0 receives a byte
  * Return         : SBUF
  *******************************************************************************/
-inline uint8_t CH554UART0RcvByte(void)
+static inline uint8_t CH554UART0RcvByte(void)
 {
     while (RI == 0)
         ; // Wait for uart rx interrupt flag
@@ -111,7 +111,7 @@ inline uint8_t CH554UART0RcvByte(void)
  * Description    : CH554UART0 sends a byte
  * Input          : uint8_t SendDat; the data to be sent
  *******************************************************************************/
-inline void CH554UART0SendByte(uint8_t SendDat)
+static inline void CH554UART0SendByte(uint8_t SendDat)
 {
     SBUF = SendDat;
     while (TI == 0)
@@ -123,7 +123,7 @@ inline void CH554UART0SendByte(uint8_t SendDat)
  * Function Name  : CH554UART1Alter()
  * Description    : Set the alternate pin mappings for UART1 (RX on P3.4, TX on P3.2)
  *******************************************************************************/
-inline void CH554UART1Alter(void)
+static inline void CH554UART1Alter(void)
 {
     PIN_FUNC |= bUART1_PIN_X; // RX on P3.4, TX on P3.2
 }
@@ -134,7 +134,7 @@ inline void CH554UART1Alter(void)
  *                  RX on P1.6, TX on P1.7
  *
  *******************************************************************************/
-inline void UART1Setup(void)
+static inline void UART1Setup(void)
 {
     U1SM0 = 0;    // UART1 selects 8-bit data bit
     U1SMOD = 1;   // Fast mode
@@ -149,7 +149,7 @@ inline void UART1Setup(void)
  * Function Name  : UART1Clean()
  * Description    : Read out spurious data
  *******************************************************************************/
-inline void UART1Clean(void)
+static inline void UART1Clean(void)
 {
     uint8_t tmp;
 
@@ -164,7 +164,7 @@ inline void UART1Clean(void)
  * Description    : CH554UART1 receives a byte
  * Return         : SBUF
  *******************************************************************************/
-inline uint8_t  CH554UART1RcvByte(void)
+static inline uint8_t  CH554UART1RcvByte(void)
 {
     while (U1RI == 0)  // Query reception, interrupt mode is not required
         ;
@@ -177,7 +177,7 @@ inline uint8_t  CH554UART1RcvByte(void)
  * Description    : CH554UART1 sends a byte
  * Input          : uint8_t SendDat; data to be sent
  *******************************************************************************/
-inline void CH554UART1SendByte(uint8_t SendDat)
+static inline void CH554UART1SendByte(uint8_t SendDat)
 {
     while(gpio_p1_4_get()) // Wait while FPGA CTS is high
         ;
@@ -193,7 +193,7 @@ inline void CH554UART1SendByte(uint8_t SendDat)
  * Input          : uint8_t *Buf; Data to be sent
  * Input          : uint32_t Len; Length of data
  *******************************************************************************/
-inline void CH554UART1SendBuffer(uint8_t *Buf, uint32_t Len)
+static inline void CH554UART1SendBuffer(uint8_t *Buf, uint32_t Len)
 {
     uint32_t Count = 0;
     while (Count < Len) {
@@ -223,7 +223,7 @@ int getchar(void);
 * Output         : None
 * Return         : None
 *******************************************************************************/
-inline void CH554WDTModeSelect(uint8_t mode)
+static inline void CH554WDTModeSelect(uint8_t mode)
 {
     SAFE_MOD = 0x55;
     SAFE_MOD = 0xaa;             // Enter Safe Mode
@@ -246,7 +246,7 @@ inline void CH554WDTModeSelect(uint8_t mode)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-inline void CH554WDTFeed(uint8_t tim)
+static inline void CH554WDTFeed(uint8_t tim)
 {
     WDOG_COUNT = tim; // Watchdog counter assignment
 }

@@ -1,0 +1,3 @@
+# <issue_type_regex>:<filename_regex>:<function_regex>:<reason_string>
+BUFFER_OVERRUN_L1:src/main.c:CreateCfgDescriptor:False positive
+DEAD_STORE:inc/debug.h:UART1Clean:By design

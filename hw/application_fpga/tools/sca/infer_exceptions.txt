@@ -1,0 +1,5 @@
+# <issue_type_regex>:<filename_regex>:<function_regex>:<reason_string>
+BUFFER_OVERRUN_L2:fw/tk1/auth_app.c:calculate_auth_digest:False positive
+BUFFER_OVERRUN_L2:fw/tk1/main.c:compute_cdi:False positive
+BUFFER_OVERRUN_L2:fw/tk1/main.c:main:False positive
+.*:tkey-libs/monocypher/.*:.*:Ignore monocypher issues

@@ -1,0 +1,5 @@
+# <issue_type_regex>:<filename_regex>:<function_regex>:<reason_string>
+alpha.core.CastToStruct:src/main.c:UsbEp0SetupHandler:Ignore for now
+alpha.core.Conversion:inc/debug.h:mInitSTDIO:Ignore for now
+alpha.unix.cstring.OutOfBounds:src/main.c:CreateCfgDescriptor:False positive
+deadcode.DeadStores:inc/debug.h:UART1Clean:By design
