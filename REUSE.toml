@@ -54,6 +54,8 @@ path = [
      "hw/application_fpga/tools/tkeyimage/go.mod",
      "hw/application_fpga/tools/tkeyimage/go.sum",
      "hw/application_fpga/tools/tpt/README.md",
+     "hw/usb_interface/ch552_fw/tools/sca/infer_exceptions.txt",
+     "hw/usb_interface/ch552_fw/tools/sca/scan-build_exceptions.txt",
 ]
 SPDX-FileCopyrightText = "2022 Tillitis AB <tillitis.se>"
 SPDX-License-Identifier = "BSD-2-Clause"
