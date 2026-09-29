@@ -60,8 +60,11 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 			return -1;
 		}
 
-		// Read as much as is available of what we expect
-		available = available > hdr->len ? hdr->len : available;
+		// Read as much as is available from what
+		// remains
+		if (available > hdr->len - n) {
+			available = hdr->len - n;
+		}
 
 		assert(n < CMDSIZE);
 		int n_bytes_read =
