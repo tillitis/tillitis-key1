@@ -323,9 +323,9 @@ Firmware then proceeds to:
 1. Read and authenticate the partition table from flash and store in
    FW\_RAM.
 
-2. Reset the CH552 USB controller to a known state, only allowing the
-   CDC USB endpoint and the internal command channel between the CPU
-   and the CH552.
+2. Reset the USB controller to a known state, only allowing the
+   internal command channel between the CPU and the USB controller.
+   At this stage the TKey is not enumerated on the client computer. 
 
 3. Check the special `resetinfo` area in FW\_RAM for reset type. Type
    zero means default behaviour, load from flash app slot 0, expecting
