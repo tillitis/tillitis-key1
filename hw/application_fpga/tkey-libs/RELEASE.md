@@ -45,7 +45,7 @@ The I/O functions has changed accordingly. Please use:
 - `readselect()` with appropriate bitmask (e.g. `IO_CDC|IO_FIDO`) to
   see if there's anything to read in the endpoints you are interested
   in. Data from endpoints not mentioned in the bitmask will be
-  discarded.
+  discarded. Castor only function.
 
 - `read()` is now non-blocking and returns the number of bytes read
   from the endpoint you specify, because more might not be available
@@ -57,13 +57,23 @@ The I/O functions has changed accordingly. Please use:
   `putinthex()`, and `hexdump()` functions that take a destination
   argument.
 
-We recommend you use only these functions for I/O on Castor and going
-forward.
+All functions above, except `readselect()`, works with Bellatrix if
+using `IO_UART`, or `IO_QEMU` for `puts()` etc.
 
-For compatibility to develop device apps for the Bellatrix platform
-and earlier, use the low-level, blocking function `uart_read()` for
-reads and *only* the `IO_UART` and `IO_QEMU` destinations for output
-functions like `write()`, `puts()`.
+### Serial convenience functions
+
+To make it easier to write applications working on both Bellatrix and
+Castor `serial_read()` and `serial_write()` is added. They use the
+appropriate destination depending on version. The cost is a larger
+binary size. This API only works with either `IO_CDC` or `IO_UART`
+depending on version. They cannot safely be used if additional
+endpoints are enabled via `config_endpoints()`.
+
+### Frame handling
+
+When using the defined framing protocol the helper functions
+`frame_read()` and `frame_write()` can be used. They can be used with
+both Bellatrix and Castor and will aid in the frame parsing.
 
 ### Debug prints
 
@@ -75,7 +85,7 @@ including `debug.h` and defining `QEMU_DEBUG` for the qemu debug port
 or `TKEY_DEBUG` for output on the DEBUG HID endpoint. If you don't
 define either, they won't appear in your code.
 
-Similiarly, `assert()` now also follows `QEMU_DEBUG` or `TKEY_DEBUG`,
+Similarly, `assert()` now also follows `QEMU_DEBUG` or `TKEY_DEBUG`,
 and prints something on either before halting the CPU.
 
 Note that on the Bellatrix platform only `QEMU_DEBUG` works.

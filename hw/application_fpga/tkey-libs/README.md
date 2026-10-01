@@ -7,7 +7,7 @@
 - Common C functions including protocol calls: libcommon.
 - Cryptographic functions: libmonocypher. Based on
   [Monocypher](https://github.com/LoupVaillant/Monocypher) version
-  4.0.2
+  4.0.3
 - BLAKE2s hash function: libblake2s.
 
 Release notes in [RELEASE.md](RELEASE.md).
@@ -27,9 +27,8 @@ sources.
 
 Imported sources:
 
-- [Monocypher](https://github.com/LoupVaillant/Monocypher) (BSD-2) by
-  Loup Vaillant.
-
+- [Monocypher](https://github.com/LoupVaillant/Monocypher)
+  (BSD-2/CC-0) by Loup Vaillant.
 - blake2s (CC-0), originally based on the reference implementation in
   [RFC 7693](https://www.rfc-editor.org/rfc/rfc7693.html) written by
   Markku-Juhani O. Saarinen ([original
@@ -60,7 +59,8 @@ specification](https://reuse.software/).
 
 Please note that:
 
-- For reading, only use the blocking `uart_read()`.
+- For reading, only use the blocking `read(IO_UART,..)` or
+`serial_read()`.
 
 - Only `IO_UART` and `IO_QEMU` destinations are useful for writing as
   in `write(IO_UART, ...)`, `puts(IO_UART, ...)`, and so on.
@@ -118,9 +118,21 @@ clang -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 \
 clang -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 \
   -mcmodel=medany -static -ffast-math -fno-common -nostdlib \
   -T ../tkey-libs/app.lds \
+  -Wl,--gc-sections,--print-gc-sections \
   -L ../tkey-libs -lcrt0 \
   -I ../tkey-libs -o foo.elf foo.o
+```
 
+Note the `--gc-sections` which you need to remove unused sections. For
+instance, the recently added support for division means that you
+otherwise would get a kilobyte-large table included in your device app
+even if you don't use division.
+
+Since the TKey doesn't accept ELF binaries, you now have to strip the
+ELF header to produce a raw binary:
+
+```
+llvm-objcopy --input-target=elf32-littleriscv --output-target=binary foo.elf foo.bin
 ```
 
 ## Makefile example

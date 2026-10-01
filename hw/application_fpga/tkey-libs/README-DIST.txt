@@ -27,7 +27,7 @@ See LICENSE for the full BSD-2-Clause license text.
 
 Note that:
 
-- Monocypher is Copyright Loup Vaillant and released under CC0
-  1.0 Universal, see monocypher/LICENSE.
+- Monocypher is released under dual licese of BSD-2 or CC0 1.0 Universal, see
+  monocypher/LICENCE.md.
 - blake2s is Copyright Markku-Juhani O. Saarinen and released under CC0
   1.0 Universal, see blake2s/LICENSE.
