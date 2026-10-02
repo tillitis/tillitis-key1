@@ -392,12 +392,11 @@ func main() {
 	}
 
 	if output != "" {
+		if app0 == "" {
+			fmt.Printf("need -app0 path/to/app\n")
+			os.Exit(1)
+		}
 		if flash {
-			if app0 == "" {
-				fmt.Printf("need -app0 path/to/app\n")
-				os.Exit(1)
-			}
-
 			genFlashFile(output, app0, app1, app1Sig, app1Pub, uds)
 		} else {
 			genPartitionFile(output, app0, app1, app1Sig, app1Pub, uds)
