@@ -160,6 +160,7 @@ static void compute_cdi(uint8_t domain, const uint8_t *digest,
 
 	// CDI only word writable
 	wordcpy_s((void *)cdi, 8, &local_cdi, 8);
+	(void)secure_wipe(local_cdi, sizeof(local_cdi));
 }
 
 static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word)
@@ -644,6 +645,7 @@ int main(void)
 				compute_cdi(domain, ctx.digest, ctx.use_uss,
 					    ctx.uss);
 			}
+			(void)secure_wipe(ctx.uss, sizeof(ctx.uss));
 
 			// Reset resetinfo to default. Leave next_app_data
 			// intact, if any.
