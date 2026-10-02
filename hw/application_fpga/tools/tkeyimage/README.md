@@ -6,6 +6,13 @@ the TKey.
 - Parse with `-i file.bin` for "input".
 - Generate with `-o file.bin` for "output".
 
+The partition tables are authenticity protected using a mac. This
+means that each TKey, with a unique UDS, needs unique partition
+tables. Pass a path to the UDS hex file with `-uds`. If omitted the
+development UDS will be used. If the UDS mismatch, the Tkey will not
+start. See the development UDS as an example at
+`hw/application_fpga/data/uds.hex`.
+
 Add `-f` to parse or generate an entire flash image file.
 
 For more options see `tkeyimage -h`.
@@ -44,7 +51,7 @@ Partition Table Storage
                          140e981fb3b6972c125afb4d4497da0a
       Pubkey           : 9b62773323ef41a11834824194e55164
                          d325eb9cdcc10ddda7d10ade4fbd8f6d
-  Digest               : 4628f142764f724e45e05b20363960967705cfcee8285b2d9d207e04a46e275e
+  Mac                  : 4628f142764f724e45e05b20363960967705cfcee8285b2d9d207e04a46e275e
 ```
 
 Read only the first copy of the partition table from flash to file,
@@ -78,18 +85,13 @@ Partition Table Storage
                          00000000000000000000000000000000
       Pubkey           : 55555555555555555555555555555555
                          55555555555555555555555555555555
-  Digest               : 4b2446e67e35d3e214862e60cb8db62f93b54849d6d94f443ae0a25356a3c553
+  Mac                  : 4b2446e67e35d3e214862e60cb8db62f93b54849d6d94f443ae0a25356a3c553
 ```
 
 ### Generate a partition table
 
-If you want to generate just a partition table:
-
-```bash
-./tkeyimage -o partition.bin
-```
-
-With an app in slot 0, filling in the size in the partition table:
+If you want to generate a partition table, set an app in slot 0,
+filling in the size in the partition table:
 
 ```bash
 ./tkeyimage -o partition.bin -app0 ../../apps/testloadapp.bin
