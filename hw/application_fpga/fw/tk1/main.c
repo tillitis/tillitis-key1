@@ -11,11 +11,13 @@
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 
+#include "keys.h"
 #include "mgmt_app.h"
 #include "partition_table.h"
 #include "preload_app.h"
 #include "proto.h"
 #include "reset.h"
+#include "rng.h"
 #include "state.h"
 #include "syscall_enable.h"
 
@@ -25,7 +27,6 @@
 #define DOMAIN_RESET_TYPE_MAX 3 // 4 reset types available (0-3)
 
 // clang-format off
-static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
 static volatile uint32_t *name0            = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
 static volatile uint32_t *name1            = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
 static volatile uint32_t *ver              = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
@@ -33,12 +34,6 @@ static volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_U
 static volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
 static volatile uint32_t *app_addr         = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
 static volatile uint32_t *app_size         = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
-static volatile uint32_t *trng_status      = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
-static volatile uint32_t *trng_entropy     = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
-static volatile uint32_t *timer            = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
-static volatile uint32_t *timer_prescaler  = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
-static volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
-static volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
 static volatile uint32_t *ram_addr_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
 static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
 static volatile struct reset *resetinfo    = (volatile struct reset *)TK1_MMIO_RESETINFO_BASE;
@@ -46,6 +41,7 @@ static volatile uint32_t *system_reset     = (volatile uint32_t *)TK1_MMIO_TK1_S
 // clang-format on
 
 struct partition_table_storage part_table_storage;
+static uint8_t cdi_key[32];
 
 // Context for the loading of a TKey program
 struct context {
@@ -61,7 +57,6 @@ struct context {
 
 static void print_hw_version(void);
 static void print_digest(uint8_t *md);
-static uint32_t rnd_word(void);
 static void compute_cdi(uint8_t domain, const uint8_t *digest,
 			const uint8_t use_uss, const uint8_t *uss);
 static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word);
@@ -71,9 +66,6 @@ static enum state initial_commands(const struct frame_header *hdr,
 static enum state loading_commands(const struct frame_header *hdr,
 				   const uint8_t *cmd, enum state state,
 				   struct context *ctx);
-#if !defined(SIMULATION)
-static uint32_t xorwow(uint32_t state, uint32_t acc);
-#endif
 static void scramble_ram(void);
 static int compute_app_digest(uint8_t *digest);
 static int load_flash_app(struct partition_table *part_table,
@@ -105,40 +97,20 @@ static void print_digest(uint8_t *md)
 	debug_lf();
 }
 
-static uint32_t rnd_word(void)
-{
-	while ((*trng_status & (1 << TK1_MMIO_TRNG_STATUS_READY_BIT)) == 0) {
-	}
-	return *trng_entropy;
-}
-
-// CDI = blake2s(uds, domain + digest + uss)
+// CDI = blake2s(cdi_key, domain || digest [||uss])
 static void compute_cdi(uint8_t domain, const uint8_t *digest,
 			const uint8_t use_uss, const uint8_t *uss)
 {
-	uint32_t local_uds[8] = {0};
-	uint32_t local_cdi[8] = {0};
+	keys_generate(cdi_key, part_table_key());
+
+	uint32_t local_cdi[8];
 	blake2s_ctx secure_ctx = {0};
-	uint32_t rnd_sleep = 0;
 	int blake2err = 0;
 
-	// Prepare to sleep a random number of cycles before reading out UDS
-	*timer_prescaler = 1;
-	rnd_sleep = rnd_word();
-	// Up to 65536 cycles
-	rnd_sleep &= 0xffff;
-	*timer = (uint32_t)(rnd_sleep == 0 ? 1 : rnd_sleep);
-	*timer_ctrl = (1 << TK1_MMIO_TIMER_CTRL_START_BIT);
-	while (*timer_status & (1 << TK1_MMIO_TIMER_STATUS_RUNNING_BIT)) {
-	}
-
-	// Initialize the BLAKE2s hash function with the UDS as key.
-	// This means UDS will live for a short while on the firmware
-	// stack which is in the special fw_ram.
-	wordcpy_s(local_uds, 8, (void *)uds, 8);
-	blake2err = blake2s_init(&secure_ctx, 32, local_uds, 32);
+	// Initialize the BLAKE2s hash function with the CDI_key as key.
+	blake2err = blake2s_init(&secure_ctx, 32, cdi_key, 32);
+	(void)secure_wipe(cdi_key, sizeof(cdi_key));
 	assert(blake2err == 0);
-	(void)secure_wipe(local_uds, sizeof(local_uds));
 
 	// Update hash with domain
 	blake2s_update(&secure_ctx, &domain, 1);
@@ -160,6 +132,7 @@ static void compute_cdi(uint8_t domain, const uint8_t *digest,
 
 	// CDI only word writable
 	wordcpy_s((void *)cdi, 8, &local_cdi, 8);
+	(void)secure_wipe(local_cdi, sizeof(local_cdi));
 }
 
 static void copy_name(uint8_t *buf, const size_t bufsiz, const uint32_t word)
@@ -427,17 +400,6 @@ static int load_flash_app(struct partition_table *part_table,
 	return 0;
 }
 
-#if !defined(SIMULATION)
-static uint32_t xorwow(uint32_t state, uint32_t acc)
-{
-	state ^= state << 13;
-	state ^= state >> 17;
-	state ^= state << 5;
-	state += acc;
-	return state;
-}
-#endif
-
 static void scramble_ram(void)
 {
 	// Can't fill RAM if we are simulating, data has already been loaded
@@ -447,18 +409,18 @@ static void scramble_ram(void)
 
 	// Fill RAM with random data
 	// Get random state and accumulator seeds.
-	uint32_t data_state = rnd_word();
-	uint32_t data_acc = rnd_word();
+	uint32_t data_state = rng_get_word();
+	uint32_t data_acc = rng_get_word();
 
 	for (uint32_t w = 0; w < TK1_RAM_SIZE / 4; w++) {
-		data_state = xorwow(data_state, data_acc);
+		data_state = rng_xorwow(data_state, data_acc);
 		ram[w] = data_state;
 	}
 #endif
 
 	// Set RAM address and data scrambling parameters
-	*ram_addr_rand = rnd_word();
-	*ram_data_rand = rnd_word();
+	*ram_addr_rand = rng_get_word();
+	*ram_data_rand = rng_get_word();
 }
 
 /* Computes the blake2s digest of the app loaded into RAM */
@@ -540,12 +502,6 @@ int main(void)
 
 	scramble_ram();
 
-	if (part_table_read(&part_table_storage) != 0) {
-		// Couldn't read partition table
-		debug_puts("Couldn't read partition table\n");
-		assert(1 == 2);
-	}
-
 #if defined(SIMULATION)
 	run(&ctx);
 #endif
@@ -583,17 +539,14 @@ int main(void)
 			break;
 
 		case FW_STATE_LOAD_FLASH:
-			if (load_flash_app(&part_table_storage.table,
-					   ctx.digest, ctx.flash_slot) < 0) {
-				debug_puts("Couldn't load app from flash\n");
-				state = FW_STATE_FAIL;
-				break;
+		case FW_STATE_LOAD_FLASH_MGMT:
+			keys_generate(cdi_key, part_table_key());
+			if (part_table_read(&part_table_storage) != 0) {
+				// Couldn't read partition table
+				debug_puts("Couldn't read partition table\n");
+				assert(1 == 2);
 			}
 
-			state = FW_STATE_START;
-			break;
-
-		case FW_STATE_LOAD_FLASH_MGMT:
 			if (load_flash_app(&part_table_storage.table,
 					   ctx.digest, ctx.flash_slot) < 0) {
 				debug_puts("Couldn't load app from flash\n");
@@ -643,6 +596,14 @@ int main(void)
 			} else {
 				compute_cdi(domain, ctx.digest, ctx.use_uss,
 					    ctx.uss);
+			}
+
+			// Keys are generated in compute_cdi()
+			// Partition table is needed for syscalls
+			if (part_table_read(&part_table_storage) != 0) {
+				// Couldn't read partition table
+				debug_puts("Couldn't read partition table\n");
+				assert(1 == 2);
 			}
 
 			// Reset resetinfo to default. Leave next_app_data

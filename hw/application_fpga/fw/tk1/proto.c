@@ -31,8 +31,6 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 
 	led_set((state == FW_STATE_LOADING) ? LED_BLACK : LED_WHITE);
 
-	debug_puts("readcommand\n");
-
 	if (readselect(IO_CDC, &endpoint, &available) < 0) {
 		return -1;
 	}
@@ -41,14 +39,10 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 		return -1;
 	}
 
-	debug_puts("read 1 byte\n");
-
 	if (parseframe(in, hdr) == -1) {
 		debug_puts("Couldn't parse header\n");
 		return -1;
 	}
-
-	debug_puts("parseframe succeeded\n");
 
 	(void)memset(cmd, 0, CMDSIZE);
 
