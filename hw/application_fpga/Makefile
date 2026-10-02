@@ -215,6 +215,7 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/preload_app.o \
 	$(P)/fw/tk1/mgmt_app.o \
 	$(P)/fw/tk1/memcheck.o \
+	$(P)/fw/tk1/keys.o
 
 CHECK_SOURCES = \
 	$(P)/fw/tk1/*.[ch]

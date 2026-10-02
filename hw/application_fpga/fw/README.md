@@ -320,7 +320,8 @@ values from the True Random Number Generator (TRNG).
 
 Firmware then proceeds to:
 
-1. Read the partition table from flash and store in FW\_RAM.
+1. Read and authenticate the partition table from flash and store in
+   FW\_RAM.
 
 2. Reset the CH552 USB controller to a known state, only allowing the
    CDC USB endpoint and the internal command channel between the CPU
@@ -472,30 +473,41 @@ input into a 32-byte value.
 
 ### Compound Device Identifier computation
 
-The CDI is computed in one of two ways. In both of them the Unique
-Device Secret is used as a key in the BLAKE2s hash function.
+In order to generate a domain separated key for CDI calculations, a
+keyed BLAKE2s-based KDF construction is used. The Unique Device
+Secret is used as the key, like this:
 
-1. CDI is a result of a hash of the Unique Device Secret, a domain
-   byte with the measured-id bit cleared, the digest of the entire
-   loaded app, and optionally the User Supplied Secret, if sent from
-   the client:
+
+```c
+CDI_key      = blake2s(key=UDS, "kdf/cdi_key")
+p_table_key  = blake2s(key=UDS, "kdf/p_table_key")
+
+```
+
+Where the p_table_key is used to create a mac for the partition table,
+see more details under [Filesystem](#Filesystem).
+
+The CDI is computed in one of two ways.
+
+1. CDI is a result of a hash of the CDI_key, a domain byte with the
+   measured-id bit cleared, the digest of the entire loaded app, and
+   optionally the User Supplied Secret, if sent from the client:
 
    ```C
    CDI = blake2s(
-       key = UDS,
+       key = CDI_key,
        data = domain || blake2s(app) || USS)
    ```
 
    This is the default case.
 
-2. CDI is a result of a hash of the Unique Device Secret, a domain
-   byte with the measured-id bit set, something left by the previous
-   app, and optionally the User Supplied Secret, if sent from the
-   client:
+2. CDI is a result of a hash of the CDI_key, a domain byte with the
+   measured-id bit set, something left by the previous app, and
+   optionally the User Supplied Secret, if sent from the client:
 
    ```C
    CDI = blake2s(
-       key = UDS,
+       key = CDI_key,
        data = domain || measured_id* || USS)
    ```
 
@@ -894,13 +906,14 @@ The partition table is made up of:
 | Storage 1 | 1 B status, 16 B nonce, 16 B auth tag                |
 | Storage 2 | 1 B status, 16 B nonce, 16 B auth tag                |
 | Storage 3 | 1 B status, 16 B nonce, 16 B auth tag                |
-| Checksum  | 32 B                                                 |
+| Mac       | 32 B                                                 |
 
 - Digest is a BLAKE2s hash digest of the app.
 - Signature is an Ed25519 signature of the above digest.
 - Pubkey is an Ed25519 pubkey which can verify the signature above.
-- Checksum is a BLAKE2s hash digest of everything that came before.
-  Usual to detect broken flash and a signal to use the backup copy.
+- Mac is a keyed BLAKE2s mac of everything that came before. It
+  provides authenticity and may detect broken flash and signal to use
+  the backup copy.
 
 The digest, signature and pubkey are reported from the
 `PRELOAD_GET_METADATA` system call as a part of chaining of apps. See
