@@ -152,14 +152,14 @@ static void compute_cdi(uint8_t domain, const uint8_t *digest,
 	}
 
 	// Write hashed result to Compound Device Identity (CDI)
-	blake2s_final(&secure_ctx, &local_cdi);
+	blake2s_final(&secure_ctx, local_cdi);
 
 	// Clear secure_ctx of any residue of UDS. Don't want to keep
 	// that for long even though fw_ram is cleared later.
 	(void)secure_wipe(&secure_ctx, sizeof(secure_ctx));
 
 	// CDI only word writable
-	wordcpy_s((void *)cdi, 8, &local_cdi, 8);
+	wordcpy_s((void *)cdi, 8, local_cdi, 8);
 	(void)secure_wipe(local_cdi, sizeof(local_cdi));
 }
 
