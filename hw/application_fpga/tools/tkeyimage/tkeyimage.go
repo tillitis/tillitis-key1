@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 
 	"golang.org/x/crypto/blake2s"
 )
@@ -45,17 +47,100 @@ type PartTable struct {
 
 type PartTableStorage struct {
 	PartTable PartTable
-	Checksum  [32]byte
+	Mac       [32]byte
 }
 
-func (p *PartTableStorage) GenChecksum() {
+// Same as ../../data/uds.hex
+var defaultDevUDS = [8]uint32{
+	0x80818283,
+	0x94959697,
+	0xa0a1a2a3,
+	0xb4b5b6b7,
+	0xc0c1c2c3,
+	0xd4d5d6d7,
+	0xe0e1e2e3,
+	0xf4f5f6f7,
+}
+
+func readUDS(filename string) ([32]byte, error) {
+	if filename == "" {
+		var uds [32]byte
+		for i, word := range defaultDevUDS {
+			binary.LittleEndian.PutUint32(uds[i*4:], word)
+		}
+		return uds, nil
+	}
+
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return [32]byte{}, fmt.Errorf("read UDS file: %w", err)
+	}
+
+	var words []uint32
+	for _, field := range strings.Fields(string(data)) {
+		word, err := strconv.ParseUint(field, 16, 32)
+		if err != nil {
+			return [32]byte{}, fmt.Errorf("invalid UDS word %q: %w", field, err)
+		}
+		words = append(words, uint32(word))
+	}
+
+	if len(words) != 8 {
+		return [32]byte{}, fmt.Errorf(
+			"UDS file must contain exactly 8 words, got %d", len(words),
+		)
+	}
+
+	var uds [32]byte
+	for i, word := range words {
+		binary.LittleEndian.PutUint32(uds[i*4:], word)
+	}
+
+	return uds, nil
+}
+
+func (p *PartTableStorage) GenMac(udsFn string) {
 	buf := make([]byte, 4096)
-	len, err := binary.Encode(buf, binary.LittleEndian, p.PartTable)
+	n, err := binary.Encode(buf, binary.LittleEndian, p.PartTable)
 	if err != nil {
 		panic(err)
 	}
 
-	p.Checksum = blake2s.Sum256(buf[:len])
+
+	uds, err := readUDS(udsFn)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%x\n", uds)
+
+	// Derive the partition-table MAC key from the device UDS
+	keyHash, err := blake2s.New256(uds[:])
+	if err != nil {
+		panic(err)
+	}
+
+	partTableInfo := []byte("kdf/p_table_key")
+	_, err = keyHash.Write(partTableInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	
+	key := keyHash.Sum(nil)
+	fmt.Printf("%x\n", key)
+	
+	// Generate the MAC over the partition table
+	macHash, err := blake2s.New256(key)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = macHash.Write(buf[:n])
+	if err != nil {
+		panic(err)
+	}
+	copy(p.Mac[:], macHash.Sum(nil))
 }
 
 // Name		Size		Start addr
@@ -124,14 +209,14 @@ func printPartTableStorageCondensed(storage PartTableStorage) {
 		fmt.Printf("      Pubkey           : %x\n", appData.Pubkey[:16])
 		fmt.Printf("                         %x\n", appData.Pubkey[16:])
 	}
-	fmt.Printf("  Digest               : %x\n", storage.Checksum)
+	fmt.Printf("  Mac                  : %x\n", storage.Mac)
 }
 
-func genPartitionFile(outFn string, app0Fn, app1Fn, app1SigFn, app1PubFn string) {
+func genPartitionFile(outFn string, app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) {
 	app0, app1, app1Sig, app1Pub := readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn)
 
 	partition := newPartTable(app0, app1, app1Sig, app1Pub)
-	partition.GenChecksum()
+	partition.GenMac(udsFn)
 
 	storageFile, err := os.Create(outFn)
 	if err != nil {
@@ -146,7 +231,7 @@ func genPartitionFile(outFn string, app0Fn, app1Fn, app1SigFn, app1PubFn string)
 // newPartTable generates a new partition table suitable for storage.
 //
 // When you're done with filling in the struct, remember to call
-// GenChecksum().
+// GenMac().
 //
 // It returns the partition table.
 func newPartTable(app0 []byte, app1 []byte, app1Sig *Signature, app1Pub *PubKey) PartTableStorage {
@@ -186,7 +271,7 @@ func memset(s []byte, c byte) {
 	}
 }
 
-func genFlashFile(outFn, app0Fn, app1Fn, app1SigFn, app1PubFn string) {
+func genFlashFile(outFn, app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) {
 	app0, app1, app1Sig, app1Pub := readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn)
 
 	var flash Flash
@@ -211,7 +296,7 @@ func genFlashFile(outFn, app0Fn, app1Fn, app1SigFn, app1PubFn string) {
 	}
 
 	partition := newPartTable(app0, app1, app1Sig, app1Pub)
-	partition.GenChecksum()
+	partition.GenMac(udsFn)
 	flash.PartitionTable = partition
 	flash.PartitionTable2 = partition
 
@@ -271,6 +356,7 @@ func main() {
 	var app1Pub string
 	var app1Sig string
 	var flash bool
+	var uds string
 
 	flag.StringVar(&input, "i", "", "Input binary file. Cannot be used with -o.")
 	flag.StringVar(&output, "o", "", "Output binary file. Cannot be used with -i. If used with -f, -app0 must also be specified.")
@@ -279,6 +365,7 @@ func main() {
 	flag.StringVar(&app1Sig, "app1sig", "", "File containing signature for validating binary in pre loaded app slot 1. Optional. Used with -o.")
 	flag.StringVar(&app1Pub, "app1pub", "", "File containing public key for validating binary in pre loaded app slot 1. Optional. Used with -o.")
 	flag.BoolVar(&flash, "f", false, "Treat file as a dump of the entire flash memory.")
+	flag.StringVar(&uds, "uds", "", "Hex file containing the uds. If omitted deaults to the development uds. Used with -o.")
 	flag.Parse()
 
 	if len(flag.Args()) > 0 {
@@ -311,9 +398,9 @@ func main() {
 				os.Exit(1)
 			}
 
-			genFlashFile(output, app0, app1, app1Sig, app1Pub)
+			genFlashFile(output, app0, app1, app1Sig, app1Pub, uds)
 		} else {
-			genPartitionFile(output, app0, app1, app1Sig, app1Pub)
+			genPartitionFile(output, app0, app1, app1Sig, app1Pub, uds)
 		}
 	}
 }
