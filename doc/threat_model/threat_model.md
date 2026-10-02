@@ -124,6 +124,10 @@ mitigations in the threat model.
   cryptographic keys et c. as needed. The CDI should never be exposed
   outside of the FPGA.
 
+- CDI key
+
+  Key generated from the UDS, used to calculate the CDI.
+
 - Vendor public key.
 
   Used in a verified boot scenario to verify the next app to start.
@@ -145,6 +149,11 @@ mitigations in the threat model.
 
   Partition table on the TKey flash. Keeps metadata about the vendor
   key, preloaded apps, and app storage slots.
+
+- Partition table MAC key.
+
+  Key generated from the UDS, used to generate the MAC over the
+  partition table.
 
 - Firmware RAM.
 
@@ -286,11 +295,10 @@ Mitigations:
   reset, meant to be done by the firmware.
 
 - The firmware reads out UDS exactly once and keeps it in the special
-  firmware RAM for a very short period while doing the CDI
-  computation, almost immediately discarding it after just a few
-  instructions. In order not to keep the UDS in `FW_RAM` on
-  predictable cycles, it randomizes when the UDS handling takes place
-  using the TRNG.
+  firmware RAM for a very short period while doing key derivation,
+  almost immediately discarding it after just a few instructions. In
+  order not to keep the UDS in `FW_RAM` on predictable cycles, it
+  randomizes when the UDS handling takes place using the TRNG.
 
 - UDS is generated and provisioned in an airgapped environment. It's
   kept only until the bitstream for that particular device is
@@ -410,6 +418,18 @@ Mitigations:
   impersonate next app, the entire verifier app is *also* always
   measured, so they still get the wrong CDI.
 
+### CDI key
+
+Threats:
+
+- Leaking.
+
+Mitigaions:
+
+- Only lives in `FW_RAM` for a short amount of time in order to
+  perform the CDI calculation. So never survies or are used after a
+  devie app has started.
+
 ### Vendor public key
 
 Threat: Replaced by malicious vendor key.
@@ -442,15 +462,30 @@ Threats: Corruption or malicious change.
 
 Mitigations:
 
-- Corruption: The partition table is held in two copies on flash. It
-  also contains a checksum. Firmware checks the checksum at every read
-  and computes it on every write. If it ever differs, the filesystem
-  is marked as suspect and the copy is used.
+- Malicious change: The partition table is protected by a MAC (message
+  authentication code), providing both integrity and authenticity. Only
+  firmware has access to the key required to produce a valid MAC. While
+  physical access is out of scope, this mitigates malicious changes
+  that overwrite the current partition table with an attacker's version.
+  This does not mitigate replay attacks.
 
-- Malicious change: Only firmware is allowed to change the partition
-  table. Barring bugs, a malicious change will require physical
-  access, breaking of the case, and accessing the flash directly,
-  which is currently out of scope.
+- Corruption: The partition table is held in two copies on flash. It
+  is protected by a MAC that is verified by firmware on every read and
+  recomputed on every write. If verification ever fails, the filesystem
+  is marked as suspect and the other copy is used.
+
+### Partition table MAC key
+
+Threat:
+
+- Leaking.
+- Changing by device app.
+
+Mitigations:
+
+- The MAC key lives in BSS, a part of `FW_RAM`, which is protected
+  from read and write in app mode. See [Firmware
+  memory](#firmware-memory-fwram) below.
 
 ### Firmware memory (`FW_RAM`)
 

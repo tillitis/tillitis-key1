@@ -46,7 +46,7 @@
 #define SIZE_STORAGE_AREA 0x20000UL // 128KiB
 #define N_STORAGE_AREA 4
 
-#define PART_CHECKSUM_SIZE 32
+#define PART_MAC_SIZE 32
 
 enum part_status {
 	PART_SLOT0_INVALID = 1,
@@ -74,7 +74,8 @@ enum part_status {
 //   - 16 bytes random nonce.
 //   - 16 bytes authentication tag.
 //
-// - Checksum over the above
+// - Mac over the above. Provides authenticity.
+//
 
 struct auth_metadata {
 	uint8_t nonce[16];
@@ -105,9 +106,10 @@ struct partition_table {
 
 struct partition_table_storage {
 	struct partition_table table;
-	uint8_t checksum[PART_CHECKSUM_SIZE]; // Helps detect flash problems
+	uint8_t mac[PART_MAC_SIZE];
 } __attribute__((packed));
 
+uint8_t *part_table_key(void);
 enum part_status part_get_status(void);
 int part_table_read(struct partition_table_storage *storage);
 int part_table_write(struct partition_table_storage *storage);
