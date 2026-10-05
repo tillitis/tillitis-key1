@@ -3,7 +3,6 @@
 
 #include <fw/tk1/proto.h>
 #include <fw/tk1/reset.h>
-#include <fw/tk1/syscall_num.h>
 #include <stdint.h>
 #include <string.h>
 #include <syscall.h>
@@ -11,6 +10,7 @@
 #include <tkey/debug.h>
 #include <tkey/io.h>
 #include <tkey/led.h>
+#include <tkey/syscall.h>
 #include <tkey/tk1_mem.h>
 
 // Converts a single hex character to its integer value
