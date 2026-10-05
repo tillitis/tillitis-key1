@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <tkey/assert.h>
 #include <tkey/debug.h>
 #include <tkey/led.h>

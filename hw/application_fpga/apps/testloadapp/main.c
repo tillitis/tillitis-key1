@@ -6,6 +6,7 @@
 #include <fw/tk1/syscall_num.h>
 #include <monocypher/monocypher-ed25519.h>
 #include <stdint.h>
+#include <string.h>
 #include <tkey/assert.h>
 #include <tkey/debug.h>
 #include <tkey/led.h>

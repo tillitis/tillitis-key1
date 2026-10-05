@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <tkey/debug.h>
-#include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 
 #include "auth_app.h"

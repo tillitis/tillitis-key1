@@ -3,10 +3,10 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include <tkey/assert.h>
 #include <tkey/io.h>
 #include <tkey/led.h>
-#include <tkey/lib.h>
 
 #define BUFSIZE 256
 #define HEADER_SIZE 2

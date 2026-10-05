@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 #include <stdint.h>
+#include <string.h>
 #include <tkey/assert.h>
 #include <tkey/lib.h>
 
