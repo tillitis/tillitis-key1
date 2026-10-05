@@ -184,7 +184,7 @@ int main(void)
 	// Generate a key pair from CDI
 	crypto_ed25519_key_pair(secret_key, pubkey, (uint8_t *)cdi);
 
-	if (readselect(IO_CDC, &endpoint, &available) < 0) {
+	if (readselect(IO_CDC, false, &endpoint, &available) < 0) {
 		// readselect failed! I/O broken? Just redblink.
 		assert(1 == 2);
 	}
@@ -198,7 +198,7 @@ int main(void)
 		     "verify app, 2 == load app from client\r\n");
 
 	for (;;) {
-		if (readselect(IO_CDC, &endpoint, &available) < 0) {
+		if (readselect(IO_CDC, false, &endpoint, &available) < 0) {
 			// readselect failed! I/O broken? Just redblink.
 			assert(1 == 2);
 		}

@@ -43,7 +43,7 @@ int main(void)
 
 	while (1) {
 		// Wait for data
-		if (readselect(endpoints, &endpoint, &available) != 0) {
+		if (readselect(endpoints, false, &endpoint, &available) != 0) {
 			assert(1 == 2);
 		}
 

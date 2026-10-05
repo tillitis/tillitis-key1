@@ -59,7 +59,7 @@ int main(void)
 		memset(cmdbuf, 0, BUFSIZE);
 
 		// Wait for data
-		if (readselect(IO_CDC, &endpoint, &available) < 0) {
+		if (readselect(IO_CDC, false, &endpoint, &available) < 0) {
 			assert(1 == 2);
 		}
 

@@ -33,7 +33,7 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 
 	debug_puts("readcommand\n");
 
-	if (readselect(IO_CDC, &endpoint, &available) < 0) {
+	if (readselect(IO_CDC, false, &endpoint, &available) < 0) {
 		return -1;
 	}
 
@@ -56,7 +56,7 @@ int readcommand(struct frame_header *hdr, uint8_t *cmd, int state)
 	uint8_t n = 0;
 	while (n < hdr->len) {
 		// Wait for something to be available
-		if (readselect(IO_CDC, &endpoint, &available) < 0) {
+		if (readselect(IO_CDC, false, &endpoint, &available) < 0) {
 			return -1;
 		}
 
