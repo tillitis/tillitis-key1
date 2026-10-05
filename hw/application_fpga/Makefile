@@ -274,13 +274,13 @@ tools/b2s/b2s:
 LDFLAGS = \
 	-T $(P)/fw/tk1/firmware.lds \
 	-fuse-ld=lld \
-	-Wl,--cref,-M \
+	-Wl,--cref,-M,--gc-sections \
 	-L $(LIBDIR) -lcommon -lblake2s
 
 QEMU_LDFLAGS = \
 	-T $(P)/fw/tk1/qemu_firmware.lds \
 	-fuse-ld=lld \
-	-Wl,--cref,-M \
+	-Wl,--cref,-M,--gc-sections \
 	-L $(LIBDIR) -lcommon -lblake2s
 
 # Common libraries the firmware and testfw depend on. See
