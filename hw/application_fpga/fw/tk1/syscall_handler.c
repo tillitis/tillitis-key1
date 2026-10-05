@@ -11,7 +11,6 @@
 #include "preload_app.h"
 #include "reset.h"
 #include "storage.h"
-#include "syscall_num.h"
 
 // clang-format off
 static volatile uint32_t *udi           = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;

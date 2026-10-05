@@ -3,7 +3,6 @@
 
 #include <blake2s/blake2s.h>
 #include <fw/tk1/reset.h>
-#include <fw/tk1/syscall_num.h>
 #include <monocypher/monocypher-ed25519.h>
 #include <stdint.h>
 #include <string.h>
@@ -11,6 +10,7 @@
 #include <tkey/debug.h>
 #include <tkey/led.h>
 #include <tkey/lib.h>
+#include <tkey/syscall.h>
 #include <tkey/tk1_mem.h>
 
 #include "blink.h"

@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 #include <fw/tk1/reset.h>
-#include <fw/tk1/syscall_num.h>
 #include <syscall.h>
 #include <tkey/debug.h>
 #include <tkey/led.h>
+#include <tkey/syscall.h>
 
 int main(void)
 {
