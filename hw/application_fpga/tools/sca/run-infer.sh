@@ -7,7 +7,7 @@ export PROJECT_COMMAND="make firmware.elf"
 export PROJECT_CLEAN="clean_fw"
 
 export ARCH=""
-export FREESTANDING=""
+export FREESTANDING="-mx32"
 
 # Set report date
 export REPORT_DATE=$(TZ="Europe/Stockholm" date +%Y-%m-%d_-_%H%M)
