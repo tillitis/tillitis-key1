@@ -12,13 +12,6 @@
 #define RESET_DIGEST_SIZE 32
 #define RESET_DATA_SIZE 184
 
-enum reset_start {
-	START_FLASH0 = 0,
-	START_FLASH1_VER = 1,
-	START_CLIENT = 2,
-	START_CLIENT_VER = 3,
-};
-
 #define RESET_NEXT 0x01
 #define RESET_SEED 0x02
 
