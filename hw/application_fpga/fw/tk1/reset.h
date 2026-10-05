@@ -6,11 +6,12 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <tkey/syscall.h>
 
 #define TK1_MMIO_RESETINFO_BASE 0xd0000f00
 #define TK1_MMIO_RESETINFO_SIZE 0x100
 
-struct reset {
+struct resetinfo {
 	enum reset_start type;
 	uint8_t mask;
 	uint8_t app_digest[RESET_DIGEST_SIZE];
@@ -18,15 +19,6 @@ struct reset {
 	uint8_t next_app_data[RESET_DATA_SIZE];
 } __attribute__((__packed__));
 
-// TODO Use version from tkey-libs when new version has been imported
-struct user_reset {
-	enum reset_start type;
-	uint8_t mask;
-	uint8_t app_digest[RESET_DIGEST_SIZE];
-	uint8_t measured_id_seed[RESET_DIGEST_SIZE];
-	uint8_t next_app_data[RESET_DATA_SIZE];
-};
-
-int reset(struct user_reset *userreset, size_t nextlen);
+int reset(struct reset *userreset, size_t nextlen);
 int reset_get_reset_data(uint8_t *next_app_data);
 #endif

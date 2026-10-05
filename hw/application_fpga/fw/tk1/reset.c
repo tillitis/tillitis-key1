@@ -12,14 +12,14 @@
 #include "reset.h"
 
 // clang-format off
-static volatile uint32_t *cdi           = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
-static volatile uint32_t *system_reset  = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;
-static volatile struct reset *resetinfo = (volatile struct reset *)TK1_MMIO_RESETINFO_BASE;
+static volatile uint32_t *cdi               = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
+static volatile uint32_t *system_reset      = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;
+static volatile struct resetinfo *resetinfo = (volatile struct resetinfo *)TK1_MMIO_RESETINFO_BASE;
 // clang-format on
 
-int reset(struct user_reset *userreset, size_t nextlen)
+int reset(struct reset *userreset, size_t nextlen)
 {
-	if (!in_app_ram(userreset, sizeof(struct user_reset))) {
+	if (!in_app_ram(userreset, sizeof(struct reset))) {
 		return -1;
 	}
 
