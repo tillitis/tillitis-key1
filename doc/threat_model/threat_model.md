@@ -395,6 +395,8 @@ Mitigations:
   1. If the app was loaded with or without USS.
   2. If the app was directly loaded (the entire app is measured) or
      verified (combination of measured boot and verified boot).
+  3. If the source of the app comes from the client, or from the flash
+     storage.
 
 - Impersonation: When using *verified boot* the attacker is in control
   of:
