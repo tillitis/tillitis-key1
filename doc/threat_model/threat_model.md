@@ -155,6 +155,11 @@ mitigations in the threat model.
   Key generated from the UDS, used to generate the MAC over the
   partition table.
 
+- Current app digest.
+
+  Digest over the currently running app, used to authenticate the
+  Management app. Written by firmware before starting the next app.
+
 - Firmware RAM.
 
   The firmware has its own memory, `FW_RAM`. It does all its sensitive
@@ -485,6 +490,18 @@ Mitigations:
 
 - The MAC key lives in BSS, a part of `FW_RAM`, which is protected
   from read and write in app mode. See [Firmware
+  memory](#firmware-memory-fwram) below.
+
+### Current app digest
+
+Threat:
+
+- Changing by device app.
+
+Mitigations:
+
+- The digest lives in BSS, a part of `FW_RAM`, which is protected from
+  read and write in app mode. See [Firmware
   memory](#firmware-memory-fwram) below.
 
 ### Firmware memory (`FW_RAM`)
