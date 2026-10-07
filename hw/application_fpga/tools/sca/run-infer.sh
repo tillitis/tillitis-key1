@@ -73,9 +73,9 @@ trap 'ctrl_c' SIGINT
 
 cleanup() {
     mkdir -p "$CWD"/infer-out-$REPORT_DATE
-    if [ -f "$CWD"/compile_commands.json ]
+    if [ -f "$CWD"/compile_commands_infer.json ]
     then
-        mv "$CWD"/compile_commands.json "$CWD"/infer-out-$REPORT_DATE/
+        mv "$CWD"/compile_commands_infer.json "$CWD"/infer-out-$REPORT_DATE/
     fi
 }
 
@@ -127,26 +127,26 @@ make $PROJECT_CLEAN
 check_error "make clean"
 
 # Run bear
-bear --output "$CWD"/compile_commands.json -- $PROJECT_COMMAND -j$JOBS
+bear --output "$CWD"/compile_commands_infer.json -- $PROJECT_COMMAND -j$JOBS
 check_error "bear"
 
-# Filter compile_commands.json
+# Filter compile_commands_infer.json
 if [[ -z "$ARCH" ]]; then # If $ARCH is empty, remove "-target" also.
-sed -i 's/-target//g' "$CWD"/compile_commands.json
+sed -i 's/-target//g' "$CWD"/compile_commands_infer.json
 fi
-sed -i 's/riscv32-unknown-none-elf/'"$ARCH"'/g' "$CWD"/compile_commands.json
-sed -i 's/-march=rv32iczmmul/'"$FREESTANDING"'/g' "$CWD"/compile_commands.json
-sed -i 's/-mabi=ilp32//g' "$CWD"/compile_commands.json
-sed -i 's/-mcmodel=medany//g' "$CWD"/compile_commands.json
+sed -i 's/riscv32-unknown-none-elf/'"$ARCH"'/g' "$CWD"/compile_commands_infer.json
+sed -i 's/-march=rv32iczmmul/'"$FREESTANDING"'/g' "$CWD"/compile_commands_infer.json
+sed -i 's/-mabi=ilp32//g' "$CWD"/compile_commands_infer.json
+sed -i 's/-mcmodel=medany//g' "$CWD"/compile_commands_infer.json
 
 # Run infer capture
 infer-capture \
-    --compilation-database "$CWD"/compile_commands.json \
+    --compilation-database "$CWD"/compile_commands_infer.json \
     --results-dir "$CWD"/infer-out-$REPORT_DATE
 check_error "infer-capture"
 
-# Move compile_commands.json to infer-out directory
-mv -f "$CWD"/compile_commands.json "$CWD"/infer-out-$REPORT_DATE/
+# Move compile_commands_infer.json to infer-out directory
+mv -f "$CWD"/compile_commands_infer.json "$CWD"/infer-out-$REPORT_DATE/
 
 # Run infer analyze
 infer-analyze \
