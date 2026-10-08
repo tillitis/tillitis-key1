@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
 // SPDX-License-Identifier: BSD-2-Clause
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -30,13 +31,17 @@ enum ch552cmd {
 
 void write(enum ioend dest, const uint8_t *buf, size_t nbytes);
 int read(enum ioend src, uint8_t *buf, size_t bufsize, size_t nbytes);
-int uart_read(uint8_t *buf, size_t bufsize, size_t nbytes);
-int readselect(int bitmask, enum ioend *endpoint, uint8_t *len);
+int readselect(int bitmask, bool non_blocking, enum ioend *endpoint,
+	       uint8_t *len);
+int discard(enum ioend src, size_t nbytes);
+int serial_write(const uint8_t *buf, size_t nbytes);
+int serial_read(uint8_t *buf, size_t bufsize, size_t nbytes);
+int serial_discard(size_t nbytes);
 void putchar(enum ioend dest, const uint8_t ch);
 void puthex(enum ioend dest, const uint8_t ch);
 void putinthex(enum ioend dest, const uint32_t n);
 void puts(enum ioend dest, const char *s);
-void hexdump(enum ioend dest, void *buf, int len);
+void hexdump(enum ioend dest, const void *buf, int len);
 void config_endpoints(uint8_t endpoints);
 
 #endif

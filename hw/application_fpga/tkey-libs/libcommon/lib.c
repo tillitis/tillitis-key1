@@ -6,28 +6,6 @@
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 
-void *memset(void *dest, int c, unsigned n)
-{
-	uint8_t *s = dest;
-
-	for (; n; n--, s++)
-		*s = c;
-
-	return dest;
-}
-
-__attribute__((used)) void *memcpy(void *dest, const void *src, unsigned n)
-{
-	uint8_t *src_byte = (uint8_t *)src;
-	uint8_t *dest_byte = (uint8_t *)dest;
-
-	for (int i = 0; i < n; i++) {
-		dest_byte[i] = src_byte[i];
-	}
-
-	return dest;
-}
-
 void memcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 {
 	assert(dest != NULL);
@@ -88,14 +66,4 @@ void secure_wipe(void *v, size_t n)
 	volatile uint8_t *p = (volatile uint8_t *)v;
 	while (n--)
 		*p++ = 0;
-}
-
-size_t strlen(const char *str)
-{
-	const char *s;
-
-	for (s = str; *s; ++s)
-		;
-
-	return (s - str);
 }

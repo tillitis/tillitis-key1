@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <tkey/assert.h>
 #include <tkey/io.h>
 #include <tkey/led.h>
@@ -125,7 +126,7 @@ int main(void)
 	// clang-format on
 
 	// Wait for terminal program and a character to be typed
-	if (readselect(IO_CDC, &endpoint, &available) < 0) {
+	if (readselect(IO_CDC, false, &endpoint, &available) < 0) {
 		// readselect failed! I/O broken? Just redblink.
 		assert(1 == 2);
 	}
@@ -279,7 +280,7 @@ int main(void)
 
 	puts(IO_CDC, "Now echoing what you type...Type + to reset device\r\n");
 	for (;;) {
-		if (readselect(IO_CDC, &endpoint, &available) < 0) {
+		if (readselect(IO_CDC, false, &endpoint, &available) < 0) {
 			// readselect failed! I/O broken? Just redblink.
 			assert(1 == 2);
 		}

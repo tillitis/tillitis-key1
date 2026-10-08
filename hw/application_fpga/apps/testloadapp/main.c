@@ -3,13 +3,14 @@
 
 #include <blake2s/blake2s.h>
 #include <fw/tk1/reset.h>
-#include <fw/tk1/syscall_num.h>
 #include <monocypher/monocypher-ed25519.h>
 #include <stdint.h>
+#include <string.h>
 #include <tkey/assert.h>
 #include <tkey/debug.h>
 #include <tkey/led.h>
 #include <tkey/lib.h>
+#include <tkey/syscall.h>
 #include <tkey/tk1_mem.h>
 
 #include "blink.h"
@@ -183,7 +184,7 @@ int main(void)
 	// Generate a key pair from CDI
 	crypto_ed25519_key_pair(secret_key, pubkey, (uint8_t *)cdi);
 
-	if (readselect(IO_CDC, &endpoint, &available) < 0) {
+	if (readselect(IO_CDC, false, &endpoint, &available) < 0) {
 		// readselect failed! I/O broken? Just redblink.
 		assert(1 == 2);
 	}
@@ -197,7 +198,7 @@ int main(void)
 		     "verify app, 2 == load app from client\r\n");
 
 	for (;;) {
-		if (readselect(IO_CDC, &endpoint, &available) < 0) {
+		if (readselect(IO_CDC, false, &endpoint, &available) < 0) {
 			// readselect failed! I/O broken? Just redblink.
 			assert(1 == 2);
 		}

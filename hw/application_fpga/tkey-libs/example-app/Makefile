@@ -14,7 +14,7 @@ CFLAGS = -g -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 -mcm
 
 INCLUDE=$(LIBDIR)/include
 
-LDFLAGS=-T $(LIBDIR)/app.lds -L $(LIBDIR) -lcommon -lcrt0
+LDFLAGS=-T $(LIBDIR)/app.lds -Wl,--gc-sections,--print-gc-sections -L $(LIBDIR) -lcommon -lcrt0
 
 .PHONY: all
 all: blue.bin

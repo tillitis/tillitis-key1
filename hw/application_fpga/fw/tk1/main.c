@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <tkey/assert.h>
 #include <tkey/debug.h>
 #include <tkey/led.h>
@@ -25,24 +26,24 @@
 #define DOMAIN_RESET_TYPE_MAX 3 // 4 reset types available (0-3)
 
 // clang-format off
-static volatile uint32_t *uds              = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
-static volatile uint32_t *name0            = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
-static volatile uint32_t *name1            = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
-static volatile uint32_t *ver              = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
-static volatile uint32_t *udi              = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
-static volatile uint32_t *cdi              = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
-static volatile uint32_t *app_addr         = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
-static volatile uint32_t *app_size         = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
-static volatile uint32_t *trng_status      = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
-static volatile uint32_t *trng_entropy     = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
-static volatile uint32_t *timer            = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
-static volatile uint32_t *timer_prescaler  = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
-static volatile uint32_t *timer_status     = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
-static volatile uint32_t *timer_ctrl       = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
-static volatile uint32_t *ram_addr_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
-static volatile uint32_t *ram_data_rand    = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
-static volatile struct reset *resetinfo    = (volatile struct reset *)TK1_MMIO_RESETINFO_BASE;
-static volatile uint32_t *system_reset     = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;
+static volatile uint32_t *uds               = (volatile uint32_t *)TK1_MMIO_UDS_FIRST;
+static volatile uint32_t *name0             = (volatile uint32_t *)TK1_MMIO_TK1_NAME0;
+static volatile uint32_t *name1             = (volatile uint32_t *)TK1_MMIO_TK1_NAME1;
+static volatile uint32_t *ver               = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
+static volatile uint32_t *udi               = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
+static volatile uint32_t *cdi               = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
+static volatile uint32_t *app_addr          = (volatile uint32_t *)TK1_MMIO_TK1_APP_ADDR;
+static volatile uint32_t *app_size          = (volatile uint32_t *)TK1_MMIO_TK1_APP_SIZE;
+static volatile uint32_t *trng_status       = (volatile uint32_t *)TK1_MMIO_TRNG_STATUS;
+static volatile uint32_t *trng_entropy      = (volatile uint32_t *)TK1_MMIO_TRNG_ENTROPY;
+static volatile uint32_t *timer             = (volatile uint32_t *)TK1_MMIO_TIMER_TIMER;
+static volatile uint32_t *timer_prescaler   = (volatile uint32_t *)TK1_MMIO_TIMER_PRESCALER;
+static volatile uint32_t *timer_status      = (volatile uint32_t *)TK1_MMIO_TIMER_STATUS;
+static volatile uint32_t *timer_ctrl        = (volatile uint32_t *)TK1_MMIO_TIMER_CTRL;
+static volatile uint32_t *ram_addr_rand     = (volatile uint32_t *)TK1_MMIO_TK1_RAM_ADDR_RAND;
+static volatile uint32_t *ram_data_rand     = (volatile uint32_t *)TK1_MMIO_TK1_RAM_DATA_RAND;
+static volatile struct resetinfo *resetinfo = (volatile struct resetinfo *)TK1_MMIO_RESETINFO_BASE;
+static volatile uint32_t *system_reset      = (volatile uint32_t *)TK1_MMIO_TK1_SYSTEM_RESET;
 // clang-format on
 
 struct partition_table_storage part_table_storage;

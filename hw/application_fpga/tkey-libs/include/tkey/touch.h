@@ -13,5 +13,9 @@
 //
 // If a touch event occurs it returns true. If the timeout expires it
 // returns false.
+//
+// This function uses the timer module and will override any existing timer
+// configuration.
 bool touch_wait(int color, int timeout_s);
+
 #endif

@@ -3,10 +3,10 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include <tkey/assert.h>
 #include <tkey/io.h>
 #include <tkey/led.h>
-#include <tkey/lib.h>
 
 #define BUFSIZE 256
 #define HEADER_SIZE 2
@@ -43,7 +43,7 @@ int main(void)
 
 	while (1) {
 		// Wait for data
-		if (readselect(endpoints, &endpoint, &available) != 0) {
+		if (readselect(endpoints, false, &endpoint, &available) != 0) {
 			assert(1 == 2);
 		}
 

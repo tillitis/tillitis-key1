@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
 // SPDX-License-Identifier: BSD-2-Clause
 
+#include <stdint.h>
 #include <tkey/syscall.h>
 
 // Reset the TKey. Leave the reset type (enum reset_start) in rst as
@@ -21,9 +22,10 @@ int sys_reset(struct reset *rst, size_t len)
 // RESET_DATA_SIZE bytes.
 //
 // Returns 0 on success.
-int sys_reset_data(uint8_t next_app_data[RESET_DATA_SIZE])
+int sys_get_reset_data(uint8_t next_app_data[RESET_DATA_SIZE])
 {
-	return syscall(TK1_SYSCALL_GET_APP_DATA, (uint32_t)next_app_data, 0, 0);
+	return syscall(TK1_SYSCALL_GET_RESET_DATA, (uint32_t)next_app_data, 0,
+		       0);
 }
 
 // Allocate a flash area for the current app. Must be done before sys_write()
@@ -125,15 +127,26 @@ int sys_preload_store_fin(size_t len, uint8_t digest[32], uint8_t signature[64])
 		       (uint32_t)signature);
 }
 
-// Copies the digest and signature of app in flash slot 1 to
-// `app_digest` and `app_signature`. Returns 0 on success. Only
+// Copies the digest, signature and pubkey for app in flash slot 1 to
+// `app_digest`, `app_signature` and `pubkey`. Returns 0 on success. Only
 // available for the verified management app.
 //
 // Returns 0 on success.
-int sys_get_digsig(uint8_t digest[32], uint8_t signature[64])
+int sys_preload_get_metadata(uint8_t digest[32], uint8_t signature[64],
+			     uint8_t pubkey[32])
 {
-	return syscall(TK1_SYSCALL_PRELOAD_GET_DIGSIG, (uint32_t)digest,
-		       (uint32_t)signature, 0);
+	return syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)digest,
+		       (uint32_t)signature, (uint32_t)pubkey);
+}
+
+// Stores `pubkey` for app in flash slot 1
+//
+// Only available for the verified management app.
+//
+// Returns 0 on success.
+int sys_preload_set_pubkey(uint8_t pubkey[32])
+{
+	return syscall(TK1_SYSCALL_PRELOAD_SET_PUBKEY, (uint32_t)pubkey, 0, 0);
 }
 
 // Returns filesystem status. Non-zero when problems have been
@@ -142,4 +155,10 @@ int sys_get_digsig(uint8_t digest[32], uint8_t signature[64])
 int sys_status(void)
 {
 	return syscall(TK1_SYSCALL_STATUS, 0, 0, 0);
+}
+
+// Erases a storage area. Privileged syscall. Returns 0 on success.
+int sys_erase_area(uint8_t area)
+{
+	return syscall(TK1_SYSCALL_ERASE_AREA, (uint32_t)area, 0, 0);
 }

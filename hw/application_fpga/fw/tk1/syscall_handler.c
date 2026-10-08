@@ -11,7 +11,6 @@
 #include "preload_app.h"
 #include "reset.h"
 #include "storage.h"
-#include "syscall_num.h"
 
 // clang-format off
 static volatile uint32_t *udi           = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
@@ -25,7 +24,7 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 {
 	switch (number) {
 	case TK1_SYSCALL_RESET:
-		return reset((struct user_reset *)arg1, (size_t)arg2);
+		return reset((struct reset *)arg1, (size_t)arg2);
 		break;
 
 	case TK1_SYSCALL_ALLOC_AREA:
