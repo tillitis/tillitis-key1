@@ -16,7 +16,7 @@ jobs:
       image: ghcr.io/tillitis/tkey-builder:5rc2
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # fetch-depth: 0
           persist-credentials: false
@@ -37,7 +37,7 @@ jobs:
       image: ghcr.io/tillitis/tkey-builder:5rc2
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # fetch-depth: 0
           persist-credentials: false
@@ -66,7 +66,7 @@ jobs:
       image: ghcr.io/tillitis/tkey-builder:5rc2
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # fetch-depth: 0
           persist-credentials: false
@@ -90,7 +90,7 @@ jobs:
       image: ghcr.io/tillitis/tkey-builder:5rc2
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # fetch-depth: 0
           persist-credentials: false
@@ -112,7 +112,7 @@ jobs:
       image: ghcr.io/tillitis/tkey-builder:5rc2
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # fetch-depth: 0
           persist-credentials: false
@@ -142,7 +142,7 @@ jobs:
       image: ghcr.io/tillitis/tkey-builder:5rc2
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # fetch-depth: 0
           persist-credentials: false
@@ -171,7 +171,7 @@ jobs:
       image: ghcr.io/tillitis/tkey-builder:5rc2
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -194,7 +194,7 @@ jobs:
       image: ghcr.io/tillitis/tkey-builder:5rc2
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -214,9 +214,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: REUSE Compliance Check
-      uses: fsfe/reuse-action@v4
+      uses: fsfe/reuse-action@v6
       with:
         args: lint
