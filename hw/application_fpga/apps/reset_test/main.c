@@ -118,7 +118,8 @@ int main(void)
 			// Reset and load app from second flash slot with
 			// verification using an invalid digest.
 			//
-			// Should cause firmware to refuse to start app.
+			// Should cause firmware to refuse to start app, since
+			// reset_test is not the management_app.
 
 			uint8_t string[] = "0123456789abcdef0123456789abcdef012"
 					   "3456789abcdef0123456789abcdef";
@@ -133,8 +134,8 @@ int main(void)
 			// verification using a digest matching the example app
 			// (blue.bin) from tkey-libs
 			//
-			// Blue.bin has to be present on flash in the second
-			// preloaded app slot (slot 1).
+			// Should cause firmware to refuse to start app, since
+			// reset_test is not the management_app.
 
 			uint8_t tkeylibs_example_app_digest[] =
 			    "96bb4c90603dbbbe09b9a1d7259b5e9e61bedd89a897105c30"

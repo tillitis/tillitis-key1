@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 #include <blake2s/blake2s.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <tkey/assert.h>
 #include <tkey/debug.h>
@@ -9,6 +10,7 @@
 #include <tkey/tk1_mem.h>
 
 #include "memcheck.h"
+#include "mgmt_app.h"
 #include "reset.h"
 
 // clang-format off
@@ -24,6 +26,16 @@ int reset(struct user_reset *userreset, size_t nextlen)
 	}
 
 	if (nextlen > sizeof(resetinfo->next_app_data)) {
+		return -1;
+	}
+
+	if (userreset->type < START_FLASH0 ||
+	    userreset->type > START_CLIENT_VER) {
+		return -1;
+	}
+
+	// Only let the management app boot the app in FLASH1
+	if ((userreset->type == START_FLASH1_VER) && !mgmt_app_authenticate()) {
 		return -1;
 	}
 
