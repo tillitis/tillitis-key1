@@ -431,11 +431,11 @@ Threats:
 
 - Leaking.
 
-Mitigaions:
+Mitigations:
 
 - Only lives in `FW_RAM` for a short amount of time in order to
-  perform the CDI calculation. So never survies or are used after a
-  devie app has started.
+  perform the CDI calculation. So never survives or are used after a
+  device app has started.
 
 ### Vendor public key
 
