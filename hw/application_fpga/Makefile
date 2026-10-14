@@ -215,6 +215,7 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/preload_app.o \
 	$(P)/fw/tk1/mgmt_app.o \
 	$(P)/fw/tk1/memcheck.o \
+	$(P)/fw/tk1/keys.o
 
 CHECK_SOURCES = \
 	$(P)/fw/tk1/*.[ch]
@@ -295,7 +296,7 @@ $(FLASH_APP_0):
 
 # Build a complete filesystem image
 flash_image.bin: tools/tkeyimage/tkeyimage $(FLASH_IMAGE_DEPS)
-	./tools/tkeyimage/tkeyimage -f $(TKEYIMAGE_FLAGS) -o $@
+	./tools/tkeyimage/tkeyimage -f $(TKEYIMAGE_FLAGS) -o $@ -uds $(P)/data/uds.hex
 
 $(FIRMWARE_OBJS): $(FIRMWARE_DEPS)
 $(TESTFW_OBJS): $(FIRMWARE_DEPS)
