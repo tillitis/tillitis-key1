@@ -148,8 +148,28 @@ mitigations in the threat model.
 
 - Firmware RAM.
 
-  The firmware has its own memory, `FW_RAM`. It does all its sensitive
-  computations here.
+  The firmware has its own memory, `FW_RAM`. It keeps its stack here
+  during runtime. The `resetinfo` struct that is kept over software
+  resets is also located in a part of `FW_RAM`.
+
+  Secrets held in firmware RAM:
+
+  - A copy of the UDS. Lives for a short wile in `FW_RAM`, computation
+    started on randomized cycles. See [UDS](#UDS).
+
+  - USS digest.
+
+  - CDI
+
+    A copy of the CDI is held in `FW_RAM` for a while and wiped directly
+    after being computed and the result stored in the register `CDI`.
+
+  - `next_app_data` in `resetinfo`
+
+     Might contain secrets meant for the next app in the chain.
+
+  With the exception of `next_app_data`, all these live in `FW_RAM`
+  only during the firmware's first run when it acts as a bootloader.
 
 - Firmware ROM.
 
@@ -458,15 +478,14 @@ Threats:
 
 - Leaking sensitive data.
 - Execution.
+- Being changed from device app.
 
 Mitigation:
 
-- The entire `FW_RAM` is cleared when the FPGA is powered up and the
-  FPGA is configured.
+- The entire `FW_RAM` is cleared by hardware when the FPGA is powered
+  up and the FPGA is configured.
 
-  TODO: However, since `FW_RAM` is not cleared after a soft reset,
-  perhaps the firmware should clear the `FW_RAM` except the
-  `resetinfo` area before doing a reset.
+- `FW_RAM` is also cleared by firmware after a reset.
 
 - The firmware's stack in `FW_RAM` is cleared by firmware before
   jumping to an app.
