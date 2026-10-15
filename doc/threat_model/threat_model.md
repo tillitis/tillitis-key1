@@ -215,8 +215,7 @@ There are two major type of attacks
    attacks may be performed from the client through the USB port,
    through the TKey enclosure, or near the TKey device.
 
-
-## In scope
+### In scope
 
 - SW attacks from the client against the firmware in the FPGA, the
   boot verifier in flash slot 0, and against the FPGA design itself
@@ -224,7 +223,7 @@ There are two major type of attacks
 
 - Timing attacks on the firmware and the FPGA design.
 
-## Out of scope
+### Out of scope
 
 - All physical and electrical attacks applied to the board, including:
 
