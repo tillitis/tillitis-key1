@@ -148,8 +148,28 @@ mitigations in the threat model.
 
 - Firmware RAM.
 
-  The firmware has its own memory, `FW_RAM`. It does all its sensitive
-  computations here.
+  The firmware has its own memory, `FW_RAM`. It keeps its stack here
+  during runtime. The `resetinfo` struct that is kept over software
+  resets is also located in a part of `FW_RAM`.
+
+  Secrets held in firmware RAM:
+
+  - A copy of the UDS. Lives for a short wile in `FW_RAM`, computation
+    started on randomized cycles. See [UDS](#UDS).
+
+  - USS digest.
+
+  - CDI
+
+    A copy of the CDI is held in `FW_RAM` for a while and wiped directly
+    after being computed and the result stored in the register `CDI`.
+
+  - `next_app_data` in `resetinfo`
+
+     Might contain secrets meant for the next app in the chain.
+
+  With the exception of `next_app_data`, all these live in `FW_RAM`
+  only during the firmware's first run when it acts as a bootloader.
 
 - Firmware ROM.
 
@@ -195,8 +215,7 @@ There are two major type of attacks
    attacks may be performed from the client through the USB port,
    through the TKey enclosure, or near the TKey device.
 
-
-## In scope
+### In scope
 
 - SW attacks from the client against the firmware in the FPGA, the
   boot verifier in flash slot 0, and against the FPGA design itself
@@ -204,7 +223,7 @@ There are two major type of attacks
 
 - Timing attacks on the firmware and the FPGA design.
 
-## Out of scope
+### Out of scope
 
 - All physical and electrical attacks applied to the board, including:
 
@@ -458,15 +477,14 @@ Threats:
 
 - Leaking sensitive data.
 - Execution.
+- Being changed from device app.
 
 Mitigation:
 
-- The entire `FW_RAM` is cleared when the FPGA is powered up and the
-  FPGA is configured.
+- The entire `FW_RAM` is cleared by hardware when the FPGA is powered
+  up and the FPGA is configured.
 
-  TODO: However, since `FW_RAM` is not cleared after a soft reset,
-  perhaps the firmware should clear the `FW_RAM` except the
-  `resetinfo` area before doing a reset.
+- `FW_RAM` is also cleared by firmware after a reset.
 
 - The firmware's stack in `FW_RAM` is cleared by firmware before
   jumping to an app.
