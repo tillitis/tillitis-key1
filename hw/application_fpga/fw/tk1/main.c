@@ -136,7 +136,7 @@ static void compute_cdi(uint8_t domain, const uint8_t *digest,
 	// Initialize the BLAKE2s hash function with the UDS as key.
 	// This means UDS will live for a short while on the firmware
 	// stack which is in the special fw_ram.
-	wordcpy_s(local_uds, 8, (void *)uds, 8);
+	wordcpy_s_volatile(local_uds, 8, (void *)uds, 8);
 	blake2err = blake2s_init(&secure_ctx, 32, local_uds, 32);
 	assert(blake2err == 0);
 	(void)secure_wipe(local_uds, sizeof(local_uds));
@@ -160,7 +160,7 @@ static void compute_cdi(uint8_t domain, const uint8_t *digest,
 	(void)secure_wipe(&secure_ctx, sizeof(secure_ctx));
 
 	// CDI only word writable
-	wordcpy_s((void *)cdi, 8, local_cdi, 8);
+	wordcpy_s_volatile(cdi, 8, &local_cdi, 8);
 	(void)secure_wipe(local_cdi, sizeof(local_cdi));
 }
 
@@ -192,7 +192,7 @@ static enum state initial_commands(const struct frame_header *hdr,
 
 		copy_name(rsp, CMDSIZE, *name0);
 		copy_name(&rsp[4], CMDSIZE - 4, *name1);
-		wordcpy_s(&rsp[8], CMDSIZE - 8, (void *)ver, 1);
+		wordcpy_s_volatile(&rsp[8], CMDSIZE - 8, ver, 1);
 
 		fwreply(*hdr, FW_RSP_NAME_VERSION, rsp);
 		// still initial state
@@ -209,7 +209,7 @@ static enum state initial_commands(const struct frame_header *hdr,
 		}
 
 		rsp[0] = STATUS_OK;
-		wordcpy_s(&udi_words, 2, (void *)udi, 2);
+		wordcpy_s_volatile(&udi_words, 2, udi, 2);
 		memcpy_s(&rsp[1], CMDSIZE - 1, &udi_words, 2 * 4);
 		fwreply(*hdr, FW_RSP_GET_UDI, rsp);
 		// still initial state

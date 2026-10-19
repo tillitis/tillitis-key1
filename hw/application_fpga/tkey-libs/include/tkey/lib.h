@@ -9,6 +9,8 @@
 void memcpy_s(void *dest, size_t destsize, const void *src, size_t n);
 void *wordcpy(void *dest, const void *src, unsigned n);
 void wordcpy_s(void *dest, size_t destsize, const void *src, size_t n);
+void wordcpy_s_volatile(volatile void *dest, size_t destsize,
+			volatile const void *src, size_t n);
 int memeq(void *dest, const void *src, size_t n);
 void secure_wipe(void *v, size_t n);
 #endif
