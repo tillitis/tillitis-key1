@@ -7,32 +7,32 @@ index fd3c7bb67cd..0f897cd587d 100644
  	int or_gate(int A, int B)
  	{
 -		return nand_gate(not_gate(A), not_gate(B));
-+		int not_a = not_gate(A);
 +		int not_b = not_gate(B);
++		int not_a = not_gate(A);
 +		return nand_gate(not_a, not_b);
  	}
  
  	int nor_gate(int A, int B)
  	{
 -		return and_gate(not_gate(A), not_gate(B));
-+		int not_a = not_gate(A);
 +		int not_b = not_gate(B);
++		int not_a = not_gate(A);
 +		return and_gate(not_a, not_b);
  	}
  
  	int xor_gate(int A, int B)
  	{
 -		return nor_gate(and_gate(A, B), nor_gate(A, B));
-+		int a_and_b = and_gate(A, B);
 +		int a_nor_b = nor_gate(A, B);
++		int a_and_b = and_gate(A, B);
 +		return nor_gate(a_and_b, a_nor_b);
  	}
  
  	int xnor_gate(int A, int B)
  	{
 -		return or_gate(and_gate(A, B), nor_gate(A, B));
-+		int a_and_b = and_gate(A, B);
 +		int a_nor_b = nor_gate(A, B);
++		int a_and_b = and_gate(A, B);
 +		return or_gate(a_and_b, a_nor_b);
  	}
  
@@ -53,9 +53,9 @@ index fd3c7bb67cd..0f897cd587d 100644
  	int mux_gate(int A, int B, int S)
  	{
 -		return or_gate(and_gate(A, not_gate(S)), and_gate(B, S));
++		int b_active = and_gate(B, S);
 +		int not_s = not_gate(S);
 +		int a_active = and_gate(A, not_s);
-+		int b_active = and_gate(B, S);
 +		return or_gate(a_active, b_active);
  	}
  
@@ -68,10 +68,10 @@ index fd3c7bb67cd..0f897cd587d 100644
 -			Y[i] = xor_gate(xor_gate(A[i], B[i]), carry);
 -			carry = or_gate(and_gate(A[i], B[i]), and_gate(or_gate(A[i], B[i]), carry));
 +			int a_xor_b = xor_gate(A[i], B[i]);
-+			int a_or_b = or_gate(A[i], B[i]);
-+			int a_and_b = and_gate(A[i], B[i]);
 +			Y[i] = xor_gate(a_xor_b, carry_in);
++			int a_or_b = or_gate(A[i], B[i]);
 +			int tmp = and_gate(a_or_b, carry_in);
++			int a_and_b = and_gate(A[i], B[i]);
 +			int carry_out = or_gate(a_and_b, tmp);
  			if (X != nullptr)
 -				X->at(i) = xor_gate(A[i], B[i]);
@@ -106,8 +106,8 @@ index fd3c7bb67cd..0f897cd587d 100644
  		int C = mk.inport(ID::C);
  		int D = mk.inport(ID::D);
 -		int Y = mk.nor_gate(mk.and_gate(A, B), mk.and_gate(C, D));
-+		int a_and_b = mk.and_gate(A, B);
-+		int Y = mk.nor_gate(a_and_b, mk.and_gate(C, D));
++		int c_and_d = mk.and_gate(C, D);
++		int Y = mk.nor_gate(mk.and_gate(A, B), c_and_d);
  		mk.outport(Y, ID::Y);
  		goto optimize;
  	}
@@ -116,8 +116,8 @@ index fd3c7bb67cd..0f897cd587d 100644
  		int C = mk.inport(ID::C);
  		int D = mk.inport(ID::D);
 -		int Y = mk.nand_gate(mk.or_gate(A, B), mk.or_gate(C, D));
-+		int a_or_b = mk.or_gate(A, B);
-+		int Y = mk.nand_gate(a_or_b, mk.or_gate(C, D));
++		int c_or_d = mk.or_gate(C, D);
++		int Y = mk.nand_gate(mk.or_gate(A, B), c_or_d);
  		mk.outport(Y, ID::Y);
  		goto optimize;
  	}
