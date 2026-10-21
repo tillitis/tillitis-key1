@@ -19,7 +19,7 @@ cd /src/icestorm
 git checkout 738af822905fdcf0466e9dd784b9ae4b0b34987f
 make -j$(nproc --ignore=2)
 make install
-git describe --all --always --long --dirty > /usr/local/repo-commit-icestorm
+git describe --all --always --long --dirty >/usr/local/repo-commit-icestorm
 
 # ----------------------------------------------------------------------
 # Our own custom iceprog for the RPi 2040-based programmer. Will be
@@ -29,7 +29,7 @@ git clone -b interfaces --depth=1 https://github.com/tillitis/icestorm /src/ices
 cd /src/icestorm-tillitis/iceprog
 make -j$(nproc --ignore=2)
 make PROGRAM_PREFIX=tillitis- install
-git describe --all --always --long --dirty > /usr/local/repo-commit-tillitis--icestorm
+git describe --all --always --long --dirty >/usr/local/repo-commit-tillitis--icestorm
 
 # ----------------------------------------------------------------------
 # yosys
@@ -38,12 +38,12 @@ git clone -b 0.45 --depth=1 https://github.com/YosysHQ/yosys /src/yosys
 cd /src/yosys
 
 # Make sure the digest is correct and no history has changed
-git checkout  9ed031ddd588442f22be13ce608547a5809b62f0
+git checkout 9ed031ddd588442f22be13ce608547a5809b62f0
 
 git submodule update --init
 make -j$(nproc --ignore=2)
 make install
-git describe --all --always --long --dirty > /usr/local/repo-commit-yosys
+git describe --all --always --long --dirty >/usr/local/repo-commit-yosys
 
 # ----------------------------------------------------------------------
 # nextpnr
@@ -79,7 +79,7 @@ sed -i \
 cmake -DARCH=ice40 .
 make -j$(nproc --ignore=2)
 make install
-git describe --all --always --long --dirty > /usr/local/repo-commit-nextpnr
+git describe --all --always --long --dirty >/usr/local/repo-commit-nextpnr
 
 # ----------------------------------------------------------------------
 # icarus verilog
@@ -93,7 +93,7 @@ sh autoconf.sh
 ./configure
 make -j$(nproc --ignore=2)
 make install
-git describe --all --always --long --dirty > /usr/local/repo-commit-iverilog
+git describe --all --always --long --dirty >/usr/local/repo-commit-iverilog
 
 # ----------------------------------------------------------------------
 # verilator
@@ -109,12 +109,12 @@ autoconf
 make -j$(nproc --ignore=2)
 make test
 make install
-git describe --all --always --long --dirty > /usr/local/repo-commit-verilator
+git describe --all --always --long --dirty >/usr/local/repo-commit-verilator
 
 # ----------------------------------------------------------------------
 # verible
 # ----------------------------------------------------------------------
-curl --output /src/verible.tar.gz  -L https://github.com/chipsalliance/verible/releases/download/v0.0-3795-gf4d72375/verible-v0.0-3795-gf4d72375-linux-static-x86_64.tar.gz
+curl --output /src/verible.tar.gz -L https://github.com/chipsalliance/verible/releases/download/v0.0-3795-gf4d72375/verible-v0.0-3795-gf4d72375-linux-static-x86_64.tar.gz
 
 # Check against the expected digest
 sha512sum -c /verible.sha512
@@ -123,7 +123,7 @@ cd /src
 
 tar xvf verible.tar.gz
 mv -v verible*/bin/* /usr/local/bin
-verible-verilog-format --version | head -1 > /usr/local/repo-commit-verible
+verible-verilog-format --version | head -1 >/usr/local/repo-commit-verible
 
 # ----------------------------------------------------------------------
 # cocotb
@@ -131,4 +131,4 @@ verible-verilog-format --version | head -1 > /usr/local/repo-commit-verible
 git clone -b v1.9.1 https://github.com/cocotb/cocotb.git /src/cocotb
 cd /src/cocotb
 pip install . --break-system-packages
-git describe --all --always --long --dirty > /usr/local/repo-commit-cocotb
+git describe --all --always --long --dirty >/usr/local/repo-commit-cocotb
