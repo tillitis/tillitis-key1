@@ -114,14 +114,23 @@ git describe --all --always --long --dirty >/usr/local/repo-commit-verilator
 # ----------------------------------------------------------------------
 # verible
 # ----------------------------------------------------------------------
-curl --output /src/verible.tar.gz -L https://github.com/chipsalliance/verible/releases/download/v0.0-3795-gf4d72375/verible-v0.0-3795-gf4d72375-linux-static-x86_64.tar.gz
+case "$(uname -m)" in
+x86_64) verible_arch=x86_64 ;;
+aarch64) verible_arch=arm64 ;;
+*)
+    echo "unsupported architecture: $(uname -m)" >&2
+    exit 1
+    ;;
+esac
+
+curl --output /src/verible-$verible_arch.tar.gz -L https://github.com/chipsalliance/verible/releases/download/v0.0-3795-gf4d72375/verible-v0.0-3795-gf4d72375-linux-static-$verible_arch.tar.gz
 
 # Check against the expected digest
-sha512sum -c /verible.sha512
+sha512sum -c --ignore-missing /verible.sha512
 
 cd /src
 
-tar xvf verible.tar.gz
+tar xvf verible-$verible_arch.tar.gz
 mv -v verible*/bin/* /usr/local/bin
 verible-verilog-format --version | head -1 >/usr/local/repo-commit-verible
 
