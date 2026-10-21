@@ -41,6 +41,7 @@ cd /src/yosys
 git checkout 9ed031ddd588442f22be13ce608547a5809b62f0
 
 git submodule update --init
+patch -p1 </yosys-cellaigs-eval-order.patch
 make -j$(nproc --ignore=2)
 make install
 git describe --all --always --long --dirty >/usr/local/repo-commit-yosys

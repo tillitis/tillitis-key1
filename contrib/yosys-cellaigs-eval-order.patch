@@ -1,0 +1,83 @@
+diff --git a/kernel/cellaigs.cc b/kernel/cellaigs.cc
+index 5dda450..1e04cee 100644
+--- a/kernel/cellaigs.cc
++++ b/kernel/cellaigs.cc
+@@ -184,22 +184,30 @@ struct AigMaker
+ 
+ 	int or_gate(int A, int B)
+ 	{
+-		return nand_gate(not_gate(A), not_gate(B));
++		int nB = not_gate(B);
++		int nA = not_gate(A);
++		return nand_gate(nA, nB);
+ 	}
+ 
+ 	int nor_gate(int A, int B)
+ 	{
+-		return and_gate(not_gate(A), not_gate(B));
++		int nB = not_gate(B);
++		int nA = not_gate(A);
++		return and_gate(nA, nB);
+ 	}
+ 
+ 	int xor_gate(int A, int B)
+ 	{
+-		return nor_gate(and_gate(A, B), nor_gate(A, B));
++		int norAB = nor_gate(A, B);
++		int andAB = and_gate(A, B);
++		return nor_gate(andAB, norAB);
+ 	}
+ 
+ 	int xnor_gate(int A, int B)
+ 	{
+-		return or_gate(and_gate(A, B), nor_gate(A, B));
++		int norAB = nor_gate(A, B);
++		int andAB = and_gate(A, B);
++		return or_gate(andAB, norAB);
+ 	}
+ 
+ 	int andnot_gate(int A, int B)
+@@ -214,7 +222,9 @@ struct AigMaker
+ 
+ 	int mux_gate(int A, int B, int S)
+ 	{
+-		return or_gate(and_gate(A, not_gate(S)), and_gate(B, S));
++		int BS = and_gate(B, S);
++		int AnS = and_gate(A, not_gate(S));
++		return or_gate(AnS, BS);
+ 	}
+ 
+ 	vector<int> adder(const vector<int> &A, const vector<int> &B, int carry, vector<int> *X = nullptr, vector<int> *CO = nullptr)
+@@ -223,7 +233,9 @@ struct AigMaker
+ 		log_assert(GetSize(A) == GetSize(B));
+ 		for (int i = 0; i < GetSize(A); i++) {
+ 			Y[i] = xor_gate(xor_gate(A[i], B[i]), carry);
+-			carry = or_gate(and_gate(A[i], B[i]), and_gate(or_gate(A[i], B[i]), carry));
++			int orAB_carry = and_gate(or_gate(A[i], B[i]), carry);
++			int andAB = and_gate(A[i], B[i]);
++			carry = or_gate(andAB, orAB_carry);
+ 			if (X != nullptr)
+ 				X->at(i) = xor_gate(A[i], B[i]);
+ 			if (CO != nullptr)
+@@ -464,7 +476,9 @@ Aig::Aig(Cell *cell)
+ 		int B = mk.inport(ID::B);
+ 		int C = mk.inport(ID::C);
+ 		int D = mk.inport(ID::D);
+-		int Y = mk.nor_gate(mk.and_gate(A, B), mk.and_gate(C, D));
++		int andCD = mk.and_gate(C, D);
++		int andAB = mk.and_gate(A, B);
++		int Y = mk.nor_gate(andAB, andCD);
+ 		mk.outport(Y, ID::Y);
+ 		goto optimize;
+ 	}
+@@ -475,7 +489,9 @@ Aig::Aig(Cell *cell)
+ 		int B = mk.inport(ID::B);
+ 		int C = mk.inport(ID::C);
+ 		int D = mk.inport(ID::D);
+-		int Y = mk.nand_gate(mk.or_gate(A, B), mk.or_gate(C, D));
++		int orCD = mk.or_gate(C, D);
++		int orAB = mk.or_gate(A, B);
++		int Y = mk.nand_gate(orAB, orCD);
+ 		mk.outport(Y, ID::Y);
+ 		goto optimize;
+ 	}
