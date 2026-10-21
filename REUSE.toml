@@ -17,6 +17,7 @@ path = [
   "contrib/99-tillitis.rules",
   "contrib/Dockerfile",
   "contrib/verible.sha512",
+  "contrib/yosys-cellaigs-eval-order.patch",
   "doc/images/application_fpga_block_diagram.png",
   "doc/images/tkey-open-lid.png",
   "doc/release_notes.md",
