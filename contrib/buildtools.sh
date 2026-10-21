@@ -42,7 +42,7 @@ git checkout 9ed031ddd588442f22be13ce608547a5809b62f0
 
 git submodule update --init
 patch -p1 </yosys-cellaigs-eval-order.patch
-make -j$(nproc --ignore=2)
+make -j$(nproc --ignore=2) ABC_ARCHFLAGS="-fsigned-char"
 make install
 git describe --all --always --long --dirty >/usr/local/repo-commit-yosys
 
@@ -77,7 +77,7 @@ sed -i \
     '244s/bool warn_on_failure = false/bool warn_on_failure = true/' \
     common/kernel/timing.h
 
-cmake -DARCH=ice40 .
+cmake -DARCH=ice40 -DCMAKE_CXX_FLAGS="-ffp-contract=off" .
 make -j$(nproc --ignore=2)
 make install
 git describe --all --always --long --dirty >/usr/local/repo-commit-nextpnr
