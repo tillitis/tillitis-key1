@@ -4,6 +4,9 @@
 # image produced by build-image targets
 BUILDIMAGE=tkey-builder-local
 
+# platforms built by the build-image-multiarch targets
+PLATFORMS=linux/amd64,linux/arm64
+
 # default image used when running a container
 IMAGE=ghcr.io/tillitis/tkey-builder:5rc2
 
@@ -22,8 +25,10 @@ all:
 	@echo "pull                             Pull down the image '$(IMAGE)' (Podman)"
 	@echo "build-image                      Build a toolchain image named '$(BUILDIMAGE)' (Podman)"
 	@echo "                                 A newly built image can be used like: make IMAGE=$(BUILDIMAGE) run"
+	@echo "build-image-multiarch            Build a multiarch toolchain image named '$(BUILDIMAGE)' for $(PLATFORMS) (Podman)"
 	@echo "docker-run                       Run a shell using image '$(IMAGE)' (Docker)"
 	@echo "docker-build-image               Build a toolchain image named '$(BUILDIMAGE)' (Docker)"
+	@echo "docker-build-image-multiarch     Build a multiarch toolchain image named '$(BUILDIMAGE)' for $(PLATFORMS) (Docker)"
 	@echo ""
 	@echo "Configuration Options:"
 	@echo "PACKAGE=...                      Target hardware package. Allowed PACKAGE values: sg48, uwg30"
@@ -105,5 +110,12 @@ pull:
 build-image:
 	podman build -t $(BUILDIMAGE) .
 
+build-image-multiarch:
+	-podman manifest rm $(BUILDIMAGE)
+	podman build --platform $(PLATFORMS) --manifest $(BUILDIMAGE) .
+
 docker-build-image:
 	docker build -t $(BUILDIMAGE) .
+
+docker-build-image-multiarch:
+	docker buildx build --platform $(PLATFORMS) -t $(BUILDIMAGE) --load .

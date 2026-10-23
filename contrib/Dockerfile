@@ -63,6 +63,7 @@ FROM base as toolsbuilder
 
 COPY buildtools.sh /buildtools.sh
 COPY verible.sha512 /verible.sha512
+COPY yosys-cellaigs-eval-order.patch /yosys-cellaigs-eval-order.patch
 
 RUN /buildtools.sh
 
