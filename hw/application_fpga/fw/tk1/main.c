@@ -260,7 +260,7 @@ static enum state initial_commands(const struct frame_header *hdr,
 
 		ctx->left = *app_size;
 
-		led_set(LED_BLACK);
+		led_set(LED_WHITE);
 
 		state = FW_STATE_LOADING;
 		break;
@@ -528,6 +528,8 @@ int main(void)
 	uint8_t cmd[CMDSIZE] = {0};
 	enum state state = FW_STATE_INITIAL;
 
+	led_set(LED_WHITE);
+
 	print_hw_version();
 
 	config_endpoints(0); // Disable all endpoints
@@ -559,7 +561,7 @@ int main(void)
 
 			if (state == FW_STATE_WAITCOMMAND) {
 				config_endpoints(IO_CDC);
-				led_set(LED_WHITE);
+				led_set(LED_BLACK);
 			}
 			break;
 
