@@ -62,12 +62,14 @@ enum part_status {
 //   - 32 bytes digest.
 //   - 64 bytes signature.
 //   - 32 bytes pubkey.
+//   - 32 bytes MAC.
 //
 // - Pre-loaded device app 2
 //   - 4 bytes length.
 //   - 32 bytes digest.
 //   - 64 bytes signature.
 //   - 32 bytes pubkey.
+//   - 32 bytes MAC.
 //
 // - Device app storage area
 //   - 1 byte status.
@@ -86,6 +88,7 @@ struct pre_loaded_app_metadata {
 	uint8_t digest[32];
 	uint8_t signature[64];
 	uint8_t pubkey[32];
+	uint8_t mac[32];
 } __attribute__((packed));
 
 struct app_storage_area {

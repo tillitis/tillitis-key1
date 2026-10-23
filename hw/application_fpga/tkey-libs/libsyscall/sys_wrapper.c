@@ -87,9 +87,9 @@ int sys_get_vidpid(void)
 // management app.
 //
 // Returns 0 on success.
-int sys_preload_delete(void)
+int sys_preload_delete(struct app_metadata *metadata)
 {
-	return syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0);
+	return syscall(TK1_SYSCALL_PRELOAD_DELETE, (uint32_t)metadata, 0, 0);
 }
 
 // Store an app, or possibly just a block of an app, from the `app`
@@ -121,32 +121,20 @@ int sys_preload_store(uint32_t offset, void *app, size_t len)
 // resulting signature in `app_signature`.
 //
 // Returns 0 on success.
-int sys_preload_store_fin(size_t len, uint8_t digest[32], uint8_t signature[64])
+int sys_preload_set_metadata(struct app_metadata *metadata)
 {
-	return syscall(TK1_SYSCALL_PRELOAD_STORE_FIN, len, (uint32_t)digest,
-		       (uint32_t)signature);
+	return syscall(TK1_SYSCALL_PRELOAD_SET_METADATA, (uint32_t)metadata, 0,
+		       0);
 }
 
-// Copies the digest, signature and pubkey for app in flash slot 1 to
-// `app_digest`, `app_signature` and `pubkey`. Returns 0 on success. Only
-// available for the verified management app.
+// Copies the app metadata for app in flash slot 1 to metadata struct. Returns 0
+// on success. Only available for the verified management app.
 //
 // Returns 0 on success.
-int sys_preload_get_metadata(uint8_t digest[32], uint8_t signature[64],
-			     uint8_t pubkey[32])
+int sys_preload_get_metadata(struct app_metadata *metadata)
 {
-	return syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)digest,
-		       (uint32_t)signature, (uint32_t)pubkey);
-}
-
-// Stores `pubkey` for app in flash slot 1
-//
-// Only available for the verified management app.
-//
-// Returns 0 on success.
-int sys_preload_set_pubkey(uint8_t pubkey[32])
-{
-	return syscall(TK1_SYSCALL_PRELOAD_SET_PUBKEY, (uint32_t)pubkey, 0, 0);
+	return syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)metadata, 0,
+		       0);
 }
 
 // Returns filesystem status. Non-zero when problems have been
