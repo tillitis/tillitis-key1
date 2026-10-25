@@ -735,6 +735,7 @@ struct app_metadata {
 	uint8_t digest[32];
 	uint8_t signature[64];
 	uint8_t pubkey[32];
+	uint8_t mac[32];
 };
 
 struct app_metadata metadata;
@@ -757,6 +758,11 @@ Used to finalize storing of a new app, or updating the public key.
 `metadata.pubkey` is the public key to the private key used for
 signing.
 
+`metadata.mac` is a 32-byte field use to store a mac along with the
+app metadata. This field is not in any way verified by firmware, it is
+created, verified and used by the consumer of the data in order to
+enable authenticity of the metadata struct.
+
 #### `PRELOAD_DELETE`
 
 ```C
@@ -766,7 +772,11 @@ syscall(TK1_SYSCALL_PRELOAD_DELETE, (uint32_t)&metadata, 0, 0);
 ```
 
 Delete the app in flash slot 1. Firmware sets the size, digest and
-signature to zero and erases flash for app slot 1.
+signature to zero and erases flash for app slot 1. Writes
+`metadata.mac` to the MAC field.
+
+Note: the size, digest, signature and pubkey fields in `metadata` is
+ignored. Hence take caution when calculating the MAC that is stored.
 
 Returns 0 on success. Only available for the verified management app.
 
@@ -778,9 +788,9 @@ struct app_metadata metadata;
 syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)&metadata, 0, 0;
 ```
 
-Copies the size, digest and signature of the app, and the pubkey for
-flash slot 1 to `metadata` struct. Returns 0 on success. Only
-available for the verified management app.
+Copies the size, digest, signature, pubkey and MAC for app in flash
+slot 1 to `metadata` struct. Returns 0 on success. Only available for
+the verified management app.
 
 #### `PRELOAD_SET_PUBKEY`
 

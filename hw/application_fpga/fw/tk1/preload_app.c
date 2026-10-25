@@ -147,6 +147,9 @@ int preload_set_metadata(struct partition_table_storage *part_table_storage,
 	memcpy_s(part_table->pre_app_data[to_slot].pubkey,
 		 sizeof(part_table->pre_app_data[to_slot].pubkey),
 		 metadata->pubkey, sizeof(metadata->pubkey));
+	memcpy_s(part_table->pre_app_data[to_slot].mac,
+		 sizeof(part_table->pre_app_data[to_slot].mac), metadata->mac,
+		 sizeof(metadata->mac));
 
 	debug_puts("preload_set_metadata: size: ");
 	debug_putinthex(metadata->size);
@@ -164,6 +167,7 @@ int preload_set_metadata(struct partition_table_storage *part_table_storage,
 // Erases preloaded app from the slot.
 // Sets size, digest and signature to zero.
 // Validates metadata->size is zero, the rest is up to the caller to validate.
+// Updates the mac from the metadata->mac. Does not update pubkey.
 //
 // Privileged function.
 // Returns zero on success
@@ -206,6 +210,10 @@ int preload_delete(struct partition_table_storage *part_table_storage,
 
 	(void)memset(part_table->pre_app_data[slot].signature, 0,
 		     sizeof(part_table->pre_app_data[slot].signature));
+
+	memcpy_s(part_table->pre_app_data[slot].mac,
+		 sizeof(part_table->pre_app_data[slot].mac), metadata->mac,
+		 sizeof(metadata->mac));
 
 	if (part_table_write(part_table_storage) != 0) {
 		return -1;
@@ -253,6 +261,9 @@ int preload_get_metadata(struct partition_table *part_table,
 	memcpy_s(metadata->pubkey, sizeof(metadata->pubkey),
 		 part_table->pre_app_data[slot].pubkey,
 		 sizeof(part_table->pre_app_data[slot].pubkey));
+	memcpy_s(metadata->mac, sizeof(metadata->mac),
+		 part_table->pre_app_data[slot].mac,
+		 sizeof(part_table->pre_app_data[slot].mac));
 
 	return 0;
 }
