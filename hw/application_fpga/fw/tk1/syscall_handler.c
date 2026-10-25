@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Tillitis AB <tillitis.se>
 // SPDX-License-Identifier: BSD-2-Clause
 
+#include <stddef.h>
 #include <stdint.h>
 #include <tkey/assert.h>
 #include <tkey/debug.h>
@@ -72,7 +73,10 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 		return udi[0];
 
 	case TK1_SYSCALL_PRELOAD_DELETE:
-		return preload_delete(&part_table_storage, 1);
+		// arg1 struct metadata
+		// always using slot 1
+		return preload_delete(&part_table_storage,
+				      (struct app_metadata *)arg1, 1);
 
 	case TK1_SYSCALL_PRELOAD_STORE:
 		// arg1 offset
@@ -82,25 +86,17 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 		return preload_store(&part_table_storage.table, arg1,
 				     (uint8_t *)arg2, arg3, 1);
 
-	case TK1_SYSCALL_PRELOAD_STORE_FIN:
-		// arg1 app_size
-		// arg2 app_digest
-		// arg3 app_signature
+	case TK1_SYSCALL_PRELOAD_SET_METADATA:
+		// arg1 struct metadata
 		// always using slot 1
-		return preload_store_finalize(&part_table_storage, arg1,
-					      (uint8_t *)arg2, (uint8_t *)arg3,
-					      1);
+		return preload_set_metadata(&part_table_storage,
+					    (struct app_metadata *)arg1, 1);
 
 	case TK1_SYSCALL_PRELOAD_GET_METADATA:
-		return preload_get_metadata(&part_table_storage.table,
-					    (uint8_t *)arg1, (uint8_t *)arg2,
-					    (uint8_t *)arg3, 1);
-
-	case TK1_SYSCALL_PRELOAD_SET_PUBKEY:
-		// arg1 pubkey
+		// arg1 struct metadata
 		// always using slot 1
-		return preload_set_pubkey(&part_table_storage, (uint8_t *)arg1,
-					  1);
+		return preload_get_metadata(&part_table_storage.table,
+					    (struct app_metadata *)arg1, 1);
 
 	case TK1_SYSCALL_STATUS:
 		return part_get_status();
