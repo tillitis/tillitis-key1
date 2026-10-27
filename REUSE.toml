@@ -63,3 +63,8 @@ SPDX-License-Identifier = "BSD-2-Clause"
 [[annotations]]
 path = "hw/application_fpga/core/picorv32/rtl/picorv32.v"
 SPDX-License-Identifier = "ISC"
+
+[[annotations]]
+path = "contrib/yosys-cellaigs-eval-order.patch"
+SPDX-FileCopyrightText = "2012 - 2025 Claire Xenia Wolf <claire@yosyshq.com>"
+SPDX-License-Identifier = "ISC"
