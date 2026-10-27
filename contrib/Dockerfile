@@ -1,4 +1,4 @@
-FROM docker.io/library/ubuntu:24.04 as base
+FROM debian:trixie-slim as base
 
 RUN apt-get -qq update -y \
     && DEBIAN_FRONTEND=noninteractive \
@@ -8,9 +8,9 @@ RUN apt-get -qq update -y \
                bison \
                build-essential \
                ca-certificates \
-               clang \
-               clang-format \
-               clang-tidy \
+               clang-18 \
+               clang-format-18 \
+               clang-tidy-18 \
                cmake \
                curl \
                flex \
@@ -18,7 +18,7 @@ RUN apt-get -qq update -y \
                gawk \
                gcc \
                git \
-               golang-1.23 \
+               golang \
                gperf \
                graphviz \
                help2man \
@@ -37,8 +37,8 @@ RUN apt-get -qq update -y \
                libpython3-dev \
                libusb-1.0-0-dev \
                libreadline-dev \
-               lld \
-               llvm \
+               lld-18 \
+               llvm-18 \
                make \
                nano \
                ncdu \
@@ -70,4 +70,4 @@ RUN /buildtools.sh
 FROM base
 LABEL org.opencontainers.image.description="Toolchain for building TKey FPGA bitstream"
 COPY --from=toolsbuilder /usr/local/ /usr/local
-ENV PATH="$PATH:/usr/lib/go-1.23/bin"
+ENV PATH="/usr/lib/llvm-18/bin:$PATH"
