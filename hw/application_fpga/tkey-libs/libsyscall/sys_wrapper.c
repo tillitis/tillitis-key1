@@ -83,13 +83,17 @@ int sys_get_vidpid(void)
 	return syscall(TK1_SYSCALL_GET_VIDPID, 0, 0, 0);
 }
 
-// Delete the app in flash slot 1. Only available for the verified
-// management app.
+// Delete the app in flash slot 1. Firmware sets the size, digest and
+// signature to zero and erases flash for app slot 1. Writes
+// `metadata.mac` to the MAC field.
 //
-// Returns 0 on success.
-int sys_preload_delete(void)
+// Note: the size, digest, signature and pubkey fields in `metadata` is
+// ignored. Hence take caution when calculating the MAC that is stored.
+//
+// Returns 0 on success. Only available for the verified management app.
+int sys_preload_delete(struct app_metadata *metadata)
 {
-	return syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0);
+	return syscall(TK1_SYSCALL_PRELOAD_DELETE, (uint32_t)metadata, 0, 0);
 }
 
 // Store an app, or possibly just a block of an app, from the `app`
@@ -102,6 +106,9 @@ int sys_preload_delete(void)
 // Up to preloaded app area size bytes can be written at once and `offset` must
 // be a multiple of 256 bytes.
 //
+// After the entire app is stored, call `sys_preload_set_metadata()` to
+// finalize it.
+//
 // Only available for the verified management app.
 //
 // Returns 0 on success.
@@ -110,43 +117,40 @@ int sys_preload_store(uint32_t offset, void *app, size_t len)
 	return syscall(TK1_SYSCALL_PRELOAD_STORE, offset, (uint32_t)app, len);
 }
 
-// Finalize storing of an app where the complete binary size is `len`
-// in flash slot 1. Returns 0 on success. Only available for the
-// verified management app.
-//
-// Compute a BLAKE2s hash digest over the entire binary. Pass the
-// result in `app_digest`.
-//
-// Sign `app_digest` with your Ed25519 private key and pass the
-// resulting signature in `app_signature`.
-//
-// Returns 0 on success.
-int sys_preload_store_fin(size_t len, uint8_t digest[32], uint8_t signature[64])
-{
-	return syscall(TK1_SYSCALL_PRELOAD_STORE_FIN, len, (uint32_t)digest,
-		       (uint32_t)signature);
-}
-
-// Copies the digest, signature and pubkey for app in flash slot 1 to
-// `app_digest`, `app_signature` and `pubkey`. Returns 0 on success. Only
+// Write and store metadata associated with the preloaded app in flash
+// slot 1. Stores the entire metadata struct. Returns 0 on success. Only
 // available for the verified management app.
 //
-// Returns 0 on success.
-int sys_preload_get_metadata(uint8_t digest[32], uint8_t signature[64],
-			     uint8_t pubkey[32])
+// Used to finalize storing of a new app, or updating the public key.
+//
+// `metadata.size` is the complete binary size of the app in flash slot
+// 1.
+//
+// `metadata.digest` is the BLAKE2s hash digest over the entire binary.
+//
+// `metadata.signature` is the Ed25519 signature over `metadata.digest`.
+//
+// `metadata.pubkey` is the public key to the private key used for
+// signing.
+//
+// `metadata.mac` is a 32-byte field use to store a mac along with the
+// app metadata. This field is not in any way verified by firmware, it is
+// created, verified and used by the consumer of the data in order to
+// enable authenticity of the metadata struct.
+int sys_preload_set_metadata(struct app_metadata *metadata)
 {
-	return syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)digest,
-		       (uint32_t)signature, (uint32_t)pubkey);
+	return syscall(TK1_SYSCALL_PRELOAD_SET_METADATA, (uint32_t)metadata, 0,
+		       0);
 }
 
-// Stores `pubkey` for app in flash slot 1
+// Copies the app metadata for app in flash slot 1 to `metadata` struct.
 //
 // Only available for the verified management app.
-//
 // Returns 0 on success.
-int sys_preload_set_pubkey(uint8_t pubkey[32])
+int sys_preload_get_metadata(struct app_metadata *metadata)
 {
-	return syscall(TK1_SYSCALL_PRELOAD_SET_PUBKEY, (uint32_t)pubkey, 0, 0);
+	return syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)metadata, 0,
+		       0);
 }
 
 // Returns filesystem status. Non-zero when problems have been
