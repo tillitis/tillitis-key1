@@ -719,13 +719,15 @@ If you can't fit your entire app in the buffer, call `PRELOAD_STORE`
 many times as you receive the binary from the client. Returns 0 on
 success.
 
-At most 4096 bytes can be written at once and `offset` must be a
-multiple of 4096 bytes.
-
-Only available for the verified management app.
+Up to preloaded app area size bytes can be written at once and
+`offset` must be a multiple of 256 bytes.
 
 After the entire app is stored, call `PRELOAD_SET_METADATA` to
 finalize it.
+
+Only available for the verified management app.
+
+Returns 0 on success.
 
 #### `PRELOAD_SET_METADATA`
 
