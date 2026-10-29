@@ -92,6 +92,8 @@ static void write_with_header(enum ioend dest, const uint8_t *buf,
 //
 // - IO_DEBUG: Through the UART for the DEBUG endpoint (USB HID), with
 //   header.
+//
+// Make sure the endpoint is active, see config_endpoints().
 void write(enum ioend dest, const uint8_t *buf, size_t nbytes)
 {
 	if (dest == IO_QEMU) {
@@ -140,6 +142,7 @@ static uint8_t readbyte(void)
 // If used with the USB-mode protocol and readselect(), it doesn't block.
 // Only for version > Bellatrix.
 //
+// Make sure the endpoint is active, see config_endpoints().
 // If called with IO_UART it will do low-level UART access, blockingly.
 //
 // Returns the number of bytes read. Empty data returns 0.
@@ -174,8 +177,9 @@ int read(enum ioend src, uint8_t *buf, size_t bufsize, size_t nbytes)
 	return n;
 }
 
-// serial_write writes nbytes of data from buf to IO_CDC when using Castor, or
-// to IO_UART when using Bellatrix.
+// serial_write writes nbytes of data from buf to IO_CDC when using Castor, make
+// sure the endpoint is active, see config_endpoints(). IO_UART is used when
+// on Bellatrix.
 int serial_write(const uint8_t *buf, size_t nbytes)
 {
 	if (*ver < TKEY_VERSION_CASTOR) {
@@ -191,8 +195,8 @@ int serial_write(const uint8_t *buf, size_t nbytes)
 // serial_read blocks and returns when nbytes is read.
 // Returns number of bytes read on success, negative on error.
 //
-// On Castor serial_read will use the IO_CDC endpoint, on Bellatrix it will use
-// the IO_UART.
+// On Castor serial_read will use the IO_CDC endpoint, make sure the endpoint is
+// active, see config_endpoints(). on Bellatrix it will use the IO_UART.
 //
 // When used on Castor serial_read will not handle interleaved frames from
 // different endpoints, and hence should not be used if additional endpoints
@@ -321,6 +325,7 @@ int discard(enum ioend src, size_t nbytes)
 //   readselect(IO_CDC|IO_FIDO, false, &endpoint, &len)
 //
 // to wait for some data from either the CDC or the FIDO endpoint.
+// Make sure the endpoint is active, see config_endpoints().
 //
 // NOTE WELL: You need to call readselect() first, before doing any
 // calls to read() if using Castor.
@@ -491,18 +496,20 @@ void hexdump(enum ioend dest, const void *buf, int len)
 // Configure USB endpoints that should be enabled/disabled
 //
 // Allowed options are:
+//   - IO_CDC
 //   - IO_FIDO (can't be used used together with IO_CCID)
 //   - IO_CCID (can't be used used together with IO_FIDO)
 //   - IO_DEBUG
 //
 // The following are always enabled:
-//   - IO_CDC
 //   - IO_CH552
 //
 // Use like this in the bitmask:
 //
 //   config_endpoints(IO_FIDO|IO_DEBUG)
 //
+// Needs to be called before using any read/write operations to a specific
+// endpoint.
 void config_endpoints(uint8_t endpoints)
 {
 	uint8_t cmdbuf[2] = {0};

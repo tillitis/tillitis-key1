@@ -122,7 +122,7 @@ int frame_parse_hdr(uint8_t b, struct frame_header *hdr)
 // 128 bytes, the maximum frame size according to the framing protocol.
 //
 // Does not handle interleaved frames from different endpoints, and
-// hence should only be used with IO_CDC set via config_endpoints() (default).
+// hence should only be used with IO_CDC set via config_endpoints().
 //
 // Returns number of bytes read on success, negative on error.
 int frame_read(uint8_t *buf, size_t bufsize, struct frame_header *hdr)
@@ -148,8 +148,9 @@ int frame_read(uint8_t *buf, size_t bufsize, struct frame_header *hdr)
 }
 
 // frame_write writes an entire frame according to the "framing protocol".
-// Handles both Castor and Bellatrix. Uses the CDC endpoint for Castor, direct
-// UART access for Bellatrix.
+// Handles both Castor and Bellatrix. Uses the CDC endpoint for Castor. Make
+// sure the endpoint is active, see config_endpoints().
+// Uses direct UART access for Bellatrix.
 //
 // The frame size, nbytes, needs to be one of the defined lengths for a frame.
 // See cmdlen in proto.h.

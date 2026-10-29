@@ -12,7 +12,7 @@ void memcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 	assert(src != NULL);
 	assert(destsize >= n);
 
-	uint8_t *src_byte = (uint8_t *)src;
+	const uint8_t *src_byte = (const uint8_t *)src;
 	uint8_t *dest_byte = (uint8_t *)dest;
 
 	for (size_t i = 0; i < n; i++) {
@@ -22,7 +22,7 @@ void memcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 
 __attribute__((used)) void *wordcpy(void *dest, const void *src, unsigned n)
 {
-	uint32_t *src_word = (uint32_t *)src;
+	const uint32_t *src_word = (const uint32_t *)src;
 	uint32_t *dest_word = (uint32_t *)dest;
 
 	for (int i = 0; i < n; i++) {
@@ -32,14 +32,36 @@ __attribute__((used)) void *wordcpy(void *dest, const void *src, unsigned n)
 	return dest;
 }
 
+// Copies n 32-bit words from src to dest.
+// destsize specifies the size of dest in 32-bit words.
+// Halts if destsize is less than n.
 void wordcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 {
 	assert(dest != NULL);
 	assert(src != NULL);
 	assert(destsize >= n);
 
-	uint32_t *src_word = (uint32_t *)src;
+	const uint32_t *src_word = (const uint32_t *)src;
 	uint32_t *dest_word = (uint32_t *)dest;
+
+	for (size_t i = 0; i < n; i++) {
+		dest_word[i] = src_word[i];
+	}
+}
+
+// Copies n 32-bit words from src to dest.
+// destsize specifies the size of dest in 32-bit words.
+// Halts if destsize is less than n.
+// The data in src and dest are accessed through volatile references.
+void wordcpy_s_volatile(volatile void *dest, size_t destsize,
+			volatile const void *src, size_t n)
+{
+	assert(dest != NULL);
+	assert(src != NULL);
+	assert(destsize >= n);
+
+	volatile const uint32_t *src_word = (volatile const uint32_t *)src;
+	volatile uint32_t *dest_word = (volatile uint32_t *)dest;
 
 	for (size_t i = 0; i < n; i++) {
 		dest_word[i] = src_word[i];
@@ -48,7 +70,7 @@ void wordcpy_s(void *dest, size_t destsize, const void *src, size_t n)
 
 int memeq(void *dest, const void *src, size_t n)
 {
-	uint8_t *src_byte = (uint8_t *)src;
+	const uint8_t *src_byte = (const uint8_t *)src;
 	uint8_t *dest_byte = (uint8_t *)dest;
 	int res = -1;
 
