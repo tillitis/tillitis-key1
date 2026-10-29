@@ -601,7 +601,8 @@ uint32_t len; // Length of data in next_app_data.
 syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, len, 0);
 ```
 
-Resets the TKey. Does not return.
+Resets the TKey. Does not return if successful, returns negative on
+error.
 
 You can pass data to the firmware about the reset type `type` and
 `measured_id_seed` that you want to include in the CDI measurement for
@@ -711,62 +712,87 @@ syscall(TK1_SYSCALL_PRELOAD_STORE, offset, (uint32_t)appbinary,
 			  size);
 ```
 
-Store an app, or possible just a block of an app, from the `appbinary`
+Store an app, or possibly just a block of an app, from the `appbinary`
 buffer in flash slot 1 at byte `offset`.
 
 If you can't fit your entire app in the buffer, call `PRELOAD_STORE`
 many times as you receive the binary from the client. Returns 0 on
 success.
 
-At most 4096 bytes can be written at once and `offset` must be a
-multiple of 4096 bytes.
+Up to preloaded app area size bytes can be written at once and
+`offset` must be a multiple of 256 bytes.
+
+After the entire app is stored, call `PRELOAD_SET_METADATA` to
+finalize it.
 
 Only available for the verified management app.
 
-#### `PRELOAD_STORE_FIN`
+Returns 0 on success.
+
+#### `PRELOAD_SET_METADATA`
 
 ```C
-uint8_t app_digest[32];
-uint8_t app_signature[64];
-size_t app_size;
+struct app_metadata {
+	size_t size;
+	uint8_t digest[32];
+	uint8_t signature[64];
+	uint8_t pubkey[32];
+	uint8_t mac[32];
+};
 
-syscall(TK1_SYSCALL_PRELOAD_STORE_FIN, app_size,
-		    (uint32_t)app_digest, (uint32_t)app_signature)
+struct app_metadata metadata;
+
+syscall(TK1_SYSCALL_PRELOAD_SET_METADATA, (uint32_t)&metadata, 0, 0;
 ```
+Write and store metadata associated with the preloaded app in flash
+slot 1. Stores the entire metadata struct. Returns 0 on success. Only
+available for the verified management app.
 
-Finalize storing of an app where the complete binary size is
-`app_size` in flash slot 1. Returns 0 on success. Only available for
-the verified management app.
+Used to finalize storing of a new app, or updating the public key.
 
-Compute a BLAKE2s hash digest over the entire binary. Pass the result
-in `app_digest`.
+`metadata.size` is the complete binary size of the app in flash slot
+1.
 
-Sign `app_digest` with your Ed25519 private key and pass the
-resulting signature in `app_signature`.
+`metadata.digest` is the BLAKE2s hash digest over the entire binary.
+
+`metadata.signature` is the Ed25519 signature over `metadata.digest`.
+
+`metadata.pubkey` is the public key to the private key used for
+signing.
+
+`metadata.mac` is a 32-byte field use to store a mac along with the
+app metadata. This field is not in any way verified by firmware, it is
+created, verified and used by the consumer of the data in order to
+enable authenticity of the metadata struct.
 
 #### `PRELOAD_DELETE`
 
 ```C
-syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0);
+struct app_metadata metadata;
+
+syscall(TK1_SYSCALL_PRELOAD_DELETE, (uint32_t)&metadata, 0, 0);
 ```
 
-Delete the app in flash slot 1. Returns 0 on success. Only available
-for the verified management app.
+Delete the app in flash slot 1. Firmware sets the size, digest and
+signature to zero and erases flash for app slot 1. Writes
+`metadata.mac` to the MAC field.
+
+Note: the size, digest, signature and pubkey fields in `metadata` is
+ignored. Hence take caution when calculating the MAC that is stored.
+
+Returns 0 on success. Only available for the verified management app.
 
 #### `PRELOAD_GET_METADATA`
 
 ```C
-uint8_t app_digest[32];
-uint8_t app_signature[64];
-uint8_t pubkey[32];
+struct app_metadata metadata;
 
-syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)app_digest,
-		(uint32_t)app_signature, (uint32_t)pubkey;
+syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)&metadata, 0, 0;
 ```
 
-Copies the digest and signature of app, and pubkey in flash slot 1 to
-`app_digest`, `app_signature` and `pubkey`. Returns 0 on success. Only
-available for the verified management app.
+Copies the size, digest, signature, pubkey and MAC for app in flash
+slot 1 to `metadata` struct. Returns 0 on success. Only available for
+the verified management app.
 
 #### `PRELOAD_SET_PUBKEY`
 

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 #include <blake2s/blake2s.h>
-#include <fw/tk1/reset.h>
 #include <monocypher/monocypher-ed25519.h>
 #include <stdint.h>
 #include <string.h>
@@ -22,12 +21,10 @@ static volatile uint32_t *cdi           = (volatile uint32_t *) TK1_MMIO_TK1_CDI
 
 int install_app(uint8_t secret_key[64])
 {
-	uint8_t app_digest[32];
-	uint8_t app_signature[64];
-	size_t app_size = sizeof(blink);
+	struct app_metadata metadata = {0};
 	int ret = 0;
 
-	ret = syscall(TK1_SYSCALL_PRELOAD_DELETE, 0, 0, 0);
+	ret = syscall(TK1_SYSCALL_PRELOAD_DELETE, (uint32_t)&metadata, 0, 0);
 
 	if (ret != 0) {
 		puts(IO_CDC, "couldn't delete preloaded app. error: 0x");
@@ -48,6 +45,10 @@ int install_app(uint8_t secret_key[64])
 		return -1;
 	}
 
+	// Update metadata with the new app, and write to set_metadata to
+	// finalize. Currently skips metadata.mac
+	metadata.size = sizeof(blink);
+
 	puts(IO_CDC, "blink: ");
 	putinthex(IO_CDC, (uint32_t)blink);
 	puts(IO_CDC, "\r\n");
@@ -60,28 +61,28 @@ int install_app(uint8_t secret_key[64])
 	putinthex(IO_CDC, sizeof(blink));
 	puts(IO_CDC, "\r\n");
 
-	if (blake2s(app_digest, 32, NULL, 0, blink, sizeof(blink)) != 0) {
+	if (blake2s(metadata.digest, 32, NULL, 0, blink, sizeof(blink)) != 0) {
 		puts(IO_CDC, "couldn't compute digest\r\n");
 		return -1;
 	}
 
-	crypto_ed25519_sign(app_signature, secret_key, app_digest,
-			    sizeof(app_digest));
+	crypto_ed25519_sign(metadata.signature, secret_key, metadata.digest,
+			    sizeof(metadata.digest));
 
-	puts(IO_CDC, "app_digest:\r\n");
-	hexdump(IO_CDC, app_digest, sizeof(app_digest));
+	puts(IO_CDC, "metadata.digest:\r\n");
+	hexdump(IO_CDC, metadata.digest, sizeof(metadata.digest));
 	puts(IO_CDC, "\r\n");
 
-	puts(IO_CDC, "app_signature:\r\n");
-	hexdump(IO_CDC, app_signature, sizeof(app_signature));
+	puts(IO_CDC, "metadata.signature:\r\n");
+	hexdump(IO_CDC, metadata.signature, sizeof(metadata.signature));
 	puts(IO_CDC, "\r\n");
 
 	puts(IO_CDC, "secret_key:\r\n");
 	hexdump(IO_CDC, secret_key, 64);
 	puts(IO_CDC, "\r\n");
 
-	ret = syscall(TK1_SYSCALL_PRELOAD_STORE_FIN, app_size,
-		      (uint32_t)app_digest, (uint32_t)app_signature);
+	ret = syscall(TK1_SYSCALL_PRELOAD_SET_METADATA, (uint32_t)&metadata, 0,
+		      0);
 
 	if (ret != 0) {
 		puts(IO_CDC, "couldn't finalize storing app, error:");
@@ -96,18 +97,14 @@ int install_app(uint8_t secret_key[64])
 
 int verify(uint8_t pubkey[32])
 {
-	uint8_t app_digest[32];
-	uint8_t app_signature[64];
-	uint8_t flash_pubkey[32];
+	struct app_metadata metadata = {0};
 	int ret = 0;
 
 	// pubkey we already have
 	// read signature
 	// read digest
-	ret = syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)app_digest,
-		      (uint32_t)app_signature, (uint32_t)flash_pubkey);
-
-	(void)flash_pubkey; // Using pubkey argument instead of pubkey on flash
+	ret = syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)&metadata, 0,
+		      0);
 
 	if (ret != 0) {
 		puts(IO_CDC, "couldn't get metadata, error:");
@@ -117,16 +114,16 @@ int verify(uint8_t pubkey[32])
 		return -1;
 	}
 
-	puts(IO_CDC, "app_digest:\r\n");
-	hexdump(IO_CDC, app_digest, sizeof(app_digest));
+	puts(IO_CDC, "metadata.digest:\r\n");
+	hexdump(IO_CDC, metadata.digest, sizeof(metadata.digest));
 	puts(IO_CDC, "\r\n");
 
-	puts(IO_CDC, "app_signature:\r\n");
-	hexdump(IO_CDC, app_signature, sizeof(app_signature));
+	puts(IO_CDC, "metadata.signature:\r\n");
+	hexdump(IO_CDC, metadata.signature, sizeof(metadata.signature));
 	puts(IO_CDC, "\r\n");
 
-	puts(IO_CDC, "flash pubkey:\r\n");
-	hexdump(IO_CDC, flash_pubkey, 32);
+	puts(IO_CDC, "metadata.pubkey:\r\n");
+	hexdump(IO_CDC, metadata.pubkey, 32);
 	puts(IO_CDC, "\r\n");
 
 	puts(IO_CDC, "embedded pubkey:\r\n");
@@ -135,20 +132,20 @@ int verify(uint8_t pubkey[32])
 
 	puts(IO_CDC, "Checking signature against embedded pubkey...\r\n");
 
-	if (crypto_ed25519_check(app_signature, pubkey, app_digest,
-				 sizeof(app_digest)) != 0) {
+	if (crypto_ed25519_check(metadata.signature, pubkey, metadata.digest,
+				 sizeof(metadata.digest)) != 0) {
 		puts(IO_CDC, "signature check failed\r\n");
 
 		return -1;
 	}
 
-	puts(IO_CDC, "Resetting into pre loaded app (slot 2)...\r\n");
+	puts(IO_CDC, "Resetting into pre loaded app (slot 1)...\r\n");
 
-	// syscall reset flash1_ver with app_digest
+	// syscall reset flash1_ver with metadata.digest
 	struct reset rst;
 	rst.type = START_FLASH1_VER;
-	memcpy_s(rst.app_digest, sizeof(rst.app_digest), app_digest,
-		 sizeof(app_digest));
+	memcpy_s(rst.app_digest, sizeof(rst.app_digest), metadata.digest,
+		 sizeof(metadata.digest));
 	memset(rst.next_app_data, 0, sizeof(rst.next_app_data));
 
 	syscall(TK1_SYSCALL_RESET, (uint32_t)&rst, 0, 0);
