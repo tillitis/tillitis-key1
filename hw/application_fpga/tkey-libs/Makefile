@@ -17,7 +17,7 @@ INCLUDE=include
 # either of them. You don't need to recompile tkey-libs.
 
 CFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 \
-	-mcmodel=medany -static -std=gnu99 -O2 -ffast-math -fno-common \
+	-mcmodel=medany -static -std=gnu99 -Os -ffast-math -fno-common \
 	-fno-builtin-printf -fno-builtin-putchar -nostdlib -mno-relax -flto \
 	-Wall -Werror=implicit-function-declaration \
 	-I $(INCLUDE) -I .
