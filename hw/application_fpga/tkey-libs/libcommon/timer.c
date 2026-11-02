@@ -31,3 +31,22 @@ void timer_wait(int delay_s)
 	// Stop timer
 	*timer_ctrl |= (1 << TK1_MMIO_TIMER_CTRL_STOP_BIT);
 }
+
+void timer_wait_ms(int delay_ms)
+{
+	// Tick once every milli second
+	*timer_prescaler = *version >= TKEY_VERSION_CASTOR
+			       ? (TKEY_CPU_FREQ_CASTOR_HZ / 1000)
+			       : (TKEY_CPU_FREQ_BELLATRIX_HZ / 1000);
+	*timer = delay_ms;
+
+	// Start timer
+	*timer_ctrl |= (1 << TK1_MMIO_TIMER_CTRL_START_BIT);
+
+	// Wait until timer hits 0.
+	while (*timer_status != 0) {
+	}
+
+	// Stop timer
+	*timer_ctrl |= (1 << TK1_MMIO_TIMER_CTRL_STOP_BIT);
+}

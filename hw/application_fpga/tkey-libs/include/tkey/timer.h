@@ -10,4 +10,10 @@
 // configuration.
 void timer_wait(int delay_s);
 
+// timer_wait_ms() blocks for delay_ms milli seconds before returning.
+//
+// This function uses the timer module and will override any existing timer
+// configuration.
+void timer_wait_ms(int delay_ms);
+
 #endif

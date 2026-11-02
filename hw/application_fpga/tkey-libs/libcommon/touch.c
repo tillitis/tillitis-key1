@@ -21,10 +21,7 @@ static volatile uint32_t *version	  = (volatile uint32_t *)TK1_MMIO_TK1_VERSION;
 
 bool touch_wait(int color, int timeout_s)
 {
-	int ledon = 0;
 	int orig_color = led_get();
-	uint32_t time = 0;
-	uint32_t lasttime = 0;
 
 	// Tick once every decisecond
 	const uint32_t cpu_freq_hz = *version >= TKEY_VERSION_CASTOR
@@ -43,12 +40,7 @@ bool touch_wait(int color, int timeout_s)
 	// Blink until either the touch sensor has been touched or the
 	// timer hits 0.
 	while (!touched() && *timer_status != 0) {
-		time = *timer;
-		if (time % 2 == 0 && time != lasttime) {
-			lasttime = time;
-			ledon = !ledon;
-			led_set(ledon ? color : LED_BLACK);
-		}
+		led_set(*timer & 1 ? color : LED_BLACK);
 	}
 
 	// Restore LED
