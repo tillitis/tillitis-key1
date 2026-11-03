@@ -12,13 +12,13 @@
 #include <tkey/lib.h>
 #include <tkey/tk1_mem.h>
 
+#include "app_handoff.h"
 #include "mgmt_app.h"
 #include "partition_table.h"
 #include "preload_app.h"
 #include "proto.h"
 #include "reset.h"
 #include "state.h"
-#include "syscall_enable.h"
 
 #define DOMAIN_USS_USED_POS 0
 #define DOMAIN_CHAINED_POS 1
@@ -373,36 +373,10 @@ static void jump_to_app(void)
 	debug_putinthex(*app_addr);
 	debug_lf();
 
-	// Clear the firmware stack
-	// clang-format off
-#ifndef S_SPLINT_S
-	asm volatile(
-		"la a0, _sstack;"
-		"la a1, _estack;"
-		"loop:;"
-		"sw zero, 0(a0);"
-		"addi a0, a0, 4;"
-		"blt a0, a1, loop;"
-		::: "memory");
-#endif
-	// clang-format on
+	app_handoff();
 
-	syscall_enable();
-
-	// Jump to app - doesn't return
-	// Hardware is responsible for switching to app mode
-	// clang-format off
-#ifndef S_SPLINT_S
-	asm volatile(
-		// Get value at TK1_MMIO_TK1_APP_ADDR
-		"lui a0,0xff000;"
-		"lw a0,0x030(a0);"
-		// Jump to it
-		"jalr x0,0(a0);"
-		::: "memory");
-#endif
-	// clang-format on
-
+	// Should not be reached
+	assert(1 == 2);
 	__builtin_unreachable();
 }
 
@@ -660,6 +634,7 @@ int main(void)
 				     RESET_DIGEST_SIZE);
 
 			jump_to_app();
+			assert(1 == 2);
 			break; // Not reached
 		}
 

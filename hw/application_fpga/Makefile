@@ -201,6 +201,7 @@ FIRMWARE_DEPS = \
 
 FIRMWARE_OBJS = \
 	$(P)/fw/tk1/main.o \
+	$(P)/fw/tk1/app_handoff.o \
 	$(P)/fw/tk1/start.o \
 	$(P)/fw/tk1/proto.o \
 	$(P)/fw/tk1/syscall_enable.o \
