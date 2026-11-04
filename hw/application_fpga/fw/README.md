@@ -736,6 +736,7 @@ struct app_metadata {
 	size_t size;
 	uint8_t digest[32];
 	uint8_t signature[64];
+	uint8_t name[16];
 	uint8_t pubkey[32];
 	uint8_t mac[32];
 };
@@ -762,7 +763,12 @@ Returns zero on success.
 
 `metadata.digest` is the BLAKE2s hash digest over the entire binary.
 
-`metadata.signature` is the Ed25519 signature over `metadata.digest`.
+`metadata.signature` is a field that fits an Ed25519 signature. The
+signature is defined by the consumer, see tkey-boot-verifier for
+details on the signature it uses.
+
+`metadata.name` is a 16-byte data field opaque to the firmware. It may
+be used by the metadata consumer in its security policy.
 
 `metadata.pubkey` is the public key to the private key used for
 signing.
@@ -795,9 +801,9 @@ struct app_metadata metadata;
 syscall(TK1_SYSCALL_PRELOAD_GET_METADATA, (uint32_t)&metadata, 0, 0;
 ```
 
-Copies the size, digest, signature, pubkey and MAC for app in flash
-slot 1 to `metadata` struct. Returns 0 on success. Only available for
-the verified management app.
+Copies the size, digest, signature, name, pubkey and MAC for app in
+flash slot 1 to `metadata` struct. Returns 0 on success. Only
+available for the verified management app.
 
 #### `STATUS`
 
