@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/tillitis/tkey-sign-cli/distfile"
 	"golang.org/x/crypto/blake2s"
 )
 
@@ -20,12 +21,13 @@ const MaxAppSize = (128 * 1024)
 
 // Size in bytes of the partition table binary. Find out with -o and
 // check the file size.
-const PartitionSize = 493
+const PartitionSize = 525
 
 type PreLoadedAppData struct {
 	Size      uint32
 	Digest    [32]uint8
 	Signature [64]uint8
+	Name      [16]uint8
 	Pubkey    [32]uint8
 	Mac       [32]uint8
 }
@@ -66,11 +68,13 @@ func (p *PreLoadedAppData) GenMac(uds [32]byte, mgmtAppDigest [32]byte) {
 		Size      uint32
 		Digest    [32]uint8
 		Signature [64]uint8
+		Name      [16]uint8
 		Pubkey    [32]uint8
 	}{
 		Size:      p.Size,
 		Digest:    p.Digest,
 		Signature: p.Signature,
+		Name:      p.Name,
 		Pubkey:    p.Pubkey,
 	}
 
@@ -164,6 +168,7 @@ func printPartTableStorageCondensed(storage PartTableStorage) {
 		fmt.Printf("                         %x\n", appData.Signature[16:32])
 		fmt.Printf("                         %x\n", appData.Signature[32:48])
 		fmt.Printf("                         %x\n", appData.Signature[48:])
+		fmt.Printf("      Name             : %x\n", appData.Name)
 		fmt.Printf("      Pubkey           : %x\n", appData.Pubkey[:16])
 		fmt.Printf("                         %x\n", appData.Pubkey[16:])
 		fmt.Printf("      MAC              : %x\n", appData.Mac[:16])
@@ -172,10 +177,10 @@ func printPartTableStorageCondensed(storage PartTableStorage) {
 	fmt.Printf("  Digest               : %x\n", storage.Checksum)
 }
 
-func genPartitionFile(outFn string, app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) {
-	app0, app1, app1Sig, app1Pub, uds := readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn)
+func genPartitionFile(outFn, app0Fn, app1Fn, app1DistInfoFn, udsFn string) {
+	app0, app1, app1DistInfo, uds := readFiles(app0Fn, app1Fn, app1DistInfoFn, udsFn)
 
-	partition := newPartTable(app0, app1, app1Sig, app1Pub, uds)
+	partition := newPartTable(app0, app1, app1DistInfo, uds)
 	partition.GenChecksum()
 
 	storageFile, err := os.Create(outFn)
@@ -194,7 +199,7 @@ func genPartitionFile(outFn string, app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn 
 // GenChecksum().
 //
 // It returns the partition table.
-func newPartTable(app0 []byte, app1 []byte, app1Sig *Signature, app1Pub *PubKey, uds [32]byte) PartTableStorage {
+func newPartTable(app0 []byte, app1 []byte, app1DistInfo *distfile.DistInfo, uds [32]byte) PartTableStorage {
 	storage := PartTableStorage{
 		PartTable: PartTable{
 			Version:          1,
@@ -214,12 +219,13 @@ func newPartTable(app0 []byte, app1 []byte, app1Sig *Signature, app1Pub *PubKey,
 		storage.PartTable.PreLoadedAppData[1].Digest = blake2s.Sum256(app1)
 	}
 
-	if app1Sig != nil {
-		storage.PartTable.PreLoadedAppData[1].Signature = app1Sig.Sig
-	}
+	if app1DistInfo != nil {
+		storage.PartTable.PreLoadedAppData[1].Signature = app1DistInfo.Signature.Sig
 
-	if app1Pub != nil {
-		storage.PartTable.PreLoadedAppData[1].Pubkey = app1Pub.Key
+		storage.PartTable.PreLoadedAppData[1].Pubkey = app1DistInfo.PubKey.Key
+
+		name := []byte(app1DistInfo.Message.Name)
+		copy(storage.PartTable.PreLoadedAppData[1].Name[:], name)
 	}
 
 	storage.PartTable.PreLoadedAppData[1].GenMac(uds, blake2s.Sum256(app0))
@@ -233,8 +239,8 @@ func memset(s []byte, c byte) {
 	}
 }
 
-func genFlashFile(outFn, app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) {
-	app0, app1, app1Sig, app1Pub, uds := readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn)
+func genFlashFile(outFn, app0Fn, app1Fn, app1DistInfoFn, udsFn string) {
+	app0, app1, app1DistInfo, uds := readFiles(app0Fn, app1Fn, app1DistInfoFn, udsFn)
 
 	var flash Flash
 
@@ -257,7 +263,7 @@ func genFlashFile(outFn, app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) {
 		copy(flash.PreLoadedApp1[:], app1)
 	}
 
-	partition := newPartTable(app0, app1, app1Sig, app1Pub, uds)
+	partition := newPartTable(app0, app1, app1DistInfo, uds)
 	partition.GenChecksum()
 	flash.PartitionTable = partition
 	flash.PartitionTable2 = partition
@@ -321,7 +327,7 @@ func readUDS(filename string) ([32]byte, error) {
 	return uds, nil
 }
 
-func readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) (app0 []byte, app1 []byte, app1Sig *Signature, app1Pub *PubKey, uds [32]byte) {
+func readFiles(app0Fn, app1Fn, app1DistInfoFn, udsFn string) (app0 []byte, app1 []byte, app1DistInfo *distfile.DistInfo, uds [32]byte) {
 	app0, err := os.ReadFile(app0Fn)
 	if err != nil {
 		panic(err)
@@ -342,18 +348,13 @@ func readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) (app0 []byte,
 		}
 	}
 
-	if app1SigFn != "" {
-		app1Sig, err = ReadSig(app1SigFn)
+	if app1DistInfoFn != "" {
+		var di distfile.DistInfo
+		err = di.FromFile(app1DistInfoFn)
 		if err != nil {
 			panic(err)
 		}
-	}
-
-	if app1PubFn != "" {
-		app1Pub, err = ReadKey(app1PubFn)
-		if err != nil {
-			panic(err)
-		}
+		app1DistInfo = &di
 	}
 
 	uds, err = readUDS(udsFn)
@@ -361,7 +362,7 @@ func readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) (app0 []byte,
 		panic(err)
 	}
 
-	return app0, app1, app1Sig, app1Pub, uds
+	return app0, app1, app1DistInfo, uds
 }
 
 func main() {
@@ -369,19 +370,17 @@ func main() {
 	var output string
 	var app0 string
 	var app1 string
-	var app1Pub string
-	var app1Sig string
+	var app1DistInfo string
 	var flash bool
 	var uds string
 
-	flag.StringVar(&input, "i", "", "Input binary file. Cannot be used with -o.")
-	flag.StringVar(&output, "o", "", "Output binary file. Cannot be used with -i. If used with -f, -app0 must also be specified.")
-	flag.StringVar(&app0, "app0", "", "Binary in pre loaded app slot 0. Used with -o.")
-	flag.StringVar(&app1, "app1", "", "Binary in pre loaded app slot 1. Optional. Used with -o.")
-	flag.StringVar(&app1Sig, "app1sig", "", "File containing signature for validating binary in pre loaded app slot 1. Optional. Used with -o.")
-	flag.StringVar(&app1Pub, "app1pub", "", "File containing public key for validating binary in pre loaded app slot 1. Optional. Used with -o.")
+	flag.StringVar(&input, "i", "", "Input binary `file`. Cannot be used with -o.")
+	flag.StringVar(&output, "o", "", "Output binary `file`. Cannot be used with -i. If used with -f, -app0 must also be specified.")
+	flag.StringVar(&app0, "app0", "", "Binary `file` in pre loaded app slot 0. Used with -o.")
+	flag.StringVar(&app1, "app1", "", "Binary `file` in pre loaded app slot 1. Optional. Used with -o.")
+	flag.StringVar(&app1DistInfo, "app1cert", "", "Distribution certificate `file` for pre loaded app slot 1. Optional. Used with -o.")
 	flag.BoolVar(&flash, "f", false, "Treat file as a dump of the entire flash memory.")
-	flag.StringVar(&uds, "uds", "", "Hex file containing the uds. If omitted defaults to the development uds. Used with -o.")
+	flag.StringVar(&uds, "uds", "", "Hex `file` containing the UDS. If omitted defaults to the development UDS. Used with -o.")
 	flag.Parse()
 
 	if len(flag.Args()) > 0 {
@@ -391,6 +390,7 @@ func main() {
 	}
 
 	if (input == "" && output == "") || (input != "" && output != "") {
+		fmt.Printf("specify -i or -o\n")
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -414,9 +414,9 @@ func main() {
 				os.Exit(1)
 			}
 
-			genFlashFile(output, app0, app1, app1Sig, app1Pub, uds)
+			genFlashFile(output, app0, app1, app1DistInfo, uds)
 		} else {
-			genPartitionFile(output, app0, app1, app1Sig, app1Pub, uds)
+			genPartitionFile(output, app0, app1, app1DistInfo, uds)
 		}
 	}
 }
