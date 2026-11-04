@@ -20,12 +20,13 @@ const MaxAppSize = (128 * 1024)
 
 // Size in bytes of the partition table binary. Find out with -o and
 // check the file size.
-const PartitionSize = 493
+const PartitionSize = 525
 
 type PreLoadedAppData struct {
 	Size      uint32
 	Digest    [32]uint8
 	Signature [64]uint8
+	Name      [16]uint8
 	Pubkey    [32]uint8
 	Mac       [32]uint8
 }
@@ -66,11 +67,13 @@ func (p *PreLoadedAppData) GenMac(uds [32]byte, mgmtAppDigest [32]byte) {
 		Size      uint32
 		Digest    [32]uint8
 		Signature [64]uint8
+		Name      [16]uint8
 		Pubkey    [32]uint8
 	}{
 		Size:      p.Size,
 		Digest:    p.Digest,
 		Signature: p.Signature,
+		Name:      p.Name,
 		Pubkey:    p.Pubkey,
 	}
 
@@ -164,6 +167,7 @@ func printPartTableStorageCondensed(storage PartTableStorage) {
 		fmt.Printf("                         %x\n", appData.Signature[16:32])
 		fmt.Printf("                         %x\n", appData.Signature[32:48])
 		fmt.Printf("                         %x\n", appData.Signature[48:])
+		fmt.Printf("      Name             : %x\n", appData.Name)
 		fmt.Printf("      Pubkey           : %x\n", appData.Pubkey[:16])
 		fmt.Printf("                         %x\n", appData.Pubkey[16:])
 		fmt.Printf("      MAC              : %x\n", appData.Mac[:16])
@@ -172,10 +176,10 @@ func printPartTableStorageCondensed(storage PartTableStorage) {
 	fmt.Printf("  Digest               : %x\n", storage.Checksum)
 }
 
-func genPartitionFile(outFn string, app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) {
+func genPartitionFile(outFn, app0Fn, app1Fn, app1SigFn, app1PubFn, app1Name, udsFn string) {
 	app0, app1, app1Sig, app1Pub, uds := readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn)
 
-	partition := newPartTable(app0, app1, app1Sig, app1Pub, uds)
+	partition := newPartTable(app0, app1, app1Sig, app1Pub, app1Name, uds)
 	partition.GenChecksum()
 
 	storageFile, err := os.Create(outFn)
@@ -194,7 +198,7 @@ func genPartitionFile(outFn string, app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn 
 // GenChecksum().
 //
 // It returns the partition table.
-func newPartTable(app0 []byte, app1 []byte, app1Sig *Signature, app1Pub *PubKey, uds [32]byte) PartTableStorage {
+func newPartTable(app0 []byte, app1 []byte, app1Sig *Signature, app1Pub *PubKey, app1Name string, uds [32]byte) PartTableStorage {
 	storage := PartTableStorage{
 		PartTable: PartTable{
 			Version:          1,
@@ -222,6 +226,16 @@ func newPartTable(app0 []byte, app1 []byte, app1Sig *Signature, app1Pub *PubKey,
 		storage.PartTable.PreLoadedAppData[1].Pubkey = app1Pub.Key
 	}
 
+	if app1Name != "" {
+		name := []byte(app1Name)
+		if len(name) > 16 {
+			err_str := fmt.Sprintf("app1name to long, got %d expected at most 16\n", len(name))
+			panic(err_str)
+		}
+
+		copy(storage.PartTable.PreLoadedAppData[1].Name[:], name)
+	}
+
 	storage.PartTable.PreLoadedAppData[1].GenMac(uds, blake2s.Sum256(app0))
 
 	return storage
@@ -233,7 +247,7 @@ func memset(s []byte, c byte) {
 	}
 }
 
-func genFlashFile(outFn, app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) {
+func genFlashFile(outFn, app0Fn, app1Fn, app1SigFn, app1PubFn, app1Name, udsFn string) {
 	app0, app1, app1Sig, app1Pub, uds := readFiles(app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn)
 
 	var flash Flash
@@ -257,7 +271,7 @@ func genFlashFile(outFn, app0Fn, app1Fn, app1SigFn, app1PubFn, udsFn string) {
 		copy(flash.PreLoadedApp1[:], app1)
 	}
 
-	partition := newPartTable(app0, app1, app1Sig, app1Pub, uds)
+	partition := newPartTable(app0, app1, app1Sig, app1Pub, app1Name, uds)
 	partition.GenChecksum()
 	flash.PartitionTable = partition
 	flash.PartitionTable2 = partition
@@ -371,6 +385,7 @@ func main() {
 	var app1 string
 	var app1Pub string
 	var app1Sig string
+	var app1Name string
 	var flash bool
 	var uds string
 
@@ -380,6 +395,7 @@ func main() {
 	flag.StringVar(&app1, "app1", "", "Binary in pre loaded app slot 1. Optional. Used with -o.")
 	flag.StringVar(&app1Sig, "app1sig", "", "File containing signature for validating binary in pre loaded app slot 1. Optional. Used with -o.")
 	flag.StringVar(&app1Pub, "app1pub", "", "File containing public key for validating binary in pre loaded app slot 1. Optional. Used with -o.")
+	flag.StringVar(&app1Name, "app1name", "", "Hex-string containing the 16 byte name for app 1. Optional. Used with -o.")
 	flag.BoolVar(&flash, "f", false, "Treat file as a dump of the entire flash memory.")
 	flag.StringVar(&uds, "uds", "", "Hex file containing the uds. If omitted defaults to the development uds. Used with -o.")
 	flag.Parse()
@@ -414,9 +430,9 @@ func main() {
 				os.Exit(1)
 			}
 
-			genFlashFile(output, app0, app1, app1Sig, app1Pub, uds)
+			genFlashFile(output, app0, app1, app1Sig, app1Pub, app1Name, uds)
 		} else {
-			genPartitionFile(output, app0, app1, app1Sig, app1Pub, uds)
+			genPartitionFile(output, app0, app1, app1Sig, app1Pub, app1Name, uds)
 		}
 	}
 }
