@@ -36,7 +36,7 @@ all:
 	@echo ""
 # Find the TP1 programmer to be able to import the device into the
 # container.
-tpdev != lsusb -d 1209:8886 | awk '{ printf "%s/%s", $$2, substr($$4,1,3) }'
+tpdev != lsusb -d 1209:8886 2>/dev/null | awk '{ printf "%s/%s", $$2, substr($$4,1,3) }'
 
 ifneq ($(strip $(tpdev)),)
 tp = --device /dev/bus/usb/$(tpdev)
