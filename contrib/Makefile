@@ -21,6 +21,7 @@ all:
 	@echo "run-make-no-clean PACKAGE=...    Like run-make but without cleaning first, useful for iterative firmware dev"
 	@echo "run-make-ch552-no-clean          Like run-make-ch552 but without cleaning first, useful for iterative firmware dev"
 	@echo "run-make-clean_fw PACKAGE=...    Like run-make but cleans only firmware"
+	@echo "export-artifacts PACKAGE=...     Build release artifacts locally and collect them in ./artifacts"
 	@echo "flash                            Build bitstream and defaultapp.bin then program them and the partition table onto the TKey SPI flash"
 	@echo "pull                             Pull down the image '$(IMAGE)' (Podman)"
 	@echo "build-image                      Build a toolchain image named '$(BUILDIMAGE)' (Podman)"
@@ -35,7 +36,7 @@ all:
 	@echo ""
 # Find the TP1 programmer to be able to import the device into the
 # container.
-tpdev != lsusb -d 1209:8886 | awk '{ printf "%s/%s", $$2, substr($$4,1,3) }'
+tpdev != lsusb -d 1209:8886 2>/dev/null | awk '{ printf "%s/%s", $$2, substr($$4,1,3) }'
 
 ifneq ($(strip $(tpdev)),)
 tp = --device /dev/bus/usb/$(tpdev)
@@ -103,6 +104,30 @@ flash:
 	-w /build \
 	-it $(IMAGE) make prog_flash PACKAGE=$(PACKAGE)
 
+# Export release artifacts
+ARTIFACTS_DIR = artifacts
+FPGA_DIR = ../hw/application_fpga
+CH552_DIR = ../hw/usb_interface/ch552_fw
+
+export-artifacts:
+	$(CHECK_PACKAGE)
+	rm -rf $(ARTIFACTS_DIR)
+	$(MAKE) -C $(FPGA_DIR) clean
+	$(MAKE) -C $(FPGA_DIR) PACKAGE=$(PACKAGE) \
+		application_fpga_par.json bram_fw.hex firmware.hex
+	$(MAKE) -C $(CH552_DIR) clean usb_device.bin
+	mkdir -p $(ARTIFACTS_DIR)
+	cp $(FPGA_DIR)/application_fpga_par.json \
+		$(FPGA_DIR)/bram_fw.hex \
+		$(FPGA_DIR)/firmware.hex \
+		$(CH552_DIR)/usb_device.bin \
+		$(ARTIFACTS_DIR)/
+	cp $(FPGA_DIR)/application_fpga.bin.$(PACKAGE).sha256 \
+		$(ARTIFACTS_DIR)/application_fpga.bin.sha256
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
+		-C $(FPGA_DIR)/tools/tkeyimage \
+		-o $(abspath $(ARTIFACTS_DIR))/tkeyimage
+.PHONY: export-artifacts
 
 pull:
 	podman pull $(IMAGE)
