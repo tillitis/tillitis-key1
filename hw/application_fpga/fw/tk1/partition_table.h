@@ -61,6 +61,7 @@ enum part_status {
 //   - 4 bytes length.
 //   - 32 bytes digest.
 //   - 64 bytes signature.
+//   - 16 bytes name.
 //   - 32 bytes pubkey.
 //   - 32 bytes MAC.
 //
@@ -68,6 +69,7 @@ enum part_status {
 //   - 4 bytes length.
 //   - 32 bytes digest.
 //   - 64 bytes signature.
+//   - 16 bytes name.
 //   - 32 bytes pubkey.
 //   - 32 bytes MAC.
 //
@@ -87,6 +89,7 @@ struct pre_loaded_app_metadata {
 	uint32_t size;
 	uint8_t digest[32];
 	uint8_t signature[64];
+	uint8_t name[16];
 	uint8_t pubkey[32];
 	uint8_t mac[32];
 } __attribute__((packed));

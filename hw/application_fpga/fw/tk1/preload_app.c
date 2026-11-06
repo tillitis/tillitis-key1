@@ -146,6 +146,9 @@ int preload_set_metadata(struct partition_table_storage *part_table_storage,
 	memcpy_s(part_table->pre_app_data[to_slot].signature,
 		 sizeof(part_table->pre_app_data[to_slot].signature),
 		 metadata->signature, sizeof(metadata->signature));
+	memcpy_s(part_table->pre_app_data[to_slot].name,
+		 sizeof(part_table->pre_app_data[to_slot].name), metadata->name,
+		 sizeof(metadata->name));
 	memcpy_s(part_table->pre_app_data[to_slot].pubkey,
 		 sizeof(part_table->pre_app_data[to_slot].pubkey),
 		 metadata->pubkey, sizeof(metadata->pubkey));
@@ -235,6 +238,9 @@ int preload_get_metadata(struct partition_table *part_table,
 	memcpy_s(metadata->signature, sizeof(metadata->signature),
 		 part_table->pre_app_data[slot].signature,
 		 sizeof(part_table->pre_app_data[slot].signature));
+	memcpy_s(metadata->name, sizeof(metadata->name),
+		 part_table->pre_app_data[slot].name,
+		 sizeof(part_table->pre_app_data[slot].name));
 	memcpy_s(metadata->pubkey, sizeof(metadata->pubkey),
 		 part_table->pre_app_data[slot].pubkey,
 		 sizeof(part_table->pre_app_data[slot].pubkey));
