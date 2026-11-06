@@ -6,12 +6,14 @@
 #include <tkey/assert.h>
 #include <tkey/debug.h>
 #include <tkey/lib.h>
+#include <tkey/syscall.h>
 #include <tkey/tk1_mem.h>
 
 #include "partition_table.h"
 #include "preload_app.h"
 #include "reset.h"
 #include "storage.h"
+#include "string.h"
 
 // clang-format off
 static volatile uint32_t *udi           = (volatile uint32_t *)TK1_MMIO_TK1_UDI_FIRST;
@@ -19,6 +21,51 @@ static volatile uint32_t *udi           = (volatile uint32_t *)TK1_MMIO_TK1_UDI_
 
 extern struct partition_table_storage part_table_storage;
 extern uint8_t part_status;
+
+#define CDI_WORDS 8
+#define RESET_DIGEST_SIZE 32
+#define RESET_DATA_SIZE 184
+
+// clang-format off
+static volatile uint32_t *cdi           = (volatile uint32_t *)TK1_MMIO_TK1_CDI_FIRST;
+static volatile struct reset *resetinfo = (volatile struct reset *)TK1_MMIO_RESETINFO_BASE;
+// clang-format on
+
+uint32_t cdi_clean[CDI_WORDS] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0};
+
+static void firmware_assert_fail(void) __attribute__((noreturn));
+static void firmware_assert_fail(void)
+{
+	// Clear CDI
+	wordcpy_s_volatile((void *)cdi, CDI_WORDS, cdi_clean, CDI_WORDS);
+	// Clear reset data
+	(void)memset((void *)resetinfo->app_digest, 0, RESET_DIGEST_SIZE);
+	(void)memset((void *)resetinfo->measured_id_seed, 0, RESET_DIGEST_SIZE);
+	(void)memset((void *)resetinfo->next_app_data, 0, RESET_DATA_SIZE);
+
+	// clang-format off
+
+	// Clear fw stack + fw data + fw bss
+	asm volatile(
+			"la a0, _sfwram;"
+			"la a1, _efwram;"
+			"loop_assert_fail:;"
+			"sw zero, 0(a0);"
+			"addi a0, a0, 4;"
+			"blt a0, a1, loop_assert_fail;" ::
+			: "memory");
+
+	// Force illegal instruction to halt CPU
+	for (;;) {
+		asm volatile("unimp");
+		asm volatile("unimp");
+		asm volatile("unimp");
+		asm volatile("unimp");
+	}
+
+	// clang-format on
+	__builtin_unreachable();
+}
 
 int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 			uint32_t arg3)
@@ -108,10 +155,15 @@ int32_t syscall_handler(uint32_t number, uint32_t arg1, uint32_t arg2,
 		// arg1 area
 		return storage_erase_area(&part_table_storage, (uint8_t)arg1);
 
+	case TK1_SYSCALL_ASSERT_FAIL:
+		firmware_assert_fail();
+		// not reached
+		break;
+
 	default:
-		assert(1 == 2);
+		firmware_assert_fail();
 	}
 
-	assert(1 == 2);
+	firmware_assert_fail();
 	return -1; // This should never run
 }
