@@ -21,7 +21,8 @@ all:
 	@echo "run-make-no-clean PACKAGE=...    Like run-make but without cleaning first, useful for iterative firmware dev"
 	@echo "run-make-ch552-no-clean          Like run-make-ch552 but without cleaning first, useful for iterative firmware dev"
 	@echo "run-make-clean_fw PACKAGE=...    Like run-make but cleans only firmware"
-	@echo "export-artifacts PACKAGE=...     Build release artifacts locally and collect them in ./artifacts"
+	@echo "export-artifacts PACKAGE=... FLASH_APP_0=... FLASH_APP_1=... FLASH_APP_1_SIG=... FLASH_APP_1_PUB=..."
+	@echo "                                 Build release artifacts locally and collect them in ./artifacts"
 	@echo "flash                            Build bitstream and defaultapp.bin then program them and the partition table onto the TKey SPI flash"
 	@echo "pull                             Pull down the image '$(IMAGE)' (Podman)"
 	@echo "build-image                      Build a toolchain image named '$(BUILDIMAGE)' (Podman)"
@@ -33,6 +34,10 @@ all:
 	@echo ""
 	@echo "Configuration Options:"
 	@echo "PACKAGE=...                      Target hardware package. Allowed PACKAGE values: sg48, uwg30"
+	@echo "FLASH_APP_0=...                  Path to app in flash app slot 0, e.g. tkey-boot-verifier"
+	@echo "FLASH_APP_1=...                  Path to app in flash app slot 1"
+	@echo "FLASH_APP_1_SIG=...              Signature of the app in flash app slot 1"
+	@echo "FLASH_APP_1_PUB=...              Public key used to verify the app in flash app slot 1"
 	@echo ""
 # Find the TP1 programmer to be able to import the device into the
 # container.
@@ -48,6 +53,44 @@ endif
 define CHECK_PACKAGE
 	@if [ -z "$(PACKAGE)" ]; then \
 			echo "PACKAGE variable is not defined. Please run 'make <target> PACKAGE=...'"; \
+		exit 1; \
+	fi
+endef
+
+#-------------------------------------------------------------------
+# Canned recipe: check that the flash apps are set at recipe time.
+#-------------------------------------------------------------------
+define CHECK_FLASH_APPS
+	@if [ -z "$(FLASH_APP_0)" ]; then \
+			echo "FLASH_APP_0 variable is not defined. Please run 'make <target> FLASH_APP_0=...'"; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(FLASH_APP_0)" ]; then \
+			echo "FLASH_APP_0 file '$(FLASH_APP_0)' not found."; \
+		exit 1; \
+	fi
+	@if [ -z "$(FLASH_APP_1)" ]; then \
+			echo "FLASH_APP_1 variable is not defined. Please run 'make <target> FLASH_APP_1=...'"; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(FLASH_APP_1)" ]; then \
+			echo "FLASH_APP_1 file '$(FLASH_APP_1)' not found."; \
+		exit 1; \
+	fi
+	@if [ -z "$(FLASH_APP_1_SIG)" ]; then \
+			echo "FLASH_APP_1_SIG variable is not defined. Please run 'make <target> FLASH_APP_1_SIG=...'"; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(FLASH_APP_1_SIG)" ]; then \
+			echo "FLASH_APP_1_SIG file '$(FLASH_APP_1_SIG)' not found."; \
+		exit 1; \
+	fi
+	@if [ -z "$(FLASH_APP_1_PUB)" ]; then \
+			echo "FLASH_APP_1_PUB variable is not defined. Please run 'make <target> FLASH_APP_1_PUB=...'"; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(FLASH_APP_1_PUB)" ]; then \
+			echo "FLASH_APP_1_PUB file '$(FLASH_APP_1_PUB)' not found."; \
 		exit 1; \
 	fi
 endef
@@ -109,11 +152,17 @@ ARTIFACTS_DIR = artifacts
 FPGA_DIR = ../hw/application_fpga
 CH552_DIR = ../hw/usb_interface/ch552_fw
 
+FLASH_APP_0 ?=
+FLASH_APP_1 ?=
+FLASH_APP_1_SIG ?=
+FLASH_APP_1_PUB ?=
+
 export-artifacts:
 	$(CHECK_PACKAGE)
+	$(CHECK_FLASH_APPS)
 	rm -rf $(ARTIFACTS_DIR)
 	$(MAKE) -C $(FPGA_DIR) clean
-	$(MAKE) -C $(FPGA_DIR) PACKAGE=$(PACKAGE) \
+	$(MAKE) -C $(FPGA_DIR) PACKAGE=$(PACKAGE) FLASH_APP_0=$(abspath $(FLASH_APP_0)) \
 		application_fpga_par.json bram_fw.hex firmware.hex
 	$(MAKE) -C $(CH552_DIR) clean usb_device.bin
 	mkdir -p $(ARTIFACTS_DIR)
@@ -122,6 +171,10 @@ export-artifacts:
 		$(FPGA_DIR)/firmware.hex \
 		$(CH552_DIR)/usb_device.bin \
 		$(ARTIFACTS_DIR)/
+	cp $(FLASH_APP_0) $(ARTIFACTS_DIR)/app0.bin
+	cp $(FLASH_APP_1) $(ARTIFACTS_DIR)/app1.bin
+	cp $(FLASH_APP_1_SIG) $(ARTIFACTS_DIR)/app1.bin.sig
+	cp $(FLASH_APP_1_PUB) $(ARTIFACTS_DIR)/app1.pub
 	cp $(FPGA_DIR)/application_fpga.bin.$(PACKAGE).sha256 \
 		$(ARTIFACTS_DIR)/application_fpga.bin.sha256
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
