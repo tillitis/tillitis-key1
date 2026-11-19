@@ -215,13 +215,15 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/preload_app.o \
 	$(P)/fw/tk1/mgmt_app.o \
 	$(P)/fw/tk1/memcheck.o \
+	$(P)/fw/tk1/assert.o
 
 CHECK_SOURCES = \
 	$(P)/fw/tk1/*.[ch]
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
-	$(P)/fw/testfw/start.o
+	$(P)/fw/testfw/start.o \
+	$(P)/fw/tk1/assert.o
 
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.
