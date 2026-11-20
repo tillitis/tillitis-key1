@@ -36,6 +36,7 @@ jobs:
         run: |
           cp tools/sca/run-infer.sh .
           cp tools/sca/infer_exceptions.txt .
+          cp tools/sca/infer_files_to_skip.txt .
           ./run-infer.sh
 
       - name: Archive all report files
