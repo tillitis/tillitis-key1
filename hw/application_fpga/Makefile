@@ -64,14 +64,14 @@ ifeq ($(PACKAGE), sg48)
 PIN_FILE = application_fpga_tk1_sg48.pcf
 FPGA_PACKAGE = sg48
 FPGA_PACKAGE_UPPER = SG48
-BUILD_SEED = 5251586251342757212
+BUILD_SEED = 5270583593887501557
 
 else ifeq ($(PACKAGE), uwg30)
 
 PIN_FILE = application_fpga_tk1_uwg30.pcf
 FPGA_PACKAGE = uwg30
 FPGA_PACKAGE_UPPER = UWG30
-BUILD_SEED = 15031151824396602107
+BUILD_SEED = 3624585141919841833
 
 else
 $(error Invalid PACKAGE '$(PACKAGE)'. Allowed PACKAGE values: sg48, uwg30)
@@ -215,13 +215,15 @@ FIRMWARE_OBJS = \
 	$(P)/fw/tk1/preload_app.o \
 	$(P)/fw/tk1/mgmt_app.o \
 	$(P)/fw/tk1/memcheck.o \
+	$(P)/fw/tk1/assert.o
 
 CHECK_SOURCES = \
 	$(P)/fw/tk1/*.[ch]
 
 TESTFW_OBJS = \
 	$(P)/fw/testfw/main.o \
-	$(P)/fw/testfw/start.o
+	$(P)/fw/testfw/start.o \
+	$(P)/fw/tk1/assert.o
 
 #-------------------------------------------------------------------
 # All: Complete build of HW and FW.

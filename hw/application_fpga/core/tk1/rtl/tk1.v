@@ -356,6 +356,17 @@ module tk1 #(
       if (force_trap_set) begin
         force_trap_reg <= 1'h1;
       end
+
+      if (cpu_trap) begin
+        cdi_mem[0] <= 32'h0;
+        cdi_mem[1] <= 32'h0;
+        cdi_mem[2] <= 32'h0;
+        cdi_mem[3] <= 32'h0;
+        cdi_mem[4] <= 32'h0;
+        cdi_mem[5] <= 32'h0;
+        cdi_mem[6] <= 32'h0;
+        cdi_mem[7] <= 32'h0;
+      end
     end
   end  // reg_update
 

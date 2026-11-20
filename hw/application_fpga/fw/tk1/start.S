@@ -48,7 +48,7 @@ irq_source_ok:
 	sw sp, 0(t0)
 
 	// Setup firmware stack pointer
-	la sp, _estack
+	la sp, _estackfw
 
 	// Run syscall handler
 	call syscall_handler
@@ -152,7 +152,7 @@ clear:
 	blt a0, a1, clear
 
 	// Init stack
-	la sp, _estack
+	la sp, _estackfw
 
 	call main
 

@@ -668,6 +668,63 @@ module tb_tk1 ();
 
 
   //----------------------------------------------------------------
+  // test4()
+  // Verify that a CPU trap clears the CDI.
+  //----------------------------------------------------------------
+  task test4;
+    begin
+      tc_ctr = tc_ctr + 1;
+
+      $display("--- test4: Reset DUT to switch to fw mode.");
+      tb_syscall = 0;
+      reset_dut();
+
+      $display("");
+      $display("--- test4: Verify that CPU trap clears CDI started.");
+      $display("--- test4: Write CDI.");
+      write_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
+      write_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
+      write_word(ADDR_CDI_FIRST + 2, 32'hd0d1d2d3);
+      write_word(ADDR_CDI_FIRST + 3, 32'hc0c1c2c3);
+      write_word(ADDR_CDI_FIRST + 4, 32'ha0a1a2a3);
+      write_word(ADDR_CDI_FIRST + 5, 32'h90919293);
+      write_word(ADDR_CDI_FIRST + 6, 32'h80818283);
+      write_word(ADDR_CDI_FIRST + 7, 32'h70717273);
+
+      $display("--- test4: Read CDI.");
+      read_check_word(ADDR_CDI_FIRST + 0, 32'hf0f1f2f3);
+      read_check_word(ADDR_CDI_FIRST + 1, 32'he0e1e2e3);
+      read_check_word(ADDR_CDI_FIRST + 2, 32'hd0d1d2d3);
+      read_check_word(ADDR_CDI_FIRST + 3, 32'hc0c1c2c3);
+      read_check_word(ADDR_CDI_FIRST + 4, 32'ha0a1a2a3);
+      read_check_word(ADDR_CDI_FIRST + 5, 32'h90919293);
+      read_check_word(ADDR_CDI_FIRST + 6, 32'h80818283);
+      read_check_word(ADDR_CDI_FIRST + 7, 32'h70717273);
+
+      $display("--- test4: Enter CPU trap.");
+      tb_cpu_trap = 1'h1;
+      #(2 * CLK_PERIOD);
+
+      $display("--- test4: Read CDI after trap.");
+      read_check_word(ADDR_CDI_FIRST + 0, 32'h00000000);
+      read_check_word(ADDR_CDI_FIRST + 1, 32'h00000000);
+      read_check_word(ADDR_CDI_FIRST + 2, 32'h00000000);
+      read_check_word(ADDR_CDI_FIRST + 3, 32'h00000000);
+      read_check_word(ADDR_CDI_FIRST + 4, 32'h00000000);
+      read_check_word(ADDR_CDI_FIRST + 5, 32'h00000000);
+      read_check_word(ADDR_CDI_FIRST + 6, 32'h00000000);
+      read_check_word(ADDR_CDI_FIRST + 7, 32'h00000000);
+
+      $display("--- test4: Leave CPU trap.");
+      tb_cpu_trap = 1'h0;
+      reset_dut();
+
+      $display("--- test4: completed.");
+      $display("");
+    end
+  endtask  // test4
+
+  //----------------------------------------------------------------
   // test5()
   // Write and read APP start address end size.
   //----------------------------------------------------------------
@@ -1195,6 +1252,7 @@ module tb_tk1 ();
     test1();
     test2();
     test3();
+    test4();
     test5();
     test6();
     test7();

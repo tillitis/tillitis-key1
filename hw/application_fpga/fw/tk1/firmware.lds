@@ -1,7 +1,7 @@
 /*
  * SPDX-FileCopyrightText: 2022 Tillitis AB <tillitis.se>
  * SPDX-License-Identifier: BSD-2-Clause
-*/
+ */
 
 OUTPUT_ARCH("riscv")
 ENTRY(_start)
@@ -33,7 +33,7 @@ SECTIONS
 	.text :
 	{
 		. = ALIGN(4);
-		_stext = .;
+		_stextfw = .;
 		*(.text)           /* .text sections (code) */
 		*(.text*)          /* .text* sections (code) */
 		*(.rodata)         /* .rodata sections (constants, strings, etc.) */
@@ -41,43 +41,43 @@ SECTIONS
 		*(.srodata)        /* .srodata sections (constants, strings, etc.) */
 		*(.srodata*)       /* .srodata* sections (constants, strings, etc.) */
 		. = ALIGN(4);
-		_etext = .;
+		_etextfw = .;
 	} >ROM
 
 	.stack (NOLOAD) :
 	{
 		. = ALIGN(16);
-		_sstack = .;
+		_sstackfw = .;
 		. += STACK_SIZE;
 		. = ALIGN(16);
-		_estack = .;
+		_estackfw = .;
 	} >FWRAM
 
 	.data :
 	{
 		. = ALIGN(4);
-		_sdata = .;
+		_sdatafw = .;
 		*(.data)           /* .data sections */
 		*(.data*)          /* .data* sections */
 		*(.sdata)          /* .sdata sections */
 		*(.sdata*)         /* .sdata* sections */
 		. = ALIGN(4);
-		_edata = .;
+		_edatafw = .;
 	} >FWRAM AT>ROM
-	_sidata = LOADADDR(.data);
+	_sidatafw = LOADADDR(.data);
 
 	/* Uninitialized data section */
 	.bss :
 	{
 		. = ALIGN(4);
-		_sbss = .;
+		_sbssfw = .;
 		*(.bss)
 		*(.bss*)
 		*(.sbss)
 		*(.sbss*)
 		*(COMMON)
 		. = ALIGN(4);
-		_ebss = .;
+		_ebssfw = .;
 	} >FWRAM
 }
 
@@ -85,3 +85,7 @@ _sfwram = ORIGIN(FWRAM);
 _efwram = ORIGIN(FWRAM) + LENGTH(FWRAM);
 _sresetinfo = ORIGIN(RESETINFO);
 _eresetinfo = ORIGIN(RESETINFO) + LENGTH(RESETINFO);
+_sfwram_all = ORIGIN(FWRAM);
+_efwram_all = ORIGIN(FWRAM) + LENGTH(FWRAM) + LENGTH(RESETINFO);
+_sappram = ORIGIN(RAM);
+_eappram = ORIGIN(RAM) + LENGTH(RAM);

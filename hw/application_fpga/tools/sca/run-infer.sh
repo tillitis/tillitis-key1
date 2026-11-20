@@ -7,7 +7,10 @@ export PROJECT_COMMAND="make firmware.elf"
 export PROJECT_CLEAN="clean_fw"
 
 export ARCH=""
-export FREESTANDING="-mx32"
+
+# Flags that replace the RISC-V ones in compile_commands_infer.json.
+# bear writes one JSON string per argument, so each flag must be its own string.
+export FREESTANDING='"-mx32", "-ffreestanding"'
 
 # Set report date
 export REPORT_DATE=$(TZ="Europe/Stockholm" date +%Y-%m-%d_-_%H%M)
@@ -132,17 +135,38 @@ check_error "bear"
 
 # Filter compile_commands_infer.json
 if [[ -z "$ARCH" ]]; then # If $ARCH is empty, remove "-target" also.
-sed -i 's/-target//g' "$CWD"/compile_commands_infer.json
+sed -i 's/"-target",//g' "$CWD"/compile_commands_infer.json
 fi
-sed -i 's/riscv32-unknown-none-elf/'"$ARCH"'/g' "$CWD"/compile_commands_infer.json
-sed -i 's/-march=rv32iczmmul/'"$FREESTANDING"'/g' "$CWD"/compile_commands_infer.json
-sed -i 's/-mabi=ilp32//g' "$CWD"/compile_commands_infer.json
-sed -i 's/-mcmodel=medany//g' "$CWD"/compile_commands_infer.json
+sed -i 's/"riscv32-unknown-none-elf",/'"$ARCH"'/g' "$CWD"/compile_commands_infer.json
+sed -i 's/"-march=rv32iczmmul"/'"$FREESTANDING"'/g' "$CWD"/compile_commands_infer.json
+sed -i 's/"-mabi=ilp32",//g' "$CWD"/compile_commands_infer.json
+sed -i 's/"-mcmodel=medany",//g' "$CWD"/compile_commands_infer.json
+
+# Optional skip of files for analysis (if infer for example dies analysing the file)
+SKIP_ARGS=()
+if [[ -f "$CWD"/infer_files_to_skip.txt ]]; then
+    while IFS= read -r LINE; do
+        # Trim trailing whitespace (it would become part of the regex)
+        LINE=${LINE%"${LINE##*[![:space:]]}"}
+
+        # Skip empty lines
+        [[ -z "$LINE" ]] && continue
+
+        # Skip lines that only contain whitespace
+        [[ $LINE =~ ^[[:space:]]+$ ]] && continue
+
+        # Skip comment lines (optionally preceded by whitespace)
+        [[ $LINE =~ ^[[:space:]]*# ]] && continue
+
+        SKIP_ARGS+=(--skip-analysis-in-path "$LINE")
+    done < "$CWD"/infer_files_to_skip.txt
+fi
 
 # Run infer capture
 infer-capture \
     --compilation-database "$CWD"/compile_commands_infer.json \
-    --results-dir "$CWD"/infer-out-$REPORT_DATE
+    --results-dir "$CWD"/infer-out-$REPORT_DATE \
+    "${SKIP_ARGS[@]}"
 check_error "infer-capture"
 
 # Move compile_commands_infer.json to infer-out directory
