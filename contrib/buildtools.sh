@@ -124,7 +124,7 @@ aarch64) verible_arch=arm64 ;;
     ;;
 esac
 
-curl --output /src/verible-$verible_arch.tar.gz -L https://github.com/chipsalliance/verible/releases/download/v0.0-3795-gf4d72375/verible-v0.0-3795-gf4d72375-linux-static-$verible_arch.tar.gz
+curl --fail --retry 5 --retry-all-errors --output /src/verible-$verible_arch.tar.gz -L https://github.com/chipsalliance/verible/releases/download/v0.0-3795-gf4d72375/verible-v0.0-3795-gf4d72375-linux-static-$verible_arch.tar.gz
 
 # Check against the expected digest
 sha512sum -c --ignore-missing /verible.sha512
