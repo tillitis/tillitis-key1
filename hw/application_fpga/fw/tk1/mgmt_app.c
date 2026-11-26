@@ -10,8 +10,9 @@
 
 // Lock down what app can start from flash slot 0.
 //
-// To update this, compute the BLAKE2s digest of the device app
-// binare, see the b2s tool.
+// The digest of the trusted app is generated into mgmt_app_digest.h
+// by the Makefile from the app binary given as FLASH_APP_0, using
+// the b2s tool.
 #include "mgmt_app_digest.h"
 
 static uint8_t current_app_digest[32];

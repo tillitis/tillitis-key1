@@ -389,11 +389,12 @@ Such a verified boot loader app:
 - Typically includes a security policy, for instance a public key and
   code to check a cryptographic signature.
 
-- Can be specifically trusted by firmware to be able to do filesystem
-  management to be able to update an app slot on flash. Add the app's
-  digest to `allowed_app_digest` in `mgmt_app.c` to allow it to use
-  `PRELOAD_DELETE`, `PRELOAD_STORE`, `PRELOAD_STORE_FIN`, and
-  `PRELOAD_GET_METADATA`.
+- Can be specifically trusted by firmware to do filesystem management
+to be able to update an app slot on flash. Build the firmware with the
+app binary as `FLASH_APP_0` and its BLAKE2s digest is generated into
+`allowed_app_digest` in the generated `mgmt_app_digest.h`, see the
+`b2s` tool. This allows it to use `PRELOAD_ERASE`, `PRELOAD_STORE`,
+`PRELOAD_SET_METADATA`, and `PRELOAD_GET_METADATA`.
 
 It works like this:
 
