@@ -1,2 +1,3 @@
 # List files to skip in infer analysis, one file per line.
 fw/tk1/assert.c
+tkey-libs/libcommon/assert.c
