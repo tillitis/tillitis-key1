@@ -6,6 +6,42 @@
   semantics!
 - `blake2s()` with new signature.
 - System call support.
+- New assert behavior: RAM is wiped before halting.
+- The initial stack pointer now comes from the `_estack` linker
+  script marker.
+
+### Asserts
+
+A failing `assert()` now wipes RAM before halting the CPU with an
+illegal instruction:
+
+- In app mode, the default `assert_halt()` (in libcommon) wipes the
+  calling app's `.data`, `.bss`, and stack, one section at a time,
+  before halting. The bounds are the section markers `_sdata`,
+  `_edata`, `_sbss`, `_ebss`, `_sstack` and `_estack`. If you link
+  your device app with a custom linker script you must define these
+  symbols yourself.
+
+### C runtime
+
+`libcrt0`'s `crt0.S` now inits the stack pointer from the `_estack`
+linker script marker instead of the previously hardcoded
+`TK1_RAM_BASE + TK1_RAM_SIZE - 16`. `app.lds` defines a `.stack`
+(NOLOAD) section, with markers like the firmware's linker script,
+spanning from the end of `.bss` up to `_estack`, just below the end
+of RAM. Apps linking with custom linker scripts must define
+`_estack` themselves.
+
+- `assert_fail()`, used by the `assert()` in `QEMU_DEBUG` and
+  `TKEY_DEBUG` builds, prints information about the failing assert
+  and then calls `assert_halt()`.
+
+- `assert_halt()` is declared weak. A program running with higher
+  privilege, such as the TKey firmware executing in firmware mode,
+  can provide a strong definition to also wipe memory that is not
+  accessible in app mode. For an example see `fw/tk1/assert.c` in
+  tillitis-key1, which clears all of app RAM and the full FW_RAM.
+
 
 ### BLAKE2s hash function
 

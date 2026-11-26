@@ -135,7 +135,12 @@ int sys_preload_store(uint32_t offset, void *app, size_t len)
 //
 // `metadata.digest` is the BLAKE2s hash digest over the entire binary.
 //
-// `metadata.signature` is the Ed25519 signature over `metadata.digest`.
+// `metadata.signature` is a field that fits an Ed25519 signature. The signature
+// is defined by the consumer, see tkey-boot-verifier for details on the
+// signature it uses.
+//
+// `metadata.name` is a 16-byte data field opaque to the firmware. It may
+// be used by the metadata consumer in its security policy.
 //
 // `metadata.pubkey` is the public key to the private key used for
 // signing.

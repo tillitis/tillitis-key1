@@ -36,8 +36,8 @@ _start:
 	li x30,0
 	li x31,0
 
-	/* init stack below 0x40020000 (TK1_RAM_BASE+TK1_RAM_SIZE) */
-	li sp, 0x4001fff0
+	/* init stack to _estack, defined by app.lds */
+	la sp, _estack
 
 	/* zero-init bss section */
 	la a0, _sbss

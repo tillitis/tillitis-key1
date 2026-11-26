@@ -56,7 +56,7 @@ void led_indicate_error_alert(int count, uint32_t ledvalue)
 	led_set(LED_BLACK);
 	while (count > 0) {
 		timer_wait_ms(600);
-		led_set(LED_RED);
+		led_set(ledvalue);
 		timer_wait_ms(600);
 		led_set(LED_BLACK);
 		count--;

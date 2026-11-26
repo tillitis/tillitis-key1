@@ -33,6 +33,7 @@ struct app_metadata {
 	size_t size;
 	uint8_t digest[32];
 	uint8_t signature[64];
+	uint8_t name[16];
 	uint8_t pubkey[32];
 	uint8_t mac[32];
 };
